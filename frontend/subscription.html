@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://js.stripe.com https://maps.googleapis.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com;">
+    <title>Subscription Plans - Mozarex SEO Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .billing-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .billing-toggle span {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle.active {
+            background: #667eea;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(30px);
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .plan-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .plan-card.popular {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .plan-card.popular::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #f1f5f9;
+        }
+
+        .plan-description {
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price .period {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .plan-savings {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .plan-features {
+            margin-bottom: 2rem;
+        }
+
+        .plan-features h4 {
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .feature-list li i {
+            color: #10b981;
+            width: 16px;
+        }
+
+        .feature-list li.restriction {
+            color: #94a3b8;
+        }
+
+        .feature-list li.restriction i {
+            color: #ef4444;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .plan-button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .plan-button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .plan-button.secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .plan-button.secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .trial-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .trial-info h3 {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .trial-info p {
+            color: #93c5fd;
+            margin-bottom: 1rem;
+        }
+
+        .trial-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .trial-feature {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .trial-feature i {
+            color: #3b82f6;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .current-subscription {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .current-subscription h3 {
+            color: #10b981;
+            margin-bottom: 1rem;
+        }
+
+        .subscription-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-item {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            padding: 2rem 2rem 1rem 2rem;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #f1f5f9;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close {
+            color: #94a3b8;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #ef4444;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Google Places Autocomplete styling */
+        .pac-container {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            border: 1px solid rgba(102, 126, 234, 0.3) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        }
+        
+        .pac-item {
+            background-color: transparent !important;
+            color: #f1f5f9 !important;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1) !important;
+            padding: 0.75rem !important;
+        }
+        
+        .pac-item:hover {
+            background-color: rgba(102, 126, 234, 0.1) !important;
+        }
+        
+        .pac-item-query {
+            color: #f1f5f9 !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .pac-matched {
+            color: #667eea !important;
+            font-weight: 600 !important;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #f1f5f9;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-card.popular {
+                transform: none;
+            }
+
+            .subscription-actions {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Choose Your Plan</h1>
+            <p>Select the perfect plan for your SEO needs.</p>
+        </div>
+
+
+        <!-- Current Subscription -->
+        <div class="current-subscription" id="currentSubscription" style="display: none;">
+            <h3><i class="fas fa-crown"></i> Current Subscription</h3>
+            <div class="subscription-details" id="subscriptionDetails">
+                <!-- Subscription details will be populated here -->
+            </div>
+            <div class="subscription-actions">
+                <button class="btn btn-secondary" onclick="showManageSubscription()">
+                    <i class="fas fa-cog"></i> Manage Subscription
+                </button>
+                <button class="btn btn-danger" onclick="showCancelModal()">
+                    <i class="fas fa-times"></i> Cancel Subscription
+                </button>
+            </div>
+        </div>
+
+        <!-- Billing Toggle -->
+        <div class="billing-toggle">
+            <span class="billing-period" data-period="monthly">Monthly</span>
+            <div class="toggle active" id="billingToggle" onclick="toggleBilling()"></div>
+            <span class="billing-period" data-period="yearly">Yearly <span style="color: #10b981; font-size: 0.875rem;">(30% off)</span></span>
+        </div>
+
+        <!-- Plans Grid -->
+        <div class="plans-grid" id="plansGrid">
+            <!-- Plans will be populated here -->
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading subscription plans...</p>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Start Your 7-Day Free Trial</h3>
+                <span class="close" onclick="closePaymentModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Trial Information -->
+                <div class="trial-info" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <i class="fas fa-shield-alt" style="color: #22c55e; font-size: 1.5rem; margin-right: 0.75rem;"></i>
+                        <h4 style="color: #22c55e; margin: 0; font-size: 1.2rem;">7-Day Free Trial</h4>
+                    </div>
+                    <p style="color: #f1f5f9; margin: 0; font-size: 1rem; line-height: 1.5;">
+                        <strong>You won't be charged anything for the first 7 days.</strong> 
+                        After your trial ends, your subscription will automatically continue. 
+                        You can cancel anytime during your trial period at no cost.
+                    </p>
+                </div>
+
+                <!-- Selected Plan Details -->
+                <div class="selected-plan" style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h4 style="color: #667eea; margin: 0 0 1rem 0; font-size: 1.2rem;">Selected Plan</h4>
+                    <div id="selectedPlanDetails" style="color: #f1f5f9;">
+                        <!-- Plan details will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" placeholder="Start typing your address..." required autocomplete="off">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city" placeholder="New York" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="state">State</label>
+                            <input type="text" id="state" name="state" placeholder="NY" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                        <label for="postal_code">Postal Code</label>
+                        <input type="text" id="postal_code" name="postal_code" placeholder="e.g., 10001 (US), 3044 (AU), SW1A 1AA (UK)" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <select id="country" name="country" required>
+                                <option value="">Select your country</option>
+                                <option value="US">🇺🇸 United States</option>
+                                <option value="CA">🇨🇦 Canada</option>
+                                <option value="GB">🇬🇧 United Kingdom</option>
+                                <option value="AU">🇦🇺 Australia</option>
+                                <option value="DE">🇩🇪 Germany</option>
+                                <option value="FR">🇫🇷 France</option>
+                                <option value="IT">🇮🇹 Italy</option>
+                                <option value="ES">🇪🇸 Spain</option>
+                                <option value="NL">🇳🇱 Netherlands</option>
+                                <option value="SE">🇸🇪 Sweden</option>
+                                <option value="NO">🇳🇴 Norway</option>
+                                <option value="DK">🇩🇰 Denmark</option>
+                                <option value="FI">🇫🇮 Finland</option>
+                                <option value="CH">🇨🇭 Switzerland</option>
+                                <option value="AT">🇦🇹 Austria</option>
+                                <option value="BE">🇧🇪 Belgium</option>
+                                <option value="IE">🇮🇪 Ireland</option>
+                                <option value="PT">🇵🇹 Portugal</option>
+                                <option value="PL">🇵🇱 Poland</option>
+                                <option value="CZ">🇨🇿 Czech Republic</option>
+                                <option value="HU">🇭🇺 Hungary</option>
+                                <option value="SK">🇸🇰 Slovakia</option>
+                                <option value="SI">🇸🇮 Slovenia</option>
+                                <option value="HR">🇭🇷 Croatia</option>
+                                <option value="RO">🇷🇴 Romania</option>
+                                <option value="BG">🇧🇬 Bulgaria</option>
+                                <option value="GR">🇬🇷 Greece</option>
+                                <option value="CY">🇨🇾 Cyprus</option>
+                                <option value="MT">🇲🇹 Malta</option>
+                                <option value="LU">🇱🇺 Luxembourg</option>
+                                <option value="EE">🇪🇪 Estonia</option>
+                                <option value="LV">🇱🇻 Latvia</option>
+                                <option value="LT">🇱🇹 Lithuania</option>
+                                <option value="JP">🇯🇵 Japan</option>
+                                <option value="KR">🇰🇷 South Korea</option>
+                                <option value="SG">🇸🇬 Singapore</option>
+                                <option value="HK">🇭🇰 Hong Kong</option>
+                                <option value="NZ">🇳🇿 New Zealand</option>
+                                <option value="BR">🇧🇷 Brazil</option>
+                                <option value="MX">🇲🇽 Mexico</option>
+                                <option value="AR">🇦🇷 Argentina</option>
+                                <option value="CL">🇨🇱 Chile</option>
+                                <option value="CO">🇨🇴 Colombia</option>
+                                <option value="PE">🇵🇪 Peru</option>
+                                <option value="ZA">🇿🇦 South Africa</option>
+                                <option value="IN">🇮🇳 India</option>
+                                <option value="CN">🇨🇳 China</option>
+                                <option value="RU">🇷🇺 Russia</option>
+                                <option value="TR">🇹🇷 Turkey</option>
+                                <option value="IL">🇮🇱 Israel</option>
+                                <option value="AE">🇦🇪 United Arab Emirates</option>
+                                <option value="SA">🇸🇦 Saudi Arabia</option>
+                                <option value="EG">🇪🇬 Egypt</option>
+                                <option value="NG">🇳🇬 Nigeria</option>
+                                <option value="KE">🇰🇪 Kenya</option>
+                                <option value="MA">🇲🇦 Morocco</option>
+                                <option value="TN">🇹🇳 Tunisia</option>
+                                <option value="TH">🇹🇭 Thailand</option>
+                                <option value="MY">🇲🇾 Malaysia</option>
+                                <option value="ID">🇮🇩 Indonesia</option>
+                                <option value="PH">🇵🇭 Philippines</option>
+                                <option value="VN">🇻🇳 Vietnam</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem;">
+                            <div id="card-element">
+                                <!-- Stripe Elements will create form elements here -->
+                            </div>
+                        </div>
+                        <div id="card-errors" role="alert"></div>
+                        <p style="color: #94a3b8; font-size: 0.875rem; margin: 0.5rem 0 0 0;">
+                            <i class="fas fa-lock" style="margin-right: 0.25rem;"></i>
+                            Your payment information is secure and encrypted
+                        </p>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            <i class="fas fa-rocket"></i> Start 7 Days Free Trial
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Modal -->
+    <div class="modal" id="cancelModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cancel Subscription</h3>
+                <span class="close" onclick="closeCancelModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>We're sorry to see you go! Your subscription will remain active until the end of your current billing period.</p>
+                <div class="form-group">
+                    <label for="cancelReason">Why are you canceling? (Optional)</label>
+                    <textarea id="cancelReason" rows="4" style="width: 100%; padding: 0.75rem; border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 8px; background: rgba(15, 23, 42, 0.8); color: #f1f5f9; font-size: 1rem;"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCancelModal()">Keep Subscription</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmCancellation()">
+                        <i class="fas fa-times"></i> Cancel Subscription
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let stripe;
+        let elements;
+        let cardElement;
+        let currentBillingCycle = 'yearly';
+        let currentPlan = null;
+        let currentSubscription = null;
+        
+        // Google Places Autocomplete functionality
+        let autocomplete;
+        let place;
+
+        // Postal code validation function (supports international formats)
+        function isValidPostalCode(postalCode) {
+            if (!postalCode || postalCode.trim().length === 0) {
+                return false;
+            }
+            
+            const trimmedCode = postalCode.trim();
+            
+            // Common postal code patterns:
+            // US: 5 digits (12345) or 5+4 digits (12345-6789)
+            // AU: 4 digits (3044)
+            // UK: Various formats (SW1A 1AA, M1 1AA, B33 8TH)
+            // CA: A1A 1A1 format
+            // DE: 5 digits (12345)
+            // FR: 5 digits (12345)
+            // etc.
+            
+            const patterns = [
+                /^\d{4}$/,           // 4 digits (Australia, some European countries)
+                /^\d{5}$/,           // 5 digits (US, Germany, France)
+                /^\d{5}-\d{4}$/,     // US ZIP+4 format
+                /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, // UK format
+                /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i,           // Canadian format
+                /^\d{3}\s?\d{2}$/,   // Swedish format
+                /^\d{4}\s?\d{3}$/,   // Dutch format
+                /^\d{6}$/,           // 6 digits (India, some others)
+                /^\d{7}$/,           // 7 digits (some countries)
+                /^\d{8}$/,           // 8 digits (some countries)
+            ];
+            
+            return patterns.some(pattern => pattern.test(trimmedCode));
+        }
+
+        // Load Google Places API dynamically
+        async function loadGooglePlacesAPI() {
+            try {
+                const response = await fetch('/api/subscription/google-places-key');
+                const data = await response.json();
+                
+                if (data.success && data.apiKey) {
+                    console.log('Loading Google Places API...');
+                    const script = document.createElement('script');
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${data.apiKey}&libraries=places&callback=initGooglePlaces`;
+                    script.async = true;
+                    script.defer = true;
+                    document.head.appendChild(script);
+                } else {
+                    console.warn('Google Places API key not available, address autocomplete disabled');
+                }
+            } catch (error) {
+                console.error('Failed to load Google Places API:', error);
+            }
+        }
+
+        // Initialize Google Places Autocomplete
+        function initGooglePlaces() {
+            console.log('Google Places API loaded');
+            initializeAddressAutocomplete();
+        }
+
+        // Initialize address autocomplete
+        function initializeAddressAutocomplete() {
+            const addressInput = document.getElementById('address');
+            
+            if (!addressInput) {
+                console.log('Address input not found');
+                return;
+            }
+
+            // Create autocomplete instance
+            autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: ['us', 'ca', 'gb', 'au', 'de', 'fr', 'it', 'es', 'nl', 'se', 'no', 'dk', 'fi', 'ch', 'at', 'be', 'ie', 'pt', 'pl', 'cz', 'hu', 'sk', 'si', 'hr', 'ro', 'bg', 'gr', 'cy', 'mt', 'lu', 'ee', 'lv', 'lt'] }
+            });
+
+            // Listen for place selection
+            autocomplete.addListener('place_changed', function() {
+                place = autocomplete.getPlace();
+                
+                if (!place.geometry) {
+                    console.log('No details available for input: ' + place.name);
+                    return;
+                }
+
+                // Fill form fields with place details
+                fillAddressFields(place);
+            });
+        }
+
+        // Fill address fields from Google Places result
+        function fillAddressFields(place) {
+            const components = place.address_components;
+            
+            // Reset fields
+            document.getElementById('city').value = '';
+            document.getElementById('state').value = '';
+            document.getElementById('postal_code').value = '';
+            document.getElementById('country').value = '';
+
+            // Parse address components
+            for (let i = 0; i < components.length; i++) {
+                const component = components[i];
+                const types = component.types;
+
+                if (types.includes('locality')) {
+                    document.getElementById('city').value = component.long_name;
+                } else if (types.includes('administrative_area_level_1')) {
+                    document.getElementById('state').value = component.short_name;
+                } else if (types.includes('postal_code')) {
+                    document.getElementById('postal_code').value = component.long_name;
+                } else if (types.includes('country')) {
+                    document.getElementById('country').value = component.short_name;
+                }
+            }
+
+            console.log('Address fields filled:', {
+                address: place.formatted_address,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                postal_code: document.getElementById('postal_code').value,
+                country: document.getElementById('country').value
+            });
+        }
+
+        // Load Stripe dynamically
+        function loadStripeDynamically() {
+            return new Promise((resolve, reject) => {
+                console.log('Creating dynamic Stripe script tag...');
+                const script = document.createElement('script');
+                script.src = 'https://js.stripe.com/v3/';
+                script.async = true;
+                script.onload = () => {
+                    console.log('Dynamic Stripe script loaded');
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.error('Dynamic Stripe script failed to load');
+                    reject(new Error('Dynamic Stripe loading failed'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // Wait for Stripe to load with timeout
+        function waitForStripe() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max wait
+                
+                const checkStripe = () => {
+                    attempts++;
+                    console.log(`Checking for Stripe (attempt ${attempts}/${maxAttempts})...`);
+                    
+                    if (typeof Stripe !== 'undefined') {
+                        console.log('Stripe loaded successfully');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        console.error('Stripe failed to load after 5 seconds');
+                        reject(new Error('Stripe script failed to load'));
+                    } else {
+                        setTimeout(checkStripe, 100);
+                    }
+                };
+                checkStripe();
+            });
+        }
+
+        function handleSignupSuccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const signup = urlParams.get('signup');
+            
+            if (signup === 'success') {
+                // Show success message
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.innerHTML = `
+                    <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #86efac; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Account created successfully!</strong> Now choose your plan to get started.
+                    </div>
+                `;
+                
+                const container = document.querySelector('.container');
+                container.insertBefore(successDiv, container.firstChild);
+                
+                // Remove the success parameter from URL
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+
+        // Initialize Stripe
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('DOM loaded, starting initialization...');
+            
+            // Handle signup success message
+            handleSignupSuccess();
+            
+            // Initialize plans first (doesn't need Stripe)
+            console.log('Initializing plans...');
+            initializePlans();
+            checkCurrentSubscription();
+            
+            // Load Google Places API
+            loadGooglePlacesAPI();
+            
+            // Wait for Stripe to load, then initialize
+            try {
+                console.log('Waiting for Stripe to load...');
+                await waitForStripe();
+                
+                console.log('Stripe is available, fetching key...');
+                // Fetch Stripe publishable key from server
+                const response = await fetch('/api/subscription/stripe-key');
+                const data = await response.json();
+                
+                console.log('Stripe key response:', data);
+                
+                if (data.success && data.publishableKey) {
+                    console.log('Initializing Stripe with key:', data.publishableKey.substring(0, 20) + '...');
+                    stripe = Stripe(data.publishableKey);
+                    elements = stripe.elements();
+                    console.log('Stripe initialized successfully');
+                } else {
+                    console.warn('Failed to get Stripe key from server:', data);
+                }
+            } catch (error) {
+                console.warn('Stripe initialization failed:', error);
+                
+                // Try to load Stripe dynamically as fallback
+                console.log('Attempting to load Stripe dynamically...');
+                try {
+                    await loadStripeDynamically();
+                    console.log('Stripe loaded dynamically, retrying initialization...');
+                    
+                    const response = await fetch('/api/subscription/stripe-key');
+                    const data = await response.json();
+                    
+                    if (data.success && data.publishableKey) {
+                        stripe = Stripe(data.publishableKey);
+                        elements = stripe.elements();
+                        console.log('Stripe initialized successfully via dynamic loading');
+                    }
+                } catch (dynamicError) {
+                    console.error('Dynamic Stripe loading also failed:', dynamicError);
+                }
+            }
+        });
+
+        // Initialize plans with default data
+        function initializePlans() {
+            console.log('Initializing plans...');
+            const plans = {
+                starter: {
+                    name: 'Starter',
+                    description: 'Perfect for small businesses and individuals',
+                    monthly: {
+                        pricing: {
+                            priceDisplay: '$49.90',
+                            savingsDisplay: null
+                        },
+                        features: [
+                            'Basic SEO analysis',
+                            'Keyword research',
+                            'Technical SEO audit'
+                        ],
+                        restrictions: []
+                    },
+                    yearly: {
+                        pricing: {
+                            priceDisplay: '$419.18',
+                            savingsDisplay: '$179.64'
+                        },
+                        features: [
+                            'Basic SEO analysis',
+                            'Keyword research',
+                            'Technical SEO audit',
+                            '30% savings with yearly billing'
+                        ],
+                        restrictions: []
+                    }
+                },
+                professional: {
+                    name: 'Professional',
+                    description: 'Ideal for growing businesses and agencies',
+                    monthly: {
+                        pricing: {
+                            priceDisplay: '$99.90',
+                            savingsDisplay: null
+                        },
+                        features: [
+                            '90-day content calendar',
+                            'AI Content Generation',
+                            'Advanced SEO Analysis',
+                            'WordPress Integration',
+                            'Priority support'
+                        ],
+                        restrictions: []
+                    },
+                    yearly: {
+                        pricing: {
+                            priceDisplay: '$839.16',
+                            savingsDisplay: '$359.64'
+                        },
+                        features: [
+                            '90-day content calendar',
+                            'AI Content Generation',
+                            'Advanced SEO Analysis',
+                            'WordPress Integration',
+                            'Priority support',
+                            '30% savings with yearly billing'
+                        ],
+                        restrictions: []
+                    }
+                },
+                enterprise: {
+                    name: 'Enterprise',
+                    description: 'Custom solutions for large organizations',
+                    monthly: {
+                        pricing: {
+                            priceDisplay: 'Custom',
+                            savingsDisplay: null
+                        },
+                        features: [
+                            'Unlimited content calendar',
+                            'Advanced AI Content Generation',
+                            'Comprehensive SEO Analysis',
+                            'Custom integrations',
+                            'Dedicated account manager',
+                            '24/7 priority support'
+                        ],
+                        restrictions: []
+                    },
+                    yearly: {
+                        pricing: {
+                            priceDisplay: 'Custom',
+                            savingsDisplay: 'Volume discounts available'
+                        },
+                        features: [
+                            'Unlimited content calendar',
+                            'Advanced AI Content Generation',
+                            'Comprehensive SEO Analysis',
+                            'Custom integrations',
+                            'Dedicated account manager',
+                            '24/7 priority support',
+                            'Volume discounts available'
+                        ],
+                        restrictions: []
+                    }
+                }
+            };
+
+            displayPlans(plans, null);
+        }
+
+        // Display plans
+        function displayPlans(plans, trialConfig) {
+            console.log('Displaying plans:', plans);
+            const plansGrid = document.getElementById('plansGrid');
+            const loading = document.getElementById('loading');
+            
+            // Hide loading spinner
+            loading.classList.remove('show');
+            
+            // Clear and populate plans grid
+            plansGrid.innerHTML = '';
+
+            Object.keys(plans).forEach(planKey => {
+                const plan = plans[planKey];
+                const planCard = createPlanCard(planKey, plan, trialConfig);
+                plansGrid.appendChild(planCard);
+            });
+            
+            console.log('Plans displayed successfully');
+        }
+
+        // Create plan card
+        function createPlanCard(planKey, plan, trialConfig) {
+            const card = document.createElement('div');
+            card.className = `plan-card ${planKey === 'professional' ? 'popular' : ''}`;
+            
+            const billingCycle = currentBillingCycle;
+            const planDetails = plan[billingCycle];
+            const pricing = planDetails.pricing;
+
+            card.innerHTML = `
+                <div class="plan-header">
+                    <div class="plan-name">${plan.name}</div>
+                    <div class="plan-description">${plan.description}</div>
+                    <div class="plan-price">
+                        ${pricing.priceDisplay}
+                        <span class="period">/${billingCycle === 'monthly' ? 'month' : 'year'}</span>
+                    </div>
+                    ${billingCycle === 'yearly' && pricing.savingsDisplay ? `
+                        <div class="plan-savings">Save ${pricing.savingsDisplay}</div>
+                    ` : ''}
+                </div>
+                
+                <div class="plan-features">
+                    <h4>What's included:</h4>
+                    <ul class="feature-list">
+                        ${planDetails.features.map(feature => `
+                            <li><i class="fas fa-check"></i> ${feature}</li>
+                        `).join('')}
+                        ${planDetails.restrictions.map(restriction => `
+                            <li class="restriction"><i class="fas fa-times"></i> ${restriction}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <button class="plan-button ${planKey === 'professional' ? 'primary' : 'secondary'}" 
+                        onclick="selectPlan('${planKey}', '${billingCycle}')">
+                    ${planKey === 'enterprise' ? 'Contact Us' : 'Start 7 Days Free Trial'}
+                </button>
+            `;
+
+            return card;
+        }
+
+        // Toggle billing cycle
+        function toggleBilling() {
+            const toggle = document.getElementById('billingToggle');
+            currentBillingCycle = currentBillingCycle === 'monthly' ? 'yearly' : 'monthly';
+            toggle.classList.toggle('active', currentBillingCycle === 'yearly');
+            
+            // Re-display plans with new billing cycle
+            initializePlans();
+        }
+
+        // Select plan
+        function selectPlan(planKey, billingCycle) {
+            if (planKey === 'enterprise') {
+                // Handle enterprise contact
+                window.location.href = 'mailto:sales@mozarex.com?subject=Enterprise Plan Inquiry';
+                return;
+            }
+
+            currentPlan = { planKey, billingCycle };
+            showPaymentModal();
+        }
+
+        // Update selected plan details in payment modal
+        function updateSelectedPlanDetails() {
+            if (!currentPlan) return;
+            
+            const planKey = currentPlan.planKey;
+            const billingCycle = currentPlan.billingCycle;
+            
+            // Get plan data from the hardcoded plans
+            const plans = {
+                starter: {
+                    monthly: { price: 49.99, features: ["30-day content calendar", "Basic SEO analysis", "Social media scheduling", "Email support"] },
+                    yearly: { price: 419.18, features: ["30-day content calendar", "Basic SEO analysis", "Social media scheduling", "Email support"], savingsDisplay: "$179.64" }
+                },
+                professional: {
+                    monthly: { price: 99.99, features: ["90-day content calendar", "AI Content Generation", "Advanced SEO Analysis", "WordPress Integration", "Priority support", "Custom reports"] },
+                    yearly: { price: 839.16, features: ["90-day content calendar", "AI Content Generation", "Advanced SEO Analysis", "WordPress Integration", "Priority support", "Custom reports"], savingsDisplay: "$359.64" }
+                },
+                enterprise: {
+                    monthly: { price: 199.99, features: ["Unlimited content calendar", "AI Content Generation", "Advanced SEO Analysis", "WordPress Integration", "White-label solution", "Dedicated account manager", "Custom integrations", "24/7 support"] },
+                    yearly: { price: 1679.16, features: ["Unlimited content calendar", "AI Content Generation", "Advanced SEO Analysis", "WordPress Integration", "White-label solution", "Dedicated account manager", "Custom integrations", "24/7 support"], savingsDisplay: "$719.64" }
+                }
+            };
+            
+            const plan = plans[planKey];
+            if (!plan) return;
+            
+            const selectedPlanDetails = document.getElementById('selectedPlanDetails');
+            
+            const planData = plan[billingCycle];
+            const planName = planKey.charAt(0).toUpperCase() + planKey.slice(1);
+            
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <h5 style="margin: 0; font-size: 1.1rem; color: #f1f5f9;">${planName} Plan</h5>
+                    <span style="font-size: 1.25rem; font-weight: 700; color: #667eea;">$${planData.price}</span>
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                    <span style="color: #94a3b8; font-size: 0.875rem;">Billing: </span>
+                    <span style="color: #f1f5f9; font-weight: 500;">${billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}</span>
+                    ${billingCycle === 'yearly' && planData.savingsDisplay ? 
+                        `<span style="color: #22c55e; font-size: 0.875rem; margin-left: 0.5rem;">(${planData.savingsDisplay} saved)</span>` : 
+                        ''}
+                </div>
+                <div style="border-top: 1px solid rgba(102, 126, 234, 0.2); padding-top: 0.75rem;">
+                    <h6 style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.5rem 0; text-transform: uppercase; letter-spacing: 0.05em;">Includes:</h6>
+                    <ul style="margin: 0; padding-left: 1.25rem; color: #f1f5f9;">
+            `;
+            
+            // Add key features (limit to 5 most important)
+            const features = planData.features.slice(0, 5);
+            features.forEach(feature => {
+                html += `<li style="margin-bottom: 0.25rem; font-size: 0.875rem;">${feature}</li>`;
+            });
+            
+            if (planData.features.length > 5) {
+                html += `<li style="margin-bottom: 0.25rem; font-size: 0.875rem; color: #94a3b8;">+ ${planData.features.length - 5} more features</li>`;
+            }
+            
+            html += `
+                    </ul>
+                </div>
+            `;
+            
+            selectedPlanDetails.innerHTML = html;
+        }
+
+        // Show payment modal
+        function showPaymentModal() {
+            console.log('showPaymentModal called');
+            console.log('stripe object:', stripe);
+            console.log('stripe type:', typeof stripe);
+            
+            if (!stripe) {
+                console.error('Stripe is not initialized');
+                alert('Payment system is not available. Please contact support.');
+                return;
+            }
+            
+            console.log('Opening payment modal...');
+            
+            // Update selected plan details
+            updateSelectedPlanDetails();
+            
+            const modal = document.getElementById('paymentModal');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+            
+            // Initialize Stripe Elements
+            if (!cardElement) {
+                console.log('Creating Stripe card element...');
+                cardElement = elements.create('card', {
+                    style: {
+                        base: {
+                            fontSize: '16px',
+                            color: '#f1f5f9',
+                            '::placeholder': {
+                                color: '#94a3b8',
+                            },
+                        },
+                        invalid: {
+                            color: '#ef4444',
+                        },
+                    },
+                    // Hide postal code from Stripe Elements since we have our own field
+                    hidePostalCode: true
+                });
+                cardElement.mount('#card-element');
+                
+                cardElement.on('change', function(event) {
+                    const displayError = document.getElementById('card-errors');
+                    if (event.error) {
+                        displayError.textContent = event.error.message;
+                    } else {
+                        displayError.textContent = '';
+                    }
+                });
+                console.log('Stripe card element created and mounted');
+            }
+        }
+
+        // Close payment modal
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Handle payment form submission
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitButton = document.getElementById('submitButton');
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const postalCode = document.getElementById('postal_code').value;
+            
+            // Validate postal code format (flexible for international formats)
+            if (!isValidPostalCode(postalCode)) {
+                alert('Please enter a valid postal code (e.g., 10001, 3044, SW1A 1AA)');
+                return;
+            }
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                // Create setup intent
+                const setupIntentResponse = await fetch('/api/subscription/setup-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, name })
+                });
+
+                const setupIntentData = await setupIntentResponse.json();
+                
+                if (!setupIntentData.success) {
+                    throw new Error(setupIntentData.error || 'Failed to create setup intent');
+                }
+
+                // Confirm card setup
+                const { setupIntent, error } = await stripe.confirmCardSetup(
+                    setupIntentData.client_secret,
+                    {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: name,
+                                email: email,
+                                address: {
+                                    line1: document.getElementById('address').value,
+                                    city: document.getElementById('city').value,
+                                    state: document.getElementById('state').value,
+                                    postal_code: document.getElementById('postal_code').value,
+                                    country: document.getElementById('country').value,
+                                },
+                            },
+                        }
+                    }
+                );
+
+                if (error) {
+                    console.error('Payment failed:', error);
+                    alert('Payment failed: ' + error.message);
+                } else {
+                    // Start trial with payment method
+                    await startTrial(setupIntent.payment_method);
+                }
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                alert('An error occurred. Please try again: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-rocket"></i> Start 7 Days Free Trial';
+            }
+        });
+
+
+        // Start trial
+        async function startTrial(paymentMethodId) {
+            try {
+                const response = await fetch('/api/subscription/trial/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        name: document.getElementById('name').value,
+                        plan: currentPlan.planKey,
+                        billingCycle: currentPlan.billingCycle,
+                        paymentMethodId: paymentMethodId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    closePaymentModal();
+                    
+                    // Show success message and redirect to login
+                    if (data.redirect_url) {
+                        alert('🎉 Trial started successfully! Redirecting you to login to set up your account...');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 2000);
+                    } else {
+                        alert('🎉 Trial started successfully! Check your email for confirmation. You have 7 days of free access.');
+                        checkCurrentSubscription();
+                    }
+                } else {
+                    alert('Failed to start trial: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error starting trial:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Check current subscription
+        async function checkCurrentSubscription() {
+            try {
+                const response = await fetch('/api/subscription/current');
+                const data = await response.json();
+                
+                if (data.success && data.subscription) {
+                    currentSubscription = data.subscription;
+                    displayCurrentSubscription(data.subscription);
+                } else {
+                    document.getElementById('currentSubscription').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking subscription:', error);
+            }
+        }
+
+        // Display current subscription
+        function displayCurrentSubscription(subscription) {
+            const currentSubDiv = document.getElementById('currentSubscription');
+            const detailsDiv = document.getElementById('subscriptionDetails');
+            
+            const trialEnd = subscription.trial_end ? new Date(subscription.trial_end).toLocaleDateString() : null;
+            const periodEnd = new Date(subscription.current_period_end).toLocaleDateString();
+            
+            detailsDiv.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Plan</div>
+                    <div class="detail-value">${subscription.plan}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">${subscription.status}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Billing Cycle</div>
+                    <div class="detail-value">${subscription.billing_cycle}</div>
+                </div>
+                ${trialEnd ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Trial Ends</div>
+                        <div class="detail-value">${trialEnd}</div>
+                    </div>
+                ` : ''}
+                <div class="detail-item">
+                    <div class="detail-label">Next Billing</div>
+                    <div class="detail-value">${periodEnd}</div>
+                </div>
+            `;
+            
+            currentSubDiv.style.display = 'block';
+        }
+
+        // Show cancel modal
+        function showCancelModal() {
+            const modal = document.getElementById('cancelModal');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+        }
+
+        // Close cancel modal
+        function closeCancelModal() {
+            const modal = document.getElementById('cancelModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Confirm cancellation
+        async function confirmCancellation() {
+            try {
+                const response = await fetch('/api/subscription/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        subscriptionId: currentSubscription.id,
+                        immediately: false
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    closeCancelModal();
+                    alert('Subscription canceled. You will continue to have access until the end of your billing period.');
+                    checkCurrentSubscription();
+                } else {
+                    alert('Failed to cancel subscription: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error canceling subscription:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Show manage subscription
+        function showManageSubscription() {
+            // This would typically redirect to a subscription management page
+            alert('Subscription management features coming soon!');
+        }
+    </script>
+</body>
+</html>

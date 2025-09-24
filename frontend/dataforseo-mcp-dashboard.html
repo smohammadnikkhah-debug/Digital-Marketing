@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataForSEO MCP Integration Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .mcp-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .mcp-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .mcp-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .mcp-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .mcp-status {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .mcp-status h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-active {
+            background-color: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+
+        .status-inactive {
+            background-color: #f44336;
+            box-shadow: 0 0 10px #f44336;
+        }
+
+        .mcp-tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mcp-tool-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .mcp-tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tool-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            color: #667eea;
+        }
+
+        .tool-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .tool-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .tool-form {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-mcp {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-mcp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-mcp:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .error {
+            color: #f44336;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+
+        .success {
+            color: #4CAF50;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .json-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .mcp-dashboard {
+                padding: 15px;
+            }
+
+            .mcp-header h1 {
+                font-size: 2rem;
+            }
+
+            .mcp-tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mcp-dashboard">
+        <div class="mcp-header">
+            <h1>🔗 DataForSEO MCP Integration</h1>
+            <p>Advanced SEO Analysis using Model Context Protocol</p>
+        </div>
+
+        <div class="mcp-status">
+            <h3>MCP Status</h3>
+            <div id="mcpStatus">
+                <span class="status-indicator status-inactive"></span>
+                <span style="color: white;">Checking MCP support...</span>
+            </div>
+        </div>
+
+        <div class="mcp-tools-grid">
+            <!-- Keyword Overview Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">🔍</div>
+                    <div class="tool-title">Keyword Overview</div>
+                </div>
+                <div class="tool-description">
+                    Get comprehensive keyword data including search volume, competition, CPC, and difficulty scores.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="keywordOverviewKeywords">Keywords (comma-separated)</label>
+                        <input type="text" id="keywordOverviewKeywords" placeholder="seo tools, digital marketing, content strategy">
+                    </div>
+                    <div class="form-group">
+                        <label for="keywordOverviewLocation">Location</label>
+                        <select id="keywordOverviewLocation">
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                        </select>
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeKeywords()">Analyze Keywords</button>
+                </div>
+                <div id="keywordOverviewResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- SERP Analysis Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">📊</div>
+                    <div class="tool-title">SERP Analysis</div>
+                </div>
+                <div class="tool-description">
+                    Analyze search engine results pages to understand competition and ranking opportunities.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="serpKeyword">Keyword</label>
+                        <input type="text" id="serpKeyword" placeholder="best seo tools">
+                    </div>
+                    <div class="form-group">
+                        <label for="serpLocation">Location</label>
+                        <select id="serpLocation">
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="serpDepth">Results Depth</label>
+                        <select id="serpDepth">
+                            <option value="10">10 results</option>
+                            <option value="20">20 results</option>
+                            <option value="50">50 results</option>
+                        </select>
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeSerp()">Analyze SERP</button>
+                </div>
+                <div id="serpResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- Competitor Analysis Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">🏆</div>
+                    <div class="tool-title">Competitor Analysis</div>
+                </div>
+                <div class="tool-description">
+                    Discover and analyze your competitors' SEO performance and keyword strategies.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="competitorTarget">Target Domain</label>
+                        <input type="text" id="competitorTarget" placeholder="example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="competitorLocation">Location</label>
+                        <select id="competitorLocation">
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                        </select>
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeCompetitors()">Analyze Competitors</button>
+                </div>
+                <div id="competitorResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- Backlink Analysis Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">🔗</div>
+                    <div class="tool-title">Backlink Analysis</div>
+                </div>
+                <div class="tool-description">
+                    Analyze backlink profiles to understand link building opportunities and authority.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="backlinkTarget">Target Domain</label>
+                        <input type="text" id="backlinkTarget" placeholder="example.com">
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeBacklinks()">Analyze Backlinks</button>
+                </div>
+                <div id="backlinkResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- On-Page Analysis Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">📄</div>
+                    <div class="tool-title">On-Page Analysis</div>
+                </div>
+                <div class="tool-description">
+                    Analyze on-page SEO elements including content, structure, and technical factors.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="onpageUrl">URL</label>
+                        <input type="url" id="onpageUrl" placeholder="https://example.com/page">
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeOnPage()">Analyze On-Page</button>
+                </div>
+                <div id="onpageResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- Keyword Suggestions Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">💡</div>
+                    <div class="tool-title">Keyword Suggestions</div>
+                </div>
+                <div class="tool-description">
+                    Discover new keyword opportunities and related search terms for content strategy.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="suggestionsKeyword">Seed Keyword</label>
+                        <input type="text" id="suggestionsKeyword" placeholder="digital marketing">
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestionsLocation">Location</label>
+                        <select id="suggestionsLocation">
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                        </select>
+                    </div>
+                    <button class="btn-mcp" onclick="getKeywordSuggestions()">Get Suggestions</button>
+                </div>
+                <div id="suggestionsResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- Domain Rank Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">📈</div>
+                    <div class="tool-title">Domain Rank Overview</div>
+                </div>
+                <div class="tool-description">
+                    Get comprehensive domain ranking data including traffic estimates and keyword counts.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="domainRankTarget">Target Domain</label>
+                        <input type="text" id="domainRankTarget" placeholder="example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="domainRankLocation">Location</label>
+                        <select id="domainRankLocation">
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                        </select>
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeDomainRank()">Analyze Domain Rank</button>
+                </div>
+                <div id="domainRankResults" class="results-container" style="display: none;"></div>
+            </div>
+
+            <!-- Comprehensive Website Analysis Tool -->
+            <div class="mcp-tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon">🌐</div>
+                    <div class="tool-title">Comprehensive Analysis</div>
+                </div>
+                <div class="tool-description">
+                    Run a complete website analysis combining on-page, backlinks, domain rank, and competitor data.
+                </div>
+                <div class="tool-form">
+                    <div class="form-group">
+                        <label for="comprehensiveUrl">Website URL</label>
+                        <input type="url" id="comprehensiveUrl" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="comprehensiveLocation">Location</label>
+                        <select id="comprehensiveLocation">
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                        </select>
+                    </div>
+                    <button class="btn-mcp" onclick="analyzeComprehensive()">Run Complete Analysis</button>
+                </div>
+                <div id="comprehensiveResults" class="results-container" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check MCP support on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkMCPSupport();
+        });
+
+        async function checkMCPSupport() {
+            try {
+                const response = await fetch('/api/dataforseo/mcp/support-check');
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('mcpStatus');
+                if (data.success && data.data.supported) {
+                    statusElement.innerHTML = `
+                        <span class="status-indicator status-active"></span>
+                        <span style="color: white;">MCP tools are available and ready to use</span>
+                    `;
+                } else {
+                    statusElement.innerHTML = `
+                        <span class="status-indicator status-inactive"></span>
+                        <span style="color: white;">MCP tools are not available in this environment</span>
+                    `;
+                }
+            } catch (error) {
+                const statusElement = document.getElementById('mcpStatus');
+                statusElement.innerHTML = `
+                    <span class="status-indicator status-inactive"></span>
+                    <span style="color: white;">Error checking MCP support: ${error.message}</span>
+                `;
+            }
+        }
+
+        async function analyzeKeywords() {
+            const keywords = document.getElementById('keywordOverviewKeywords').value;
+            const location = document.getElementById('keywordOverviewLocation').value;
+            const resultsDiv = document.getElementById('keywordOverviewResults');
+            
+            if (!keywords.trim()) {
+                showError(resultsDiv, 'Please enter keywords to analyze');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/keyword-overview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        keywords: keywords.split(',').map(k => k.trim()),
+                        location: location
+                    })
+                });
+                
+                const data = await response.json();
+                displayKeywordOverviewResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function analyzeSerp() {
+            const keyword = document.getElementById('serpKeyword').value;
+            const location = document.getElementById('serpLocation').value;
+            const depth = parseInt(document.getElementById('serpDepth').value);
+            const resultsDiv = document.getElementById('serpResults');
+            
+            if (!keyword.trim()) {
+                showError(resultsDiv, 'Please enter a keyword to analyze');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/serp-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        location: location,
+                        depth: depth
+                    })
+                });
+                
+                const data = await response.json();
+                displaySerpResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function analyzeCompetitors() {
+            const target = document.getElementById('competitorTarget').value;
+            const location = document.getElementById('competitorLocation').value;
+            const resultsDiv = document.getElementById('competitorResults');
+            
+            if (!target.trim()) {
+                showError(resultsDiv, 'Please enter a target domain');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/competitor-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target: target,
+                        location: location
+                    })
+                });
+                
+                const data = await response.json();
+                displayCompetitorResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function analyzeBacklinks() {
+            const target = document.getElementById('backlinkTarget').value;
+            const resultsDiv = document.getElementById('backlinkResults');
+            
+            if (!target.trim()) {
+                showError(resultsDiv, 'Please enter a target domain');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/backlink-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target: target })
+                });
+                
+                const data = await response.json();
+                displayBacklinkResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function analyzeOnPage() {
+            const url = document.getElementById('onpageUrl').value;
+            const resultsDiv = document.getElementById('onpageResults');
+            
+            if (!url.trim()) {
+                showError(resultsDiv, 'Please enter a URL to analyze');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/onpage-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                displayOnPageResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function getKeywordSuggestions() {
+            const keyword = document.getElementById('suggestionsKeyword').value;
+            const location = document.getElementById('suggestionsLocation').value;
+            const resultsDiv = document.getElementById('suggestionsResults');
+            
+            if (!keyword.trim()) {
+                showError(resultsDiv, 'Please enter a seed keyword');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/keyword-suggestions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        location: location
+                    })
+                });
+                
+                const data = await response.json();
+                displayKeywordSuggestionsResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function analyzeDomainRank() {
+            const target = document.getElementById('domainRankTarget').value;
+            const location = document.getElementById('domainRankLocation').value;
+            const resultsDiv = document.getElementById('domainRankResults');
+            
+            if (!target.trim()) {
+                showError(resultsDiv, 'Please enter a target domain');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/domain-rank', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target: target,
+                        location: location
+                    })
+                });
+                
+                const data = await response.json();
+                displayDomainRankResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        async function analyzeComprehensive() {
+            const url = document.getElementById('comprehensiveUrl').value;
+            const location = document.getElementById('comprehensiveLocation').value;
+            const resultsDiv = document.getElementById('comprehensiveResults');
+            
+            if (!url.trim()) {
+                showError(resultsDiv, 'Please enter a website URL');
+                return;
+            }
+
+            showLoading(resultsDiv);
+            
+            try {
+                const response = await fetch('/api/dataforseo/mcp/analyze-website', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        location: location
+                    })
+                });
+                
+                const data = await response.json();
+                displayComprehensiveResults(resultsDiv, data);
+            } catch (error) {
+                showError(resultsDiv, `Error: ${error.message}`);
+            }
+        }
+
+        function showLoading(div) {
+            div.style.display = 'block';
+            div.innerHTML = '<div class="loading">🔄 Analyzing data via MCP...</div>';
+        }
+
+        function showError(div, message) {
+            div.style.display = 'block';
+            div.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+
+        function showSuccess(div, message) {
+            div.style.display = 'block';
+            div.innerHTML = `<div class="success">✅ ${message}</div>`;
+        }
+
+        function displayKeywordOverviewResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get keyword overview');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = '<div class="success">Keyword Overview Analysis Complete</div>';
+            
+            if (result.summary) {
+                html += `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${result.summary.totalKeywords}</div>
+                            <div class="stat-label">Keywords</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.round(result.summary.avgSearchVolume).toLocaleString()}</div>
+                            <div class="stat-label">Avg Search Volume</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">$${result.summary.avgCPC.toFixed(2)}</div>
+                            <div class="stat-label">Avg CPC</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.round(result.summary.avgDifficulty)}</div>
+                            <div class="stat-label">Avg Difficulty</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.keywords && result.keywords.length > 0) {
+                html += `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Keyword</th>
+                                <th>Search Volume</th>
+                                <th>Competition</th>
+                                <th>CPC</th>
+                                <th>Difficulty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.keywords.map(k => `
+                                <tr>
+                                    <td>${k.keyword}</td>
+                                    <td>${k.searchVolume.toLocaleString()}</td>
+                                    <td>${k.competition}</td>
+                                    <td>$${k.cpc.toFixed(2)}</td>
+                                    <td>${k.difficulty}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displaySerpResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get SERP analysis');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = `<div class="success">SERP Analysis Complete for "${result.keyword}"</div>`;
+            
+            if (result.totalResults) {
+                html += `<p><strong>Total Results:</strong> ${result.totalResults.toLocaleString()}</p>`;
+            }
+
+            if (result.items && result.items.length > 0) {
+                html += `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Title</th>
+                                <th>Domain</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.items.map(item => `
+                                <tr>
+                                    <td>${item.position}</td>
+                                    <td>${item.title}</td>
+                                    <td>${item.domain}</td>
+                                    <td>${item.description}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            if (result.relatedKeywords && result.relatedKeywords.length > 0) {
+                html += `
+                    <h4>Related Keywords:</h4>
+                    <p>${result.relatedKeywords.join(', ')}</p>
+                `;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displayCompetitorResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get competitor analysis');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = '<div class="success">Competitor Analysis Complete</div>';
+            
+            if (result.summary) {
+                html += `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${result.summary.totalCompetitors}</div>
+                            <div class="stat-label">Competitors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.round(result.summary.avgRank)}</div>
+                            <div class="stat-label">Avg Rank</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.round(result.summary.totalOrganicTraffic).toLocaleString()}</div>
+                            <div class="stat-label">Total Organic Traffic</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.round(result.summary.totalPaidTraffic).toLocaleString()}</div>
+                            <div class="stat-label">Total Paid Traffic</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.competitors && result.competitors.length > 0) {
+                html += `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>Rank</th>
+                                <th>Organic Traffic</th>
+                                <th>Organic Keywords</th>
+                                <th>Paid Traffic</th>
+                                <th>Visibility</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.competitors.map(c => `
+                                <tr>
+                                    <td>${c.domain}</td>
+                                    <td>${c.rank}</td>
+                                    <td>${c.organicTraffic.toLocaleString()}</td>
+                                    <td>${c.organicKeywords.toLocaleString()}</td>
+                                    <td>${c.paidTraffic.toLocaleString()}</td>
+                                    <td>${c.visibility.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displayBacklinkResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get backlink analysis');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = `<div class="success">Backlink Analysis Complete for ${result.target}</div>`;
+            
+            html += `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${result.totalBacklinks.toLocaleString()}</div>
+                        <div class="stat-label">Total Backlinks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.referringDomains.toLocaleString()}</div>
+                        <div class="stat-label">Referring Domains</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.referringMainDomains.toLocaleString()}</div>
+                        <div class="stat-label">Main Domains</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.rank}</div>
+                        <div class="stat-label">Domain Rank</div>
+                    </div>
+                </div>
+            `;
+
+            if (result.brokenBacklinks > 0 || result.brokenPages > 0) {
+                html += `
+                    <div class="error">
+                        <strong>Issues Found:</strong><br>
+                        Broken Backlinks: ${result.brokenBacklinks}<br>
+                        Broken Pages: ${result.brokenPages}
+                    </div>
+                `;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displayOnPageResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get on-page analysis');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = `<div class="success">On-Page Analysis Complete for ${result.url}</div>`;
+            
+            html += `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${result.wordCount}</div>
+                        <div class="stat-label">Word Count</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.headings.length}</div>
+                        <div class="stat-label">Headings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.images.length}</div>
+                        <div class="stat-label">Images</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.links.length}</div>
+                        <div class="stat-label">Links</div>
+                    </div>
+                </div>
+            `;
+
+            if (result.title) {
+                html += `<p><strong>Title:</strong> ${result.title}</p>`;
+            }
+
+            if (result.description) {
+                html += `<p><strong>Description:</strong> ${result.description}</p>`;
+            }
+
+            if (result.loadTime > 0) {
+                html += `<p><strong>Load Time:</strong> ${result.loadTime}ms</p>`;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displayKeywordSuggestionsResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get keyword suggestions');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = '<div class="success">Keyword Suggestions Generated</div>';
+            
+            if (result.summary) {
+                html += `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${result.summary.totalSuggestions}</div>
+                            <div class="stat-label">Suggestions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${Math.round(result.summary.avgSearchVolume).toLocaleString()}</div>
+                            <div class="stat-label">Avg Search Volume</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">$${result.summary.avgCPC.toFixed(2)}</div>
+                            <div class="stat-label">Avg CPC</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.suggestions && result.suggestions.length > 0) {
+                html += `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Keyword</th>
+                                <th>Search Volume</th>
+                                <th>Competition</th>
+                                <th>CPC</th>
+                                <th>Difficulty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${result.suggestions.map(s => `
+                                <tr>
+                                    <td>${s.keyword}</td>
+                                    <td>${s.searchVolume.toLocaleString()}</td>
+                                    <td>${s.competition}</td>
+                                    <td>$${s.cpc.toFixed(2)}</td>
+                                    <td>${s.difficulty}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displayDomainRankResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get domain rank overview');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = `<div class="success">Domain Rank Analysis Complete for ${result.target}</div>`;
+            
+            html += `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${result.rank}</div>
+                        <div class="stat-label">Domain Rank</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.totalTraffic.toLocaleString()}</div>
+                        <div class="stat-label">Total Traffic</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.organicTraffic.toLocaleString()}</div>
+                        <div class="stat-label">Organic Traffic</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${result.organicKeywords.toLocaleString()}</div>
+                        <div class="stat-label">Organic Keywords</div>
+                    </div>
+                </div>
+            `;
+
+            if (result.paidTraffic > 0) {
+                html += `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${result.paidTraffic.toLocaleString()}</div>
+                            <div class="stat-label">Paid Traffic</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.paidKeywords.toLocaleString()}</div>
+                            <div class="stat-label">Paid Keywords</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.organicVisibility.toFixed(2)}</div>
+                            <div class="stat-label">Organic Visibility</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.paidVisibility.toFixed(2)}</div>
+                            <div class="stat-label">Paid Visibility</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = html;
+        }
+
+        function displayComprehensiveResults(div, data) {
+            if (!data.success) {
+                showError(div, data.error || 'Failed to get comprehensive analysis');
+                return;
+            }
+
+            const result = data.data;
+            if (result.error) {
+                showError(div, result.error);
+                return;
+            }
+
+            let html = `<div class="success">Comprehensive Analysis Complete for ${result.url}</div>`;
+            
+            html += `<p><strong>Domain:</strong> ${result.domain}</p>`;
+            html += `<p><strong>Analysis Time:</strong> ${new Date(result.timestamp).toLocaleString()}</p>`;
+
+            // Display each analysis section
+            Object.keys(result.analysis).forEach(section => {
+                const analysis = result.analysis[section];
+                if (analysis.error) {
+                    html += `<div class="error"><strong>${section}:</strong> ${analysis.error}</div>`;
+                } else {
+                    html += `<div class="success"><strong>${section}:</strong> Analysis completed successfully</div>`;
+                }
+            });
+
+            // Show detailed results in a collapsible format
+            html += `
+                <details style="margin-top: 15px;">
+                    <summary style="cursor: pointer; font-weight: bold;">View Detailed Results</summary>
+                    <div class="json-display">${JSON.stringify(result, null, 2)}</div>
+                </details>
+            `;
+
+            div.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+
+

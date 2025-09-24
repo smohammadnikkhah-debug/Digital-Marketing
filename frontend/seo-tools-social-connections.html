@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Connections</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="components/top-navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: #334155;
+            color: white;
+            border-left-color: #667eea;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: transparent;
+        }
+
+        .top-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #94a3b8;
+            font-size: 1.125rem;
+        }
+
+        /* Social Platforms Grid */
+        .platforms-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .platform-card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .platform-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .platform-card.connected {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .platform-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .platform-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .platform-icon.twitter {
+            background: #1da1f2;
+        }
+
+        .platform-icon.facebook {
+            background: #1877f2;
+        }
+
+        .platform-icon.instagram {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+
+        .platform-icon.tiktok {
+            background: #000000;
+        }
+
+        .platform-icon.linkedin {
+            background: #0077b5;
+        }
+
+        .platform-icon.youtube {
+            background: #ff0000;
+        }
+
+        .platform-icon.pinterest {
+            background: #bd081c;
+        }
+
+        .platform-info {
+            flex: 1;
+        }
+
+        .platform-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .platform-status {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .platform-status.connected {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .platform-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* AI Chat Section */
+        .ai-chat-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .ai-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .chat-container {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: transparent;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+        }
+
+        .message-content {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-right: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .chat-input input::placeholder {
+            color: #94a3b8;
+        }
+
+        .chat-input button {
+            padding: 0.75rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #94a3b8;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .platforms-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .platform-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex</span>
+                </a>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/blog" class="nav-item" data-page="blog-generator">
+                        <i class="fas fa-pen-fancy"></i>
+                        Blog Generator
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Connections</div>
+                    <a href="/seo-tools-social-connections" class="nav-item active" data-page="social-connections">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/">Home</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="currentPage">Social Connections</span>
+                    </nav>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item">
+                                <div class="user-info">
+                                    <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                                    <div class="user-details">
+                                        <h4>Mozarex User</h4>
+                                        <div class="user-role">Admin</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/user-settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item danger" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">🔗 Social Connections</h1>
+                    <p class="page-subtitle">Connect and manage your social media accounts for automated posting</p>
+                </div>
+
+                <!-- Social Platforms -->
+                <div class="platforms-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-share-alt"></i>
+                        Connected Social Platforms
+                    </h2>
+                    <div class="platforms-grid" id="platformsGrid">
+                        <!-- Platforms will be populated here -->
+                    </div>
+                </div>
+
+                <!-- AI Chat -->
+                <div class="ai-chat-section">
+                    <div class="ai-header">
+                        <div class="ai-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="ai-title">Social Media Assistant</div>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message ai">
+                                <div class="message-avatar">AI</div>
+                                <div class="message-content">
+                                    Hello! I'm your Social Media assistant. I can help you connect accounts, optimize posting schedules, and manage your social media strategy. Ask me anything about social media management!
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="chatInput" placeholder="Ask about social media management..." />
+                            <button id="sendBtn" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="components/top-navbar.js"></script>
+    <script>
+        let chatHistory = [];
+        const platforms = [
+            {
+                name: 'Twitter',
+                icon: 'fab fa-twitter',
+                class: 'twitter',
+                connected: false,
+                description: 'Connect your Twitter account for automated posting'
+            },
+            {
+                name: 'Facebook',
+                icon: 'fab fa-facebook',
+                class: 'facebook',
+                connected: false,
+                description: 'Connect your Facebook page for automated posting'
+            },
+            {
+                name: 'Instagram',
+                icon: 'fab fa-instagram',
+                class: 'instagram',
+                connected: false,
+                description: 'Connect your Instagram account for automated posting'
+            },
+            {
+                name: 'TikTok',
+                icon: 'fab fa-tiktok',
+                class: 'tiktok',
+                connected: false,
+                description: 'Connect your TikTok account for automated posting'
+            },
+            {
+                name: 'LinkedIn',
+                icon: 'fab fa-linkedin',
+                class: 'linkedin',
+                connected: false,
+                description: 'Connect your LinkedIn profile for automated posting'
+            },
+            {
+                name: 'YouTube',
+                icon: 'fab fa-youtube',
+                class: 'youtube',
+                connected: false,
+                description: 'Connect your YouTube channel for automated posting'
+            },
+            {
+                name: 'Pinterest',
+                icon: 'fab fa-pinterest',
+                class: 'pinterest',
+                connected: false,
+                description: 'Connect your Pinterest account for automated posting'
+            }
+        ];
+
+        // Load chat history and initialize platforms
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedChatHistory = localStorage.getItem('socialConnectionsChatHistory');
+            if (savedChatHistory) {
+                chatHistory = JSON.parse(savedChatHistory);
+                displayChatHistory();
+            }
+            
+            displayPlatforms();
+        });
+
+        function displayPlatforms() {
+            const platformsGrid = document.getElementById('platformsGrid');
+            platformsGrid.innerHTML = '';
+
+            platforms.forEach(platform => {
+                const platformCard = document.createElement('div');
+                platformCard.className = `platform-card ${platform.connected ? 'connected' : ''}`;
+                
+                platformCard.innerHTML = `
+                    <div class="platform-header">
+                        <div class="platform-icon ${platform.class}">
+                            <i class="${platform.icon}"></i>
+                        </div>
+                        <div class="platform-info">
+                            <div class="platform-name">${platform.name}</div>
+                            <div class="platform-status ${platform.connected ? 'connected' : ''}">
+                                ${platform.connected ? 'Connected' : 'Not Connected'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="platform-actions">
+                        ${platform.connected ? 
+                            `<button class="btn btn-danger btn-small" onclick="disconnectPlatform('${platform.name}')">
+                                <i class="fas fa-unlink"></i>
+                                Disconnect
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="managePlatform('${platform.name}')">
+                                <i class="fas fa-cog"></i>
+                                Manage
+                            </button>` :
+                            `<button class="btn btn-primary btn-small" onclick="connectPlatform('${platform.name}')">
+                                <i class="fas fa-link"></i>
+                                Connect
+                            </button>`
+                        }
+                    </div>
+                `;
+                
+                platformsGrid.appendChild(platformCard);
+            });
+        }
+
+        function connectPlatform(platformName) {
+            addMessageToChat('user', `How do I connect my ${platformName} account?`);
+            
+            // Simulate connection process
+            const platform = platforms.find(p => p.name === platformName);
+            if (platform) {
+                platform.connected = true;
+                displayPlatforms();
+            }
+        }
+
+        function disconnectPlatform(platformName) {
+            addMessageToChat('user', `How do I disconnect my ${platformName} account?`);
+            
+            // Simulate disconnection process
+            const platform = platforms.find(p => p.name === platformName);
+            if (platform) {
+                platform.connected = false;
+                displayPlatforms();
+            }
+        }
+
+        function managePlatform(platformName) {
+            addMessageToChat('user', `Show me the settings and options for my ${platformName} account`);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+
+            // Disable send button
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch('/api/ai/mozarex-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        section: 'social-connections',
+                        analysis: null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessageToChat('ai', data.response);
+                } else {
+                    addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
+        function addMessageToChat(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? 'U' : 'AI';
+            messageElement.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Save to chat history
+            chatHistory.push({ sender, message, timestamp: new Date().toISOString() });
+            localStorage.setItem('socialConnectionsChatHistory', JSON.stringify(chatHistory));
+        }
+
+        function displayChatHistory() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+
+            chatHistory.forEach(chat => {
+                addMessageToChat(chat.sender, chat.message);
+            });
+        }
+
+        // Allow Enter key to send message
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
+
+

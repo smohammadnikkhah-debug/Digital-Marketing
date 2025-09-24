@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mozarex AI - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: #334155;
+            color: white;
+            border-left-color: #667eea;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f8fafc;
+        }
+
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb i {
+            font-size: 0.75rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        /* Domains Table */
+        .domains-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .add-domain-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-domain-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .domains-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .domains-table th {
+            background: #f8fafc;
+            padding: 1rem 2rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+        }
+
+        .domains-table td {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #64748b;
+        }
+
+        .domains-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .domain-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .domain-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-analyzed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-review {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-review:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .domains-table-container {
+                overflow-x: auto;
+            }
+
+            .domains-table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-main" class="nav-item active">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/seo-tools-content-calendar" class="nav-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                    <a href="/seo-tools-social-connections" class="nav-item">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/">Home</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Dashboard</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">Website Analysis Dashboard</h1>
+                    <p class="page-subtitle">Manage and review your analyzed websites</p>
+                </div>
+
+                <!-- Domains Table -->
+                <div class="domains-table-container">
+                    <div class="table-header">
+                        <h2 class="table-title">Analyzed Websites</h2>
+                        <a href="/onboarding-simple" class="add-domain-btn">
+                            <i class="fas fa-plus"></i>
+                            Add New Website
+                        </a>
+                    </div>
+                    
+                    <div id="domainsTableContent">
+                        <!-- Table will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let analyzedDomains = [];
+
+        // Load analyzed domains from localStorage
+        function loadAnalyzedDomains() {
+            const domains = JSON.parse(localStorage.getItem('analyzedDomains') || '[]');
+            analyzedDomains = domains;
+            renderDomainsTable();
+        }
+
+        // Render the domains table
+        function renderDomainsTable() {
+            const container = document.getElementById('domainsTableContent');
+            
+            if (analyzedDomains.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-globe"></i>
+                        <h3>No websites analyzed yet</h3>
+                        <p>Start by analyzing your first website to see detailed SEO insights.</p>
+                        <a href="/onboarding-simple" class="add-domain-btn">
+                            <i class="fas fa-plus"></i>
+                            Analyze Your First Website
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="domains-table">
+                    <thead>
+                        <tr>
+                            <th>Website</th>
+                            <th>Status</th>
+                            <th>Last Analyzed</th>
+                            <th>SEO Score</th>
+                            <th>Issues Found</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${analyzedDomains.map(domain => `
+                            <tr>
+                                <td>
+                                    <div class="domain-name">${domain.domain}</div>
+                                </td>
+                                <td>
+                                    <span class="domain-status status-analyzed">
+                                        <i class="fas fa-check-circle"></i>
+                                        Analyzed
+                                    </span>
+                                </td>
+                                <td>${new Date(domain.lastAnalyzed).toLocaleDateString()}</td>
+                                <td>${domain.seoScore || 'N/A'}</td>
+                                <td>${domain.issuesCount || 0}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-review" onclick="reviewDomain('${domain.domain}')">
+                                            <i class="fas fa-eye"></i>
+                                            Review
+                                        </button>
+                                        <button class="btn-delete" onclick="deleteDomain('${domain.domain}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Review a domain
+        function reviewDomain(domain) {
+            // Store the selected domain in localStorage for the Technical SEO page to read
+            localStorage.setItem('selectedDomain', domain);
+            window.location.href = '/seo-tools-technical';
+        }
+
+        // Delete a domain
+        function deleteDomain(domain) {
+            if (confirm(`Are you sure you want to delete analysis for ${domain}?`)) {
+                analyzedDomains = analyzedDomains.filter(d => d.domain !== domain);
+                localStorage.setItem('analyzedDomains', JSON.stringify(analyzedDomains));
+                renderDomainsTable();
+            }
+        }
+
+        // Check if we have a new analysis to add
+        function checkForNewAnalysis() {
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            const analysisData = localStorage.getItem('analysisData');
+            
+            if (lastAnalyzedDomain && analysisData) {
+                const analysis = JSON.parse(analysisData);
+                
+                // Check if this domain is already in our list
+                const existingDomain = analyzedDomains.find(d => d.domain === lastAnalyzedDomain);
+                
+                if (!existingDomain) {
+                    // Add new domain to the list
+                    const newDomain = {
+                        domain: lastAnalyzedDomain,
+                        lastAnalyzed: new Date().toISOString(),
+                        seoScore: analysis.score || 85,
+                        issuesCount: analysis.recommendations?.length || 0
+                    };
+                    
+                    analyzedDomains.unshift(newDomain);
+                    localStorage.setItem('analyzedDomains', JSON.stringify(analyzedDomains));
+                    renderDomainsTable();
+                }
+            }
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAnalyzedDomains();
+            checkForNewAnalysis();
+        });
+    </script>
+</body>
+</html>

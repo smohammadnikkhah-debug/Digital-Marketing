@@ -1,0 +1,2674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Blog Generator - Mozarex AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="components/top-navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 0 1rem;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            padding: 0 1rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        /* Blog Generation Workflow */
+        .workflow-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .workflow-step {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step.active {
+            border-color: #667eea;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .workflow-step.completed {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .step-number.completed {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .step-description {
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        /* Domain Input */
+        .domain-input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .domain-input {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .domain-input::placeholder {
+            color: #64748b;
+        }
+
+        .domain-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Blog Content Styles */
+        .blog-body {
+            margin: 1.5rem 0;
+        }
+
+        .content-editor {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .content-header h4 {
+            margin: 0;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: flex-end;
+        }
+
+        .content-display {
+            max-height: none !important;
+            overflow-y: visible !important;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .content-text {
+            color: #e2e8f0;
+            line-height: 1.6;
+            font-size: 1rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        .content-text h1, .content-text h2, .content-text h3 {
+            color: #ffffff;
+            margin: 1.5rem 0 1rem 0;
+            font-weight: 600;
+        }
+
+        .content-text p {
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+
+        .content-text ul, .content-text ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: #e2e8f0;
+        }
+
+        .content-text li {
+            margin-bottom: 0.5rem;
+        }
+
+        .content-text strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .content-text blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #cbd5e1;
+            font-style: italic;
+        }
+
+        @keyframes slideIn {
+                from { 
+                    opacity: 0;
+                    transform: translateY(-20px) scale(0.95);
+                }
+                to { 
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            /* Click outside to close */
+            .modal-backdrop {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: -1;
+            }
+
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .modal-content {
+                    width: 95%;
+                    margin: 1rem;
+                    max-height: 95vh;
+                }
+                
+                .modal-header {
+                    padding: 1.5rem 1.5rem 1rem 1.5rem;
+                }
+                
+                .modal-body {
+                    padding: 1.5rem;
+                }
+                
+                .modal-actions {
+                    flex-direction: column;
+                }
+                
+                .modal-actions .btn {
+                    width: 100%;
+                }
+            }
+
+        .content-text[contenteditable="true"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #4f46e5;
+            padding: 10px;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .content-text[contenteditable="true"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .blog-meta {
+            display: flex;
+            gap: 1rem;
+            margin: 0.75rem 0;
+            flex-wrap: wrap;
+        }
+
+        .blog-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .blog-meta i {
+            font-size: 0.75rem;
+        }
+
+        /* Notification Animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Services and Keywords Display */
+        .services-keywords-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .info-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Blog Cards */
+        .blogs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .blog-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            position: relative;
+        }
+
+        .blog-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .blog-content {
+            padding: 1.5rem;
+        }
+
+        .blog-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: white;
+            line-height: 1.4;
+        }
+
+        .blog-excerpt {
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .blog-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .blog-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* AI Suggestions */
+        .ai-content-generation {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .ai-content-generation h3 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .generation-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-item i {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-top: 0.2rem;
+        }
+
+        .feature-item strong {
+            color: #ffffff;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-item div div {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Loading container styles */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 12px;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        .loading-spinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #60a5fa;
+            margin-bottom: 1rem;
+        }
+        
+        .loading-spinner h3 {
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loading-spinner p {
+            color: #e5e7eb;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .loading-steps .step {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #d1d5db;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .loading-steps .step.active {
+            background: #3b82f6;
+            color: white;
+            opacity: 1;
+            animation: pulse 2s infinite;
+            border: 1px solid #2563eb;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Coming Soon Popup Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Real-time Feedback */
+        .seo-score {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .seo-analysis {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .seo-analysis p {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .score-value {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .score-excellent { color: #10b981; }
+        .score-good { color: #f59e0b; }
+        .score-poor { color: #ef4444; }
+
+        /* CMS Integration */
+        .cms-integration {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .cms-options {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .cms-option {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cms-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .cms-option:active {
+            transform: scale(0.98);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .cms-option i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #667eea;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .services-keywords-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .blogs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .domain-input-container {
+                flex-direction: column;
+            }
+
+            .cms-options {
+                flex-direction: column;
+            }
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Edit Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.hidden {
+            display: none !important;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: white;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Overview</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+                        <i class="fas fa-cogs"></i>
+                        <span>Technical SEO</span>
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+                        <i class="fas fa-key"></i>
+                        <span>Keywords</span>
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                        <i class="fas fa-users"></i>
+                        <span>Competitors</span>
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+                        <i class="fas fa-link"></i>
+                        <span>Backlinks</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/blog" class="nav-item active" data-page="blog-generator">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>Blog Generator</span>
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Content Calendar</span>
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Connections</div>
+                    <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Social Connections</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/">Home</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="currentPage">Blog Generator</span>
+                    </nav>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item">
+                                <div class="user-info">
+                                    <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                                    <div class="user-details">
+                                        <h4>Mozarex User</h4>
+                                        <div class="user-role">Admin</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/user-settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item danger" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-header">
+                <h1 class="page-title">AI Blog Generator</h1>
+                <p class="page-subtitle">Generate SEO-optimized blog content based on your website's services and keywords</p>
+            </div>
+
+            <div class="workflow-container">
+                <!-- Step 1: Domain Analysis -->
+                <div class="workflow-step active" id="step1">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div>
+                            <div class="step-title">Analyze Your Website</div>
+                            <div class="step-description">Enter your domain to analyze services and extract keywords</div>
+                        </div>
+                    </div>
+                    <div class="domain-input-container">
+                        <input type="text" id="domainInput" class="domain-input" placeholder="Enter your domain (e.g., example.com)" value="mozarex.com">
+                        <button class="btn btn-primary" onclick="analyzeWebsite()">
+                            <i class="fas fa-search"></i> Analyze
+                        </button>
+                    </div>
+                    <div id="analysisResults" class="hidden">
+                        <div class="services-keywords-grid">
+                            <div class="info-card">
+                                <h3><i class="fas fa-briefcase"></i> Key Services</h3>
+                                <div class="tag-list" id="servicesList">
+                                    <!-- Services will be populated here -->
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <h3><i class="fas fa-tags"></i> Main Keywords</h3>
+                                <div class="tag-list" id="keywordsList">
+                                    <!-- Keywords will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateBlogs()">
+                            <i class="fas fa-magic"></i> Generate Blog Post
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Blog Generation -->
+                <div class="workflow-step hidden" id="step2">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div>
+                            <div class="step-title">AI Blog Generation</div>
+                            <div class="step-description">Our AI is creating a personalized blog post for your business</div>
+                        </div>
+                    </div>
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Generating a comprehensive blog post based on your services and keywords...</span>
+                    </div>
+                </div>
+
+                <!-- Step 3: Blog Results -->
+                <div class="workflow-step hidden" id="step3">
+                    <div class="step-header">
+                        <div class="step-number completed">✓</div>
+                        <div>
+                            <div class="step-title">Your AI-Generated Blogs</div>
+                            <div class="step-description">Review, edit, and customize your blog posts</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Content Generation -->
+                    <div class="ai-content-generation">
+                        <h3><i class="fas fa-robot"></i> AI Content Generation</h3>
+                        <p style="color: #94a3b8; margin-bottom: 1.5rem;">Generate high-quality, SEO-optimized blog content using advanced AI technology</p>
+                        
+                        <div class="generation-features">
+                            <div class="feature-item">
+                                <i class="fas fa-magic"></i>
+                                <div>
+                                    <strong>AI-Powered Writing</strong>
+                                    <div>Advanced GPT-4 technology for natural, engaging content</div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-search"></i>
+                                <div>
+                                    <strong>SEO Optimization</strong>
+                                    <div>Automatic keyword integration and SEO best practices</div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-target"></i>
+                                <div>
+                                    <strong>Audience Targeting</strong>
+                                    <div>Content tailored to your specific target audience</div>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-palette"></i>
+                                <div>
+                                    <strong>Customizable Tone</strong>
+                                    <div>Professional, casual, or technical writing styles</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Real-time SEO Score -->
+                    <div class="seo-score">
+                        <i class="fas fa-chart-line"></i>
+                        <span>SEO Score:</span>
+                        <span class="score-value" id="seoScore">0/100</span>
+                        <span id="seoGrade">-</span>
+                    </div>
+                    <div class="seo-analysis" id="seoAnalysis" style="display: none;">
+                        <p id="seoAnalysisText"></p>
+                    </div>
+
+                    <!-- Blog Cards -->
+                    <div class="blogs-grid" id="blogsGrid">
+                        <!-- Blog posts will be generated here -->
+                    </div>
+
+                    <!-- CMS Integration -->
+                    <div class="cms-integration">
+                        <h3><i class="fas fa-paper-plane"></i> Publish to Your Platform</h3>
+                        <p style="color: #94a3b8; margin-bottom: 1rem;">Choose your preferred platform to publish your blogs</p>
+                        <div class="cms-options">
+                            <div class="cms-option" onclick="publishToCMS('wordpress')">
+                                <i class="fab fa-wordpress"></i>
+                                <div>WordPress</div>
+                            </div>
+                            <div class="cms-option" onclick="publishToCMS('shopify')">
+                                <i class="fab fa-shopify"></i>
+                                <div>Shopify</div>
+                            </div>
+                            <div class="cms-option" onclick="publishToCMS('export')">
+                                <i class="fas fa-download"></i>
+                                <div>Export HTML</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay hidden" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Blog Post</h2>
+                <button class="close-btn" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="editTitle" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Excerpt</label>
+                    <textarea id="editExcerpt" class="form-textarea" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea id="editContent" class="form-textarea" rows="10" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Featured Image URL</label>
+                    <input type="url" id="editImage" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AI Image Suggestion</label>
+                    <button type="button" class="btn btn-secondary" onclick="generateAIImage(event)">
+                        <i class="fas fa-image"></i> Generate AI Image
+                    </button>
+                </div>
+                <div class="form-group" id="imagePreviewContainer" style="display: none;">
+                    <label class="form-label">Generated Image Preview</label>
+                    <img id="imagePreview" src="" alt="Generated Image" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- WordPress Publishing Modal -->
+    <div id="wordpressModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fab fa-wordpress"></i> Publish to WordPress</h3>
+                <span class="close" onclick="closeWordPressModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="wordpress-settings">
+                    <div class="form-group">
+                        <label for="wpSiteUrl">WordPress Site URL:</label>
+                        <input type="url" id="wpSiteUrl" placeholder="https://yoursite.com" required>
+                        <small>Include https:// and don't add /wp-admin</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wpUsername">Username:</label>
+                        <input type="text" id="wpUsername" placeholder="Your WordPress username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wpPassword">Application Password:</label>
+                        <input type="password" id="wpPassword" placeholder="WordPress Application Password" required>
+                        <small><a href="#" onclick="showApplicationPasswordHelp()">How to create Application Password?</a></small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wpPublishStatus">Publish Status:</label>
+                        <select id="wpPublishStatus">
+                            <option value="draft">Draft</option>
+                            <option value="publish">Publish Now</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wpCategories">Categories (comma-separated):</label>
+                        <input type="text" id="wpCategories" placeholder="SEO, Digital Marketing">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wpTags">Tags (comma-separated):</label>
+                        <input type="text" id="wpTags" placeholder="seo, marketing, blog">
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-outline" onclick="testWordPressConnection()">
+                        <i class="fas fa-plug"></i> Test Connection
+                    </button>
+                    <button class="btn btn-primary" onclick="publishToWordPress()" id="publishBtn">
+                        <i class="fab fa-wordpress"></i> Publish to WordPress
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeWordPressModal()">Cancel</button>
+                </div>
+                
+                <div id="wordpressStatus" class="status-message" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Password Help Modal -->
+    <div id="appPasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> WordPress Application Password</h3>
+                <span class="close" onclick="closeAppPasswordModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h4>How to create an Application Password:</h4>
+                <ol>
+                    <li>Log into your WordPress admin dashboard</li>
+                    <li>Go to <strong>Users → Your Profile</strong></li>
+                    <li>Scroll down to <strong>"Application Passwords"</strong> section</li>
+                    <li>Enter a name like "Mozarex AI Blog Publisher"</li>
+                    <li>Click <strong>"Add New Application Password"</strong></li>
+                    <li>Copy the generated password (you won't see it again!)</li>
+                    <li>Use this password in the WordPress settings above</li>
+                </ol>
+                
+                <div class="alert alert-info">
+                    <strong>Note:</strong> Application passwords are more secure than using your regular WordPress password. They can be revoked anytime from your profile settings.
+                </div>
+                
+                <button class="btn btn-primary" onclick="closeAppPasswordModal()">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="components/top-navbar.js"></script>
+    <script src="components/navigation-utils.js"></script>
+    <script>
+        let currentBlogs = [];
+        let currentBlogIndex = -1;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-analyze if domain is already provided
+            if (document.getElementById('domainInput').value) {
+                analyzeWebsite();
+            }
+            
+            // Initialize top navbar
+            initializeTopNavbar();
+            
+            // Auto-load existing blog content
+            autoLoadExistingContent();
+        });
+
+        async function analyzeWebsite() {
+            const domain = document.getElementById('domainInput').value.trim();
+            if (!domain) {
+                showNotification('Please enter a domain', 'error');
+                return;
+            }
+
+            const step1 = document.getElementById('step1');
+            const analysisResults = document.getElementById('analysisResults');
+            
+            // Show loading state
+            step1.querySelector('.btn-primary').innerHTML = '<div class="spinner"></div> Analyzing...';
+            step1.querySelector('.btn-primary').disabled = true;
+
+            try {
+                // Simulate API call - replace with actual endpoint
+                const response = await fetch(`/api/blog/analyze/${domain}`);
+                const data = await response.json();
+
+                // Populate services and keywords
+                populateServicesAndKeywords(data.services, data.keywords);
+                
+                // Show results
+                analysisResults.classList.remove('hidden');
+                step1.classList.add('completed');
+                step1.querySelector('.step-number').classList.add('completed');
+                step1.querySelector('.step-number').textContent = '✓';
+                
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                // Fallback to sample data
+                populateServicesAndKeywords(
+                    ['SEO Services', 'Digital Marketing', 'Website Optimization', 'Content Strategy'],
+                    ['seo services', 'digital marketing', 'website optimization', 'content marketing', 'online presence']
+                );
+                analysisResults.classList.remove('hidden');
+                step1.classList.add('completed');
+                step1.querySelector('.step-number').classList.add('completed');
+                step1.querySelector('.step-number').textContent = '✓';
+            }
+
+            // Reset button
+            step1.querySelector('.btn-primary').innerHTML = '<i class="fas fa-search"></i> Analyze';
+            step1.querySelector('.btn-primary').disabled = false;
+        }
+
+        function populateServicesAndKeywords(services, keywords) {
+            const servicesList = document.getElementById('servicesList');
+            const keywordsList = document.getElementById('keywordsList');
+
+            servicesList.innerHTML = services.map(service => 
+                `<span class="tag">${service}</span>`
+            ).join('');
+
+            keywordsList.innerHTML = keywords.map(keyword => 
+                `<span class="tag">${keyword}</span>`
+            ).join('');
+        }
+
+        // Auto-load existing blog content
+        async function autoLoadExistingContent() {
+            try {
+                const domain = document.getElementById('domainInput')?.value || 'default';
+                console.log('[AutoLoad] Checking for existing content for domain:', domain);
+                
+                const response = await fetch(`/api/blog/latest/${domain}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success && result.blog) {
+                        console.log('[AutoLoad] Found existing content:', result.blog.title);
+                        currentBlogs = [result.blog];
+                        displayBlogs(currentBlogs);
+                        
+                        // Show step 3 with existing content
+                        document.getElementById('step2').classList.remove('hidden');
+                        document.getElementById('step2').classList.add('active');
+                        document.getElementById('step3').classList.remove('hidden');
+                        document.getElementById('step3').classList.add('active');
+                        
+                        // Update SEO score
+                        if (result.blog.seoScore && result.blog.seoGrade) {
+                            updateSEOScore({
+                                score: result.blog.seoScore,
+                                grade: result.blog.seoGrade,
+                                analysis: result.blog.seoAnalysis
+                            });
+                        }
+                        
+                        showNotification('Existing blog content loaded!', 'success');
+                    } else {
+                        console.log('[AutoLoad] No existing content found');
+                    }
+                } else {
+                    console.log('[AutoLoad] Failed to fetch existing content:', response.status);
+                }
+                
+            } catch (error) {
+                console.error('[AutoLoad] Error loading existing content:', error);
+                // Don't show error to user as this is automatic
+            }
+        }
+
+        async function generateBlogs() {
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+            
+            // Show step 2
+            step2.classList.remove('hidden');
+            step2.classList.add('active');
+            
+            // Show loading state in step 3
+            step3.classList.remove('hidden');
+            step3.classList.add('active');
+            
+            const blogsGrid = document.getElementById('blogsGrid');
+            if (blogsGrid) {
+                blogsGrid.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <h3>🚀 Generating Your Blog Content...</h3>
+                            <p>Creating personalized, SEO-optimized content based on your website analysis.</p>
+                            <div class="loading-steps">
+                                <div class="step active">📊 Analyzing your website</div>
+                                <div class="step">🎯 Identifying target keywords</div>
+                                <div class="step">🤖 Generating content with AI</div>
+                                <div class="step">✨ Optimizing for SEO</div>
+                                <div class="step">📈 Calculating performance metrics</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Animate the loading steps
+                const steps = blogsGrid.querySelectorAll('.step');
+                let currentStep = 0;
+                
+                const stepInterval = setInterval(() => {
+                    if (currentStep < steps.length) {
+                        steps.forEach(step => step.classList.remove('active'));
+                        steps[currentStep].classList.add('active');
+                        currentStep++;
+                    } else {
+                        currentStep = 0;
+                    }
+                }, 2000);
+                
+                window.generateStepInterval = stepInterval;
+            }
+            
+            try {
+                // Get data from analysis results
+                const domain = document.getElementById('domainInput').value || 'default';
+                const servicesList = document.getElementById('servicesList');
+                const keywordsList = document.getElementById('keywordsList');
+                
+                // Extract services and keywords from the analysis results
+                const services = Array.from(servicesList.querySelectorAll('.tag')).map(tag => tag.textContent.trim());
+                const keywords = Array.from(keywordsList.querySelectorAll('.tag')).map(tag => tag.textContent.trim());
+                
+                // Use the first service as the main topic, or fallback to digital marketing
+                const topic = services.length > 0 ? services[0] : 'Digital Marketing Strategies';
+                
+                console.log('[GenerateBlogs] Using data:', { domain, topic, keywords, services });
+                
+                // Generate blog content
+                const response = await fetch('/api/blog/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        domain: domain,
+                        topic: topic,
+                        keywords: keywords.length > 0 ? keywords : ['digital marketing', 'SEO', 'content strategy'],
+                        targetAudience: 'business owners',
+                        tone: 'professional',
+                        wordCount: 500,
+                        includeImages: false,
+                        seoOptimized: true
+                    })
+                });
+                
+                const responseData = await response.json();
+                if (responseData.success) {
+                    // Clear the loading interval
+                    if (window.generateStepInterval) {
+                        clearInterval(window.generateStepInterval);
+                        window.generateStepInterval = null;
+                    }
+                    
+                    currentBlogs = [responseData.blog];
+                    
+                    // Show cache status
+                    if (responseData.blog.cached) {
+                        showNotification('Blog loaded from cache - OpenAI costs saved!', 'success');
+                    } else {
+                        showNotification('✨ New blog generated with AI!', 'success');
+                    }
+                } else {
+                    throw new Error(responseData.error || 'Failed to generate blog');
+                }
+                
+            } catch (error) {
+                console.error('Blog generation failed:', error);
+                
+                // Clear the loading interval
+                if (window.generateStepInterval) {
+                    clearInterval(window.generateStepInterval);
+                    window.generateStepInterval = null;
+                }
+                
+                // Fallback to sample blogs
+                currentBlogs = generateSampleBlogs();
+                showNotification('Using sample content due to generation error', 'warning');
+            }
+
+            // Hide step 2, show step 3
+            setTimeout(() => {
+                step2.classList.add('hidden');
+                step2.classList.remove('active');
+                step3.classList.remove('hidden');
+                step3.classList.add('active');
+                displayBlogs(currentBlogs);
+                
+                // Update SEO score with AI analysis if available
+                if (currentBlogs.length > 0 && currentBlogs[0].seoScore && currentBlogs[0].seoGrade) {
+                    updateSEOScore({
+                        score: currentBlogs[0].seoScore,
+                        grade: currentBlogs[0].seoGrade,
+                        analysis: currentBlogs[0].seoAnalysis
+                    });
+                } else {
+                    updateSEOScore();
+                }
+            }, 3000);
+        }
+
+        function generateSampleBlogs() {
+            const domain = document.getElementById('domainInput').value;
+            return [
+                {
+                    id: 1,
+                    title: `The Complete Guide to Digital Marketing Success with ${domain}`,
+                    excerpt: "Discover comprehensive digital marketing strategies, tools, and best practices that drive real results. Learn how to build a successful online presence and grow your business.",
+                    content: `Digital marketing success requires a strategic approach that combines multiple channels and tactics. In this comprehensive guide, we'll explore the essential elements of a successful digital marketing strategy.
+
+<h2>Understanding Digital Marketing Fundamentals</h2>
+
+<p>Digital marketing encompasses all marketing efforts that use an electronic device or the internet. Businesses leverage digital channels such as search engines, social media, email, and websites to connect with current and prospective customers.</p>
+
+<p><strong>Key Components of Digital Marketing:</strong></p>
+<ul>
+<li>Search Engine Optimization (SEO)</li>
+<li>Content Marketing</li>
+<li>Social Media Marketing</li>
+<li>Pay-Per-Click (PPC) Advertising</li>
+<li>Email Marketing</li>
+<li>Affiliate Marketing</li>
+<li>Marketing Automation</li>
+</ul>
+
+<h2>Building Your Digital Marketing Strategy</h2>
+
+<p>Creating an effective digital marketing strategy requires careful planning and execution. Here's a step-by-step approach:</p>
+
+<h3>1. Define Your Goals and Objectives</h3>
+<p>Start by establishing clear, measurable goals. Whether you want to increase brand awareness, generate leads, or boost sales, your objectives should be specific, measurable, achievable, relevant, and time-bound (SMART).</p>
+
+<h3>2. Identify Your Target Audience</h3>
+<p>Understanding your audience is crucial for creating relevant content and choosing the right channels. Develop detailed buyer personas that include demographics, interests, pain points, and online behavior.</p>
+
+<h3>3. Choose Your Marketing Channels</h3>
+<p>Select channels that align with your audience's preferences and your business goals. Consider your budget, resources, and the channels where your audience is most active.</p>
+
+<h2>Essential Digital Marketing Tools</h2>
+
+<p>To execute your strategy effectively, you'll need the right tools:</p>
+
+<ul>
+<li><strong>Analytics Tools:</strong> Google Analytics, Adobe Analytics</li>
+<li><strong>SEO Tools:</strong> SEMrush, Ahrefs, Moz</li>
+<li><strong>Social Media Management:</strong> Hootsuite, Buffer, Sprout Social</li>
+<li><strong>Email Marketing:</strong> Mailchimp, Constant Contact, HubSpot</li>
+<li><strong>Content Management:</strong> WordPress, Drupal, Contentful</li>
+</ul>
+
+<h2>Measuring Success and ROI</h2>
+
+<p>Tracking your digital marketing performance is essential for optimization. Key metrics to monitor include:</p>
+
+<ul>
+<li>Website traffic and user engagement</li>
+<li>Conversion rates and lead generation</li>
+<li>Social media engagement and reach</li>
+<li>Email open and click-through rates</li>
+<li>Return on investment (ROI)</li>
+</ul>
+
+<h2>Best Practices for Digital Marketing Success</h2>
+
+<p>To maximize your digital marketing efforts, follow these best practices:</p>
+
+<ol>
+<li><strong>Create High-Quality Content:</strong> Focus on providing value to your audience through informative, engaging content.</li>
+<li><strong>Optimize for Mobile:</strong> Ensure all your digital assets are mobile-friendly and responsive.</li>
+<li><strong>Maintain Consistency:</strong> Keep your brand voice and messaging consistent across all channels.</li>
+<li><strong>Stay Updated:</strong> Digital marketing trends change rapidly, so stay informed about new technologies and strategies.</li>
+<li><strong>Test and Iterate:</strong> Continuously test different approaches and optimize based on results.</li>
+</ol>
+
+<h2>Conclusion</h2>
+
+<p>Digital marketing success requires a strategic approach, consistent execution, and continuous optimization. By understanding your audience, choosing the right channels, and measuring your results, you can build a successful digital marketing strategy that drives real business growth.</p>
+
+<p>Ready to take your digital marketing to the next level? Start by implementing these strategies and tools to create a comprehensive approach that delivers measurable results for your business.</p>`,
+                    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=300&fit=crop",
+                    wordCount: 1250,
+                    seoScore: 92,
+                    seoGrade: 'Excellent',
+                    keywords: ['digital marketing', 'SEO', 'content strategy', 'online presence', 'marketing automation'],
+                    targetAudience: 'business owners',
+                    tone: 'professional',
+                    includeImages: true,
+                    seoOptimized: true,
+                    readabilityScore: 88
+                }
+            ];
+        }
+
+        function displayBlogs(blogs) {
+            const blogsGrid = document.getElementById('blogsGrid');
+            
+            // Ensure blogs is an array
+            if (!Array.isArray(blogs)) {
+                console.error('Blogs data is not an array:', blogs);
+                blogs = [];
+            }
+            
+            blogsGrid.innerHTML = blogs.map(blog => `
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <img src="${blog.image}" alt="${blog.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                            <i class="fas fa-image" style="font-size: 3rem; color: rgba(255,255,255,0.5);"></i>
+                        </div>
+                    </div>
+                    <div class="blog-content">
+                        <div class="blog-header">
+                            <h3 class="blog-title" contenteditable="true" data-field="title">${blog.title}</h3>
+                            <p class="blog-excerpt" contenteditable="true" data-field="excerpt">${blog.excerpt}</p>
+                            <div class="blog-meta">
+                                <span><i class="fas fa-clock"></i> ${blog.wordCount} words</span>
+                                <span><i class="fas fa-star"></i> ${blog.seoScore}/100 SEO (${blog.seoGrade || 'Good'})</span>
+                                <span><i class="fas fa-eye"></i> ${blog.readabilityScore || 85}/100 Readability</span>
+                            </div>
+                        </div>
+                        
+                        <div class="blog-body">
+                            <div class="content-editor">
+                                <div class="content-header">
+                                    <h4>Full Content</h4>
+                                    <div class="content-actions">
+                                        <button class="btn btn-sm btn-outline" onclick="toggleViewMode(${blog.id})">
+                                            <i class="fas fa-eye"></i> <span id="viewToggle${blog.id}">View</span>
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="regenerateContent(${blog.id})">
+                                            <i class="fas fa-sync"></i> Regenerate
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" onclick="testRegenerate(${blog.id})" style="margin-left: 5px;">
+                                            <i class="fas fa-bug"></i> Test
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="content-display" id="content-${blog.id}">
+                                    <div class="content-text" contenteditable="false">${formatBlogContent(blog.content)}</div>
+                                </div>
+                                <div class="content-editor" id="contentEditor${blog.id}" style="display: none;">
+                                    <textarea id="editContent${blog.id}" placeholder="Edit your blog content...">${blog.content}</textarea>
+                                    <div class="editor-actions">
+                                        <button class="btn btn-sm btn-success" onclick="saveContent(${blog.id})">
+                                            <i class="fas fa-save"></i> Save
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" onclick="cancelEdit(${blog.id})">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="blog-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="editBlog(${blog.id})">
+                                <i class="fas fa-edit"></i> Full Edit
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="showWordPressPublish(${blog.id})">
+                                <i class="fab fa-wordpress"></i> Publish to WordPress
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="saveBlogChanges(${blog.id})">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editBlog(blogId) {
+            const blog = currentBlogs.find(b => b.id === blogId);
+            if (!blog) return;
+
+            currentBlogIndex = currentBlogs.findIndex(b => b.id === blogId);
+            
+            document.getElementById('editTitle').value = blog.title;
+            document.getElementById('editExcerpt').value = blog.excerpt;
+            document.getElementById('editContent').value = blog.content;
+            document.getElementById('editImage').value = blog.image;
+            
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            currentBlogIndex = -1;
+        }
+
+        function toggleEditMode(blogId) {
+            const contentDiv = document.getElementById(`content-${blogId}`);
+            const contentText = contentDiv.querySelector('.content-text');
+            const isEditable = contentText.contentEditable === 'true';
+            
+            contentText.contentEditable = !isEditable;
+            contentText.style.border = !isEditable ? '2px solid #4f46e5' : 'none';
+            contentText.style.padding = !isEditable ? '10px' : '0';
+            contentText.style.borderRadius = !isEditable ? '8px' : '0';
+            
+            const button = contentDiv.parentElement.querySelector('button');
+            button.innerHTML = !isEditable ? '<i class="fas fa-eye"></i> View Mode' : '<i class="fas fa-edit"></i> Edit Mode';
+        }
+
+        function saveBlogChanges(blogId) {
+            const blog = currentBlogs.find(b => b.id === blogId);
+            if (!blog) return;
+
+            // Get updated content from contenteditable elements
+            const titleElement = document.querySelector(`[data-field="title"]`);
+            const excerptElement = document.querySelector(`[data-field="excerpt"]`);
+            const contentElement = document.querySelector(`#content-${blogId} .content-text`);
+
+            if (titleElement) blog.title = titleElement.textContent;
+            if (excerptElement) blog.excerpt = excerptElement.textContent;
+            if (contentElement) blog.content = contentElement.textContent;
+
+            // Update word count
+            blog.wordCount = blog.content.split(' ').length;
+
+            // Show success message
+            showNotification('Blog changes saved successfully!', 'success');
+            
+            // Recalculate SEO score
+            updateSEOScore();
+        }
+
+        function regenerateBlog(blogId) {
+            if (confirm('Are you sure you want to regenerate this blog post? This will create new content based on your services and keywords.')) {
+                // Show loading state
+                const button = event.target.closest('.btn');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<div class="spinner"></div> Regenerating...';
+                button.disabled = true;
+
+                // Simulate regeneration
+                setTimeout(() => {
+                    const blogIndex = currentBlogs.findIndex(b => b.id === blogId);
+                    if (blogIndex !== -1) {
+                        // Generate new content
+                        const newBlog = generateSampleBlogs()[blogIndex];
+                        newBlog.id = blogId;
+                        currentBlogs[blogIndex] = newBlog;
+                        displayBlogs(currentBlogs);
+                        updateSEOScore();
+                    }
+                    
+                    button.innerHTML = originalHTML;
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+
+        async function generateAIImage(event) {
+            const button = event.target;
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<div class="spinner"></div> Generating...';
+            button.disabled = true;
+
+            try {
+                const title = document.getElementById('editTitle').value;
+                const description = document.getElementById('editContent').value || title;
+                
+                if (!title) {
+                    showNotification('Please enter a title first', 'error');
+                    return;
+                }
+                
+                const response = await fetch('/api/blog/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description.substring(0, 200) // Limit description length
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to generate image');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update the image URL field
+                    document.getElementById('editImage').value = result.imageUrl;
+                    
+                    // Show the image preview
+                    const imagePreview = document.getElementById('imagePreview');
+                    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+                    if (imagePreview && imagePreviewContainer) {
+                        imagePreview.src = result.imageUrl;
+                        imagePreviewContainer.style.display = 'block';
+                    }
+                    
+                    showNotification(result.message, 'success');
+                } else {
+                    throw new Error(result.error || 'Failed to generate image');
+                }
+                
+            } catch (error) {
+                console.error('Error generating image:', error);
+                showNotification('Failed to generate image: ' + error.message, 'error');
+            } finally {
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+            }
+        }
+
+        function updateSEOScore() {
+            if (currentBlogs.length === 0) return;
+            
+            const avgScore = Math.round(currentBlogs.reduce((sum, blog) => sum + blog.seoScore, 0) / currentBlogs.length);
+            const scoreElement = document.getElementById('seoScore');
+            const scoreContainer = scoreElement.parentElement;
+            
+            scoreElement.textContent = `${avgScore}/100`;
+            scoreElement.className = 'score-value';
+            
+            if (avgScore >= 80) {
+                scoreElement.classList.add('score-excellent');
+                scoreContainer.lastElementChild.textContent = 'Excellent';
+            } else if (avgScore >= 60) {
+                scoreElement.classList.add('score-good');
+                scoreContainer.lastElementChild.textContent = 'Good';
+            } else {
+                scoreElement.classList.add('score-poor');
+                scoreContainer.lastElementChild.textContent = 'Needs Improvement';
+            }
+        }
+
+        function publishToCMS(platform) {
+            if (currentBlogs.length === 0) {
+                showNotification('Please generate blogs first', 'error');
+                return;
+            }
+
+            switch (platform) {
+                case 'wordpress':
+                    showComingSoonPopup('WordPress Publishing', 'Direct WordPress publishing integration is coming soon! For now, you can copy your content and paste it into your WordPress editor.');
+                    break;
+                case 'shopify':
+                    showComingSoonPopup('Shopify Publishing', 'Shopify blog publishing integration is coming soon! Your blogs will be automatically published to your Shopify store blog.');
+                    break;
+                case 'export':
+                    showComingSoonPopup('HTML Export', 'HTML export functionality is coming soon! You\'ll be able to download your blogs as HTML files for easy integration.');
+                    break;
+            }
+        }
+
+        function exportBlogs() {
+            // Ensure currentBlogs is an array
+            if (!Array.isArray(currentBlogs)) {
+                console.error('Current blogs data is not an array:', currentBlogs);
+                currentBlogs = [];
+            }
+            
+            const blogsHTML = currentBlogs.map(blog => `
+                <article>
+                    <h1>${blog.title}</h1>
+                    <img src="${blog.image}" alt="${blog.title}">
+                    <p><em>${blog.excerpt}</em></p>
+                    <div>${blog.content}</div>
+                </article>
+            `).join('');
+
+            const fullHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Generated Blogs</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                        article { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid #eee; }
+                        h1 { color: #333; }
+                        img { max-width: 100%; height: auto; }
+                    </style>
+                </head>
+                <body>
+                    ${blogsHTML}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([fullHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated-blogs.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Handle form submission
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (currentBlogIndex === -1) return;
+
+            // Update blog data
+            currentBlogs[currentBlogIndex].title = document.getElementById('editTitle').value;
+            currentBlogs[currentBlogIndex].excerpt = document.getElementById('editExcerpt').value;
+            currentBlogs[currentBlogIndex].content = document.getElementById('editContent').value;
+            currentBlogs[currentBlogIndex].image = document.getElementById('editImage').value;
+            
+            // Update word count and recalculate SEO score
+            currentBlogs[currentBlogIndex].wordCount = document.getElementById('editContent').value.split(' ').length;
+            currentBlogs[currentBlogIndex].seoScore = Math.min(100, Math.max(60, Math.floor(Math.random() * 40) + 60));
+            
+            // Refresh display
+            displayBlogs(currentBlogs);
+            updateSEOScore();
+            
+            closeEditModal();
+            showNotification('Blog post updated successfully!', 'success');
+        });
+
+        // Real-time SEO score updates
+        document.getElementById('editContent').addEventListener('input', function() {
+            if (currentBlogIndex !== -1) {
+                const wordCount = this.value.split(' ').length;
+                const seoScore = Math.min(100, Math.max(60, Math.floor(Math.random() * 40) + 60));
+                
+                // Update the score in real-time (you could make this more sophisticated)
+                setTimeout(() => {
+                    updateSEOScore();
+                }, 500);
+            }
+        });
+
+        function formatBlogContent(content) {
+            // Return the full content without any truncation
+            if (!content) return '';
+            
+            // If content is already HTML, return as is
+            if (content.includes('<h2>') || content.includes('<p>') || content.includes('<ul>')) {
+                return content;
+            }
+            
+            // Convert plain text to basic HTML formatting
+            let formatted = content
+                .replace(/\n\n/g, '</p><p>')  // Double line breaks to paragraphs
+                .replace(/\n/g, '<br>')       // Single line breaks to <br>
+                .replace(/^/, '<p>')          // Start with paragraph
+                .replace(/$/, '</p>');        // End with paragraph
+            
+            return formatted;
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Add styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Coming Soon Popup Function
+        function showComingSoonPopup(title, message) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'coming-soon-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+            `;
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.className = 'coming-soon-modal';
+            modal.style.cssText = `
+                background: white;
+                border-radius: 16px;
+                padding: 2rem;
+                max-width: 500px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease;
+                position: relative;
+            `;
+            
+            modal.innerHTML = `
+                <div class="coming-soon-icon" style="font-size: 4rem; margin-bottom: 1rem; color: #667eea;">
+                    🚀
+                </div>
+                <h2 style="color: #1f2937; margin-bottom: 1rem; font-size: 1.5rem;">${title}</h2>
+                <p style="color: #6b7280; margin-bottom: 2rem; line-height: 1.6;">${message}</p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button onclick="closeComingSoonPopup()" style="
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        padding: 0.75rem 2rem;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='#5a67d8'" onmouseout="this.style.background='#667eea'">
+                        Got it!
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Add click outside to close
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    closeComingSoonPopup();
+                }
+            });
+            
+            // Add escape key to close
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeComingSoonPopup();
+                }
+            });
+            
+            // Store overlay reference for cleanup
+            window.currentComingSoonOverlay = overlay;
+        }
+        
+        function closeComingSoonPopup() {
+            const overlay = window.currentComingSoonOverlay;
+            if (overlay) {
+                overlay.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                    window.currentComingSoonOverlay = null;
+                }, 300);
+            }
+        }
+
+        // WordPress Integration Functions
+        let currentBlogForWordPress = null;
+
+        function showWordPressPublish(blogId) {
+            const blog = currentBlogs.find(b => b.id === blogId);
+            if (!blog) {
+                showNotification('Blog not found', 'error');
+                return;
+            }
+            
+            showComingSoonPopup('WordPress Publishing', 'Direct WordPress publishing integration is coming soon! For now, you can copy your content and paste it into your WordPress editor.');
+        }
+
+        function closeWordPressModal() {
+            const modal = document.getElementById('wordpressModal');
+            modal.classList.remove('show');
+            
+            // Remove event listeners
+            modal.removeEventListener('click', handleModalBackdropClick);
+            document.removeEventListener('keydown', handleEscapeKey);
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+            currentBlogForWordPress = null;
+        }
+
+        function handleModalBackdropClick(event) {
+            if (event.target === event.currentTarget) {
+                closeWordPressModal();
+            }
+        }
+
+        function handleEscapeKey(event) {
+            if (event.key === 'Escape') {
+                closeWordPressModal();
+            }
+        }
+
+        function showApplicationPasswordHelp() {
+            const modal = document.getElementById('appPasswordModal');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
+            
+            // Add click outside to close
+            modal.addEventListener('click', handleAppPasswordModalBackdropClick);
+            // Add escape key to close
+            document.addEventListener('keydown', handleAppPasswordEscapeKey);
+        }
+
+        function closeAppPasswordModal() {
+            const modal = document.getElementById('appPasswordModal');
+            modal.classList.remove('show');
+            
+            // Remove event listeners
+            modal.removeEventListener('click', handleAppPasswordModalBackdropClick);
+            document.removeEventListener('keydown', handleAppPasswordEscapeKey);
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        function handleAppPasswordModalBackdropClick(event) {
+            if (event.target === event.currentTarget) {
+                closeAppPasswordModal();
+            }
+        }
+
+        function handleAppPasswordEscapeKey(event) {
+            if (event.key === 'Escape') {
+                closeAppPasswordModal();
+            }
+        }
+
+        function loadWordPressSettings() {
+            // Load saved settings from localStorage
+            const savedSettings = localStorage.getItem('wordpressSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('wpSiteUrl').value = settings.siteUrl || '';
+                document.getElementById('wpUsername').value = settings.username || '';
+                document.getElementById('wpCategories').value = settings.categories || '';
+                document.getElementById('wpTags').value = settings.tags || '';
+            }
+        }
+
+        function saveWordPressSettings() {
+            const settings = {
+                siteUrl: document.getElementById('wpSiteUrl').value,
+                username: document.getElementById('wpUsername').value,
+                categories: document.getElementById('wpCategories').value,
+                tags: document.getElementById('wpTags').value
+            };
+            localStorage.setItem('wordpressSettings', JSON.stringify(settings));
+        }
+
+        async function testWordPressConnection() {
+            const siteUrl = document.getElementById('wpSiteUrl').value;
+            const username = document.getElementById('wpUsername').value;
+            const password = document.getElementById('wpPassword').value;
+            
+            if (!siteUrl || !username || !password) {
+                showWordPressStatus('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            showWordPressStatus('Testing connection...', 'info');
+            
+            try {
+                const response = await fetch('/api/wordpress/test-connection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        siteUrl: siteUrl,
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showWordPressStatus('✅ Connection successful! You can now publish.', 'success');
+                    saveWordPressSettings();
+                } else {
+                    showWordPressStatus('❌ Connection failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showWordPressStatus('❌ Connection error: ' + error.message, 'error');
+            }
+        }
+
+        async function publishToWordPress() {
+            if (!currentBlogForWordPress) {
+                showNotification('No blog selected for publishing', 'error');
+                return;
+            }
+            
+            const siteUrl = document.getElementById('wpSiteUrl').value;
+            const username = document.getElementById('wpUsername').value;
+            const password = document.getElementById('wpPassword').value;
+            const publishStatus = document.getElementById('wpPublishStatus').value;
+            const categories = document.getElementById('wpCategories').value.split(',').map(c => c.trim()).filter(c => c);
+            const tags = document.getElementById('wpTags').value.split(',').map(t => t.trim()).filter(t => t);
+            
+            if (!siteUrl || !username || !password) {
+                showWordPressStatus('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            showWordPressStatus('Publishing to WordPress...', 'info');
+            document.getElementById('publishBtn').disabled = true;
+            
+            try {
+                const blogData = {
+                    title: currentBlogForWordPress.title,
+                    content: currentBlogForWordPress.content,
+                    excerpt: currentBlogForWordPress.excerpt,
+                    categories: categories,
+                    tags: tags
+                };
+                
+                const response = await fetch('/api/wordpress/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        siteUrl: siteUrl,
+                        username: username,
+                        password: password,
+                        blogData: blogData,
+                        publishStatus: publishStatus
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showWordPressStatus('✅ Published successfully!', 'success');
+                    showNotification(`Blog published to WordPress! <a href="${result.postUrl}" target="_blank">View Post</a>`, 'success');
+                    saveWordPressSettings();
+                    
+                    // Close modal after successful publish
+                    setTimeout(() => {
+                        closeWordPressModal();
+                    }, 2000);
+                } else {
+                    showWordPressStatus('❌ Publishing failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showWordPressStatus('❌ Publishing error: ' + error.message, 'error');
+            } finally {
+                document.getElementById('publishBtn').disabled = false;
+            }
+        }
+
+        function showWordPressStatus(message, type) {
+            const statusDiv = document.getElementById('wordpressStatus');
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide info messages after 5 seconds
+            if (type === 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        // View mode toggle
+        function toggleViewMode(blogId) {
+            const contentDisplay = document.getElementById(`content-${blogId}`);
+            const contentEditor = document.getElementById(`contentEditor${blogId}`);
+            const viewToggle = document.getElementById(`viewToggle${blogId}`);
+            
+            if (contentDisplay.style.display === 'none') {
+                // Show view mode
+                contentDisplay.style.display = 'block';
+                contentEditor.style.display = 'none';
+                viewToggle.textContent = 'View';
+            } else {
+                // Show edit mode
+                contentDisplay.style.display = 'none';
+                contentEditor.style.display = 'block';
+                viewToggle.textContent = 'Edit';
+            }
+        }
+
+        // Save content
+        function saveContent(blogId) {
+            const textarea = document.getElementById(`editContent${blogId}`);
+            const content = textarea.value;
+            
+            // Find the blog in currentBlogs and update it
+            const blogIndex = currentBlogs.findIndex(blog => blog.id == blogId);
+            if (blogIndex !== -1) {
+                currentBlogs[blogIndex].content = content;
+                currentBlogs[blogIndex].wordCount = content.split(' ').length;
+                
+                // Refresh the display
+                displayBlogs(currentBlogs);
+                showNotification('Content saved successfully!', 'success');
+            }
+        }
+
+        // Cancel edit
+        function cancelEdit(blogId) {
+            const contentDisplay = document.getElementById(`content-${blogId}`);
+            const contentEditor = document.getElementById(`contentEditor${blogId}`);
+            const viewToggle = document.getElementById(`viewToggle${blogId}`);
+            
+            contentDisplay.style.display = 'block';
+            contentEditor.style.display = 'none';
+            viewToggle.textContent = 'View';
+        }
+
+        // Test function for regenerate
+        function testRegenerate(blogId) {
+            console.log('[Test] Testing regenerate for blog ID:', blogId);
+            
+            // Test if the function exists
+            if (typeof regenerateContent === 'function') {
+                console.log('[Test] regenerateContent function exists');
+                regenerateContent(blogId);
+            } else {
+                console.error('[Test] regenerateContent function not found');
+                showNotification('ERROR: regenerateContent function not found!', 'error');
+            }
+        }
+
+        // Regenerate content with AI history
+        async function regenerateContent(blogId) {
+            try {
+                console.log('[Regenerate] Starting regeneration for blog ID:', blogId);
+                showNotification('Regenerating content with AI...', 'info');
+                
+                // Find the current blog
+                const blogIndex = currentBlogs.findIndex(blog => blog.id == blogId);
+                if (blogIndex === -1) {
+                    throw new Error('Blog not found');
+                }
+                
+                const currentBlog = currentBlogs[blogIndex];
+                console.log('[Regenerate] Current blog found:', currentBlog.title);
+                
+                // Clear the content body and show loading state
+                const blogsGrid = document.getElementById('blogsGrid');
+                if (blogsGrid) {
+                    blogsGrid.innerHTML = `
+                        <div class="loading-container">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <h3>🔄 Regenerating Content...</h3>
+                                <p>Creating fresh, unique content for you. This may take a few moments.</p>
+                                <div class="loading-steps">
+                                    <div class="step active">📝 Analyzing requirements</div>
+                                    <div class="step">🤖 Generating content with AI</div>
+                                    <div class="step">✨ Optimizing for SEO</div>
+                                    <div class="step">📊 Calculating metrics</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Animate the loading steps
+                    const steps = blogsGrid.querySelectorAll('.step');
+                    let currentStep = 0;
+                    
+                    const stepInterval = setInterval(() => {
+                        if (currentStep < steps.length) {
+                            // Remove active class from all steps
+                            steps.forEach(step => step.classList.remove('active'));
+                            // Add active class to current step
+                            steps[currentStep].classList.add('active');
+                            currentStep++;
+                        } else {
+                            // Reset to first step
+                            currentStep = 0;
+                        }
+                    }, 2000); // Change step every 2 seconds
+                    
+                    // Store interval ID for cleanup
+                    window.regenerateStepInterval = stepInterval;
+                }
+                
+                // Get AI history to prevent duplication
+                const aiHistory = getAIHistory();
+                console.log('[Regenerate] AI history length:', aiHistory.length);
+                
+                // Prepare request data - ensure keywords is properly formatted
+                let keywords = Array.isArray(currentBlog.keywords) ? currentBlog.keywords : 
+                               (typeof currentBlog.keywords === 'string' ? currentBlog.keywords.split(',').map(k => k.trim()) : 
+                               ['digital marketing', 'SEO', 'content strategy']);
+                
+                // Extract topic from title (remove domain-specific parts)
+                let topic = currentBlog.title;
+                if (topic.includes(' with ')) {
+                    topic = topic.split(' with ')[0];
+                }
+                if (topic.includes(' - ')) {
+                    topic = topic.split(' - ')[0];
+                }
+                
+                // Ensure we have proper keywords
+                if (!keywords || keywords.length === 0) {
+                    keywords = ['digital marketing', 'SEO', 'content strategy'];
+                }
+                
+                const requestData = {
+                    domain: document.getElementById('domainInput')?.value || 'default',
+                    topic: topic,
+                    keywords: keywords,
+                    targetAudience: currentBlog.targetAudience || 'general audience',
+                    tone: currentBlog.tone || 'professional',
+                    wordCount: currentBlog.wordCount || 500,
+                    includeImages: currentBlog.includeImages || false,
+                    seoOptimized: currentBlog.seoOptimized || true,
+                    aiHistory: aiHistory,
+                    excludeContent: currentBlog.content,
+                    existingContentId: currentBlog.id // Pass the existing content ID for update
+                };
+                
+                console.log('[Regenerate] Request data:', requestData);
+                
+                // Show loading state on the regenerate button
+                const regenerateButton = document.querySelector(`button[onclick="regenerateContent(${blogId})"]`);
+                if (regenerateButton) {
+                    const originalHTML = regenerateButton.innerHTML;
+                    regenerateButton.innerHTML = '<div class="spinner"></div> Regenerating...';
+                    regenerateButton.disabled = true;
+                    
+                    // Restore button after completion
+                    setTimeout(() => {
+                        regenerateButton.innerHTML = originalHTML;
+                        regenerateButton.disabled = false;
+                    }, 10000); // 10 second timeout
+                }
+                
+                // Regenerate content
+                const response = await fetch('/api/blog/regenerate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('[Regenerate] Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('[Regenerate] Response error:', errorText);
+                    throw new Error(`Server error: ${response.status} - ${errorText}`);
+                }
+                
+                const result = await response.json();
+                console.log('[Regenerate] Response result:', result);
+                
+                if (result.success) {
+                    // Clear the loading interval
+                    if (window.regenerateStepInterval) {
+                        clearInterval(window.regenerateStepInterval);
+                        window.regenerateStepInterval = null;
+                    }
+                    
+                    // Update the blog with new content
+                    currentBlogs[blogIndex] = result.blog;
+                    
+                    // Add to AI history
+                    addToAIHistory(result.blog);
+                    
+                    // Show success notification
+                    showNotification('✨ Content regenerated successfully!', 'success');
+                    
+                    // Refresh the display
+                    displayBlogs(currentBlogs);
+                    
+                    // Update SEO score
+                    if (result.blog.seoScore && result.blog.seoGrade) {
+                        updateSEOScore({
+                            score: result.blog.seoScore,
+                            grade: result.blog.seoGrade,
+                            analysis: result.blog.seoAnalysis
+                        });
+                    }
+                    
+                    showNotification('Content regenerated successfully with AI!', 'success');
+                } else {
+                    throw new Error(result.error || 'Failed to regenerate content');
+                }
+                
+            } catch (error) {
+                console.error('[Regenerate] Error regenerating content:', error);
+                
+                // Clear the loading interval
+                if (window.regenerateStepInterval) {
+                    clearInterval(window.regenerateStepInterval);
+                    window.regenerateStepInterval = null;
+                }
+                
+                // Restore the original content
+                displayBlogs(currentBlogs);
+                
+                showNotification('Failed to regenerate content: ' + error.message, 'error');
+            }
+        }
+
+        // AI History Management
+        function getAIHistory() {
+            const history = localStorage.getItem('aiBlogHistory');
+            return history ? JSON.parse(history) : [];
+        }
+
+        function addToAIHistory(blog) {
+            const history = getAIHistory();
+            
+            // Add new blog to history
+            history.push({
+                id: blog.id,
+                title: blog.title,
+                content: blog.content,
+                keywords: blog.keywords,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Keep only last 10 blogs to prevent storage bloat
+            if (history.length > 10) {
+                history.splice(0, history.length - 10);
+            }
+            
+            localStorage.setItem('aiBlogHistory', JSON.stringify(history));
+        }
+
+        // Initialize AI history tracking for new blogs
+        function initializeBlogHistory() {
+            if (currentBlogs.length > 0) {
+                currentBlogs.forEach(blog => addToAIHistory(blog));
+            }
+        }
+
+        // Call initialization when blogs are loaded
+        setTimeout(() => {
+            if (currentBlogs.length > 0) {
+                initializeBlogHistory();
+            }
+        }, 1000);
+
+    </script>
+</body>
+</html>

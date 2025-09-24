@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Request Assistant - Digital Marketing Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .input-section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .response-section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .response-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .processing {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .website-data {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid #bbdefb;
+        }
+
+        .website-data h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .website-data ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .website-data li {
+            padding: 5px 0;
+            border-bottom: 1px solid #bbdefb;
+        }
+
+        .website-data li:last-child {
+            border-bottom: none;
+        }
+
+        .quick-requests {
+            margin-top: 20px;
+        }
+
+        .quick-requests h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .quick-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SEO Request Assistant</h1>
+            <p>Get intelligent SEO recommendations powered by Boostramp analysis</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2>📝 Submit Your SEO Request</h2>
+                
+                <form id="seoRequestForm">
+                    <div class="form-group">
+                        <label for="websiteUrl">Website URL (Optional)</label>
+                        <input type="text" id="websiteUrl" placeholder="example.com or https://example.com">
+                        <small style="color: #6c757d; font-size: 14px;">Enter your website URL for personalized analysis</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="seoRequest">SEO Request</label>
+                        <textarea id="seoRequest" placeholder="Describe what SEO help you need... e.g., 'Help me improve my website speed', 'What keywords should I target?', 'How can I optimize my meta tags?'" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn">
+                        🔍 Get SEO Recommendations
+                    </button>
+                </form>
+
+                <div class="quick-requests">
+                    <h3>⚡ Quick Requests</h3>
+                    <button class="quick-btn" onclick="setQuickRequest('keyword')">Keyword Research</button>
+                    <button class="quick-btn" onclick="setQuickRequest('content')">Content Optimization</button>
+                    <button class="quick-btn" onclick="setQuickRequest('technical')">Technical SEO</button>
+                    <button class="quick-btn" onclick="setQuickRequest('meta')">Meta Tags</button>
+                    <button class="quick-btn" onclick="setQuickRequest('speed')">Site Speed</button>
+                    <button class="quick-btn" onclick="setQuickRequest('mobile')">Mobile SEO</button>
+                </div>
+            </div>
+
+            <div class="response-section">
+                <h2>📊 SEO Recommendations</h2>
+                <div class="response-content" id="responseContent">
+                    <div style="text-align: center; color: #6c757d; padding: 50px 20px;">
+                        <h3>Ready to Help! 🎯</h3>
+                        <p>Submit your SEO request above to get personalized recommendations based on your website analysis.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Initialize socket connection
+        const socket = io();
+        
+        // Form elements
+        const form = document.getElementById('seoRequestForm');
+        const websiteUrlInput = document.getElementById('websiteUrl');
+        const seoRequestInput = document.getElementById('seoRequest');
+        const submitBtn = document.getElementById('submitBtn');
+        const responseContent = document.getElementById('responseContent');
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const websiteUrl = websiteUrlInput.value.trim();
+            const request = seoRequestInput.value.trim();
+            
+            if (!request) {
+                alert('Please enter your SEO request');
+                return;
+            }
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Processing...';
+
+            // Clear previous response
+            responseContent.innerHTML = '<div class="processing">🔄 Analyzing your request and website data...</div>';
+
+            // Send SEO request
+            socket.emit('seo_request', {
+                request: request,
+                websiteUrl: websiteUrl,
+                userId: 'user_' + Date.now()
+            });
+        });
+
+        // Handle SEO processing status
+        socket.on('seo_processing', (data) => {
+            responseContent.innerHTML = `<div class="processing">${data.message}</div>`;
+        });
+
+        // Handle SEO response
+        socket.on('seo_response', (data) => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🔍 Get SEO Recommendations';
+
+            if (data.success) {
+                let responseHtml = `<div class="success">${data.response}</div>`;
+                
+                // Add website data if available
+                if (data.websiteData) {
+                    responseHtml += generateWebsiteDataHtml(data.websiteData);
+                }
+                
+                responseContent.innerHTML = responseHtml;
+            } else {
+                responseContent.innerHTML = `<div class="error">${data.response}</div>`;
+            }
+        });
+
+        // Generate website data HTML
+        function generateWebsiteDataHtml(websiteData) {
+            return `
+                <div class="website-data">
+                    <h3>📈 Website Analysis Summary</h3>
+                    <ul>
+                        <li><strong>Title:</strong> ${websiteData.title || 'Missing'}</li>
+                        <li><strong>Meta Description:</strong> ${websiteData.metaDescription ? (websiteData.metaDescription.length > 50 ? websiteData.metaDescription.substring(0, 50) + '...' : websiteData.metaDescription) : 'Missing'}</li>
+                        <li><strong>Word Count:</strong> ${websiteData.content?.wordCount || 0} words</li>
+                        <li><strong>H1 Tags:</strong> ${websiteData.headings?.h1 || 0}</li>
+                        <li><strong>H2 Tags:</strong> ${websiteData.headings?.h2 || 0}</li>
+                        <li><strong>Images:</strong> ${websiteData.images?.total || 0} (${websiteData.images?.missingAlt || 0} missing alt text)</li>
+                        <li><strong>Internal Links:</strong> ${websiteData.links?.internal || 0}</li>
+                        <li><strong>External Links:</strong> ${websiteData.links?.external || 0}</li>
+                        <li><strong>Load Time:</strong> ${websiteData.performance?.loadTime || 'Unknown'}</li>
+                        <li><strong>SSL Certificate:</strong> ${websiteData.technical?.sslCertificate ? 'Yes' : 'No'}</li>
+                        <li><strong>Mobile Friendly:</strong> ${websiteData.technical?.mobileFriendly ? 'Yes' : 'No'}</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Set quick request
+        function setQuickRequest(type) {
+            const requests = {
+                'keyword': 'Help me with keyword research for my website. What keywords should I target and how can I find them?',
+                'content': 'How can I optimize my website content for better SEO? What content improvements should I make?',
+                'technical': 'What technical SEO issues should I focus on? Help me improve my website\'s technical performance.',
+                'meta': 'How can I optimize my meta tags, title tags, and descriptions for better SEO?',
+                'speed': 'My website is loading slowly. How can I improve my site speed and performance?',
+                'mobile': 'How can I make my website more mobile-friendly and optimize for mobile SEO?'
+            };
+            
+            seoRequestInput.value = requests[type];
+        }
+
+        // Handle socket connection
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+

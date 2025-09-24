@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered SEO Dashboard - Digital Marketing Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-rows: auto 1fr;
+            min-height: calc(100vh - 40px);
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-left: 1px solid #e9ecef;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .analysis-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .analysis-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-subtitle {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .card-metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .metric-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .recommendations-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .panel-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .panel-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .recommendation-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendation-item.critical {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .recommendation-item.important {
+            border-left-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .recommendation-item.suggestion {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .content-calendar {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-nav button:hover {
+            background: #f8f9fa;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 15px 10px;
+            min-height: 120px;
+            position: relative;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .calendar-day.weekend {
+            background: #f8f9fa;
+        }
+
+        .day-number {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .day-content {
+            font-size: 0.8em;
+            line-height: 1.2;
+        }
+
+        .social-post {
+            background: #f0f2ff;
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            font-size: 0.7em;
+        }
+
+        .social-post.twitter {
+            background: #e3f2fd;
+            border-left: 3px solid #1da1f2;
+        }
+
+        .social-post.facebook {
+            background: #e8f5e8;
+            border-left: 3px solid #1877f2;
+        }
+
+        .social-post.tiktok {
+            background: #fff3e0;
+            border-left: 3px solid #ff0050;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fff5f5;
+            color: #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success {
+            background: #f0fff4;
+            color: #28a745;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .upgrade-notice {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .upgrade-notice small {
+            opacity: 0.9;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .keyword-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .keyword-text {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .keyword-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .difficulty-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .difficulty-low {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .competitor-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .competitor-domain {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .competitor-metrics {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .backlink-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .backlink-domain {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .backlink-metrics {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+            
+            .sidebar {
+                grid-row: 2;
+                border-left: none;
+                border-top: 1px solid #e9ecef;
+            }
+            
+            .main-content {
+                grid-row: 3;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI-Powered SEO Dashboard</h1>
+            <p>Comprehensive Technical Analysis & Content Strategy</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="text" id="urlInput" placeholder="Enter website URL (e.g., example.com)" />
+                    <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeWebsite()">
+                        🔍 Analyze Website
+                    </button>
+                </div>
+            </div>
+
+            <div id="analysisResults" style="display: none;">
+                <div class="analysis-grid">
+                    <!-- Technical On-Page Analysis -->
+                    <div class="analysis-card active" onclick="showRecommendations('technical')">
+                        <div class="card-header">
+                            <div class="card-icon">🔧</div>
+                            <div>
+                                <div class="card-title">Technical Analysis</div>
+                                <div class="card-subtitle">On-page SEO fundamentals</div>
+                            </div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="technicalScore">-</div>
+                                <div class="metric-label">Score</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="technicalIssues">-</div>
+                                <div class="metric-label">Issues</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="technicalFixed">-</div>
+                                <div class="metric-label">Fixed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Keyword Analysis -->
+                    <div class="analysis-card" onclick="showRecommendations('keywords')">
+                        <div class="card-header">
+                            <div class="card-icon">🔑</div>
+                            <div>
+                                <div class="card-title">Keyword Analysis</div>
+                                <div class="card-subtitle">Search optimization strategy</div>
+                            </div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="keywordCount">-</div>
+                                <div class="metric-label">Keywords</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="keywordDifficulty">-</div>
+                                <div class="metric-label">Avg Difficulty</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="keywordVolume">-</div>
+                                <div class="metric-label">Volume</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Competitor Analysis -->
+                    <div class="analysis-card" onclick="showRecommendations('competitors')">
+                        <div class="card-header">
+                            <div class="card-icon">🏆</div>
+                            <div>
+                                <div class="card-title">Competitor Analysis</div>
+                                <div class="card-subtitle">Market positioning insights</div>
+                            </div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="competitorCount">-</div>
+                                <div class="metric-label">Competitors</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="competitorRank">-</div>
+                                <div class="metric-label">Avg Rank</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="competitorGap">-</div>
+                                <div class="metric-label">Gap</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backlink Analysis -->
+                    <div class="analysis-card" onclick="showRecommendations('backlinks')">
+                        <div class="card-header">
+                            <div class="card-icon">🔗</div>
+                            <div>
+                                <div class="card-title">Backlink Analysis</div>
+                                <div class="card-subtitle">Link building opportunities</div>
+                            </div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-value" id="backlinkCount">-</div>
+                                <div class="metric-label">Backlinks</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="domainAuthority">-</div>
+                                <div class="metric-label">DA</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="referringDomains">-</div>
+                                <div class="metric-label">Domains</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <!-- Recommendations Panel -->
+            <div class="recommendations-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💡</div>
+                    <div class="panel-title">Recommendations</div>
+                </div>
+                <div id="recommendationsContent">
+                    <div class="loading">Select an analysis card to view recommendations</div>
+                </div>
+            </div>
+
+            <!-- Content Calendar -->
+            <div class="content-calendar">
+                <div class="calendar-header">
+                    <div class="calendar-title">📅 Content Calendar</div>
+                    <div class="calendar-nav">
+                        <button onclick="previousMonth()">‹</button>
+                        <button onclick="nextMonth()">›</button>
+                    </div>
+                </div>
+                <div id="calendarContent">
+                    <div class="loading">Generating 30-day content strategy...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnalysis = null;
+        let currentMonth = new Date();
+
+        async function analyzeWebsite() {
+            const urlInput = document.getElementById('urlInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const analysisResults = document.getElementById('analysisResults');
+            
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            // Process URL
+            let processedUrl = url;
+            if (!processedUrl.match(/^https?:\/\//)) {
+                processedUrl = 'https://' + processedUrl;
+            }
+
+            analysisResults.style.display = 'block';
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔍 Analyzing...';
+
+            try {
+                const response = await fetch('/api/dataforseo/environment/analyze-website', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: processedUrl })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentAnalysis = result.analysis;
+                    displayAnalysis(result.analysis);
+                    generateContentCalendar();
+                } else {
+                    throw new Error(result.error || 'Analysis failed');
+                }
+            } catch (error) {
+                console.error('Analysis error:', error);
+                document.getElementById('recommendationsContent').innerHTML = 
+                    '<div class="error">Analysis failed: ' + error.message + '</div>';
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Website';
+            }
+        }
+
+        function displayAnalysis(analysis) {
+            // Update technical analysis metrics
+            const technicalScore = calculateTechnicalScore(analysis);
+            document.getElementById('technicalScore').textContent = technicalScore;
+            document.getElementById('technicalIssues').textContent = analysis.technical?.issues?.length || 0;
+            document.getElementById('technicalFixed').textContent = analysis.technical?.fixed?.length || 0;
+
+            // Update keyword analysis metrics
+            document.getElementById('keywordCount').textContent = analysis.keywords?.length || 0;
+            document.getElementById('keywordDifficulty').textContent = 
+                analysis.keywords?.length ? Math.round(analysis.keywords.reduce((sum, k) => sum + (k.difficulty || 0), 0) / analysis.keywords.length) : '-';
+            document.getElementById('keywordVolume').textContent = 
+                analysis.keywords?.length ? Math.round(analysis.keywords.reduce((sum, k) => sum + (k.searchVolume || 0), 0) / analysis.keywords.length) : '-';
+
+            // Update competitor analysis metrics
+            document.getElementById('competitorCount').textContent = analysis.competitors?.length || 0;
+            document.getElementById('competitorRank').textContent = 
+                analysis.competitors?.length ? Math.round(analysis.competitors.reduce((sum, c) => sum + (c.rank || 0), 0) / analysis.competitors.length) : '-';
+            document.getElementById('competitorGap').textContent = analysis.competitors?.gap || '-';
+
+            // Update backlink analysis metrics
+            document.getElementById('backlinkCount').textContent = analysis.backlinks?.totalBacklinks || '-';
+            document.getElementById('domainAuthority').textContent = analysis.backlinks?.domainAuthority || '-';
+            document.getElementById('referringDomains').textContent = analysis.backlinks?.referringDomains || '-';
+
+            // Show technical recommendations by default
+            showRecommendations('technical');
+        }
+
+        function calculateTechnicalScore(analysis) {
+            if (!analysis || !analysis.onPage) return 0;
+            
+            let score = 0;
+            let checks = 0;
+            
+            if (analysis.onPage.title) { score += 20; checks++; }
+            if (analysis.onPage.metaDescription) { score += 20; checks++; }
+            if (analysis.onPage.h1Tags && Array.isArray(analysis.onPage.h1Tags) && analysis.onPage.h1Tags.length > 0) { score += 20; checks++; }
+            if (analysis.onPage.h2Tags && Array.isArray(analysis.onPage.h2Tags) && analysis.onPage.h2Tags.length > 0) { score += 15; checks++; }
+            if (analysis.onPage.wordCount && analysis.onPage.wordCount > 300) { score += 15; checks++; }
+            if (analysis.onPage.images && Array.isArray(analysis.onPage.images) && analysis.onPage.images.some(img => img.alt)) { score += 10; checks++; }
+            
+            return checks > 0 ? Math.round(score / checks * 5) : 0;
+        }
+
+        function calculateOverallScore(analysis) {
+            if (!analysis) return 0;
+            
+            let score = 0;
+            let factors = 0;
+            
+            // On-page SEO factors (40% weight)
+            if (analysis.onPage) {
+                const onPageScore = calculateOnPageScore(analysis.onPage);
+                score += onPageScore * 0.4;
+                factors += 0.4;
+            }
+            
+            // Keywords analysis (30% weight)
+            if (analysis.keywords && Array.isArray(analysis.keywords) && analysis.keywords.length > 0) {
+                const keywordScore = calculateKeywordScore(analysis.keywords);
+                score += keywordScore * 0.3;
+                factors += 0.3;
+            }
+            
+            // Recommendations (20% weight)
+            if (analysis.recommendations && Array.isArray(analysis.recommendations) && analysis.recommendations.length > 0) {
+                const recommendationScore = calculateRecommendationScore(analysis.recommendations);
+                score += recommendationScore * 0.2;
+                factors += 0.2;
+            }
+            
+            // Technical factors (10% weight)
+            if (analysis.technical) {
+                const technicalScore = calculateTechnicalScore(analysis);
+                score += technicalScore * 0.1;
+                factors += 0.1;
+            }
+            
+            // Normalize score based on available factors
+            return factors > 0 ? Math.round(score / factors) : 0;
+        }
+
+        function calculateOnPageScore(onPage) {
+            if (!onPage) return 0;
+            
+            let score = 0;
+            let checks = 0;
+            
+            if (onPage.title) { score += 20; checks++; }
+            if (onPage.metaDescription) { score += 20; checks++; }
+            if (onPage.h1Tags && Array.isArray(onPage.h1Tags) && onPage.h1Tags.length > 0) { score += 20; checks++; }
+            if (onPage.h2Tags && Array.isArray(onPage.h2Tags) && onPage.h2Tags.length > 0) { score += 15; checks++; }
+            if (onPage.wordCount && onPage.wordCount > 300) { score += 15; checks++; }
+            if (onPage.images && Array.isArray(onPage.images) && onPage.images.some(img => img.alt)) { score += 10; checks++; }
+            
+            return checks > 0 ? Math.round(score / checks * 5) : 0;
+        }
+
+        function calculateKeywordScore(keywords) {
+            if (!keywords || !Array.isArray(keywords)) return 0;
+            
+            let score = 0;
+            let checks = 0;
+            
+            keywords.forEach(keyword => {
+                if (keyword.difficulty) {
+                    if (keyword.difficulty === 'LOW') { score += 30; }
+                    else if (keyword.difficulty === 'MEDIUM') { score += 20; }
+                    else if (keyword.difficulty === 'HIGH') { score += 10; }
+                    checks++;
+                }
+                if (keyword.searchVolume && keyword.searchVolume > 1000) { score += 20; checks++; }
+            });
+            
+            return checks > 0 ? Math.round(score / checks * 5) : 0;
+        }
+
+        function calculateRecommendationScore(recommendations) {
+            if (!recommendations || !Array.isArray(recommendations)) return 0;
+            
+            let score = 0;
+            let checks = 0;
+            
+            recommendations.forEach(rec => {
+                if (rec.priority === 'HIGH') { score += 30; }
+                else if (rec.priority === 'MEDIUM') { score += 20; }
+                else if (rec.priority === 'LOW') { score += 10; }
+                checks++;
+            });
+            
+            return checks > 0 ? Math.round(score / checks * 5) : 0;
+        }
+
+        function showRecommendations(type) {
+            // Update active card
+            document.querySelectorAll('.analysis-card').forEach(card => card.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const content = document.getElementById('recommendationsContent');
+            
+            if (!currentAnalysis) {
+                content.innerHTML = '<div class="loading">No analysis data available</div>';
+                return;
+            }
+
+            switch (type) {
+                case 'technical':
+                    showTechnicalRecommendations();
+                    break;
+                case 'keywords':
+                    showKeywordRecommendations();
+                    break;
+                case 'competitors':
+                    showCompetitorRecommendations();
+                    break;
+                case 'backlinks':
+                    showBacklinkRecommendations();
+                    break;
+            }
+        }
+
+        function showTechnicalRecommendations() {
+            const content = document.getElementById('recommendationsContent');
+            let html = '<div class="panel-title">🔧 Technical Analysis</div>';
+            
+            // Analyze each technical category
+            const analysis = currentAnalysis.onPage || {};
+            
+            // Title Tags
+            html += '<div class="recommendation-item">';
+            html += '<div class="recommendation-title">📝 Title Tags</div>';
+            if (!analysis.title) {
+                html += '<div class="recommendation-description">❌ Missing title tag. Add a descriptive title tag (50-60 characters) that includes your primary keyword.</div>';
+            } else if (analysis.title.length > 60) {
+                html += '<div class="recommendation-description">⚠️ Title too long (' + analysis.title.length + ' chars). Keep it under 60 characters for optimal display.</div>';
+            } else {
+                html += '<div class="recommendation-description">✅ Title tag is optimized (' + analysis.title.length + ' characters)</div>';
+            }
+            html += '</div>';
+
+            // Meta Description
+            html += '<div class="recommendation-item">';
+            html += '<div class="recommendation-title">📄 Meta Description</div>';
+            if (!analysis.metaDescription) {
+                html += '<div class="recommendation-description">❌ Missing meta description. Add a compelling description (150-160 characters) that encourages clicks.</div>';
+            } else if (analysis.metaDescription.length > 160) {
+                html += '<div class="recommendation-description">⚠️ Meta description too long (' + analysis.metaDescription.length + ' chars). Keep it under 160 characters.</div>';
+            } else {
+                html += '<div class="recommendation-description">✅ Meta description is optimized (' + analysis.metaDescription.length + ' characters)</div>';
+            }
+            html += '</div>';
+
+            // Image Alt Text
+            html += '<div class="recommendation-item">';
+            html += '<div class="recommendation-title">🖼️ Image Alt Text</div>';
+            const imagesWithoutAlt = analysis.images && Array.isArray(analysis.images) ? analysis.images.filter(img => !img.alt).length : 0;
+            if (imagesWithoutAlt > 0) {
+                html += '<div class="recommendation-description">❌ ' + imagesWithoutAlt + ' images missing alt text. Add descriptive alt attributes for better accessibility and SEO.</div>';
+            } else {
+                html += '<div class="recommendation-description">✅ All images have alt text</div>';
+            }
+            html += '</div>';
+
+            // Heading Optimization
+            html += '<div class="recommendation-item">';
+            html += '<div class="recommendation-title">📋 Heading Structure</div>';
+            if (!analysis.h1Tags || !Array.isArray(analysis.h1Tags) || analysis.h1Tags.length === 0) {
+                html += '<div class="recommendation-description">❌ Missing H1 tag. Add a single H1 tag with your primary keyword.</div>';
+            } else if (analysis.h1Tags.length > 1) {
+                html += '<div class="recommendation-description">⚠️ Multiple H1 tags found (' + analysis.h1Tags.length + '). Use only one H1 per page.</div>';
+            } else {
+                html += '<div class="recommendation-description">✅ H1 tag is properly implemented</div>';
+            }
+            html += '</div>';
+
+            // Content Length
+            html += '<div class="recommendation-item">';
+            html += '<div class="recommendation-title">📏 Content Length</div>';
+            const wordCount = analysis.wordCount || 0;
+            if (wordCount < 300) {
+                html += '<div class="recommendation-description">⚠️ Content too short (' + wordCount + ' words). Aim for at least 300 words for better SEO.</div>';
+            } else {
+                html += '<div class="recommendation-description">✅ Content length is adequate (' + wordCount + ' words)</div>';
+            }
+            html += '</div>';
+
+            content.innerHTML = html;
+        }
+
+        function showKeywordRecommendations() {
+            const content = document.getElementById('recommendationsContent');
+            let html = '<div class="panel-title">🔑 Keyword Analysis</div>';
+            
+            if (!currentAnalysis.keywords || currentAnalysis.keywords.length === 0) {
+                html += '<div class="upgrade-notice">🔒 Keyword analysis not available in sandbox mode<br><small>This feature requires DataForSEO Labs subscription</small></div>';
+            } else {
+                currentAnalysis.keywords.slice(0, 10).forEach(keyword => {
+                    html += '<div class="keyword-item">';
+                    html += '<div class="keyword-text">' + keyword.keyword + '</div>';
+                    html += '<div class="keyword-metrics">';
+                    html += '<span>Volume: ' + (keyword.searchVolume || 'N/A') + '</span>';
+                    html += '<span class="difficulty-badge difficulty-' + getDifficultyClass(keyword.difficulty) + '">';
+                    html += 'Difficulty: ' + (keyword.difficulty || 'N/A');
+                    html += '</span>';
+                    html += '</div>';
+                    html += '</div>';
+                });
+            }
+            
+            content.innerHTML = html;
+        }
+
+        function showCompetitorRecommendations() {
+            const content = document.getElementById('recommendationsContent');
+            let html = '<div class="panel-title">🏆 Competitor Analysis</div>';
+            
+            if (!currentAnalysis.competitors || currentAnalysis.competitors.length === 0) {
+                html += '<div class="upgrade-notice">🔒 Competitor analysis not available in sandbox mode<br><small>This feature requires DataForSEO Labs subscription</small></div>';
+            } else {
+                currentAnalysis.competitors.slice(0, 5).forEach(competitor => {
+                    html += '<div class="competitor-item">';
+                    html += '<div class="competitor-domain">' + competitor.domain + '</div>';
+                    html += '<div class="competitor-metrics">Rank: ' + competitor.rank + '</div>';
+                    html += '</div>';
+                });
+            }
+            
+            content.innerHTML = html;
+        }
+
+        function showBacklinkRecommendations() {
+            const content = document.getElementById('recommendationsContent');
+            let html = '<div class="panel-title">🔗 Backlink Analysis</div>';
+            
+            if (!currentAnalysis.backlinks) {
+                html += '<div class="upgrade-notice">🔒 Backlink analysis not available in sandbox mode<br><small>This feature requires DataForSEO Labs subscription</small></div>';
+            } else {
+                html += '<div class="backlink-item">';
+                html += '<div class="backlink-domain">Total Backlinks</div>';
+                html += '<div class="backlink-metrics">' + (currentAnalysis.backlinks.totalBacklinks || 'N/A') + '</div>';
+                html += '</div>';
+                
+                html += '<div class="backlink-item">';
+                html += '<div class="backlink-domain">Referring Domains</div>';
+                html += '<div class="backlink-metrics">' + (currentAnalysis.backlinks.referringDomains || 'N/A') + '</div>';
+                html += '</div>';
+                
+                html += '<div class="backlink-item">';
+                html += '<div class="backlink-domain">Domain Authority</div>';
+                html += '<div class="backlink-metrics">' + (currentAnalysis.backlinks.domainAuthority || 'N/A') + '</div>';
+                html += '</div>';
+            }
+            
+            content.innerHTML = html;
+        }
+
+        function getDifficultyClass(difficulty) {
+            if (difficulty < 30) return 'low';
+            if (difficulty < 60) return 'medium';
+            return 'high';
+        }
+
+        async function generateContentCalendar() {
+            const content = document.getElementById('calendarContent');
+            content.innerHTML = '<div class="loading">Generating AI-powered content calendar...</div>';
+            
+            try {
+                // Generate calendar for current month
+                const calendarHtml = generateCalendarHTML();
+                content.innerHTML = calendarHtml;
+                
+                // Generate AI content for each day
+                await generateAIContent();
+            } catch (error) {
+                console.error('Calendar generation error:', error);
+                content.innerHTML = '<div class="error">Failed to generate content calendar</div>';
+            }
+        }
+
+        function generateCalendarHTML() {
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const today = new Date();
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            let html = '<div class="calendar-grid">';
+            
+            // Generate 42 days (6 weeks)
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const isCurrentMonth = date.getMonth() === month;
+                const isToday = date.toDateString() === today.toDateString();
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                
+                let dayClass = 'calendar-day';
+                if (isToday) dayClass += ' today';
+                if (isWeekend) dayClass += ' weekend';
+                if (!isCurrentMonth) dayClass += ' other-month';
+                
+                html += '<div class="' + dayClass + '">';
+                html += '<div class="day-number">' + date.getDate() + '</div>';
+                html += '<div class="day-content" id="content-' + i + '">';
+                html += '<div class="social-post twitter">Twitter: Loading...</div>';
+                html += '<div class="social-post facebook">Facebook: Loading...</div>';
+                html += '<div class="social-post tiktok">TikTok: Loading...</div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        async function generateAIContent() {
+            // Generate AI content for each day
+            for (let i = 0; i < 30; i++) {
+                const contentElement = document.getElementById('content-' + i);
+                if (contentElement) {
+                    try {
+                        const content = await generateDailyContent(i);
+                        contentElement.innerHTML = content;
+                    } catch (error) {
+                        console.error('Error generating content for day', i, error);
+                    }
+                }
+            }
+        }
+
+        async function generateDailyContent(dayOffset) {
+            // Simulate AI content generation (replace with actual Gemini AI integration)
+            const topics = [
+                'SEO Tips', 'Digital Marketing', 'Content Strategy', 'Social Media', 'Analytics',
+                'User Experience', 'Mobile Optimization', 'Local SEO', 'E-commerce', 'Branding'
+            ];
+            
+            const platforms = ['Twitter', 'Facebook', 'TikTok'];
+            const topic = topics[dayOffset % topics.length];
+            
+            let html = '';
+            platforms.forEach(platform => {
+                const platformClass = platform.toLowerCase();
+                html += '<div class="social-post ' + platformClass + '">';
+                html += platform + ': ' + topic + ' content for day ' + (dayOffset + 1);
+                html += '</div>';
+            });
+            
+            return html;
+        }
+
+        function previousMonth() {
+            currentMonth.setMonth(currentMonth.getMonth() - 1);
+            generateContentCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+            generateContentCalendar();
+        }
+
+        // Initialize calendar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            generateContentCalendar();
+        });
+    </script>
+</body>
+</html>

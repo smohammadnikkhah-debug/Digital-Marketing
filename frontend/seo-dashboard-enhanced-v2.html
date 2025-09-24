@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Dashboard - Enhanced Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        #urlInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .analysis-cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .analysis-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .analysis-card.active {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .card-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .recommendations-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .recommendations-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .recommendations-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .ai-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .ai-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .ai-toggle.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .recommendations-content {
+            line-height: 1.6;
+        }
+
+        .recommendation-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .recommendation-description {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-impact {
+            font-size: 0.9rem;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        @media (max-width: 768px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .card-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Mozarex SEO Analysis Dashboard</h1>
+            <p>Comprehensive website analysis with Mozarex AI-powered recommendations</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="Enter website URL (e.g., example.com)" />
+                <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeWebsite()">
+                    🔍 Analyze Website
+                </button>
+            </div>
+        </div>
+
+        <div id="analysisResults" style="display: none;">
+            <div class="analysis-grid">
+                <div class="analysis-cards">
+                    <div class="analysis-card active" onclick="showRecommendations('technical', this)">
+                        <div class="card-header">
+                            <div class="card-icon">🔧</div>
+                            <div class="card-title">Technical Analysis</div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-label">Score</div>
+                                <div class="metric-value" id="technicalScore">-</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Issues</div>
+                                <div class="metric-value" id="technicalIssues">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card" onclick="showRecommendations('keywords', this)">
+                        <div class="card-header">
+                            <div class="card-icon">🔑</div>
+                            <div class="card-title">Keyword Analysis</div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-label">Keywords</div>
+                                <div class="metric-value" id="keywordCount">-</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Avg. Position</div>
+                                <div class="metric-value" id="avgPosition">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card" onclick="showRecommendations('competitors', this)">
+                        <div class="card-header">
+                            <div class="card-icon">👥</div>
+                            <div class="card-title">Competitor Analysis</div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-label">Competitors</div>
+                                <div class="metric-value" id="competitorCount">-</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Market Share</div>
+                                <div class="metric-value" id="marketShare">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card" onclick="showRecommendations('backlinks', this)">
+                        <div class="card-header">
+                            <div class="card-icon">🔗</div>
+                            <div class="card-title">Backlink Analysis</div>
+                        </div>
+                        <div class="card-metrics">
+                            <div class="metric">
+                                <div class="metric-label">Backlinks</div>
+                                <div class="metric-value" id="backlinkCount">-</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Domain Rating</div>
+                                <div class="metric-value" id="domainRating">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recommendations-panel">
+                    <div class="recommendations-header">
+                        <h3 class="recommendations-title" id="recommendationsTitle">Technical Analysis</h3>
+                        <div class="ai-toggle" id="aiToggle" onclick="toggleAI()">
+                            <span>🤖</span>
+                            <span>AI Recommendations</span>
+                        </div>
+                    </div>
+                    <div class="recommendations-content" id="recommendationsContent">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading recommendations...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnalysis = null;
+        let currentSection = 'technical';
+        let aiMode = false;
+
+        // Load data from localStorage if available
+        document.addEventListener('DOMContentLoaded', function() {
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            const analysisData = localStorage.getItem('analysisData');
+            
+            if (lastAnalyzedDomain && analysisData) {
+                document.getElementById('urlInput').value = lastAnalyzedDomain;
+                try {
+                    currentAnalysis = JSON.parse(analysisData);
+                    displayAnalysisResults();
+                } catch (error) {
+                    console.error('Error parsing analysis data:', error);
+                }
+            }
+        });
+
+        async function analyzeWebsite() {
+            const url = document.getElementById('urlInput').value.trim();
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            // Auto-add protocol if missing
+            let processedUrl = url;
+            if (!processedUrl.match(/^https?:\/\//)) {
+                processedUrl = 'https://' + processedUrl;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔄 Analyzing...';
+
+            try {
+                const response = await fetch('/api/dataforseo/environment/analyze-website', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: processedUrl })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to analyze website');
+                }
+
+                if (data.success && data.data) {
+                    currentAnalysis = data.data;
+                    localStorage.setItem('lastAnalyzedDomain', data.data.domain || data.data.url);
+                    localStorage.setItem('analysisData', JSON.stringify(data.data));
+                    displayAnalysisResults();
+                } else {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+            } catch (error) {
+                console.error('Error analyzing website:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Website';
+            }
+        }
+
+        function displayAnalysisResults() {
+            if (!currentAnalysis) return;
+
+            // Update metrics
+            updateMetrics();
+            
+            // Show results
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Load initial recommendations
+            showRecommendations('technical', document.querySelector('.analysis-card'));
+        }
+
+        function updateMetrics() {
+            // Technical Analysis
+            const technicalScore = currentAnalysis.score || 85;
+            const technicalIssues = currentAnalysis.recommendations?.filter(rec => rec.category === 'On-Page SEO' || rec.category === 'Accessibility').length || 0;
+            document.getElementById('technicalScore').textContent = technicalScore;
+            document.getElementById('technicalIssues').textContent = technicalIssues;
+
+            // Keywords
+            const keywordCount = currentAnalysis.keywords?.keywords?.length || 0;
+            const avgPosition = currentAnalysis.keywords?.keywords?.length > 0 ? 
+                Math.round(currentAnalysis.keywords.keywords.reduce((sum, kw) => sum + (kw.position || 0), 0) / currentAnalysis.keywords.keywords.length) : 0;
+            document.getElementById('keywordCount').textContent = keywordCount;
+            document.getElementById('avgPosition').textContent = avgPosition || '-';
+
+            // Competitors
+            const competitorCount = currentAnalysis.competitors?.value?.length || 0;
+            const marketShare = currentAnalysis.competitors?.value?.length > 0 ? '12%' : '-';
+            document.getElementById('competitorCount').textContent = competitorCount;
+            document.getElementById('marketShare').textContent = marketShare;
+
+            // Backlinks
+            const backlinkCount = currentAnalysis.backlinks?.value?.length || 0;
+            const domainRating = currentAnalysis.backlinks?.domain_rating || 0;
+            document.getElementById('backlinkCount').textContent = backlinkCount;
+            document.getElementById('domainRating').textContent = domainRating || '-';
+        }
+
+        function showRecommendations(section, element) {
+            currentSection = section;
+            
+            // Update active card
+            document.querySelectorAll('.analysis-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            // Update title
+            const titles = {
+                'technical': 'Technical Analysis',
+                'keywords': 'Keyword Analysis',
+                'competitors': 'Competitor Analysis',
+                'backlinks': 'Backlink Analysis'
+            };
+            document.getElementById('recommendationsTitle').textContent = titles[section];
+
+            // Load recommendations
+            loadRecommendations(section);
+        }
+
+        async function loadRecommendations(section) {
+            const content = document.getElementById('recommendationsContent');
+            content.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Loading recommendations...</p></div>';
+
+            try {
+                if (aiMode) {
+                    await loadAIRecommendations(section);
+                } else {
+                    loadBasicRecommendations(section);
+                }
+            } catch (error) {
+                console.error('Error loading recommendations:', error);
+                content.innerHTML = '<div class="error">Failed to load recommendations. Please try again.</div>';
+            }
+        }
+
+        function loadBasicRecommendations(section) {
+            const content = document.getElementById('recommendationsContent');
+            
+            const recommendations = {
+                'technical': [
+                    {
+                        title: 'Title Tag Optimization',
+                        description: 'Optimize title tags to be between 50-60 characters and include primary keywords.',
+                        impact: 'High Impact'
+                    },
+                    {
+                        title: 'Meta Description',
+                        description: 'Add compelling meta descriptions between 150-160 characters for better click-through rates.',
+                        impact: 'Medium Impact'
+                    },
+                    {
+                        title: 'Image Alt Text',
+                        description: 'Add descriptive alt text to all images for better accessibility and SEO.',
+                        impact: 'Medium Impact'
+                    }
+                ],
+                'keywords': [
+                    {
+                        title: 'Keyword Research',
+                        description: 'Research and target long-tail keywords with lower competition.',
+                        impact: 'High Impact'
+                    },
+                    {
+                        title: 'Content Optimization',
+                        description: 'Optimize existing content to include target keywords naturally.',
+                        impact: 'High Impact'
+                    },
+                    {
+                        title: 'Semantic Keywords',
+                        description: 'Include related semantic keywords to improve topical relevance.',
+                        impact: 'Medium Impact'
+                    }
+                ],
+                'competitors': [
+                    {
+                        title: 'Competitor Analysis',
+                        description: 'Analyze top competitors to identify content gaps and opportunities.',
+                        impact: 'High Impact'
+                    },
+                    {
+                        title: 'Link Building',
+                        description: 'Build high-quality backlinks from authoritative domains.',
+                        impact: 'High Impact'
+                    },
+                    {
+                        title: 'Content Strategy',
+                        description: 'Create better content than competitors to outrank them.',
+                        impact: 'High Impact'
+                    }
+                ],
+                'backlinks': [
+                    {
+                        title: 'Quality Backlinks',
+                        description: 'Focus on acquiring high-quality backlinks from relevant domains.',
+                        impact: 'High Impact'
+                    },
+                    {
+                        title: 'Internal Linking',
+                        description: 'Improve internal linking structure to distribute link equity.',
+                        impact: 'Medium Impact'
+                    },
+                    {
+                        title: 'Broken Link Building',
+                        description: 'Find and replace broken links on relevant websites.',
+                        impact: 'Medium Impact'
+                    }
+                ]
+            };
+
+            const sectionRecommendations = recommendations[section] || [];
+            
+            content.innerHTML = sectionRecommendations.map(rec => `
+                <div class="recommendation-item">
+                    <div class="recommendation-title">${rec.title}</div>
+                    <div class="recommendation-description">${rec.description}</div>
+                    <div class="recommendation-impact">${rec.impact}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadAIRecommendations(section) {
+            const content = document.getElementById('recommendationsContent');
+            
+            try {
+                const response = await fetch('/api/ai/generate-proposals', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        section: section,
+                        analysis: currentAnalysis
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.proposals) {
+                    const proposals = data.proposals;
+                    content.innerHTML = proposals.map(proposal => `
+                        <div class="recommendation-item">
+                            <div class="recommendation-title">${proposal.title}</div>
+                            <div class="recommendation-description">${proposal.description}</div>
+                            <div class="recommendation-impact">${proposal.impact}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    throw new Error(data.error || 'Failed to generate AI recommendations');
+                }
+            } catch (error) {
+                console.error('Error loading AI recommendations:', error);
+                content.innerHTML = '<div class="error">Failed to load AI recommendations. Please try again.</div>';
+            }
+        }
+
+        function toggleAI() {
+            aiMode = !aiMode;
+            const toggle = document.getElementById('aiToggle');
+            
+            if (aiMode) {
+                toggle.classList.add('active');
+                toggle.innerHTML = '<span>🤖</span><span>AI Active</span>';
+            } else {
+                toggle.classList.remove('active');
+                toggle.innerHTML = '<span>🤖</span><span>AI Recommendations</span>';
+            }
+            
+            // Reload recommendations with new mode
+            loadRecommendations(currentSection);
+        }
+
+        // Allow Enter key to trigger analysis
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeWebsite();
+            }
+        });
+    </script>
+</body>
+</html>

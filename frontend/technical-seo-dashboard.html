@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical SEO Dashboard - Mozarex AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="components/top-navbar.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1e293b;
+            color: #cbd5e1;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .sidebar-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            border-left-color: #6366f1;
+            color: #ffffff;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Top navbar styles are now in components/top-navbar.css */
+
+        .user-name {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            opacity: 0.8;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filter-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .filter-select option {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            min-width: 200px;
+        }
+
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Technical SEO Overview */
+        .tech-seo-overview {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .tech-score-gauge {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+        }
+
+        .tech-score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #22c55e 0deg,
+                #16a34a 90deg,
+                rgba(255, 255, 255, 0.1) 90deg,
+                transparent 90deg,
+                transparent 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .tech-score-circle::before {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            backdrop-filter: blur(10px);
+        }
+
+        .tech-score-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .tech-score-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-score-label {
+            font-size: 1rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .tech-score-status {
+            font-size: 0.9rem;
+            color: #22c55e;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        /* Technical SEO Sections */
+        .tech-seo-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .tech-seo-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .tech-seo-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .tech-seo-section.filtered-out {
+            display: none;
+        }
+
+        /* Technical SEO Analysis Styles */
+        .tech-seo-section-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tech-seo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #a855f7, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1.2rem;
+        }
+
+        .tech-seo-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #a855f7;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .analysis-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .analysis-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-title {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .analysis-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-good {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .status-warning {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .analysis-content {
+            margin-bottom: 1rem;
+        }
+
+        .analysis-text {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .analysis-recommendation {
+            background: rgba(168, 85, 247, 0.1);
+            border-left: 3px solid #a855f7;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #a855f7;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-text {
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .tech-seo-section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tech-seo-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        /* Heading Optimization */
+        .heading-analysis {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .heading-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .heading-tag {
+            font-size: 0.9rem;
+            color: #a855f7;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .heading-text {
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .heading-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .status-good {
+            color: #22c55e;
+        }
+
+        .status-warning {
+            color: #f59e0b;
+        }
+
+        .status-error {
+            color: #ef4444;
+        }
+
+        /* Title Tags */
+        .title-analysis {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .title-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .title-url {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .title-text {
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .title-metrics {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .title-length {
+            color: #cbd5e1;
+        }
+
+        /* Meta Tags */
+        .meta-analysis {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .meta-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .meta-type {
+            font-size: 0.8rem;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .meta-content {
+            color: #ffffff;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-status {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+        }
+
+        /* Image Alt Text */
+        .image-analysis {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .image-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .image-src {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .image-alt {
+            color: #ffffff;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .image-status {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 2rem;
+            color: #ef4444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .tech-seo-sections {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .tech-score-gauge {
+                width: 150px;
+                height: 150px;
+            }
+
+            .tech-score-circle {
+                width: 150px;
+                height: 150px;
+            }
+
+            .tech-score-circle::before {
+                width: 105px;
+                height: 105px;
+            }
+
+            .tech-score-number {
+                font-size: 2rem;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="sidebar-brand">
+                <div class="sidebar-brand-icon">
+                    <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                </div>
+                <span class="sidebar-brand-text">Mozarex</span>
+            </a>
+        </div>
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Dashboard</div>
+                <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    Overview
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">SEO Tools</div>
+                <a href="/technical-seo" class="nav-item active" data-page="technical-seo">
+                    <i class="fas fa-cogs"></i>
+                    Technical SEO
+                </a>
+                <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+                    <i class="fas fa-key"></i>
+                    Keywords
+                </a>
+                <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                    <i class="fas fa-users"></i>
+                    Competitors
+                </a>
+                <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+                    <i class="fas fa-link"></i>
+                    Backlinks
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Content</div>
+                <a href="/blog" class="nav-item" data-page="blog-generator">
+                    <i class="fas fa-pen-fancy"></i>
+                    Blog Generator
+                </a>
+                <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    Content Calendar
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Connections</div>
+                <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+                    <i class="fas fa-share-alt"></i>
+                    Social Connections
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <nav class="breadcrumb">
+                    <a href="/">Home</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span id="currentPage">Technical SEO</span>
+                </nav>
+            </div>
+            
+            <div class="header-right">
+                <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+                    <div class="user-avatar">M</div>
+                    <div class="user-info">
+                        <div class="user-name">Mozarex User</div>
+                        <div class="user-role">Admin</div>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-item">
+                            <div class="user-info">
+                                <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                                <div class="user-details">
+                                    <h4>Mozarex User</h4>
+                                    <div class="user-role">Admin</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="/user-settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="#" class="dropdown-item danger" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-container">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Technical SEO Analysis</h1>
+                <p class="dashboard-subtitle">Comprehensive technical SEO audit and optimization recommendations</p>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h3 class="filter-title">Filter & Search</h3>
+                    <div class="filter-status" id="filterStatus" style="font-size: 0.9rem; color: #94a3b8; margin-left: auto; margin-right: 1rem;">All items visible</div>
+                    <button onclick="clearFilters()" class="filter-clear-btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; cursor: pointer;">Clear Filters</button>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                            <option value="all">All Status</option>
+                            <option value="good">Good</option>
+                            <option value="warning">Warning</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Category</label>
+                        <select class="filter-select" id="categoryFilter" onchange="applyFilters()">
+                            <option value="all">All Categories</option>
+                            <option value="headings">Headings</option>
+                            <option value="title">Title Tags</option>
+                            <option value="meta">Meta Tags</option>
+                            <option value="images">Images</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Search</label>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search elements..." onkeyup="debouncedApplyFilters()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical SEO Overview -->
+            <div class="tech-seo-overview">
+                <div class="tech-score-gauge">
+                    <div class="tech-score-circle" id="techScoreCircle">
+                        <div class="tech-score-content">
+                            <div class="tech-score-number" id="techScoreNumber">85</div>
+                            <div class="tech-score-label">Technical Score</div>
+                            <div class="tech-score-status" id="techScoreStatus">Good</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="techOverviewContent">
+                    <h3>Overall Technical Health</h3>
+                    <p>Your website shows good technical SEO fundamentals with room for improvement in specific areas.</p>
+                </div>
+            </div>
+
+            <!-- Technical SEO Sections -->
+            <div class="tech-seo-sections">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Heading Optimization -->
+                    <div class="tech-seo-section">
+                        <h2 class="tech-seo-section-title">
+                            <span class="tech-seo-icon">H</span>
+                            Heading Tags Analysis
+                        </h2>
+                        <div class="tech-seo-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="headingPages">12</span>
+                                <span class="stat-label">Pages Analyzed</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="headingIssues">3</span>
+                                <span class="stat-label">Issues Found</span>
+                            </div>
+                        </div>
+                        <div class="heading-analysis" id="headingAnalysis">
+                            <!-- Heading items will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Link Analysis -->
+                    <div class="tech-seo-section">
+                        <h2 class="tech-seo-section-title">
+                            <span class="tech-seo-icon">L</span>
+                            Link Analysis
+                        </h2>
+                        <div class="tech-seo-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="linkPages">12</span>
+                                <span class="stat-label">Pages Analyzed</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="linkIssues">5</span>
+                                <span class="stat-label">Issues Found</span>
+                            </div>
+                        </div>
+                        <div class="link-analysis" id="linkAnalysis">
+                            <!-- Link items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Title Tags -->
+                    <div class="tech-seo-section">
+                        <h2 class="tech-seo-section-title">
+                            <span class="tech-seo-icon">T</span>
+                            Title Tags Analysis
+                        </h2>
+                        <div class="tech-seo-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="titlePages">12</span>
+                                <span class="stat-label">Pages Analyzed</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="titleIssues">2</span>
+                                <span class="stat-label">Issues Found</span>
+                            </div>
+                        </div>
+                        <div class="title-analysis" id="titleAnalysis">
+                            <!-- Title items will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Meta Tags -->
+                    <div class="tech-seo-section">
+                        <h2 class="tech-seo-section-title">
+                            <span class="tech-seo-icon">M</span>
+                            Meta Tags Analysis
+                        </h2>
+                        <div class="tech-seo-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="metaPages">12</span>
+                                <span class="stat-label">Pages Analyzed</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="metaIssues">4</span>
+                                <span class="stat-label">Issues Found</span>
+                            </div>
+                        </div>
+                        <div class="meta-analysis" id="metaAnalysis">
+                            <!-- Meta items will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Image Alt Text -->
+                    <div class="tech-seo-section">
+                        <h2 class="tech-seo-section-title">
+                            <span class="tech-seo-icon">I</span>
+                            Image Alt Text Analysis
+                        </h2>
+                        <div class="tech-seo-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="imagePages">12</span>
+                                <span class="stat-label">Pages Analyzed</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="imageIssues">6</span>
+                                <span class="stat-label">Issues Found</span>
+                            </div>
+                        </div>
+                        <div class="image-analysis" id="imageAnalysis">
+                            <!-- Image items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="components/top-navbar.js"></script>
+    <script>
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Update technical score circle
+        function updateTechScoreCircle(score) {
+            const circle = document.getElementById('techScoreCircle');
+            const scoreNumber = document.getElementById('techScoreNumber');
+            const scoreStatus = document.getElementById('techScoreStatus');
+            
+            if (!circle) return;
+            
+            // Calculate percentage and degrees
+            const percentage = Math.min(Math.max(score, 0), 100);
+            const degrees = (percentage / 100) * 360;
+            
+            // Determine colors based on score
+            let color1, color2, status, statusColor;
+            
+            if (percentage >= 80) {
+                color1 = '#22c55e';
+                color2 = '#16a34a';
+                status = 'Excellent';
+                statusColor = '#22c55e';
+            } else if (percentage >= 60) {
+                color1 = '#3b82f6';
+                color2 = '#2563eb';
+                status = 'Good';
+                statusColor = '#3b82f6';
+            } else if (percentage >= 40) {
+                color1 = '#f59e0b';
+                color2 = '#d97706';
+                status = 'Fair';
+                statusColor = '#f59e0b';
+            } else {
+                color1 = '#ef4444';
+                color2 = '#dc2626';
+                status = 'Poor';
+                statusColor = '#ef4444';
+            }
+            
+            // Update circle gradient
+            circle.style.background = `conic-gradient(
+                from 0deg,
+                ${color1} 0deg,
+                ${color2} ${degrees}deg,
+                rgba(255, 255, 255, 0.1) ${degrees}deg,
+                transparent ${degrees}deg,
+                transparent 360deg
+            )`;
+            
+            // Update score display
+            if (scoreNumber) scoreNumber.textContent = score;
+            if (scoreStatus) {
+                scoreStatus.textContent = status;
+                scoreStatus.style.color = statusColor;
+            }
+        }
+
+        // Load technical SEO data
+        async function loadTechnicalSEOData() {
+            try {
+                console.log('🔧 Loading technical SEO data...');
+                
+                // Get current domain from URL or use default
+                const currentDomain = window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname;
+                
+                // Fetch technical SEO analysis data
+                const response = await fetch(`/api/technical-seo/${currentDomain}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch technical SEO data');
+                }
+                
+                const techData = await response.json();
+                console.log('✅ Technical SEO data loaded:', techData);
+                
+                // Check if the response was successful
+                if (!techData.success) {
+                    throw new Error(techData.error || 'Failed to fetch technical SEO data');
+                }
+                
+                // Update dashboard with real technical SEO data
+                updateTechnicalSEODashboard(techData.data);
+                
+            } catch (error) {
+                console.error('❌ Error loading technical SEO data:', error);
+                showErrorState();
+            }
+        }
+
+        // Update technical SEO dashboard with real data
+        function updateTechnicalSEODashboard(data) {
+            console.log('🔧 Updating technical SEO dashboard with data:', data);
+            
+            const metrics = data.metrics || {};
+            const technicalData = data.technicalData || {};
+            
+            // Update overall technical score
+            const overallScore = calculateTechnicalScore(metrics);
+            updateTechScoreCircle(overallScore);
+            
+            // Update heading optimization
+            updateHeadingAnalysis(technicalData.headings || []);
+            
+            // Update title tags analysis
+            updateTitleAnalysis(technicalData.titleTags || []);
+            
+            // Update meta tags analysis
+            updateMetaAnalysis(technicalData.metaTags || []);
+            
+            // Update image alt text analysis
+            updateImageAnalysis(technicalData.images || []);
+            
+            // Update link analysis
+            updateLinkAnalysis(technicalData.links || []);
+        }
+
+        // Calculate overall technical score
+        function calculateTechnicalScore(metrics) {
+            let score = 0;
+            
+            // Heading structure score (0-25 points)
+            const headingScore = metrics.headingStructure || 0;
+            score += Math.min(headingScore * 0.25, 25);
+            
+            // Title tag optimization score (0-25 points)
+            const titleScore = metrics.titleOptimization || 0;
+            score += Math.min(titleScore * 0.25, 25);
+            
+            // Meta tags score (0-20 points)
+            const metaScore = metrics.metaTags || 0;
+            score += Math.min(metaScore * 0.20, 20);
+            
+            // Image optimization score (0-15 points)
+            const imageScore = metrics.imageOptimization || 0;
+            score += Math.min(imageScore * 0.15, 15);
+            
+            // Page speed score (0-15 points)
+            const speedScore = metrics.pageSpeed || 0;
+            score += Math.min(speedScore * 0.15, 15);
+            
+            return Math.min(Math.max(score, 0), 100);
+        }
+
+        // Update heading analysis
+        function updateHeadingAnalysis(headings) {
+            const headingContainer = document.getElementById('headingAnalysis');
+            if (!headingContainer) return;
+            
+            // Clear existing content
+            headingContainer.innerHTML = '';
+            
+            // Sample headings with detailed analysis if none provided
+            const sampleHeadings = headings.length > 0 ? headings : [
+                { 
+                    tag: 'H1', 
+                    text: 'Welcome to Mozarex AI - Digital Marketing Solutions', 
+                    status: 'good',
+                    page: '/',
+                    issue: null,
+                    recommendation: 'Excellent H1 tag with primary keyword and brand name. Maintains proper hierarchy.'
+                },
+                { 
+                    tag: 'H2', 
+                    text: 'Our Services', 
+                    status: 'warning',
+                    page: '/services',
+                    issue: 'Missing keyword optimization',
+                    recommendation: 'Consider adding "Digital Marketing Services" to improve keyword targeting.'
+                },
+                { 
+                    tag: 'H2', 
+                    text: 'About Us', 
+                    status: 'warning',
+                    page: '/about',
+                    issue: 'Too short and generic',
+                    recommendation: 'Expand to "About Mozarex AI - Leading Digital Marketing Agency" for better SEO.'
+                },
+                { 
+                    tag: 'H3', 
+                    text: 'SEO Services', 
+                    status: 'good',
+                    page: '/seo-services',
+                    issue: null,
+                    recommendation: 'Well-optimized H3 tag with clear service description.'
+                },
+                { 
+                    tag: 'H3', 
+                    text: 'Content Marketing', 
+                    status: 'good',
+                    page: '/content-marketing',
+                    issue: null,
+                    recommendation: 'Good H3 structure. Consider adding location-based keywords if targeting local market.'
+                },
+                { 
+                    tag: 'H4', 
+                    text: 'Local SEO', 
+                    status: 'error',
+                    page: '/services',
+                    issue: 'Missing from main page structure',
+                    recommendation: 'Add H4 tags to main service page to improve content hierarchy and keyword targeting.'
+                }
+            ];
+            
+            // Update stats
+            const headingPages = document.getElementById('headingPages');
+            const headingIssues = document.getElementById('headingIssues');
+            if (headingPages) headingPages.textContent = new Set(sampleHeadings.map(h => h.page)).size;
+            if (headingIssues) headingIssues.textContent = sampleHeadings.filter(h => h.issue).length;
+            
+            sampleHeadings.forEach(heading => {
+                const analysisItem = document.createElement('div');
+                analysisItem.className = 'analysis-item';
+                
+                const statusClass = heading.status === 'good' ? 'status-good' : 
+                                  heading.status === 'warning' ? 'status-warning' : 'status-error';
+                
+                analysisItem.innerHTML = `
+                    <div class="analysis-header">
+                        <span class="analysis-title">${heading.tag}: ${heading.text.substring(0, 50)}${heading.text.length > 50 ? '...' : ''}</span>
+                        <span class="analysis-status ${statusClass}">${heading.status}</span>
+                    </div>
+                    <div class="analysis-content">
+                        <p class="analysis-text"><strong>Page:</strong> ${heading.page}</p>
+                        <p class="analysis-text">${heading.text}</p>
+                        ${heading.issue ? `<p class="analysis-text"><strong>Issues:</strong> ${heading.issue}</p>` : ''}
+                    </div>
+                    <div class="analysis-recommendation">
+                        <div class="recommendation-title">🤖 AI Recommendation</div>
+                        <div class="recommendation-text">${heading.recommendation}</div>
+                    </div>
+                `;
+                
+                headingContainer.appendChild(analysisItem);
+            });
+        }
+
+        // Update title analysis
+        function updateTitleAnalysis(titleTags) {
+            const titleContainer = document.getElementById('titleAnalysis');
+            if (!titleContainer) return;
+            
+            // Clear existing content
+            titleContainer.innerHTML = '';
+            
+            // Sample title tags with detailed analysis if none provided
+            const sampleTitles = titleTags.length > 0 ? titleTags : [
+                { 
+                    url: '/', 
+                    title: 'Mozarex AI - Digital Marketing & SEO Solutions', 
+                    length: 48, 
+                    status: 'good',
+                    issue: null,
+                    recommendation: 'Perfect title length and includes primary keywords. Excellent brand positioning.'
+                },
+                { 
+                    url: '/services', 
+                    title: 'Digital Marketing Services | Mozarex AI', 
+                    length: 42, 
+                    status: 'good',
+                    issue: null,
+                    recommendation: 'Well-structured title with service keywords and brand name. Optimal length for SEO.'
+                },
+                { 
+                    url: '/about', 
+                    title: 'About', 
+                    length: 5, 
+                    status: 'error',
+                    issue: 'Too short - missing keywords and brand',
+                    recommendation: 'Expand to "About Mozarex AI - Digital Marketing Experts" to include keywords and improve click-through rates.'
+                },
+                { 
+                    url: '/contact', 
+                    title: 'Contact Us - Get in Touch with Mozarex AI Team', 
+                    length: 45, 
+                    status: 'good',
+                    issue: null,
+                    recommendation: 'Good contact page title with clear call-to-action and brand name.'
+                },
+                { 
+                    url: '/blog', 
+                    title: 'Digital Marketing Blog | Latest SEO Tips & Strategies', 
+                    length: 55, 
+                    status: 'warning',
+                    issue: 'Slightly over optimal length (50-60 chars)',
+                    recommendation: 'Consider shortening to "Digital Marketing Blog | SEO Tips & Strategies" to improve SERP display.'
+                }
+            ];
+            
+            // Update stats
+            const titlePages = document.getElementById('titlePages');
+            const titleIssues = document.getElementById('titleIssues');
+            if (titlePages) titlePages.textContent = sampleTitles.length;
+            if (titleIssues) titleIssues.textContent = sampleTitles.filter(t => t.issue).length;
+            
+            sampleTitles.forEach(title => {
+                const analysisItem = document.createElement('div');
+                analysisItem.className = 'analysis-item';
+                
+                const statusClass = title.status === 'good' ? 'status-good' : 
+                                  title.status === 'warning' ? 'status-warning' : 'status-error';
+                
+                analysisItem.innerHTML = `
+                    <div class="analysis-header">
+                        <span class="analysis-title">${title.url}: ${title.title.substring(0, 40)}${title.title.length > 40 ? '...' : ''}</span>
+                        <span class="analysis-status ${statusClass}">${title.status}</span>
+                    </div>
+                    <div class="analysis-content">
+                        <p class="analysis-text"><strong>Page:</strong> ${title.url}</p>
+                        <p class="analysis-text"><strong>Title:</strong> ${title.title}</p>
+                        <p class="analysis-text"><strong>Length:</strong> ${title.length} characters</p>
+                        ${title.issue ? `<p class="analysis-text"><strong>Issues:</strong> ${title.issue}</p>` : ''}
+                    </div>
+                    <div class="analysis-recommendation">
+                        <div class="recommendation-title">🤖 AI Recommendation</div>
+                        <div class="recommendation-text">${title.recommendation}</div>
+                    </div>
+                `;
+                
+                titleContainer.appendChild(analysisItem);
+            });
+        }
+
+        // Update link analysis
+        function updateLinkAnalysis(links) {
+            const linkContainer = document.getElementById('linkAnalysis');
+            if (!linkContainer) return;
+            
+            // Clear existing content
+            linkContainer.innerHTML = '';
+            
+            // Sample links with detailed analysis if none provided
+            const sampleLinks = links.length > 0 ? links : [
+                { 
+                    url: '/services', 
+                    text: 'Digital Marketing Services', 
+                    type: 'internal',
+                    status: 'good',
+                    issue: null,
+                    recommendation: 'Well-structured internal link with descriptive anchor text. Good for SEO.'
+                },
+                { 
+                    url: 'https://mozarex.com/contact', 
+                    text: 'Contact Us', 
+                    type: 'internal',
+                    status: 'good',
+                    issue: null,
+                    recommendation: 'Clear call-to-action link with proper internal linking structure.'
+                },
+                { 
+                    url: 'https://example.com', 
+                    text: 'Learn More', 
+                    type: 'external',
+                    status: 'warning',
+                    issue: 'Generic anchor text',
+                    recommendation: 'Use more descriptive anchor text like "Learn More About Digital Marketing" to improve SEO value.'
+                },
+                { 
+                    url: '/about', 
+                    text: 'About', 
+                    type: 'internal',
+                    status: 'warning',
+                    issue: 'Short anchor text',
+                    recommendation: 'Expand anchor text to "About Mozarex AI" for better context and SEO.'
+                },
+                { 
+                    url: '#', 
+                    text: 'Read More', 
+                    type: 'placeholder',
+                    status: 'error',
+                    issue: 'Placeholder link with no destination',
+                    recommendation: 'Replace with actual destination URL or remove the link entirely.'
+                },
+                { 
+                    url: 'https://facebook.com/mozarex', 
+                    text: 'Follow us on Facebook', 
+                    type: 'external',
+                    status: 'good',
+                    issue: null,
+                    recommendation: 'Good social media link with descriptive anchor text and proper external linking.'
+                }
+            ];
+            
+            // Update stats
+            const linkPages = document.getElementById('linkPages');
+            const linkIssues = document.getElementById('linkIssues');
+            if (linkPages) linkPages.textContent = new Set(sampleLinks.map(l => l.url.split('/')[0] || '/')).size;
+            if (linkIssues) linkIssues.textContent = sampleLinks.filter(l => l.issue).length;
+            
+            sampleLinks.forEach(link => {
+                const analysisItem = document.createElement('div');
+                analysisItem.className = 'analysis-item';
+                
+                const statusClass = link.status === 'good' ? 'status-good' : 
+                                  link.status === 'warning' ? 'status-warning' : 'status-error';
+                
+                analysisItem.innerHTML = `
+                    <div class="analysis-header">
+                        <span class="analysis-title">${link.type.toUpperCase()}: ${link.text}</span>
+                        <span class="analysis-status ${statusClass}">${link.status}</span>
+                    </div>
+                    <div class="analysis-content">
+                        <p class="analysis-text"><strong>URL:</strong> ${link.url}</p>
+                        <p class="analysis-text"><strong>Anchor Text:</strong> ${link.text}</p>
+                        <p class="analysis-text"><strong>Type:</strong> ${link.type}</p>
+                        ${link.issue ? `<p class="analysis-text"><strong>Issues:</strong> ${link.issue}</p>` : ''}
+                    </div>
+                    <div class="analysis-recommendation">
+                        <div class="recommendation-title">🤖 AI Recommendation</div>
+                        <div class="recommendation-text">${link.recommendation}</div>
+                    </div>
+                `;
+                
+                linkContainer.appendChild(analysisItem);
+            });
+        }
+
+        // Update meta analysis
+        function updateMetaAnalysis(metaTags) {
+            const metaContainer = document.getElementById('metaAnalysis');
+            if (!metaContainer) return;
+            
+            // Clear existing content
+            metaContainer.innerHTML = '';
+            
+            // Sample meta tags if none provided
+            const sampleMetas = metaTags.length > 0 ? metaTags : [
+                { type: 'description', content: 'Mozarex AI provides comprehensive digital marketing and SEO solutions to help businesses grow online.', status: 'good' },
+                { type: 'keywords', content: 'digital marketing, SEO, content marketing, social media', status: 'warning' },
+                { type: 'viewport', content: 'width=device-width, initial-scale=1.0', status: 'good' },
+                { type: 'robots', content: 'index, follow', status: 'good' },
+                { type: 'author', content: 'Mozarex AI Team', status: 'good' }
+            ];
+            
+            sampleMetas.forEach(meta => {
+                const metaItem = document.createElement('div');
+                metaItem.className = 'meta-item';
+                
+                const statusClass = meta.status === 'good' ? 'status-good' : 
+                                  meta.status === 'warning' ? 'status-warning' : 'status-error';
+                const statusText = meta.status === 'good' ? '✓ Present' : 
+                                 meta.status === 'warning' ? '⚠ Consider updating' : '✗ Missing';
+                
+                metaItem.innerHTML = `
+                    <div class="meta-type">${meta.type}</div>
+                    <div class="meta-content">${meta.content}</div>
+                    <div class="meta-status ${statusClass}">${statusText}</div>
+                `;
+                
+                metaContainer.appendChild(metaItem);
+            });
+        }
+
+        // Update image analysis
+        function updateImageAnalysis(images) {
+            const imageContainer = document.getElementById('imageAnalysis');
+            if (!imageContainer) return;
+            
+            // Clear existing content
+            imageContainer.innerHTML = '';
+            
+            // Sample images if none provided
+            const sampleImages = images.length > 0 ? images : [
+                { src: '/images/hero-banner.jpg', alt: 'Digital marketing team working on SEO strategy', status: 'good' },
+                { src: '/images/services-icon.png', alt: 'Services icon', status: 'good' },
+                { src: '/images/team-photo.jpg', alt: '', status: 'error' },
+                { src: '/images/Logo_M.png', alt: 'Mozarex AI Logo', status: 'good' },
+                { src: '/images/background.jpg', alt: 'Background image', status: 'warning' }
+            ];
+            
+            sampleImages.forEach(image => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                
+                const statusClass = image.status === 'good' ? 'status-good' : 
+                                  image.status === 'warning' ? 'status-warning' : 'status-error';
+                const statusText = image.status === 'good' ? '✓ Good' : 
+                                 image.status === 'warning' ? '⚠ Generic' : '✗ Missing alt text';
+                
+                imageItem.innerHTML = `
+                    <div class="image-src">${image.src}</div>
+                    <div class="image-alt">${image.alt || 'No alt text provided'}</div>
+                    <div class="image-status ${statusClass}">${statusText}</div>
+                `;
+                
+                imageContainer.appendChild(imageItem);
+            });
+        }
+
+        // Show error state
+        function showErrorState() {
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.innerHTML = `
+                <div class="error-state">
+                    <h2>❌ Error Loading Technical SEO Data</h2>
+                    <p>Unable to fetch technical SEO analysis. Please try again later.</p>
+                    <button onclick="loadTechnicalSEOData()" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        margin-top: 1rem;
+                    ">Retry</button>
+                </div>
+            `;
+        }
+
+        // Initialize dashboard
+        // Debounced filter function for better performance
+        let filterTimeout;
+        function debouncedApplyFilters() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                applyFilters();
+            }, 300); // Wait 300ms after user stops typing
+        }
+        
+        // Enhanced filtering functionality
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            console.log('🔍 Applying filters:', { statusFilter, categoryFilter, searchInput });
+            
+            // Get all technical SEO sections
+            const sections = document.querySelectorAll('.tech-seo-section');
+            
+            sections.forEach(section => {
+                let shouldShow = true;
+                const sectionTitle = section.querySelector('.tech-seo-section-title');
+                
+                if (!sectionTitle) return;
+                
+                const sectionTitleText = sectionTitle.textContent.toLowerCase();
+                
+                // Enhanced category filtering
+                if (categoryFilter !== 'all') {
+                    shouldShow = false;
+                    
+                    switch (categoryFilter) {
+                        case 'headings':
+                            if (sectionTitleText.includes('heading') || sectionTitleText.includes('h1') || sectionTitleText.includes('h2')) {
+                                shouldShow = true;
+                            }
+                            break;
+                        case 'title':
+                            if (sectionTitleText.includes('title')) {
+                                shouldShow = true;
+                            }
+                            break;
+                        case 'meta':
+                            if (sectionTitleText.includes('meta')) {
+                                shouldShow = true;
+                            }
+                            break;
+                        case 'images':
+                            if (sectionTitleText.includes('image') || sectionTitleText.includes('alt')) {
+                                shouldShow = true;
+                            }
+                            break;
+                    }
+                }
+                
+                // If section should be shown, check for items within it
+                if (shouldShow) {
+                    const items = section.querySelectorAll('.analysis-item, .meta-item, .image-item');
+                    let hasVisibleItems = false;
+                    
+                    if (items.length === 0) {
+                        // If no specific items, show the section anyway (for stats-only sections)
+                        hasVisibleItems = true;
+                    } else {
+                        items.forEach(item => {
+                            let itemShouldShow = true;
+                            
+                            // Enhanced status filtering
+                            if (statusFilter !== 'all') {
+                                // Look for status elements with the correct class names
+                                const statusElement = item.querySelector('.analysis-status, .meta-status, .image-status, .link-status');
+                                if (statusElement) {
+                                    const statusClasses = statusElement.className;
+                                    const hasMatchingStatus = statusClasses.includes(`status-${statusFilter}`);
+                                    console.log(`🔍 Status check for item:`, {
+                                        statusFilter,
+                                        statusClasses,
+                                        hasMatchingStatus,
+                                        element: statusElement.textContent
+                                    });
+                                    if (!hasMatchingStatus) {
+                                        itemShouldShow = false;
+                                    }
+                                } else {
+                                    // If no status element, check for status classes on the item itself
+                                    const itemClasses = item.className;
+                                    const hasMatchingStatus = itemClasses.includes(`status-${statusFilter}`);
+                                    console.log(`🔍 Item class check:`, {
+                                        statusFilter,
+                                        itemClasses,
+                                        hasMatchingStatus
+                                    });
+                                    if (!hasMatchingStatus) {
+                                        itemShouldShow = false;
+                                    }
+                                }
+                            }
+                            
+                            // Enhanced search filtering
+                            if (itemShouldShow && searchInput) {
+                                const itemText = item.textContent.toLowerCase();
+                                if (!itemText.includes(searchInput)) {
+                                    itemShouldShow = false;
+                                }
+                            }
+                            
+                            // Show/hide item
+                            console.log(`🎯 Item display decision:`, {
+                                itemShouldShow,
+                                itemText: item.textContent.substring(0, 50) + '...',
+                                itemClasses: item.className
+                            });
+                            
+                            if (itemShouldShow) {
+                                item.style.display = 'block';
+                                hasVisibleItems = true;
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    }
+                    
+                    // Show/hide section based on visible items
+                    if (hasVisibleItems) {
+                        section.classList.remove('filtered-out');
+                        section.style.display = 'block';
+                    } else {
+                        section.classList.add('filtered-out');
+                        section.style.display = 'none';
+                    }
+                } else {
+                    // Hide section completely
+                    section.classList.add('filtered-out');
+                    section.style.display = 'none';
+                }
+            });
+            
+            // Update filter counts
+            updateFilterCounts();
+        }
+        
+        function updateFilterCounts() {
+            const sections = document.querySelectorAll('.tech-seo-section:not(.filtered-out)');
+            const visibleItems = document.querySelectorAll('.analysis-item:not([style*="display: none"]), .meta-item:not([style*="display: none"]), .image-item:not([style*="display: none"])');
+            const totalItems = document.querySelectorAll('.analysis-item, .meta-item, .image-item');
+            
+            const filterStatus = document.getElementById('filterStatus');
+            if (filterStatus) {
+                if (visibleItems.length === totalItems.length && sections.length === document.querySelectorAll('.tech-seo-section').length) {
+                    filterStatus.textContent = 'All items visible';
+                    filterStatus.style.color = '#94a3b8';
+                } else {
+                    filterStatus.textContent = `${visibleItems.length} of ${totalItems.length} items visible`;
+                    filterStatus.style.color = '#667eea';
+                }
+            }
+            
+            console.log(`📊 Filter results: ${sections.length} sections visible, ${visibleItems.length} items visible`);
+        }
+        
+        function clearFilters() {
+            console.log('🧹 Clearing all filters...');
+            
+            // Reset filter controls
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('searchInput').value = '';
+            
+            // Show all sections and items
+            const sections = document.querySelectorAll('.tech-seo-section');
+            sections.forEach(section => {
+                section.classList.remove('filtered-out');
+                section.style.display = 'block';
+                
+                // Show all items within sections
+                const items = section.querySelectorAll('.analysis-item, .meta-item, .image-item');
+                items.forEach(item => {
+                    item.style.display = 'block';
+                });
+            });
+            
+            // Update filter counts
+            updateFilterCounts();
+            
+            console.log('✅ All filters cleared');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Technical SEO Dashboard initialized');
+            loadTechnicalSEOData();
+            
+            // Initialize with default score
+            updateTechScoreCircle(85);
+            
+            // Initialize top navbar
+            initializeTopNavbar();
+        });
+
+        // User data loading functions are now handled by components/top-navbar.js
+        // These functions have been removed to avoid conflicts with the reusable component
+
+        // User dropdown functionality
+        function showUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            const userMenu = document.querySelector('.user-menu');
+            
+            // Get the position of the user menu
+            const rect = userMenu.getBoundingClientRect();
+            
+            // Position the dropdown using fixed positioning
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = (rect.bottom + 5) + 'px';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdown.style.zIndex = '2147483647';
+            
+            dropdown.classList.add('show');
+        }
+
+        function hideUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.remove('show');
+        }
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored authentication data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                
+                // Redirect to login page or home
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard - Mozarex SEO</title>
+    <link rel="stylesheet" href="/frontend/styles.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .debug-log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .debug-log h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .debug-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        .debug-entry.success {
+            color: #28a745;
+        }
+        .debug-entry.error {
+            color: #dc3545;
+        }
+        .debug-entry.info {
+            color: #007bff;
+        }
+        .debug-entry.warning {
+            color: #ffc107;
+        }
+        .dashboard-content {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Dashboard - Mozarex SEO</h1>
+    
+    <div class="debug-log">
+        <h4>🔍 Debug Log</h4>
+        <div id="debug-entries"></div>
+    </div>
+
+    <div class="dashboard-content">
+        <h2>Dashboard Content</h2>
+        <p>This is a debug version of the dashboard to trace what happens during loading.</p>
+        
+        <div id="user-info" style="display: none;">
+            <h3>User Information</h3>
+            <div id="user-details"></div>
+        </div>
+        
+        <div id="analysis-info" style="display: none;">
+            <h3>Analysis Information</h3>
+            <div id="analysis-details"></div>
+        </div>
+        
+        <div id="error-info" style="display: none;">
+            <h3>Error Information</h3>
+            <div id="error-details"></div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="testUserDataRetrieval()">Test User Data Retrieval</button>
+        <button class="btn btn-secondary" onclick="clearLocalStorage()">Clear LocalStorage</button>
+        <button class="btn btn-secondary" onclick="goToOnboarding()">Go to Onboarding</button>
+    </div>
+
+    <script>
+        let userData = null;
+
+        function addDebugLog(message, type = 'info') {
+            const debugEntries = document.getElementById('debug-entries');
+            const entry = document.createElement('div');
+            entry.className = `debug-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugEntries.appendChild(entry);
+            debugEntries.scrollTop = debugEntries.scrollHeight;
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        async function loadUserData() {
+            try {
+                addDebugLog('=== loadUserData START ===', 'info');
+                
+                // For demo purposes, we'll use localStorage to get the last analyzed domain
+                const lastDomain = localStorage.getItem('lastAnalyzedDomain');
+                addDebugLog(`Last domain from localStorage: "${lastDomain}"`, lastDomain ? 'success' : 'warning');
+                
+                if (!lastDomain) {
+                    addDebugLog('No domain in localStorage, redirecting to onboarding', 'error');
+                    // If no domain in localStorage, redirect to onboarding
+                    window.location.href = '/debug-onboarding';
+                    return;
+                }
+                
+                addDebugLog(`Fetching user data for domain: ${lastDomain}`, 'info');
+                addDebugLog(`Making API call to: /api/user/get-data?domain=${encodeURIComponent(lastDomain)}`, 'info');
+                
+                const response = await fetch(`/api/user/get-data?domain=${encodeURIComponent(lastDomain)}`);
+                addDebugLog(`Response status: ${response.status}`, response.status === 200 ? 'success' : 'error');
+                
+                const result = await response.json();
+                addDebugLog(`API response: ${JSON.stringify(result)}`, 'info');
+                
+                if (result.success) {
+                    userData = result.data;
+                    addDebugLog(`User data loaded successfully: ${JSON.stringify(userData)}`, 'success');
+                    displayUserInfo();
+                    
+                    // Load analysis data from Supabase
+                    await loadAnalysisData(lastDomain);
+                    
+                } else {
+                    addDebugLog(`API returned failure: ${result.error}`, 'error');
+                    // If no user data, redirect to simple onboarding
+                    window.location.href = '/debug-onboarding';
+                }
+            } catch (error) {
+                addDebugLog(`Error loading user data: ${error.message}`, 'error');
+                console.error('Dashboard: Error loading user data:', error);
+                // Redirect to simple onboarding on error
+                window.location.href = '/debug-onboarding';
+            }
+        }
+
+        async function loadAnalysisData(domain) {
+            try {
+                addDebugLog(`Loading analysis data for domain: ${domain}`, 'info');
+                
+                const response = await fetch(`/api/supabase/analysis/${encodeURIComponent(domain)}`);
+                addDebugLog(`Analysis response status: ${response.status}`, response.status === 200 ? 'success' : 'warning');
+                
+                const result = await response.json();
+                addDebugLog(`Analysis data response: ${JSON.stringify(result)}`, 'info');
+                
+                if (result.success) {
+                    addDebugLog('Analysis data loaded successfully', 'success');
+                    displayAnalysisInfo(result.data);
+                } else {
+                    addDebugLog(`Analysis data not found: ${result.error}`, 'warning');
+                }
+            } catch (error) {
+                addDebugLog(`Error loading analysis data: ${error.message}`, 'error');
+                console.error('Dashboard: Error loading analysis data:', error);
+            }
+        }
+
+        function displayUserInfo() {
+            if (userData) {
+                document.getElementById('user-info').style.display = 'block';
+                document.getElementById('user-details').innerHTML = `
+                    <p><strong>Domain:</strong> ${userData.domain}</p>
+                    <p><strong>Business Description:</strong> ${userData.businessDescription}</p>
+                    <p><strong>Has Analysis Data:</strong> ${!!userData.analysisData}</p>
+                `;
+                addDebugLog('User info displayed', 'success');
+            }
+        }
+
+        function displayAnalysisInfo(analysisData) {
+            document.getElementById('analysis-info').style.display = 'block';
+            document.getElementById('analysis-details').innerHTML = `
+                <p><strong>Analysis Data Available:</strong> ${!!analysisData}</p>
+                <p><strong>Data Keys:</strong> ${analysisData ? Object.keys(analysisData).join(', ') : 'None'}</p>
+            `;
+            addDebugLog('Analysis info displayed', 'success');
+        }
+
+        function testUserDataRetrieval() {
+            addDebugLog('=== Manual User Data Test ===', 'info');
+            const lastDomain = localStorage.getItem('lastAnalyzedDomain');
+            addDebugLog(`Testing with domain: ${lastDomain}`, 'info');
+            
+            if (lastDomain) {
+                fetch(`/api/user/get-data?domain=${encodeURIComponent(lastDomain)}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        addDebugLog(`Manual test result: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+                    })
+                    .catch(error => {
+                        addDebugLog(`Manual test error: ${error.message}`, 'error');
+                    });
+            } else {
+                addDebugLog('No domain in localStorage for manual test', 'warning');
+            }
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            addDebugLog('LocalStorage cleared', 'warning');
+            location.reload();
+        }
+
+        function goToOnboarding() {
+            addDebugLog('Redirecting to debug onboarding', 'info');
+            window.location.href = '/debug-onboarding';
+        }
+
+        // Initialize dashboard
+        addDebugLog('Debug dashboard loaded', 'info');
+        addDebugLog(`Current URL: ${window.location.href}`, 'info');
+        addDebugLog(`LocalStorage keys: ${Object.keys(localStorage).join(', ')}`, 'info');
+        
+        // Load user data
+        loadUserData();
+    </script>
+</body>
+</html>

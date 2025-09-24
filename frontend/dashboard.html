@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Mozarex - Website Overview v2.1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            overflow: hidden;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .content-card {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        .add-website-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .add-website-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .websites-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+            min-width: 800px;
+        }
+
+        .websites-table th {
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .websites-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .websites-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+            vertical-align: middle;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+
+        .websites-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 5;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .websites-table tr:hover {
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .websites-table tr:hover td:first-child {
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .domain-cell {
+            font-weight: 600;
+            color: #f1f5f9;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .domain-cell:hover {
+            color: #667eea;
+        }
+
+        .score-cell {
+            text-align: center;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            color: white;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .score-excellent {
+            background: #10b981;
+        }
+
+        .score-good {
+            background: #3b82f6;
+        }
+
+        .score-fair {
+            background: #f59e0b;
+        }
+
+        .score-poor {
+            background: #ef4444;
+        }
+
+        .metrics-cell {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            min-width: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .metric-value.fixed-issues {
+            background: #f59e0b;
+        }
+
+        .metric-value.healthy-pages {
+            background: #10b981;
+        }
+
+        .metric-value.pages-with-issues {
+            background: #ef4444;
+        }
+
+        .last-analysis {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(30, 41, 59, 1);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #f1f5f9;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 16px;
+            }
+            
+            .websites-table th,
+            .websites-table td {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                </div>
+                <div class="logo-text">Mozarex</div>
+            </div>
+            <h1 class="page-title">Website Overview</h1>
+            <p class="page-subtitle">Manage and monitor your website's SEO performance</p>
+        </div>
+
+        <!-- Content Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2 class="card-title">Your Websites</h2>
+                <p class="card-subtitle">Click on any domain to view detailed analysis and SEO tools</p>
+            </div>
+            
+            <div class="card-content">
+                <button class="add-website-btn" onclick="addNewWebsite()">
+                    <i class="fas fa-plus"></i>
+                    Add New Website
+                </button>
+                
+                <div class="table-container">
+                    <table class="websites-table" id="websites-table">
+                        <thead>
+                            <tr>
+                                <th>Website</th>
+                                <th>Score</th>
+                                <th>Fixed Issues</th>
+                                <th>Healthy Pages</th>
+                                <th>Pages with Issues</th>
+                                <th>Last Analysis</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="websites-tbody">
+                            <tr>
+                                <td colspan="7" class="loading">
+                                    <div class="spinner"></div>
+                                    Loading your websites...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO for real-time analysis updates -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        console.log('Dashboard: Script starting to load...', new Date().toISOString());
+        console.log('Dashboard: Cache busting timestamp:', Date.now());
+        let userData = null;
+
+        // Load user data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard: Page loaded, initializing...');
+            console.log('Dashboard: localStorage lastAnalyzedDomain:', localStorage.getItem('lastAnalyzedDomain'));
+            console.log('Dashboard: localStorage analysisData:', localStorage.getItem('analysisData'));
+            loadUserData();
+        });
+
+        async function loadUserData() {
+            try {
+                console.log('Dashboard: Loading user data...');
+                
+                // Use the same logic as the working debug dashboard
+                const lastDomain = localStorage.getItem('lastAnalyzedDomain');
+                console.log('Dashboard: Last domain from localStorage:', lastDomain);
+                
+                if (!lastDomain) {
+                    console.log('Dashboard: No domain in localStorage, showing empty state');
+                    displayEmptyState();
+                    return;
+                }
+                
+                console.log('Dashboard: Fetching user data for domain:', lastDomain);
+                console.log('Dashboard: Making API call to:', `/api/user/get-data?domain=${encodeURIComponent(lastDomain)}`);
+                const response = await fetch(`/api/user/get-data?domain=${encodeURIComponent(lastDomain)}`);
+                console.log('Dashboard: Response status:', response.status);
+                const result = await response.json();
+                console.log('Dashboard: API response:', result);
+                
+                if (result.success) {
+                    userData = result.data;
+                    console.log('Dashboard: User data loaded successfully:', userData);
+                    
+                    // Load analysis data from Supabase first
+                    await loadAnalysisData(lastDomain);
+                    
+                    // Then display websites (after analysis data is loaded)
+                    displayWebsites();
+                } else {
+                    console.log('Dashboard: User data not found, checking if analysis data exists');
+                    // If user data doesn't exist, check if analysis data exists
+                    await loadAnalysisData(lastDomain);
+                    
+                    console.log('Dashboard: After loadAnalysisData, userData:', userData);
+                    console.log('Dashboard: userData.analysisData:', userData ? userData.analysisData : 'userData is null');
+                    
+                    if (userData && userData.analysisData) {
+                        console.log('Dashboard: Found analysis data, displaying websites');
+                        displayWebsites();
+                    } else {
+                        console.log('Dashboard: No analysis data found, showing empty state');
+                        displayEmptyState();
+                    }
+                }
+            } catch (error) {
+                console.error('Dashboard: Error loading user data:', error);
+                displayEmptyState();
+            }
+        }
+
+        async function loadAnalysisData(domain) {
+            try {
+                console.log('Dashboard: Loading analysis data for domain:', domain);
+                
+                const response = await fetch(`/api/supabase/analysis/${encodeURIComponent(domain)}`);
+                const result = await response.json();
+                console.log('Dashboard: Analysis data response:', result);
+                
+                if (result.success && result.data) {
+                    console.log('Dashboard: Analysis data loaded successfully');
+                    console.log('Dashboard: Analysis data:', result.data);
+                    
+                    // If userData doesn't exist, create it
+                    if (!userData) {
+                        userData = {
+                            domain: domain,
+                            businessDescription: 'Website Analysis',
+                            integrations: {},
+                            analysisData: result.data
+                        };
+                        console.log('Dashboard: Created userData from analysis data:', userData);
+                    } else {
+                        // Store analysis data in existing userData object
+                        userData.analysisData = result.data;
+                        console.log('Dashboard: Analysis data stored in userData');
+                    }
+                    
+                    // Store analysis data in localStorage for the mantis dashboard
+                    localStorage.setItem('analysisData', JSON.stringify(result.data));
+                    
+                    // Trigger content generation for content calendar
+                    if (window.triggerContentGeneration) {
+                        console.log('🎯 Triggering content generation for calendar');
+                        setTimeout(() => {
+                            window.triggerContentGeneration();
+                        }, 2000);
+                    }
+                } else {
+                    console.log('Dashboard: No analysis data found in Supabase');
+                    console.log('Dashboard: Result:', result);
+                }
+            } catch (error) {
+                console.error('Dashboard: Error loading analysis data:', error);
+            }
+        }
+
+        function displayEmptyState() {
+            const tbody = document.getElementById('websites-tbody');
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <div class="empty-state-icon">🌐</div>
+                        <h3>No Websites Analyzed Yet</h3>
+                        <p>Add your first website to get started with SEO analysis and unlock your site's organic potential</p>
+                        <button class="btn btn-primary" onclick="addNewWebsite()">+ Add Your First Website</button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function displayWebsites() {
+            console.log('Dashboard: displayWebsites called');
+            console.log('Dashboard: userData:', userData);
+            console.log('Dashboard: userData.analysisData:', userData ? userData.analysisData : 'userData is null');
+            
+            const tbody = document.getElementById('websites-tbody');
+            
+            if (!userData || !userData.analysisData) {
+                console.log('Dashboard: No userData or analysisData, showing empty state');
+                displayEmptyState();
+                return;
+            }
+
+            console.log('Dashboard: Displaying website with analysis data');
+            const analysis = userData.analysisData;
+            const score = calculateOverallScore(analysis);
+            const scoreClass = getScoreClass(score);
+            
+            console.log('Dashboard: Calculated score:', score, 'Class:', scoreClass);
+            
+            // Calculate page health metrics
+            const pageHealthMetrics = calculatePageHealthMetrics(analysis);
+            const healthyPages = pageHealthMetrics.healthyPages;
+            const pagesWithIssues = pageHealthMetrics.pagesWithIssues;
+            const fixedIssues = pageHealthMetrics.fixedIssues;
+
+            console.log('Dashboard: Page health metrics:', pageHealthMetrics);
+
+            tbody.innerHTML = `
+                <tr>
+                    <td class="domain-cell" onclick="openMantisDashboard('${userData.domain}')">${userData.domain}</td>
+                    <td class="score-cell">
+                        <span class="score-badge ${scoreClass}">${score}/100</span>
+                    </td>
+                    <td class="metrics-cell">
+                        <span class="metric-value fixed-issues">${fixedIssues}</span>
+                    </td>
+                    <td class="metrics-cell">
+                        <span class="metric-value healthy-pages">${healthyPages}</span>
+                    </td>
+                    <td class="metrics-cell">
+                        <span class="metric-value pages-with-issues">${pagesWithIssues}</span>
+                    </td>
+                    <td class="last-analysis">${new Date().toLocaleDateString()}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-primary" onclick="openMantisDashboard('${userData.domain}')">View Details</button>
+                        <button class="btn btn-secondary" onclick="reanalyzeWebsite('${userData.domain}')">Re-analyze</button>
+                    </td>
+                </tr>
+            `;
+            
+            console.log('Dashboard: Website displayed successfully');
+        }
+
+        function calculatePageHealthMetrics(analysis) {
+            // Check if this is aggregated subpage analysis data
+            if (analysis.healthyPages !== undefined && analysis.pagesWithIssues !== undefined && analysis.fixedIssues !== undefined) {
+                console.log('Dashboard: Using aggregated subpage analysis metrics:', {
+                    healthyPages: analysis.healthyPages,
+                    pagesWithIssues: analysis.pagesWithIssues,
+                    fixedIssues: analysis.fixedIssues,
+                    totalPages: analysis.totalPages,
+                    analyzedPages: analysis.analyzedPages
+                });
+                return {
+                    healthyPages: analysis.healthyPages,
+                    pagesWithIssues: analysis.pagesWithIssues,
+                    fixedIssues: analysis.fixedIssues,
+                    totalPages: analysis.totalPages || analysis.analyzedPages,
+                    averageScore: analysis.score,
+                    issuesByType: analysis.recommendations || []
+                };
+            }
+            
+            // Use DataForSEO page-level metrics if available
+            if (analysis.onPage && analysis.onPage.pageMetrics) {
+                console.log('Dashboard: Using DataForSEO page-level metrics:', analysis.onPage.pageMetrics);
+                return {
+                    healthyPages: analysis.onPage.pageMetrics.healthyPages,
+                    pagesWithIssues: analysis.onPage.pageMetrics.pagesWithIssues,
+                    fixedIssues: analysis.onPage.pageMetrics.totalFixedIssues,
+                    totalPages: analysis.onPage.pageMetrics.totalPages,
+                    averageScore: analysis.onPage.pageMetrics.averageScore,
+                    issuesByType: analysis.onPage.pageMetrics.issuesByType
+                };
+            }
+            
+            // Fallback to old logic if page metrics not available
+            let healthyPages = 0;
+            let pagesWithIssues = 0;
+            let fixedIssues = 0;
+            
+            // Analyze on-page data
+            if (analysis.onPage) {
+                const onPageIssues = [];
+                
+                // Check for common SEO issues
+                if (!analysis.onPage.title) {
+                    onPageIssues.push('Missing title tag');
+                }
+                if (!analysis.onPage.metaDescription) {
+                    onPageIssues.push('Missing meta description');
+                }
+                if (analysis.onPage.headings?.h1 === 0) {
+                    onPageIssues.push('Missing H1 tag');
+                }
+                if (analysis.onPage.headings?.h2 === 0) {
+                    onPageIssues.push('Missing H2 tags');
+                }
+                if (analysis.onPage.content?.wordCount < 300) {
+                    onPageIssues.push('Low content word count');
+                }
+                if (analysis.onPage.images?.missingAlt > 0) {
+                    onPageIssues.push(`${analysis.onPage.images.missingAlt} images missing alt text`);
+                }
+                if (!analysis.onPage.ssl) {
+                    onPageIssues.push('No SSL certificate');
+                }
+                if (!analysis.onPage.mobileFriendly) {
+                    onPageIssues.push('Not mobile friendly');
+                }
+                
+                // Calculate page health based on issues
+                if (onPageIssues.length === 0) {
+                    healthyPages = 1; // Main page is healthy
+                } else if (onPageIssues.length <= 2) {
+                    pagesWithIssues = 1; // Main page has minor issues
+                } else {
+                    pagesWithIssues = 1; // Main page has major issues
+                }
+                
+                fixedIssues = onPageIssues.length;
+            }
+            
+            // Analyze keywords data
+            if (analysis.keywords && analysis.keywords.keywords) {
+                const keywordIssues = analysis.keywords.keywords.filter(k => k.difficulty > 70).length;
+                if (keywordIssues > 0) {
+                    pagesWithIssues += Math.min(keywordIssues, 3); // Cap at 3 additional pages
+                }
+            }
+            
+            // Analyze recommendations
+            if (analysis.recommendations && analysis.recommendations.length > 0) {
+                const highPriorityIssues = analysis.recommendations.filter(r => r.priority === 'High').length;
+                const mediumPriorityIssues = analysis.recommendations.filter(r => r.priority === 'Medium').length;
+                
+                if (highPriorityIssues > 0) {
+                    pagesWithIssues += highPriorityIssues;
+                }
+                if (mediumPriorityIssues > 0) {
+                    pagesWithIssues += Math.ceil(mediumPriorityIssues / 2);
+                }
+            }
+            
+            // Ensure we have at least 1 page (the main page)
+            if (healthyPages === 0 && pagesWithIssues === 0) {
+                healthyPages = 1;
+            }
+            
+            return {
+                healthyPages: Math.max(healthyPages, 0),
+                pagesWithIssues: Math.max(pagesWithIssues, 0),
+                fixedIssues: Math.max(fixedIssues, 0),
+                totalPages: 1, // Fallback
+                averageScore: 0, // Fallback
+                issuesByType: {} // Fallback
+            };
+        }
+
+        function calculateOverallScore(analysis) {
+            if (!analysis) return 0;
+            
+            // If this is aggregated subpage analysis data, use the aggregated score
+            if (analysis.score !== undefined) {
+                console.log('Dashboard: Using aggregated subpage analysis score:', analysis.score);
+                return analysis.score;
+            }
+            
+            // Use the same technical scoring algorithm as BoostrampService
+            return calculateTechnicalSEOScore(analysis);
+        }
+        
+        function calculateTechnicalSEOScore(analysis) {
+            let score = 0;
+            let maxScore = 0;
+
+            // Title (20 points)
+            maxScore += 20;
+            if (analysis.onPage?.title) {
+                score += 15;
+                if (analysis.onPage.title.length >= 30 && analysis.onPage.title.length <= 60) {
+                    score += 5;
+                }
+            }
+
+            // Meta description (15 points)
+            maxScore += 15;
+            if (analysis.onPage?.metaDescription) {
+                score += 10;
+                if (analysis.onPage.metaDescription.length >= 120 && analysis.onPage.metaDescription.length <= 160) {
+                    score += 5;
+                }
+            }
+
+            // Headings (15 points)
+            maxScore += 15;
+            if (analysis.onPage?.headings?.h1 === 1) {
+                score += 10;
+            }
+            if (analysis.onPage?.headings?.h2 > 0) {
+                score += 5;
+            }
+
+            // Images (10 points)
+            maxScore += 10;
+            if (analysis.onPage?.images?.total > 0) {
+                const altTextRatio = (analysis.onPage.images.total - analysis.onPage.images.missingAlt) / analysis.onPage.images.total;
+                score += Math.round(altTextRatio * 10);
+            } else {
+                score += 10; // No images means perfect score for this metric
+            }
+
+            // Technical SEO (20 points)
+            maxScore += 20;
+            if (analysis.onPage?.technical?.canonical) score += 5;
+            if (analysis.onPage?.technical?.viewport) score += 5;
+            if (analysis.onPage?.technical?.language) score += 5;
+            if (analysis.onPage?.technical?.charset) score += 5;
+
+            // Content structure (10 points)
+            maxScore += 10;
+            if (analysis.onPage?.links?.internal > 0) score += 5;
+            if (analysis.onPage?.links?.external > 0) score += 5;
+
+            // Boostramp bonus (10 points) - not available in sandbox mode
+            maxScore += 10;
+            // score += 0; // No boostramp data in sandbox mode
+
+            return Math.round((score / maxScore) * 100);
+        }
+
+        function getScoreClass(score) {
+            if (score >= 80) return 'score-excellent';
+            if (score >= 60) return 'score-good';
+            if (score >= 40) return 'score-fair';
+            return 'score-poor';
+        }
+
+        function addNewWebsite() {
+            window.location.href = '/onboarding-simple';
+        }
+
+
+        function openMantisDashboard(domain) {
+            console.log('Dashboard: openMantisDashboard called with domain:', domain);
+            console.log('Dashboard: Current userData:', userData);
+            
+            // Store the current domain and analysis data for the mantis dashboard
+            localStorage.setItem('lastAnalyzedDomain', domain);
+            if (userData && userData.analysisData) {
+                localStorage.setItem('analysisData', JSON.stringify(userData.analysisData));
+                console.log('Dashboard: Stored analysis data in localStorage');
+            } else {
+                console.log('Dashboard: No analysis data to store');
+            }
+            
+               console.log('Dashboard: Navigating to /dashboard-mantis-v2');
+               window.location.href = '/dashboard-mantis-v2';
+        }
+
+        async function reanalyzeWebsite(domain) {
+            try {
+                console.log('Dashboard: Starting comprehensive subpage analysis for domain:', domain);
+                
+                // Show progress bar
+                showReanalysisProgress(domain);
+                
+                // Connect to Socket.IO for real-time updates
+                const socket = io();
+                
+                // Set up event listeners
+                socket.on('analysis_progress', (data) => {
+                    updateReanalysisProgress(data.message, data.progress);
+                });
+                
+                socket.on('analysis_complete', async (data) => {
+                    socket.disconnect(); // Disconnect after analysis is complete
+                    
+                    if (data.success) {
+                        console.log('Dashboard: Comprehensive analysis completed successfully');
+                        
+                        // Update user data with fresh aggregated analysis
+                        if (!userData) {
+                            userData = {
+                                domain: domain,
+                                businessDescription: 'Website Analysis',
+                                integrations: {},
+                                analysisData: data.analysis
+                            };
+                        } else {
+                            userData.analysisData = data.analysis;
+                        }
+                        
+                        // Store analysis data in localStorage for the mantis dashboard
+                        localStorage.setItem('analysisData', JSON.stringify(data.analysis));
+                        localStorage.setItem('lastAnalyzedDomain', domain);
+                        
+                        // Save updated data to database
+                        await fetch('/api/user/save-onboarding', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(userData)
+                        });
+                        
+                        // Hide progress bar and refresh display
+                        hideReanalysisProgress();
+                        displayWebsites();
+                        
+                        console.log('Dashboard: Website reanalyzed with subpage analysis successfully');
+                    } else {
+                        console.error('Dashboard: Analysis failed:', data.error);
+                        hideReanalysisProgress();
+                        showError('Analysis failed: ' + data.error);
+                    }
+                });
+                
+                // Start the comprehensive analysis
+                socket.emit('analyze_website', { url: domain });
+                
+            } catch (error) {
+                console.error('Dashboard: Reanalysis error:', error);
+                hideReanalysisProgress();
+                showError('Analysis failed: ' + error.message);
+            }
+        }
+
+        function showReanalysisProgress(domain) {
+            // Create progress overlay
+            const progressOverlay = document.createElement('div');
+            progressOverlay.id = 'reanalysis-progress';
+            progressOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                flex-direction: column;
+            `;
+            
+            // Create progress container
+            const progressContainer = document.createElement('div');
+            progressContainer.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                text-align: center;
+                min-width: 400px;
+            `;
+            
+            // Create progress content
+            progressContainer.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <i class="fas fa-search" style="font-size: 48px; color: #3b82f6; margin-bottom: 15px;"></i>
+                    <h3 style="margin: 0; color: #1f2937; font-size: 24px;">Analyzing All Pages</h3>
+                    <p style="margin: 10px 0 0 0; color: #6b7280; font-size: 16px;">${domain}</p>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="progress-bar" style="background: linear-gradient(90deg, #3b82f6, #1d4ed8); height: 100%; width: 0%; transition: width 0.3s ease; border-radius: 4px;"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <p id="progress-text" style="margin: 0; color: #374151; font-size: 14px; font-weight: 500;">Initializing analysis...</p>
+                </div>
+                
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <div class="spinner" style="width: 20px; height: 20px; border: 2px solid #e5e7eb; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <span style="color: #6b7280; font-size: 14px;">Please wait...</span>
+                </div>
+            `;
+            
+            // Add spinner animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            progressOverlay.appendChild(progressContainer);
+            document.body.appendChild(progressOverlay);
+            
+            // Simulate progress updates
+            simulateProgress();
+        }
+        
+        function simulateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            
+            const steps = [
+                { progress: 20, text: 'Connecting to DataForSEO...' },
+                { progress: 40, text: 'Analyzing on-page SEO...' },
+                { progress: 60, text: 'Extracting keywords...' },
+                { progress: 80, text: 'Generating insights...' },
+                { progress: 95, text: 'Finalizing analysis...' }
+            ];
+            
+            let currentStep = 0;
+            
+            const updateProgress = () => {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    progressBar.style.width = step.progress + '%';
+                    progressText.textContent = step.text;
+                    currentStep++;
+                    setTimeout(updateProgress, 800);
+                }
+            };
+            
+            updateProgress();
+        }
+        
+        function hideReanalysisProgress() {
+            const progressOverlay = document.getElementById('reanalysis-progress');
+            if (progressOverlay) {
+                progressOverlay.remove();
+            }
+        }
+
+        function updateReanalysisProgress(message, progress) {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+            
+            if (progressText) {
+                progressText.textContent = message;
+            }
+        }
+
+        function showError(message) {
+            // Create error overlay
+            const errorOverlay = document.createElement('div');
+            errorOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            `;
+            
+            const errorContainer = document.createElement('div');
+            errorContainer.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                text-align: center;
+                max-width: 400px;
+            `;
+            
+            errorContainer.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ef4444; margin-bottom: 15px;"></i>
+                    <h3 style="margin: 0; color: #1f2937; font-size: 24px;">Analysis Failed</h3>
+                </div>
+                <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 16px;">${message}</p>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">OK</button>
+            `;
+            
+            errorOverlay.appendChild(errorContainer);
+            document.body.appendChild(errorOverlay);
+        }
+    </script>
+</body>
+</html>

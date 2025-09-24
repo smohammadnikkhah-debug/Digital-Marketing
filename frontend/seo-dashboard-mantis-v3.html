@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mozarex AI Ignite Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .header-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Main Container */
+        .main-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Performance Section */
+        .performance-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .performance-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .performance-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            height: 100%;
+            justify-content: space-between;
+        }
+
+        .score-gauge-centered {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speedometer-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speedometer-arc {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #8b5cf6 0deg,
+                #a855f7 22.5deg,
+                #c084fc 45deg,
+                #ddd6fe 67.5deg,
+                rgba(255, 255, 255, 0.1) 90deg,
+                transparent 90deg,
+                transparent 360deg
+            );
+        }
+
+        .speedometer-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .speedometer-center {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .speedometer-score {
+            font-size: 5rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .speedometer-label {
+            font-size: 1.1rem;
+            color: #4ade80;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .metrics-grid-below {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            margin-top: auto;
+            padding-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .metric-change.positive {
+            color: #4ade80;
+        }
+
+        .metric-change.negative {
+            color: #f87171;
+        }
+
+        /* AI Insights Section */
+        .ai-insights {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            margin-left: 18px;
+        }
+
+        .ai-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-icon {
+            background: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #764ba2;
+            position: absolute;
+            left: -18px;
+            top: 0;
+            z-index: 10;
+        }
+
+        .insight-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+
+        .insight-impact {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .impact-badge {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .effort-badge {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .insight-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .action-btn.secondary {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .chart-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 2rem 0;
+        }
+
+        .combined-chart-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .combined-chart-item {
+            position: relative;
+            height: 350px;
+            padding: 2rem;
+        }
+
+        .chart-left {
+            background: rgba(139, 92, 246, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-right {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .sub-chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        /* Opportunities Section */
+        .opportunities-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .opportunity-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .opportunity-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .keyword-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .keyword-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .keyword-text {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .keyword-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .keyword-volume {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .keyword-difficulty {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .keyword-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .keyword-metric {
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .keyword-opportunity {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .optimize-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .optimize-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Competitor Section */
+        .competitor-chart {
+            height: 250px;
+            margin-bottom: 1rem;
+        }
+
+        .ai-insight-bottom {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .ai-insight-text {
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            font-style: italic;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .performance-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .opportunities-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .metrics-grid-below {
+                grid-template-columns: 1fr;
+                max-width: 300px;
+            }
+            
+            .score-gauge-centered {
+                width: 320px;
+                height: 320px;
+            }
+            
+            .speedometer-score {
+                font-size: 4rem;
+            }
+            
+            .speedometer-label {
+                font-size: 0.9rem;
+            }
+
+            .combined-chart-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .chart-left {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .chart-right {
+                border-bottom: none;
+            }
+
+            .combined-chart-item {
+                height: 300px;
+                padding: 1.5rem;
+            }
+
+            .sub-chart-title {
+                font-size: 0.9rem;
+                margin-bottom: 0.75rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 2rem;
+            color: #f87171;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(248, 113, 113, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">🚀 Mozarex AI Ignite Dashboard</div>
+        </div>
+        <div class="header-right">
+            <div class="header-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <div class="header-icon">
+                <i class="fas fa-bell"></i>
+                <div class="notification-badge">1</div>
+            </div>
+            <div class="header-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <button class="generate-btn" onclick="generateNewReport()">
+                <i class="fas fa-plus"></i> Generate New Report
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Performance Section -->
+        <div class="performance-section">
+            <!-- SEO Performance Card -->
+            <div class="performance-card">
+                <h2 class="performance-title">Your SEO Performance at a Glance</h2>
+                
+                <div class="score-container">
+                    <div class="score-gauge-centered">
+                        <div class="speedometer-container">
+                            <div class="speedometer-background"></div>
+                            <div class="speedometer-arc"></div>
+                            <div class="speedometer-center">
+                                <div class="speedometer-score" id="overallScore">85</div>
+                                <div class="speedometer-label">
+                                    <span>▲</span>
+                                    <span>Excellent</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metrics-grid-below">
+                        <div class="metric-card">
+                            <div class="metric-value" id="organicTraffic">12,450</div>
+                            <div class="metric-label">Organic Traffic</div>
+                            <div class="metric-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>▲ 18%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-value" id="topKeywords">85</div>
+                            <div class="metric-label">Top 10 Keywords</div>
+                            <div class="metric-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>▲ 12 Keywords</span>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-value" id="seoIssues">3</div>
+                            <div class="metric-label">SEO Health Issues</div>
+                            <div class="metric-change negative">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>✔ Effort 1 Issue</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insights Card -->
+            <div class="ai-insights">
+                <h2 class="ai-title">
+                    <div class="ai-icon">🧠</div>
+                    AI Insights: Your Smartest Next Moves
+                </h2>
+                
+                <div class="insight-item">
+                    <div class="insight-text">
+                        Improve Blog Post 'SEO for Beginners' for higher ranking on 'what is SEO'. 
+                        Estimated Impact: High, Effort Homepage.
+                    </div>
+                    <div class="insight-impact">
+                        <span class="impact-badge">High Impact</span>
+                        <span class="effort-badge">Low Effort</span>
+                    </div>
+                    <div class="insight-actions">
+                        <button class="action-btn primary">Optimize Now</button>
+                        <button class="action-btn secondary">View Details</button>
+                    </div>
+                </div>
+                
+                <div class="insight-item">
+                    <div class="insight-text">
+                        Address 3 broken internal links found on homepage. 
+                        Estimated Impact: Medium, Effort Low.
+                    </div>
+                    <div class="insight-impact">
+                        <span class="impact-badge">Medium Impact</span>
+                        <span class="effort-badge">Low Effort</span>
+                    </div>
+                    <div class="insight-actions">
+                        <button class="action-btn primary">Fix Links</button>
+                        <button class="action-btn secondary">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <!-- Organic Performance Trends -->
+            <div class="chart-card">
+                <h3 class="chart-title">Organic Performance Trends</h3>
+                
+                <div class="combined-chart-container">
+                    <div class="combined-chart-item chart-left">
+                        <h4 class="sub-chart-title">Organic Traffic & Impressions</h4>
+                        <canvas id="organicChart"></canvas>
+                    </div>
+                    <div class="combined-chart-item chart-right">
+                        <h4 class="sub-chart-title">Average Keyword Position</h4>
+                        <canvas id="positionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opportunities Section -->
+        <div class="opportunities-section">
+            <!-- Top Keyword Opportunities -->
+            <div class="opportunity-card">
+                <h3 class="opportunity-title">Top Keyword Opportunities</h3>
+                
+                <div class="keywords-list">
+                    <div class="keyword-item">
+                        <div class="keyword-header">
+                            <div class="keyword-text">best espresso machine</div>
+                            <div class="keyword-stats">
+                                <span class="keyword-volume">Volume: 15K</span>
+                                <span class="keyword-difficulty">Difficulty: 65</span>
+                            </div>
+                        </div>
+                        <div class="keyword-metrics">
+                            <div class="keyword-metric">
+                                <div class="metric-title">Current Rank</div>
+                                <div class="metric-value">#15</div>
+                            </div>
+                            <div class="keyword-metric">
+                                <div class="metric-title">AI Score</div>
+                                <div class="metric-value">85/100</div>
+                            </div>
+                        </div>
+                        <div class="keyword-opportunity">High Opportunity</div>
+                        <button class="optimize-btn">Optimize Page</button>
+                    </div>
+
+                    <div class="keyword-item">
+                        <div class="keyword-header">
+                            <div class="keyword-text">coffee grinder reviews</div>
+                            <div class="keyword-stats">
+                                <span class="keyword-volume">Volume: 8.5K</span>
+                                <span class="keyword-difficulty">Difficulty: 42</span>
+                            </div>
+                        </div>
+                        <div class="keyword-metrics">
+                            <div class="keyword-metric">
+                                <div class="metric-title">Current Rank</div>
+                                <div class="metric-value">#28</div>
+                            </div>
+                            <div class="keyword-metric">
+                                <div class="metric-title">AI Score</div>
+                                <div class="metric-value">72/100</div>
+                            </div>
+                        </div>
+                        <div class="keyword-opportunity">Medium Opportunity</div>
+                        <button class="optimize-btn">Optimize Page</button>
+                    </div>
+
+                    <div class="keyword-item">
+                        <div class="keyword-header">
+                            <div class="keyword-text">home coffee brewing</div>
+                            <div class="keyword-stats">
+                                <span class="keyword-volume">Volume: 12K</span>
+                                <span class="keyword-difficulty">Difficulty: 58</span>
+                            </div>
+                        </div>
+                        <div class="keyword-metrics">
+                            <div class="keyword-metric">
+                                <div class="metric-title">Current Rank</div>
+                                <div class="metric-value">#22</div>
+                            </div>
+                            <div class="keyword-metric">
+                                <div class="metric-title">AI Score</div>
+                                <div class="metric-value">78/100</div>
+                            </div>
+                        </div>
+                        <div class="keyword-opportunity">High Opportunity</div>
+                        <button class="optimize-btn">Optimize Page</button>
+                    </div>
+
+                    <div class="keyword-item">
+                        <div class="keyword-header">
+                            <div class="keyword-text">coffee beans online</div>
+                            <div class="keyword-stats">
+                                <span class="keyword-volume">Volume: 6.2K</span>
+                                <span class="keyword-difficulty">Difficulty: 38</span>
+                            </div>
+                        </div>
+                        <div class="keyword-metrics">
+                            <div class="keyword-metric">
+                                <div class="metric-title">Current Rank</div>
+                                <div class="metric-value">#35</div>
+                            </div>
+                            <div class="keyword-metric">
+                                <div class="metric-title">AI Score</div>
+                                <div class="metric-value">68/100</div>
+                            </div>
+                        </div>
+                        <div class="keyword-opportunity">Medium Opportunity</div>
+                        <button class="optimize-btn">Optimize Page</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competitor Snapshot -->
+            <div class="opportunity-card">
+                <h3 class="opportunity-title">Competitor Snapshot</h3>
+                
+                <div class="competitor-chart">
+                    <canvas id="competitorChart"></canvas>
+                </div>
+                
+                <div class="ai-insight-bottom">
+                    <div class="ai-insight-text">
+                        <strong>AI Insight:</strong> Competitor B is outranking you on long-tail keywords. 
+                        Focus on creating comprehensive content around your main topics.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentAnalysis = null;
+        let currentDomain = null;
+        let organicChart = null;
+        let positionChart = null;
+        let competitorChart = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Mozarex AI Ignite Dashboard initialized');
+            loadDashboardData();
+            initializeCharts();
+            
+            // Initialize speedometer with default score
+            updateSpeedometerArc(85);
+        });
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                console.log('📊 Loading dashboard data...');
+                
+                // Get current domain from URL or localStorage
+                const urlParams = new URLSearchParams(window.location.search);
+                currentDomain = urlParams.get('domain') || localStorage.getItem('currentDomain') || 'mozarex.com';
+                
+                // Load analysis data
+                const response = await fetch(`/api/supabase/analysis/${currentDomain}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    currentAnalysis = data;
+                    updateDashboard(data);
+                } else {
+                    console.error('Failed to load analysis data');
+                    showErrorState();
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showErrorState();
+            }
+        }
+
+        // Update speedometer arc color based on score
+        function updateSpeedometerArc(score) {
+            const speedometerArc = document.querySelector('.speedometer-arc');
+            if (!speedometerArc) return;
+            
+            // Calculate percentage (score out of 100)
+            const percentage = Math.min(Math.max(score, 0), 100);
+            const degrees = (percentage / 100) * 360;
+            
+            // Create dynamic gradient based on score
+            let color1, color2, color3, color4;
+            
+            if (percentage >= 80) {
+                // Excellent (80-100): Green gradient
+                color1 = '#22c55e';
+                color2 = '#16a34a';
+                color3 = '#15803d';
+                color4 = '#166534';
+            } else if (percentage >= 60) {
+                // Good (60-79): Blue gradient
+                color1 = '#3b82f6';
+                color2 = '#2563eb';
+                color3 = '#1d4ed8';
+                color4 = '#1e40af';
+            } else if (percentage >= 40) {
+                // Fair (40-59): Yellow gradient
+                color1 = '#eab308';
+                color2 = '#ca8a04';
+                color3 = '#a16207';
+                color4 = '#854d0e';
+            } else {
+                // Poor (0-39): Red gradient
+                color1 = '#ef4444';
+                color2 = '#dc2626';
+                color3 = '#b91c1c';
+                color4 = '#991b1b';
+            }
+            
+            // Update the conic gradient
+            speedometerArc.style.background = `conic-gradient(
+                from 0deg,
+                ${color1} 0deg,
+                ${color2} ${degrees * 0.25}deg,
+                ${color3} ${degrees * 0.5}deg,
+                ${color4} ${degrees * 0.75}deg,
+                rgba(255, 255, 255, 0.1) ${degrees}deg,
+                transparent ${degrees}deg,
+                transparent 360deg
+            )`;
+        }
+
+        // Update dashboard with data
+        function updateDashboard(analysis) {
+            console.log('📈 Updating dashboard with analysis data:', analysis);
+            
+            // Update overall score
+            const overallScore = analysis.overallScore || analysis.score || 85;
+            document.getElementById('overallScore').textContent = overallScore;
+            
+            // Update speedometer arc color based on score
+            updateSpeedometerArc(overallScore);
+            
+            // Update metrics
+            document.getElementById('organicTraffic').textContent = formatNumber(analysis.organicTraffic || 12450);
+            document.getElementById('topKeywords').textContent = analysis.topKeywords || 85;
+            document.getElementById('seoIssues').textContent = analysis.seoIssues || 3;
+            
+            // Update charts
+            updateCharts(analysis);
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Organic Traffic Chart
+            const organicCtx = document.getElementById('organicChart');
+            if (organicCtx) {
+                organicChart = new Chart(organicCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Organic Traffic',
+                            data: [8500, 9200, 8800, 10500, 11200, 12450],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Impressions',
+                            data: [45000, 52000, 48000, 65000, 72000, 85000],
+                            borderColor: '#764ba2',
+                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Position Chart
+            const positionCtx = document.getElementById('positionChart');
+            if (positionCtx) {
+                positionChart = new Chart(positionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Average Position',
+                            data: [25, 22, 28, 18, 15, 12],
+                            borderColor: '#764ba2',
+                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderDash: [5, 5]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                reverse: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Competitor Chart
+            const competitorCtx = document.getElementById('competitorChart');
+            if (competitorCtx) {
+                competitorChart = new Chart(competitorCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Your Site', 'Competitor A', 'Competitor B', 'Top 10', 'Domain Authority'],
+                        datasets: [{
+                            label: 'Your Traffic',
+                            data: [12450, 18500, 22100, 35000, 45000],
+                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                            borderColor: '#667eea',
+                            borderWidth: 1
+                        }, {
+                            label: 'Top Keywords',
+                            data: [85, 120, 150, 200, 300],
+                            backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                            borderColor: '#764ba2',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Update charts with real data
+        function updateCharts(analysis) {
+            // Update organic chart if we have traffic data
+            if (analysis.trafficData && organicChart) {
+                organicChart.data.datasets[0].data = analysis.trafficData;
+                organicChart.update();
+            }
+
+            // Update position chart if we have position data
+            if (analysis.positionData && positionChart) {
+                positionChart.data.datasets[0].data = analysis.positionData;
+                positionChart.update();
+            }
+
+            // Update competitor chart if we have competitor data
+            if (analysis.competitorData && competitorChart) {
+                competitorChart.data.datasets[0].data = analysis.competitorData.traffic;
+                competitorChart.data.datasets[1].data = analysis.competitorData.keywords;
+                competitorChart.update();
+            }
+        }
+
+        // Generate new report
+        function generateNewReport() {
+            console.log('🔄 Generating new report...');
+            
+            // Show loading state
+            showLoadingState();
+            
+            // Redirect to analysis page
+            setTimeout(() => {
+                window.location.href = '/seo-request';
+            }, 1000);
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            `;
+        }
+
+        // Show error state
+        function showErrorState() {
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-message">Failed to load dashboard data</div>
+                    <button class="retry-btn" onclick="loadDashboardData()">Retry</button>
+                </div>
+            `;
+        }
+
+        // Format numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (organicChart) organicChart.resize();
+            if (positionChart) positionChart.resize();
+            if (competitorChart) competitorChart.resize();
+        });
+    </script>
+</body>
+</html>

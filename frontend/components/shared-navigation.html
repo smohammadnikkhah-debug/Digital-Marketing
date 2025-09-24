@@ -1,0 +1,108 @@
+<!-- Shared Navigation Component -->
+<div class="sidebar-nav">
+    <div class="nav-section">
+        <div class="nav-section-title">Dashboard</div>
+        <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+            <i class="fas fa-chart-pie"></i>
+            Overview
+        </a>
+    </div>
+    
+    <div class="nav-section">
+        <div class="nav-section-title">SEO Tools</div>
+        <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+            <i class="fas fa-cogs"></i>
+            Technical SEO
+        </a>
+        <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+            <i class="fas fa-key"></i>
+            Keywords
+        </a>
+        <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+            <i class="fas fa-users"></i>
+            Competitors
+        </a>
+        <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+            <i class="fas fa-link"></i>
+            Backlinks
+        </a>
+    </div>
+    
+    <div class="nav-section">
+        <div class="nav-section-title">Content</div>
+        <a href="/blog" class="nav-item" data-page="blog-generator">
+            <i class="fas fa-pen-fancy"></i>
+            Blog Generator
+        </a>
+        <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+            <i class="fas fa-calendar-alt"></i>
+            Content Calendar
+        </a>
+    </div>
+    
+    <div class="nav-section">
+        <div class="nav-section-title">Connections</div>
+        <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+            <i class="fas fa-share-alt"></i>
+            Social Connections
+        </a>
+    </div>
+</div>
+
+<script>
+// Navigation component JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page from URL or data attribute
+    const currentPath = window.location.pathname;
+    const currentPage = getCurrentPageFromPath(currentPath);
+    
+    // Set active navigation item
+    setActiveNavItem(currentPage);
+    
+    // Add click handlers for navigation
+    addNavigationHandlers();
+});
+
+function getCurrentPageFromPath(path) {
+    // Map paths to page identifiers
+    const pathMap = {
+        '/dashboard-mantis-v2': 'dashboard',
+        '/technical-seo': 'technical-seo',
+        '/seo-tools-keywords': 'keywords',
+        '/seo-tools-competitors': 'competitors',
+        '/seo-tools-backlinks': 'backlinks',
+        '/blog-generator': 'blog-generator',
+        '/seo-tools-content-calendar': 'content-calendar',
+        '/seo-tools-social-connections': 'social-connections'
+    };
+    
+    return pathMap[path] || 'dashboard';
+}
+
+function setActiveNavItem(currentPage) {
+    // Remove active class from all nav items
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    
+    // Add active class to current page
+    const activeItem = document.querySelector(`[data-page="${currentPage}"]`);
+    if (activeItem) {
+        activeItem.classList.add('active');
+    }
+}
+
+function addNavigationHandlers() {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Add loading state
+            this.classList.add('loading');
+            
+            // Optional: Add smooth transition effect
+            setTimeout(() => {
+                this.classList.remove('loading');
+            }, 200);
+        });
+    });
+}
+</script>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mozarex - Complete Your Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .onboarding-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 60px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .welcome-text {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-email {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .step-content {
+            text-align: center;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .step-description {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .domain-input, .business-input {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .domain-input:focus, .business-input:focus {
+            outline: none;
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .business-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .continue-btn:disabled {
+            background: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: #4CAF50;
+            transform: scale(1.2);
+        }
+
+        .step.completed {
+            background: #2ed573;
+        }
+
+        @media (max-width: 768px) {
+            .onboarding-container {
+                padding: 40px 30px;
+                margin: 20px;
+            }
+            
+            .welcome-text {
+                font-size: 24px;
+            }
+            
+            .step-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container">
+        <!-- User Information -->
+        <div class="user-info">
+            <img id="userAvatar" class="user-avatar" src="" alt="User Avatar" style="display: none;">
+            <div id="welcomeText" class="welcome-text">Welcome!</div>
+            <div id="userEmail" class="user-email"></div>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1"></div>
+            <div class="step" id="step2"></div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+
+        <!-- Step 1: Domain Setup -->
+        <div id="domainStep" class="step-content">
+            <div class="step-title">What's your website domain?</div>
+            <div class="step-description">
+                Enter your website URL so we can analyze your SEO performance and provide personalized recommendations.
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label" for="domainInput">Website Domain</label>
+                <input 
+                    type="text" 
+                    id="domainInput" 
+                    class="domain-input" 
+                    placeholder="example.com"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <button id="domainContinueBtn" class="continue-btn" onclick="submitDomain()">
+                <span id="domainBtnText">Continue</span>
+                <div id="domainLoading" class="loading"></div>
+            </button>
+        </div>
+
+        <!-- Step 2: Business Description -->
+        <div id="businessStep" class="step-content" style="display: none;">
+            <div class="step-title">Tell us about your business</div>
+            <div class="step-description">
+                Help us understand your business so we can provide more targeted SEO recommendations and content ideas.
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label" for="businessInput">Business Description</label>
+                <textarea 
+                    id="businessInput" 
+                    class="business-input" 
+                    placeholder="Describe your business, products/services, target audience, and goals..."
+                    rows="4"
+                ></textarea>
+            </div>
+            
+            <button id="businessContinueBtn" class="continue-btn" onclick="submitBusiness()">
+                <span id="businessBtnText">Complete Setup</span>
+                <div id="businessLoading" class="loading"></div>
+            </button>
+        </div>
+
+        <!-- Logout Button -->
+        <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        // Load user data on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData();
+        });
+
+        async function loadUserData() {
+            try {
+                const response = await fetch('/auth/user');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                currentUser = data.user;
+                
+                // Update UI with user info
+                document.getElementById('welcomeText').textContent = `Welcome, ${currentUser.name || 'there'}!`;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                
+                if (currentUser.picture) {
+                    const avatar = document.getElementById('userAvatar');
+                    avatar.src = currentUser.picture;
+                    avatar.style.display = 'block';
+                }
+
+                // Check if user already has domain/business info
+                if (currentUser.domain) {
+                    // Skip to business step if domain exists but no business description
+                    if (!currentUser.business_description) {
+                        showBusinessStep();
+                    } else {
+                        // User has completed onboarding, redirect to dashboard
+                        window.location.href = '/dashboard';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showError('Failed to load user data. Please refresh the page.');
+            }
+        }
+
+        async function submitDomain() {
+            const domainInput = document.getElementById('domainInput');
+            const domain = domainInput.value.trim();
+            
+            if (!domain) {
+                showError('Please enter your website domain.');
+                return;
+            }
+
+            // Basic domain validation
+            const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.([a-zA-Z]{2,}|xn--[a-zA-Z0-9]+)$/;
+            const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+            
+            if (!domainRegex.test(cleanDomain)) {
+                showError('Please enter a valid domain (e.g., example.com).');
+                return;
+            }
+
+            setDomainLoading(true);
+
+            try {
+                const response = await fetch('/auth/user/domain', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ domain: cleanDomain })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser.domain = cleanDomain;
+                    showSuccess('Domain saved successfully!');
+                    setTimeout(() => {
+                        showBusinessStep();
+                    }, 1000);
+                } else {
+                    showError(data.error || 'Failed to save domain.');
+                }
+            } catch (error) {
+                console.error('Error submitting domain:', error);
+                showError('Failed to save domain. Please try again.');
+            } finally {
+                setDomainLoading(false);
+            }
+        }
+
+        async function submitBusiness() {
+            const businessInput = document.getElementById('businessInput');
+            const businessDescription = businessInput.value.trim();
+            
+            if (!businessDescription) {
+                showError('Please provide a business description.');
+                return;
+            }
+
+            setBusinessLoading(true);
+
+            try {
+                const response = await fetch('/auth/user/business', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ business_description: businessDescription })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('Setup completed successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Failed to save business description.');
+                }
+            } catch (error) {
+                console.error('Error submitting business description:', error);
+                showError('Failed to save business description. Please try again.');
+            } finally {
+                setBusinessLoading(false);
+            }
+        }
+
+        function showBusinessStep() {
+            document.getElementById('domainStep').style.display = 'none';
+            document.getElementById('businessStep').style.display = 'block';
+            
+            // Update step indicator
+            document.getElementById('step1').classList.add('completed');
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+        }
+
+        function setDomainLoading(loading) {
+            const btn = document.getElementById('domainContinueBtn');
+            const text = document.getElementById('domainBtnText');
+            const spinner = document.getElementById('domainLoading');
+            
+            if (loading) {
+                btn.disabled = true;
+                text.style.display = 'none';
+                spinner.style.display = 'inline-block';
+            } else {
+                btn.disabled = false;
+                text.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
+        function setBusinessLoading(loading) {
+            const btn = document.getElementById('businessContinueBtn');
+            const text = document.getElementById('businessBtnText');
+            const spinner = document.getElementById('businessLoading');
+            
+            if (loading) {
+                btn.disabled = true;
+                text.style.display = 'none';
+                spinner.style.display = 'inline-block';
+            } else {
+                btn.disabled = false;
+                text.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            successDiv.style.display = 'none';
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            errorDiv.style.display = 'none';
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to sign out?')) {
+                window.location.href = '/auth/logout';
+            }
+        }
+
+        // Handle Enter key for domain input
+        document.getElementById('domainInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitDomain();
+            }
+        });
+
+        // Handle Enter key for business input (Ctrl+Enter)
+        document.getElementById('businessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                submitBusiness();
+            }
+        });
+    </script>
+</body>
+</html>

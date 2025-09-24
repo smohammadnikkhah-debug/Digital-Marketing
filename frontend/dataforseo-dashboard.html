@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataForSEO Analysis Dashboard - Digital Marketing Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .overview-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .overview-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+
+        .overview-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .score-excellent { background: linear-gradient(135deg, #28a745, #20c997); }
+        .score-good { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+        .score-poor { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .metric-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .expandable-section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .section-header h2 {
+            font-size: 1.5em;
+            font-weight: 300;
+        }
+
+        .section-toggle {
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .section-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            padding: 25px;
+            display: none;
+        }
+
+        .section-content.expanded {
+            display: block;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .analysis-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .analysis-card h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .keyword-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .keyword-text {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .keyword-position {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .competitor-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .competitor-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .competitor-item.strong-competitor {
+            border-left: 4px solid #dc3545;
+        }
+
+        .competitor-item.medium-competitor {
+            border-left: 4px solid #ffc107;
+        }
+
+        .competitor-item.weak-competitor {
+            border-left: 4px solid #28a745;
+        }
+
+        .competitor-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .competitor-domain {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .competitor-rank {
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .competitor-metrics {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .competitor-metric {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .keywords-metric {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .traffic-metric {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .backlink-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .backlink-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .backlink-item.high-authority {
+            border-left: 4px solid #28a745;
+        }
+
+        .backlink-item.medium-authority {
+            border-left: 4px solid #ffc107;
+        }
+
+        .backlink-item.low-authority {
+            border-left: 4px solid #dc3545;
+        }
+
+        .backlink-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .backlink-domain {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .backlink-rank {
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .backlink-metrics {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .backlink-metric {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .dr-metric {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .rank-metric {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .pages-metric {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .recommendation-item {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .recommendation-item.high {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .recommendation-item.medium {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .recommendation-item.low {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .recommendation-priority {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .priority-high { background: #dc3545; }
+        .priority-medium { background: #ffc107; color: #000; }
+        .priority-low { background: #28a745; }
+
+        .recommendation-solution {
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-impact {
+            color: #6c757d;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            margin: 20px 0;
+        }
+
+        .data-source {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .overview-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 DataForSEO Analysis Dashboard</h1>
+            <p>Comprehensive SEO analysis powered by DataForSEO API</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="websiteUrl" placeholder="Enter website URL (e.g., example.com)" />
+                <button class="btn" id="analyzeBtn">🔍 Analyze with DataForSEO</button>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- Welcome Section -->
+            <div class="welcome-section" id="welcomeSection">
+                <div style="text-align: center; padding: 60px 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 20px; margin-bottom: 30px;">
+                    <h2 style="color: #495057; margin-bottom: 20px; font-size: 2.2em;">🎯 DataForSEO Analysis Dashboard</h2>
+                    <p style="color: #6c757d; font-size: 1.2em; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        Get comprehensive SEO analysis with professional-grade insights. Enter any website URL above and click "Analyze with DataForSEO" to get started.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px;">
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">📊 Comprehensive Analysis</h4>
+                            <p style="color: #6c757d; font-size: 14px;">On-page SEO, backlinks, keywords, competitors, and traffic analysis</p>
+                        </div>
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">🎯 Professional Insights</h4>
+                            <p style="color: #6c757d; font-size: 14px;">DataForSEO-powered analysis with actionable recommendations</p>
+                        </div>
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">⚡ Real-time Results</h4>
+                            <p style="color: #6c757d; font-size: 14px;">Instant analysis with detailed metrics and visual indicators</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results Section (Hidden initially) -->
+            <div id="analysisResults" style="display: none;">
+                <!-- High-Level Overview -->
+            <div class="overview-section" id="overviewSection">
+                <div class="overview-card">
+                    <h3>🎯 Overall SEO Score</h3>
+                    <div class="score-circle" id="overallScore">--</div>
+                    <p id="scoreDescription">Analyzing...</p>
+                </div>
+
+                <div class="overview-card">
+                    <h3>📈 Traffic Metrics</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Organic Traffic</span>
+                        <span class="metric-value" id="organicTraffic">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Paid Traffic</span>
+                        <span class="metric-value" id="paidTraffic">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Traffic</span>
+                        <span class="metric-value" id="totalTraffic">--</span>
+                    </div>
+                </div>
+
+                <div class="overview-card">
+                    <h3>🔗 Backlinks Profile</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Backlinks</span>
+                        <span class="metric-value" id="totalBacklinks">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Referring Domains</span>
+                        <span class="metric-value" id="referringDomains">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Domain Rating</span>
+                        <span class="metric-value" id="domainRating">--</span>
+                    </div>
+                </div>
+
+                <div class="overview-card">
+                    <h3>🔍 Keyword Rankings</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Keywords</span>
+                        <span class="metric-value" id="totalKeywords">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Top 10 Keywords</span>
+                        <span class="metric-value" id="topKeywords">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Avg Position</span>
+                        <span class="metric-value" id="avgPosition">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- On-Page SEO Analysis -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('onpage')">
+                    <h2>📄 On-Page SEO Analysis</h2>
+                    <span class="section-toggle" id="onpageToggle">▼</span>
+                </div>
+                <div class="section-content" id="onpageContent">
+                    <div class="data-source">📊 Data Source: DataForSEO Content Parsing</div>
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>📝 Page Elements</h4>
+                            <div id="pageElements">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🖼️ Images & Media</h4>
+                            <div id="imageAnalysis">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🔗 Internal Links</h4>
+                            <div id="internalLinks">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>⚙️ Technical SEO</h4>
+                            <div id="technicalSEO">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keywords Analysis -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('keywords')">
+                    <h2>🔍 Keywords Analysis</h2>
+                    <span class="section-toggle" id="keywordsToggle">▼</span>
+                </div>
+                <div class="section-content" id="keywordsContent">
+                    <div class="data-source">📊 Data Source: DataForSEO Ranked Keywords</div>
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>🏆 Top Ranking Keywords</h4>
+                            <div id="topRankingKeywords">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📈 Keyword Performance</h4>
+                            <div id="keywordPerformance">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>💰 Keyword Value</h4>
+                            <div id="keywordValue">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competitors Analysis -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('competitors')">
+                    <h2>🏢 Competitors Analysis</h2>
+                    <span class="section-toggle" id="competitorsToggle">▼</span>
+                </div>
+                <div class="section-content" id="competitorsContent">
+                    <div class="data-source">📊 Data Source: DataForSEO Competitors Domain</div>
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>🥇 Top Competitors</h4>
+                            <div id="topCompetitors">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📊 Competitor Metrics</h4>
+                            <div id="competitorMetrics">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backlinks Analysis -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('backlinks')">
+                    <h2>🔗 Backlinks Analysis</h2>
+                    <span class="section-toggle" id="backlinksToggle">▼</span>
+                </div>
+                <div class="section-content" id="backlinksContent">
+                    <div class="data-source">📊 Data Source: DataForSEO Backlinks Summary</div>
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>🌟 Top Backlinks</h4>
+                            <div id="topBacklinks">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📊 Link Profile</h4>
+                            <div id="linkProfile">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('recommendations')">
+                    <h2>💡 SEO Recommendations</h2>
+                    <span class="section-toggle" id="recommendationsToggle">▼</span>
+                </div>
+                <div class="section-content" id="recommendationsContent">
+                    <div id="recommendationsList">
+                        <div class="loading">Generating recommendations...</div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End of analysis results section -->
+        </div>
+
+        <div id="loadingSection" class="loading" style="display: none;">
+            <h3>🔍 Analyzing Website with DataForSEO...</h3>
+            <p>Please wait while we perform comprehensive SEO analysis</p>
+        </div>
+
+        <div id="errorSection" class="error" style="display: none;">
+            <h3>❌ Analysis Failed</h3>
+            <p id="errorMessage">Please check the URL and try again.</p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Initialize socket connection
+        const socket = io();
+        
+        // Elements
+        const websiteUrlInput = document.getElementById('websiteUrl');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const mainContent = document.getElementById('mainContent');
+        const loadingSection = document.getElementById('loadingSection');
+        const errorSection = document.getElementById('errorSection');
+
+        // Handle analyze button click
+        analyzeBtn.addEventListener('click', () => {
+            const url = websiteUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            analyzeWebsite(url);
+        });
+
+        // Handle Enter key
+        websiteUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                analyzeBtn.click();
+            }
+        });
+
+        function analyzeWebsite(url) {
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔄 Analyzing...';
+            document.getElementById('welcomeSection').style.display = 'none';
+            document.getElementById('analysisResults').style.display = 'none';
+            errorSection.style.display = 'none';
+            loadingSection.style.display = 'block';
+
+            // Process URL - add https:// if missing
+            let processedUrl = url.trim();
+            if (!processedUrl.match(/^https?:\/\//)) {
+                processedUrl = 'https://' + processedUrl;
+            }
+
+            // Send analysis request
+            socket.emit('analyze_website', { url: processedUrl });
+        }
+
+        // Handle analysis complete
+        socket.on('analysis_complete', (data) => {
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = '🔍 Analyze with DataForSEO';
+            loadingSection.style.display = 'none';
+
+            if (data.success) {
+                displayAnalysis(data.analysis);
+                mainContent.style.display = 'block';
+            } else {
+                showError(data.error || 'Analysis failed');
+            }
+        });
+
+        function displayAnalysis(analysis) {
+            // Hide welcome section and show analysis results
+            document.getElementById('welcomeSection').style.display = 'none';
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Show demo data notice if applicable
+            if (analysis.demo) {
+                showDemoNotice();
+            }
+            
+            // Update overview section
+            updateOverallScore(analysis.score || 0);
+            updateTrafficMetrics(analysis.traffic);
+            updateBacklinksProfile(analysis.backlinks);
+            updateKeywordsOverview(analysis.keywords);
+            
+            // Update detailed analysis
+            updateOnPageAnalysis(analysis.onPage);
+            updateKeywordsAnalysis(analysis.keywords);
+            updateCompetitorsAnalysis(analysis.competitors);
+            updateBacklinksAnalysis(analysis.backlinks);
+            updateRecommendations(analysis.recommendations);
+        }
+
+        function showDemoNotice() {
+            const notice = document.createElement('div');
+            notice.className = 'demo-notice';
+            notice.innerHTML = `
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+                    <h3 style="color: #856404; margin-bottom: 10px;">🎯 Demo Data Mode</h3>
+                    <p style="color: #856404; margin-bottom: 15px;">
+                        You're viewing demo data. To get real DataForSEO analysis, please configure your API credentials.
+                    </p>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: left; margin-top: 15px;">
+                        <h4 style="color: #495057; margin-bottom: 10px;">To enable real DataForSEO analysis:</h4>
+                        <ol style="color: #6c757d; margin-left: 20px;">
+                            <li>Sign up at <a href="https://dataforseo.com/" target="_blank" style="color: #667eea;">dataforseo.com</a></li>
+                            <li>Get your API credentials (Login & Password)</li>
+                            <li>Update your .env file with real credentials</li>
+                            <li>Restart the server</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+            
+            const mainContent = document.getElementById('mainContent');
+            mainContent.insertBefore(notice, mainContent.firstChild);
+        }
+
+        function updateOverallScore(score) {
+            const scoreElement = document.getElementById('overallScore');
+            const descriptionElement = document.getElementById('scoreDescription');
+            
+            scoreElement.textContent = score;
+            
+            // Update score styling
+            scoreElement.className = 'score-circle';
+            if (score >= 80) {
+                scoreElement.classList.add('score-excellent');
+                descriptionElement.textContent = 'Excellent SEO Performance';
+            } else if (score >= 60) {
+                scoreElement.classList.add('score-good');
+                descriptionElement.textContent = 'Good SEO Performance';
+            } else {
+                scoreElement.classList.add('score-poor');
+                descriptionElement.textContent = 'Needs SEO Improvement';
+            }
+        }
+
+        function updateTrafficMetrics(traffic) {
+            document.getElementById('organicTraffic').textContent = traffic?.organicTraffic?.toLocaleString() || 'Unknown';
+            document.getElementById('paidTraffic').textContent = traffic?.paidTraffic?.toLocaleString() || 'Unknown';
+            document.getElementById('totalTraffic').textContent = traffic?.totalTraffic?.toLocaleString() || 'Unknown';
+        }
+
+        function updateBacklinksProfile(backlinks) {
+            document.getElementById('totalBacklinks').textContent = backlinks?.totalBacklinks?.toLocaleString() || 'Unknown';
+            document.getElementById('referringDomains').textContent = backlinks?.referringDomains?.toLocaleString() || 'Unknown';
+            document.getElementById('domainRating').textContent = backlinks?.domainRating || 'Unknown';
+        }
+
+        function updateKeywordsOverview(keywords) {
+            document.getElementById('totalKeywords').textContent = keywords?.totalKeywords?.toLocaleString() || 'Unknown';
+            
+            const topKeywords = keywords?.keywords?.filter(kw => kw.position <= 10).length || 0;
+            document.getElementById('topKeywords').textContent = topKeywords.toLocaleString();
+            
+            const avgPosition = keywords?.keywords?.reduce((sum, kw) => sum + kw.position, 0) / (keywords?.keywords?.length || 1);
+            document.getElementById('avgPosition').textContent = avgPosition ? avgPosition.toFixed(1) : 'Unknown';
+        }
+
+        function updateOnPageAnalysis(onPage) {
+            if (!onPage) return;
+
+            // Page Elements
+            const pageElements = document.getElementById('pageElements');
+            let elementsHtml = '';
+            
+            elementsHtml += `<div class="metric-item"><span class="metric-label">Title</span><span class="metric-value">${onPage.title || 'Missing'}</span></div>`;
+            elementsHtml += `<div class="metric-item"><span class="metric-label">Meta Description</span><span class="metric-value">${onPage.metaDescription || 'Missing'}</span></div>`;
+            elementsHtml += `<div class="metric-item"><span class="metric-label">Word Count</span><span class="metric-value">${onPage.content?.wordCount || 0}</span></div>`;
+            elementsHtml += `<div class="metric-item"><span class="metric-label">H1 Tags</span><span class="metric-value">${onPage.headings?.h1 || 0}</span></div>`;
+            
+            pageElements.innerHTML = elementsHtml;
+
+            // Images Analysis
+            const imageAnalysis = document.getElementById('imageAnalysis');
+            let imageHtml = '';
+            
+            imageHtml += `<div class="metric-item"><span class="metric-label">Total Images</span><span class="metric-value">${onPage.images?.total || 0}</span></div>`;
+            imageHtml += `<div class="metric-item"><span class="metric-label">Missing Alt Text</span><span class="metric-value">${onPage.images?.missingAlt || 0}</span></div>`;
+            imageHtml += `<div class="metric-item"><span class="metric-label">Oversized Images</span><span class="metric-value">${onPage.images?.oversized || 0}</span></div>`;
+            
+            imageAnalysis.innerHTML = imageHtml;
+
+            // Internal Links
+            const internalLinks = document.getElementById('internalLinks');
+            let linksHtml = '';
+            
+            linksHtml += `<div class="metric-item"><span class="metric-label">Internal Links</span><span class="metric-value">${onPage.links?.internal || 0}</span></div>`;
+            linksHtml += `<div class="metric-item"><span class="metric-label">External Links</span><span class="metric-value">${onPage.links?.external || 0}</span></div>`;
+            linksHtml += `<div class="metric-item"><span class="metric-label">NoFollow Links</span><span class="metric-value">${onPage.links?.noFollow || 0}</span></div>`;
+            
+            internalLinks.innerHTML = linksHtml;
+
+            // Technical SEO
+            const technicalSEO = document.getElementById('technicalSEO');
+            let technicalHtml = '';
+            
+            technicalHtml += `<div class="metric-item"><span class="metric-label">SSL Certificate</span><span class="metric-value">${onPage.technical?.sslCertificate ? 'Yes' : 'No'}</span></div>`;
+            technicalHtml += `<div class="metric-item"><span class="metric-label">Mobile Friendly</span><span class="metric-value">${onPage.technical?.mobileFriendly ? 'Yes' : 'No'}</span></div>`;
+            technicalHtml += `<div class="metric-item"><span class="metric-label">Load Time</span><span class="metric-value">${onPage.performance?.loadTime || 'Unknown'}</span></div>`;
+            
+            technicalSEO.innerHTML = technicalHtml;
+        }
+
+        function updateKeywordsAnalysis(keywords) {
+            if (!keywords) return;
+
+            // Top Ranking Keywords
+            const topRankingKeywords = document.getElementById('topRankingKeywords');
+            let keywordsHtml = '';
+            
+            if (keywords.keywords && keywords.keywords.length > 0) {
+                keywords.keywords.slice(0, 10).forEach(keyword => {
+                    keywordsHtml += `<div class="keyword-item">
+                        <span class="keyword-text">${keyword.keyword}</span>
+                        <span class="keyword-position">#${keyword.position}</span>
+                    </div>`;
+                });
+            } else {
+                keywordsHtml = '<div class="loading">No keyword data available</div>';
+            }
+            
+            topRankingKeywords.innerHTML = keywordsHtml;
+
+            // Keyword Performance
+            const keywordPerformance = document.getElementById('keywordPerformance');
+            let performanceHtml = '';
+            
+            performanceHtml += `<div class="metric-item"><span class="metric-label">Total Keywords</span><span class="metric-value">${keywords.totalKeywords || 0}</span></div>`;
+            
+            const top10Keywords = keywords.keywords?.filter(kw => kw.position <= 10).length || 0;
+            performanceHtml += `<div class="metric-item"><span class="metric-label">Top 10 Keywords</span><span class="metric-value">${top10Keywords}</span></div>`;
+            
+            const top50Keywords = keywords.keywords?.filter(kw => kw.position <= 50).length || 0;
+            performanceHtml += `<div class="metric-item"><span class="metric-label">Top 50 Keywords</span><span class="metric-value">${top50Keywords}</span></div>`;
+            
+            keywordPerformance.innerHTML = performanceHtml;
+
+            // Keyword Value
+            const keywordValue = document.getElementById('keywordValue');
+            let valueHtml = '';
+            
+            const avgCPC = keywords.keywords?.reduce((sum, kw) => sum + (kw.cpc || 0), 0) / (keywords.keywords?.length || 1);
+            valueHtml += `<div class="metric-item"><span class="metric-label">Average CPC</span><span class="metric-value">$${avgCPC?.toFixed(2) || '0.00'}</span></div>`;
+            
+            const totalValue = keywords.keywords?.reduce((sum, kw) => sum + ((kw.searchVolume || 0) * (kw.cpc || 0)), 0);
+            valueHtml += `<div class="metric-item"><span class="metric-label">Total Keyword Value</span><span class="metric-value">$${totalValue?.toLocaleString() || '0'}</span></div>`;
+            
+            keywordValue.innerHTML = valueHtml;
+        }
+
+        function updateCompetitorsAnalysis(competitors) {
+            if (!competitors) return;
+
+            // Top Competitors
+            const topCompetitors = document.getElementById('topCompetitors');
+            let competitorsHtml = '';
+            
+            if (competitors.competitors && competitors.competitors.length > 0) {
+                competitors.competitors.slice(0, 10).forEach((competitor, index) => {
+                    const strengthClass = competitor.domainRating >= 60 ? 'strong-competitor' : 
+                                        competitor.domainRating >= 40 ? 'medium-competitor' : 'weak-competitor';
+                    
+                    competitorsHtml += `<div class="competitor-item ${strengthClass}">
+                        <div class="competitor-info">
+                            <span class="competitor-domain">${competitor.domain}</span>
+                            <span class="competitor-rank">#${index + 1}</span>
+                        </div>
+                        <div class="competitor-metrics">
+                            <span class="competitor-metric keywords-metric">${competitor.commonKeywords} keywords</span>
+                            <span class="competitor-metric dr-metric">DR: ${competitor.domainRating}</span>
+                            <span class="competitor-metric traffic-metric">${competitor.organicTraffic?.toLocaleString()} traffic</span>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                competitorsHtml = '<div class="loading">No competitor data available</div>';
+            }
+            
+            topCompetitors.innerHTML = competitorsHtml;
+
+            // Competitor Metrics
+            const competitorMetrics = document.getElementById('competitorMetrics');
+            let metricsHtml = '';
+            
+            metricsHtml += `<div class="metric-item"><span class="metric-label">Total Competitors</span><span class="metric-value">${competitors.competitors?.length || 0}</span></div>`;
+            
+            const avgKeywords = competitors.competitors?.reduce((sum, comp) => sum + comp.commonKeywords, 0) / (competitors.competitors?.length || 1);
+            metricsHtml += `<div class="metric-item"><span class="metric-label">Avg Common Keywords</span><span class="metric-value">${avgKeywords?.toFixed(0) || 0}</span></div>`;
+            
+            const avgDomainRating = competitors.competitors?.reduce((sum, comp) => sum + comp.domainRating, 0) / (competitors.competitors?.length || 1);
+            metricsHtml += `<div class="metric-item"><span class="metric-label">Avg Domain Rating</span><span class="metric-value">${avgDomainRating?.toFixed(1) || 0}</span></div>`;
+            
+            const totalTraffic = competitors.competitors?.reduce((sum, comp) => sum + (comp.organicTraffic || 0), 0);
+            metricsHtml += `<div class="metric-item"><span class="metric-label">Total Competitor Traffic</span><span class="metric-value">${totalTraffic?.toLocaleString() || 0}</span></div>`;
+            
+            const strongestCompetitor = competitors.competitors?.reduce((max, comp) => comp.domainRating > max.domainRating ? comp : max, competitors.competitors[0]);
+            if (strongestCompetitor) {
+                metricsHtml += `<div class="metric-item"><span class="metric-label">Strongest Competitor</span><span class="metric-value">${strongestCompetitor.domain} (DR: ${strongestCompetitor.domainRating})</span></div>`;
+            }
+            
+            competitorMetrics.innerHTML = metricsHtml;
+        }
+
+        function updateBacklinksAnalysis(backlinks) {
+            if (!backlinks) return;
+
+            // Top Backlinks
+            const topBacklinks = document.getElementById('topBacklinks');
+            let backlinksHtml = '';
+            
+            if (backlinks.topBacklinks && backlinks.topBacklinks.length > 0) {
+                backlinks.topBacklinks.slice(0, 10).forEach((backlink, index) => {
+                    const rankClass = backlink.domain_rating >= 70 ? 'high-authority' : 
+                                    backlink.domain_rating >= 50 ? 'medium-authority' : 'low-authority';
+                    
+                    backlinksHtml += `<div class="backlink-item ${rankClass}">
+                        <div class="backlink-info">
+                            <span class="backlink-domain">${backlink.domain}</span>
+                            <span class="backlink-rank">#${index + 1}</span>
+                        </div>
+                        <div class="backlink-metrics">
+                            <span class="backlink-metric dr-metric">DR: ${backlink.domain_rating || 'N/A'}</span>
+                            <span class="backlink-metric rank-metric">Rank: ${backlink.domain_rank || 'N/A'}</span>
+                            ${backlink.referring_pages ? `<span class="backlink-metric pages-metric">${backlink.referring_pages} pages</span>` : ''}
+                        </div>
+                    </div>`;
+                });
+            } else {
+                backlinksHtml = '<div class="loading">No backlink data available</div>';
+            }
+            
+            topBacklinks.innerHTML = backlinksHtml;
+
+            // Link Profile
+            const linkProfile = document.getElementById('linkProfile');
+            let profileHtml = '';
+            
+            profileHtml += `<div class="metric-item"><span class="metric-label">Total Backlinks</span><span class="metric-value">${backlinks.totalBacklinks?.toLocaleString() || 0}</span></div>`;
+            profileHtml += `<div class="metric-item"><span class="metric-label">Referring Domains</span><span class="metric-value">${backlinks.referringDomains?.toLocaleString() || 0}</span></div>`;
+            profileHtml += `<div class="metric-item"><span class="metric-label">Domain Rating</span><span class="metric-value">${backlinks.domainRating || 0}</span></div>`;
+            
+            linkProfile.innerHTML = profileHtml;
+        }
+
+        function updateRecommendations(recommendations) {
+            const recommendationsList = document.getElementById('recommendationsList');
+            let recHtml = '';
+            
+            if (recommendations && recommendations.length > 0) {
+                recommendations.forEach(rec => {
+                    recHtml += `<div class="recommendation-item ${rec.priority.toLowerCase()}">
+                        <div class="recommendation-header">
+                            <span class="recommendation-title">${rec.issue}</span>
+                            <span class="recommendation-priority priority-${rec.priority.toLowerCase()}">${rec.priority}</span>
+                        </div>
+                        <div class="recommendation-solution">${rec.solution}</div>
+                        <div class="recommendation-impact">${rec.impact}</div>
+                    </div>`;
+                });
+            } else {
+                recHtml = '<div class="loading">No recommendations available</div>';
+            }
+            
+            recommendationsList.innerHTML = recHtml;
+        }
+
+        function toggleSection(sectionName) {
+            const content = document.getElementById(sectionName + 'Content');
+            const toggle = document.getElementById(sectionName + 'Toggle');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorSection.style.display = 'block';
+        }
+
+        // Handle socket connection
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+    </script>
+</body>
+</html>

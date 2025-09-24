@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backlinks Analysis - Mozarex AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="components/top-navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: #334155;
+            color: white;
+            border-left-color: #667eea;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: transparent;
+        }
+
+        .top-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 99999;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .dropdown-item.danger {
+            color: #ef4444;
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        .user-details h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #f1f5f9;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        /* Analysis Input */
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            max-width: 600px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        #urlInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Analysis Results */
+        .analysis-results {
+            display: none;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0 auto 1rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Backlinks List */
+        .backlinks-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .backlink-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .backlink-item:hover {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .backlink-rank {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .backlink-info {
+            flex: 1;
+        }
+
+        .backlink-domain {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .backlink-metrics {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .metric-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .backlink-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        /* AI Chat Section */
+        .ai-chat-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .ai-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .chat-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: transparent;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .message-content {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Enhanced formatting for AI responses */
+        .message-content strong {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .message-content em {
+            font-style: italic;
+            color: #64748b;
+        }
+
+        .message-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e11d48;
+        }
+
+        .message-content pre {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            color: #e2e8f0;
+        }
+
+        .message-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+
+        .message-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 12px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin: 10px 0 6px 0;
+        }
+
+        .message-content br {
+            margin: 4px 0;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-right: 0.75rem;
+        }
+
+        .chat-input button {
+            padding: 0.75rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .backlink-metrics {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item active" data-page="backlinks">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/blog" class="nav-item" data-page="blog-generator">
+                        <i class="fas fa-pen-fancy"></i>
+                        Blog Generator
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Connections</div>
+                    <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/dashboard-mantis-v2">Dashboard</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Backlinks Analysis</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item">
+                                <div class="user-info">
+                                    <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                                    <div class="user-details">
+                                        <h4>Mozarex User</h4>
+                                        <div class="user-role">Admin</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/user-settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item danger" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">🔗 Backlinks Analysis</h1>
+                    <p class="page-subtitle">Analyze your backlink profile and discover link building opportunities</p>
+                </div>
+
+                <!-- Analysis Input -->
+                <div class="input-section">
+                    <div class="input-group">
+                        <input type="text" id="urlInput" placeholder="Enter website URL (e.g., example.com)" />
+                        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeWebsite()">
+                            <i class="fas fa-search"></i>
+                            Analyze Backlinks
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Analysis Results -->
+                <div id="analysisResults" class="analysis-results">
+                    <!-- Backlink Metrics -->
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <div class="card-title">Total Backlinks</div>
+                            <div class="card-value" id="totalBacklinks">-</div>
+                        </div>
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="card-title">Referring Domains</div>
+                            <div class="card-value" id="referringDomains">-</div>
+                        </div>
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="card-title">Domain Rating</div>
+                            <div class="card-value" id="domainRating">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Backlinks List -->
+                    <div class="backlinks-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-list"></i>
+                            Top Backlinks
+                        </h2>
+                        <div id="backlinksList">
+                            <!-- Backlinks will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- AI Chat -->
+                    <div class="ai-chat-section">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-title">Mozarex AI - Backlinks Assistant</div>
+                        </div>
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="message ai">
+                                    <div class="message-avatar">AI</div>
+                                    <div class="message-content">
+                                        Hello! I'm your Backlinks assistant. I can help you analyze your backlink profile, identify link building opportunities, and suggest strategies to improve your domain authority. Ask me anything about backlinks!
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input">
+                                <input type="text" id="chatInput" placeholder="Ask about backlink strategies..." />
+                                <button id="sendBtn" onclick="sendMessage()">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="components/top-navbar.js"></script>
+    <script>
+        let currentAnalysis = null;
+        let chatHistory = [];
+
+        // Load data from localStorage if available
+        document.addEventListener('DOMContentLoaded', function() {
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            const analysisData = localStorage.getItem('analysisData');
+            
+            if (lastAnalyzedDomain && analysisData) {
+                document.getElementById('urlInput').value = lastAnalyzedDomain;
+                try {
+                    currentAnalysis = JSON.parse(analysisData);
+                    displayAnalysisResults();
+                } catch (error) {
+                    console.error('Error parsing analysis data:', error);
+                }
+            }
+
+            // Load chat history
+            const savedChatHistory = localStorage.getItem('backlinksChatHistory');
+            if (savedChatHistory) {
+                chatHistory = JSON.parse(savedChatHistory);
+                displayChatHistory();
+            }
+            
+            // Initialize top navbar
+            initializeTopNavbar();
+        });
+
+        // User dropdown functionality
+        function showUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            const userMenu = document.querySelector('.user-menu');
+            
+            if (!dropdown || !userMenu) return;
+
+            const rect = userMenu.getBoundingClientRect();
+            
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = (rect.bottom + 5) + 'px';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdown.style.zIndex = '2147483647';
+            
+            dropdown.classList.add('show');
+        }
+
+        function hideUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+        }
+
+        // Logout functionality
+        function logout() {
+            console.log('Logging out...');
+            // Clear local storage
+            localStorage.removeItem('userData');
+            localStorage.removeItem('lastAnalyzedDomain');
+            localStorage.removeItem('analysisData');
+            localStorage.removeItem('technicalSEOData');
+            localStorage.removeItem('keywordsChatHistory');
+            localStorage.removeItem('competitorsChatHistory');
+            localStorage.removeItem('backlinksChatHistory');
+            localStorage.removeItem('blogChatHistory');
+            localStorage.removeItem('contentCalendarData');
+            localStorage.removeItem('socialConnectionsChatHistory');
+
+            // Redirect to Auth0 logout endpoint
+            window.location.href = '/auth/logout';
+        }
+
+        async function analyzeWebsite() {
+            const url = document.getElementById('urlInput').value.trim();
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            // Auto-add protocol if missing
+            let processedUrl = url;
+            if (!processedUrl.match(/^https?:\/\//)) {
+                processedUrl = 'https://' + processedUrl;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+            try {
+                const response = await fetch('/api/dataforseo/environment/analyze-website', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: processedUrl })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to analyze website');
+                }
+
+                if (data.success && data.data) {
+                    currentAnalysis = data.data;
+                    localStorage.setItem('lastAnalyzedDomain', data.data.domain || data.data.url);
+                    localStorage.setItem('analysisData', JSON.stringify(data.data));
+                    displayAnalysisResults();
+                } else {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+            } catch (error) {
+                console.error('Error analyzing website:', error);
+                alert('Error: ' + error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Analyze Backlinks';
+            }
+        }
+
+        function displayAnalysisResults() {
+            if (!currentAnalysis) return;
+
+            // Update metrics
+            updateMetrics();
+            
+            // Show results
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Display backlinks
+            displayBacklinks();
+        }
+
+        function updateMetrics() {
+            const backlinks = currentAnalysis.backlinks?.value || [];
+            
+            // Total Backlinks
+            document.getElementById('totalBacklinks').textContent = backlinks.length;
+
+            // Referring Domains (mock data for now)
+            document.getElementById('referringDomains').textContent = Math.floor(backlinks.length * 0.3);
+
+            // Domain Rating
+            const domainRating = currentAnalysis.backlinks?.domain_rating || 0;
+            document.getElementById('domainRating').textContent = domainRating || '-';
+        }
+
+        function displayBacklinks() {
+            const backlinksList = document.getElementById('backlinksList');
+            backlinksList.innerHTML = '';
+
+            const backlinks = currentAnalysis.backlinks?.value || [];
+
+            if (backlinks.length === 0) {
+                backlinksList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">No backlinks found. This might be due to sandbox mode limitations.</p>';
+                return;
+            }
+
+            backlinks.forEach((backlink, index) => {
+                const backlinkElement = document.createElement('div');
+                backlinkElement.className = 'backlink-item';
+                backlinkElement.innerHTML = `
+                    <div class="backlink-rank">${index + 1}</div>
+                    <div class="backlink-info">
+                        <div class="backlink-domain">${backlink.domain || 'Unknown Domain'}</div>
+                        <div class="backlink-metrics">
+                            <div class="metric-item">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Authority: ${backlink.authority || 'Unknown'}</span>
+                            </div>
+                            <div class="metric-item">
+                                <i class="fas fa-link"></i>
+                                <span>Links: ${backlink.links || 'Unknown'}</span>
+                            </div>
+                            <div class="metric-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>First Seen: ${backlink.first_seen || 'Unknown'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="backlink-actions">
+                        <button class="btn btn-primary btn-small" onclick="analyzeBacklink('${backlink.domain}')">
+                            Analyze
+                        </button>
+                        <button class="btn btn-primary btn-small" onclick="getBacklinkOpportunities('${backlink.domain}')">
+                            Opportunities
+                        </button>
+                    </div>
+                `;
+                backlinksList.appendChild(backlinkElement);
+            });
+        }
+
+        function analyzeBacklink(domain) {
+            addMessageToChat('user', `Can you analyze the backlink from ${domain} and tell me about its quality and value?`);
+        }
+
+        function getBacklinkOpportunities(domain) {
+            addMessageToChat('user', `What link building opportunities can I pursue similar to ${domain}?`);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+
+            // Disable send button
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch('/api/ai/mozarex-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: 'backlinks',
+                        analysis: currentAnalysis,
+                        domain: currentDomain
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessageToChat('ai', data.response);
+                } else {
+                    addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
+        function addMessageToChat(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? 'U' : 'AI';
+            
+            // Process message for formatting (only for AI responses)
+            let processedMessage = message;
+            if (sender === 'ai') {
+                processedMessage = formatAIResponse(message);
+            }
+            
+            messageElement.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${processedMessage}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Save to chat history
+            chatHistory.push({ sender, message, timestamp: new Date().toISOString() });
+            localStorage.setItem('backlinksChatHistory', JSON.stringify(chatHistory));
+        }
+
+        function formatAIResponse(message) {
+            // Convert markdown-like formatting to HTML
+            let formatted = message;
+            
+            // Handle line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            // Handle bold text (**text**)
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Handle italic text (*text*)
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Handle code blocks (```code```)
+            formatted = formatted.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+            
+            // Handle inline code (`code`)
+            formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
+            
+            // Handle lists (- item)
+            formatted = formatted.replace(/^- (.*$)/gm, '<li>$1</li>');
+            formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Handle numbered lists (1. item)
+            formatted = formatted.replace(/^\d+\. (.*$)/gm, '<li>$1</li>');
+            
+            // Handle headers (## Header)
+            formatted = formatted.replace(/^## (.*$)/gm, '<h3>$1</h3>');
+            formatted = formatted.replace(/^### (.*$)/gm, '<h4>$1</h4>');
+            
+            // Handle emojis and special characters
+            formatted = formatted.replace(/✅/g, '<span style="color: #22c55e;">✅</span>');
+            formatted = formatted.replace(/❌/g, '<span style="color: #ef4444;">❌</span>');
+            formatted = formatted.replace(/⚠️/g, '<span style="color: #f59e0b;">⚠️</span>');
+            formatted = formatted.replace(/📝/g, '<span style="color: #3b82f6;">📝</span>');
+            formatted = formatted.replace(/🔍/g, '<span style="color: #8b5cf6;">🔍</span>');
+            formatted = formatted.replace(/💡/g, '<span style="color: #f59e0b;">💡</span>');
+            formatted = formatted.replace(/🎯/g, '<span style="color: #ef4444;">🎯</span>');
+            formatted = formatted.replace(/📊/g, '<span style="color: #06b6d4;">📊</span>');
+            formatted = formatted.replace(/🚀/g, '<span style="color: #10b981;">🚀</span>');
+            formatted = formatted.replace(/👉/g, '<span style="color: #6366f1;">👉</span>');
+            formatted = formatted.replace(/📈/g, '<span style="color: #059669;">📈</span>');
+            formatted = formatted.replace(/🔧/g, '<span style="color: #7c3aed;">🔧</span>');
+            formatted = formatted.replace(/⭐/g, '<span style="color: #f59e0b;">⭐</span>');
+            formatted = formatted.replace(/📋/g, '<span style="color: #3b82f6;">📋</span>');
+            formatted = formatted.replace(/🎨/g, '<span style="color: #ec4899;">🎨</span>');
+            formatted = formatted.replace(/🏠/g, '<span style="color: #059669;">🏠</span>');
+            formatted = formatted.replace(/🚨/g, '<span style="color: #dc2626;">🚨</span>');
+            formatted = formatted.replace(/🔴/g, '<span style="color: #dc2626;">🔴</span>');
+            formatted = formatted.replace(/🟡/g, '<span style="color: #f59e0b;">🟡</span>');
+            formatted = formatted.replace(/🟢/g, '<span style="color: #22c55e;">🟢</span>');
+            formatted = formatted.replace(/🏆/g, '<span style="color: #f59e0b;">🏆</span>');
+            formatted = formatted.replace(/🔗/g, '<span style="color: #3b82f6;">🔗</span>');
+            
+            return formatted;
+        }
+
+        function displayChatHistory() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+
+            chatHistory.forEach(chat => {
+                addMessageToChat(chat.sender, chat.message);
+            });
+        }
+
+        // Allow Enter key to send message
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Subscription - Digital Marketing SEO Analyzer</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://js.stripe.com https://maps.googleapis.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com;">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan-summary {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .plan-features {
+            list-style: none;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+        }
+
+        .plan-features li i {
+            margin-right: 10px;
+            color: #48bb78;
+        }
+
+        .trial-info {
+            background: #e6fffa;
+            border: 2px solid #4fd1c7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .trial-info h3 {
+            color: #2c7a7b;
+            margin-bottom: 10px;
+        }
+
+        .trial-info p {
+            color: #2c7a7b;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stripe-element {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .stripe-element--focus {
+            border-color: #667eea;
+        }
+
+        .stripe-element--invalid {
+            border-color: #e53e3e;
+        }
+
+        .complete-btn {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .complete-btn:hover {
+            background: #5a67d8;
+        }
+
+        .complete-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .back-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #cbd5e0;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .payment-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Complete Your Subscription</h1>
+            <p>Secure payment processing with Stripe</p>
+        </div>
+
+        <div class="payment-card">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> Back to Plans
+            </button>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="plan-summary" id="planSummary">
+                <!-- Plan details will be populated by JavaScript -->
+            </div>
+
+            <div class="trial-info">
+                <h3><i class="fas fa-gift"></i> 7-Day Free Trial</h3>
+                <p>You won't be charged until your trial ends. Start exploring all features today!</p>
+            </div>
+
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="card-element">Card Information</label>
+                    <div id="card-element" class="stripe-element">
+                        <!-- Stripe Elements will create form elements here -->
+                    </div>
+                    <div id="card-errors" role="alert"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="state">State/Province</label>
+                        <input type="text" id="state" name="state" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="postalCode">Postal Code</label>
+                        <input type="text" id="postalCode" name="postalCode" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" name="country" required>
+                        <option value="">Select Country</option>
+                        <option value="US">🇺🇸 United States</option>
+                        <option value="CA">🇨🇦 Canada</option>
+                        <option value="GB">🇬🇧 United Kingdom</option>
+                        <option value="AU">🇦🇺 Australia</option>
+                        <option value="DE">🇩🇪 Germany</option>
+                        <option value="FR">🇫🇷 France</option>
+                        <option value="IT">🇮🇹 Italy</option>
+                        <option value="ES">🇪🇸 Spain</option>
+                        <option value="NL">🇳🇱 Netherlands</option>
+                        <option value="SE">🇸🇪 Sweden</option>
+                        <option value="NO">🇳🇴 Norway</option>
+                        <option value="DK">🇩🇰 Denmark</option>
+                        <option value="FI">🇫🇮 Finland</option>
+                        <option value="CH">🇨🇭 Switzerland</option>
+                        <option value="AT">🇦🇹 Austria</option>
+                        <option value="BE">🇧🇪 Belgium</option>
+                        <option value="IE">🇮🇪 Ireland</option>
+                        <option value="NZ">🇳🇿 New Zealand</option>
+                        <option value="JP">🇯🇵 Japan</option>
+                        <option value="KR">🇰🇷 South Korea</option>
+                        <option value="SG">🇸🇬 Singapore</option>
+                        <option value="HK">🇭🇰 Hong Kong</option>
+                        <option value="IN">🇮🇳 India</option>
+                        <option value="BR">🇧🇷 Brazil</option>
+                        <option value="MX">🇲🇽 Mexico</option>
+                        <option value="AR">🇦🇷 Argentina</option>
+                        <option value="CL">🇨🇱 Chile</option>
+                        <option value="CO">🇨🇴 Colombia</option>
+                        <option value="PE">🇵🇪 Peru</option>
+                        <option value="ZA">🇿🇦 South Africa</option>
+                        <option value="EG">🇪🇬 Egypt</option>
+                        <option value="NG">🇳🇬 Nigeria</option>
+                        <option value="KE">🇰🇪 Kenya</option>
+                        <option value="MA">🇲🇦 Morocco</option>
+                        <option value="TN">🇹🇳 Tunisia</option>
+                        <option value="IL">🇮🇱 Israel</option>
+                        <option value="AE">🇦🇪 United Arab Emirates</option>
+                        <option value="SA">🇸🇦 Saudi Arabia</option>
+                        <option value="TR">🇹🇷 Turkey</option>
+                        <option value="RU">🇷🇺 Russia</option>
+                        <option value="PL">🇵🇱 Poland</option>
+                        <option value="CZ">🇨🇿 Czech Republic</option>
+                        <option value="HU">🇭🇺 Hungary</option>
+                        <option value="RO">🇷🇴 Romania</option>
+                        <option value="BG">🇧🇬 Bulgaria</option>
+                        <option value="HR">🇭🇷 Croatia</option>
+                        <option value="SI">🇸🇮 Slovenia</option>
+                        <option value="SK">🇸🇰 Slovakia</option>
+                        <option value="LT">🇱🇹 Lithuania</option>
+                        <option value="LV">🇱🇻 Latvia</option>
+                        <option value="EE">🇪🇪 Estonia</option>
+                        <option value="GR">🇬🇷 Greece</option>
+                        <option value="PT">🇵🇹 Portugal</option>
+                        <option value="LU">🇱🇺 Luxembourg</option>
+                        <option value="MT">🇲🇹 Malta</option>
+                        <option value="CY">🇨🇾 Cyprus</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="complete-btn" id="completeBtn">
+                    <i class="fas fa-lock"></i> Complete Subscription
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your subscription...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stripe = null;
+        let elements = null;
+        let cardElement = null;
+        let userData = null;
+        let planData = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserAndPlanData();
+            initializeStripe();
+        });
+
+        function loadUserAndPlanData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            userData = {
+                id: urlParams.get('user_id'),
+                email: urlParams.get('email'),
+                name: urlParams.get('name')
+            };
+            
+            planData = {
+                plan: urlParams.get('plan'),
+                billing_cycle: urlParams.get('billing_cycle')
+            };
+            
+            if (!userData.id || !planData.plan) {
+                showError('Invalid session. Please start over.');
+                return;
+            }
+            
+            displayPlanSummary();
+        }
+
+        function displayPlanSummary() {
+            const planNames = {
+                starter: 'Starter Plan',
+                professional: 'Professional Plan'
+            };
+            
+            const planPrices = {
+                starter: { monthly: '$29.97', yearly: '$209.98' },
+                professional: { monthly: '$59.97', yearly: '$419.98' }
+            };
+            
+            const planFeatures = {
+                starter: {
+                    monthly: [
+                        '30-day content calendar',
+                        'Basic SEO analysis',
+                        'AI content suggestions',
+                        'Keyword research',
+                        'Social media integration'
+                    ],
+                    yearly: [
+                        '30-day content calendar',
+                        'Basic SEO analysis',
+                        'AI content suggestions',
+                        'Keyword research',
+                        'Social media integration',
+                        '30% savings with yearly billing'
+                    ]
+                },
+                professional: {
+                    monthly: [
+                        '90-day content calendar',
+                        'Advanced SEO analysis',
+                        'AI-powered content generation',
+                        'Keyword research & tracking',
+                        'Technical SEO audit',
+                        'Competitor analysis',
+                        'Priority email support',
+                        'WordPress integration'
+                    ],
+                    yearly: [
+                        '90-day content calendar',
+                        'Advanced SEO analysis',
+                        'AI-powered content generation',
+                        'Keyword research & tracking',
+                        'Technical SEO audit',
+                        'Competitor analysis',
+                        'Priority email support',
+                        'WordPress integration',
+                        '30% savings with yearly billing'
+                    ]
+                }
+            };
+            
+            const planName = planNames[planData.plan];
+            const price = planPrices[planData.plan][planData.billing_cycle];
+            const period = planData.billing_cycle === 'monthly' ? 'month' : 'year';
+            const features = planFeatures[planData.plan][planData.billing_cycle];
+            
+            document.getElementById('planSummary').innerHTML = `
+                <div class="plan-name">${planName}</div>
+                <div class="plan-price">${price}</div>
+                <div style="color: #718096; margin-bottom: 20px;">per ${period}</div>
+                <ul class="plan-features">
+                    ${features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        async function initializeStripe() {
+            try {
+                const response = await fetch('/api/subscription/stripe-key');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const script = document.createElement('script');
+                    script.src = 'https://js.stripe.com/v3/';
+                    script.onload = () => {
+                        stripe = Stripe(data.publishableKey);
+                        setupStripeElements();
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    showError('Failed to load payment system');
+                }
+            } catch (error) {
+                console.error('Error initializing Stripe:', error);
+                showError('Payment system unavailable');
+            }
+        }
+
+        function setupStripeElements() {
+            elements = stripe.elements();
+            
+            cardElement = elements.create('card', {
+                hidePostalCode: true,
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                    invalid: {
+                        color: '#9e2146',
+                    },
+                },
+            });
+            
+            cardElement.mount('#card-element');
+            
+            cardElement.on('change', function(event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            if (!stripe || !cardElement) {
+                showError('Payment system not ready');
+                return;
+            }
+            
+            const completeBtn = document.getElementById('completeBtn');
+            const loading = document.getElementById('loading');
+            
+            completeBtn.disabled = true;
+            loading.classList.add('show');
+            hideError();
+            
+            try {
+                // Create setup intent
+                const setupResponse = await fetch('/api/subscription/setup-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const setupData = await setupResponse.json();
+                
+                if (!setupData.success) {
+                    throw new Error(setupData.error || 'Failed to create setup intent');
+                }
+                
+                // Confirm card setup
+                const { error, setupIntent } = await stripe.confirmCardSetup(
+                    setupData.clientSecret,
+                    {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: userData.name,
+                                email: userData.email,
+                                address: {
+                                    line1: document.getElementById('address').value,
+                                    city: document.getElementById('city').value,
+                                    state: document.getElementById('state').value,
+                                    postal_code: document.getElementById('postalCode').value,
+                                    country: document.getElementById('country').value,
+                                },
+                            },
+                        },
+                    }
+                );
+                
+                if (error) {
+                    throw new Error(error.message);
+                }
+                
+                // Start subscription with trial
+                const subscriptionResponse = await fetch('/api/subscription/trial/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: userData.email,
+                        name: userData.name,
+                        plan: planData.plan,
+                        billingCycle: planData.billing_cycle,
+                        paymentMethodId: setupIntent.payment_method,
+                        userId: userData.id
+                    })
+                });
+                
+                const subscriptionData = await subscriptionResponse.json();
+                
+                if (subscriptionData.success) {
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard?signup=success';
+                } else {
+                    throw new Error(subscriptionData.error || 'Failed to start subscription');
+                }
+                
+            } catch (error) {
+                console.error('Payment error:', error);
+                showError('Payment failed: ' + error.message);
+            } finally {
+                completeBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
+
+

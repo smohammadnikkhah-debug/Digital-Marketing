@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keywords Analysis - Mozarex AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="components/top-navbar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: #334155;
+            color: white;
+            border-left-color: #667eea;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: transparent;
+        }
+
+        .top-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .user-menu {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 99999;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .dropdown-item.danger {
+            color: #ef4444;
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        /* Analysis Input */
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            max-width: 600px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        #urlInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Analysis Results */
+        .analysis-results {
+            display: block;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0 auto 1rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Keywords Table */
+        .keywords-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .keywords-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .keywords-table th,
+        .keywords-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .keywords-table th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+        }
+
+        .keywords-table td {
+            font-size: 0.875rem;
+        }
+
+        .keyword-cell {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .difficulty-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .difficulty-low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .difficulty-medium {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .difficulty-high {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .competition-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .competition-low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .competition-medium {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .competition-high {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* AI Chat Section */
+        .ai-chat-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .ai-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .chat-container {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: transparent;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .message-content {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Enhanced formatting for AI responses */
+        .message-content strong {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .message-content em {
+            font-style: italic;
+            color: #64748b;
+        }
+
+        .message-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e11d48;
+        }
+
+        .message-content pre {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            color: #334155;
+        }
+
+        .message-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+
+        .message-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 12px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin: 10px 0 6px 0;
+        }
+
+        .message-content br {
+            margin: 4px 0;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-right: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        
+        .chat-input input::placeholder {
+            color: #94a3b8;
+        }
+
+        .chat-input button {
+            padding: 0.75rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .analysis-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .keywords-table {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item active" data-page="keywords">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/blog" class="nav-item" data-page="blog-generator">
+                        <i class="fas fa-pen-fancy"></i>
+                        Blog Generator
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Connections</div>
+                    <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/">Home</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="currentPage">Keywords</span>
+                    </nav>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item">
+                                <div class="user-info">
+                                    <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                                    <div class="user-details">
+                                        <h4>Mozarex User</h4>
+                                        <div class="user-role">Admin</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/user-settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item danger" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">🔑 Keywords Analysis</h1>
+                    <p class="page-subtitle">Discover high-value keywords and optimize your content strategy</p>
+                </div>
+
+                <!-- Analysis Results -->
+                <div id="analysisResults" class="analysis-results">
+                    <!-- Keyword Metrics -->
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="card-title">Total Keywords</div>
+                            <div class="card-value" id="totalKeywords">-</div>
+                        </div>
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="card-title">Avg. Search Volume</div>
+                            <div class="card-value" id="avgSearchVolume">-</div>
+                        </div>
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="card-title">Avg. CPC</div>
+                            <div class="card-value" id="avgCPC">-</div>
+                        </div>
+                        <div class="analysis-card">
+                            <div class="card-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <div class="card-title">Avg. Difficulty</div>
+                            <div class="card-value" id="avgDifficulty">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Keywords Table -->
+                    <div class="keywords-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-list"></i>
+                            Keyword Analysis Results
+                        </h2>
+                        <table class="keywords-table" id="keywordsTable">
+                            <thead>
+                                <tr>
+                                    <th>Keyword</th>
+                                    <th>Search Volume</th>
+                                    <th>Difficulty</th>
+                                    <th>Competition</th>
+                                    <th>CPC</th>
+                                    <th>Optimization</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keywordsTableBody">
+                                <!-- Keywords will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- AI Chat -->
+                    <div class="ai-chat-section">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-title">Mozarex AI - Keywords Assistant</div>
+                        </div>
+                        <!-- AI Chat Component Container -->
+                        <div id="aiChatContainer">
+                            <div class="chat-container">
+                                <div class="chat-messages" id="chatMessages">
+                                    <!-- Messages will be added here -->
+                                </div>
+                                <div class="chat-input">
+                                    <input type="text" id="chatInput" placeholder="Ask me about keyword research and optimization...">
+                                    <button id="sendBtn" onclick="sendMessage()">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    
+    <script src="components/top-navbar.js"></script>
+    <script>
+        let currentAnalysis = null;
+        let currentDomain = null;
+        let chatHistory = [];
+
+        // Load data from localStorage if available
+        document.addEventListener('DOMContentLoaded', function() {
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            const analysisData = localStorage.getItem('analysisData');
+            
+            if (lastAnalyzedDomain && analysisData) {
+                try {
+                    currentAnalysis = JSON.parse(analysisData);
+                    displayAnalysisResults();
+                } catch (error) {
+                    console.error('Error parsing analysis data:', error);
+                    // Load real DataForSEO data for default domain
+                    loadDataForSEOData('mozarex.com');
+                }
+            } else {
+                // Load real DataForSEO data for default domain
+                loadDataForSEOData('mozarex.com');
+            }
+
+            // Load chat history with error handling
+            try {
+                const savedChatHistory = localStorage.getItem('keywordsChatHistory');
+                if (savedChatHistory) {
+                    chatHistory = JSON.parse(savedChatHistory);
+                    // Limit chat history on load to prevent future quota issues
+                    if (chatHistory.length > 20) {
+                        chatHistory = chatHistory.slice(-20);
+                        // Try to save the trimmed history back
+                        try {
+                            localStorage.setItem('keywordsChatHistory', JSON.stringify(chatHistory));
+                        } catch (saveError) {
+                            console.warn('Could not save trimmed chat history:', saveError);
+                        }
+                    }
+                    displayChatHistory();
+                }
+            } catch (error) {
+                console.warn('Could not load chat history due to quota or parsing error:', error);
+                // Clear corrupted chat history
+                try {
+                    localStorage.removeItem('keywordsChatHistory');
+                } catch (clearError) {
+                    console.warn('Could not clear corrupted chat history:', clearError);
+                }
+                chatHistory = [];
+            }
+            
+            // Initialize top navbar
+            initializeTopNavbar();
+        });
+
+        // Load real DataForSEO data
+        async function loadDataForSEOData(domain) {
+            try {
+                console.log('🔍 Loading DataForSEO keywords data for:', domain);
+                
+                const response = await fetch(`/api/supabase/historical-data/${domain}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    console.log('✅ DataForSEO keywords data loaded:', data.data);
+                    currentAnalysis = data.data;
+                    currentDomain = domain;
+                    
+                    // Store in localStorage
+                    localStorage.setItem('lastAnalyzedDomain', domain);
+                    localStorage.setItem('analysisData', JSON.stringify(data.data));
+                    
+                    displayAnalysisResults();
+                } else {
+                    console.error('❌ Failed to load DataForSEO data:', data.error);
+                    // Fallback to empty state
+                    displayEmptyState();
+                }
+            } catch (error) {
+                console.error('❌ Error loading DataForSEO data:', error);
+                displayEmptyState();
+            }
+        }
+        
+        // Display empty state when no data available
+        function displayEmptyState() {
+            currentAnalysis = null;
+            document.getElementById('analysisResults').style.display = 'none';
+            
+            // Show message
+            const pageHeader = document.querySelector('.page-header');
+            if (pageHeader) {
+                pageHeader.innerHTML = `
+                    <h1 class="page-title">🔑 Keywords Analysis</h1>
+                    <p class="page-subtitle">No keyword data available. Please analyze a website first.</p>
+                `;
+            }
+        }
+
+        function displayAnalysisResults() {
+            if (!currentAnalysis) return;
+
+            // Update metrics
+            updateMetrics();
+            
+            // Show results
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Display keywords table
+            displayKeywordsTable();
+        }
+
+        function updateMetrics() {
+            const keywords = currentAnalysis.keywords?.keywords || [];
+            
+            // Total Keywords
+            document.getElementById('totalKeywords').textContent = keywords.length;
+
+            // Average Search Volume
+            const avgSearchVolume = keywords.length > 0 ? 
+                Math.round(keywords.reduce((sum, kw) => sum + (kw.searchVolume || 0), 0) / keywords.length) : 0;
+            document.getElementById('avgSearchVolume').textContent = avgSearchVolume.toLocaleString();
+
+            // Average CPC
+            const avgCPC = keywords.length > 0 ? 
+                (keywords.reduce((sum, kw) => sum + (parseFloat(kw.cpc?.replace('$', '') || 0)), 0) / keywords.length).toFixed(2) : '0.00';
+            document.getElementById('avgCPC').textContent = `$${avgCPC}`;
+
+            // Average Difficulty
+            const avgDifficulty = keywords.length > 0 ? 
+                Math.round(keywords.reduce((sum, kw) => sum + (kw.difficulty || 0), 0) / keywords.length) : 0;
+            document.getElementById('avgDifficulty').textContent = avgDifficulty;
+        }
+
+        function displayKeywordsTable() {
+            const tableBody = document.getElementById('keywordsTableBody');
+            tableBody.innerHTML = '';
+
+            const keywords = currentAnalysis.keywords?.keywords || [];
+
+            if (keywords.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">No keywords found</td></tr>';
+                return;
+            }
+
+            keywords.forEach(keyword => {
+                const row = document.createElement('tr');
+                
+                const difficultyClass = getDifficultyClass(keyword.difficulty);
+                const competitionClass = getCompetitionClass(keyword.competition);
+                
+                row.innerHTML = `
+                    <td class="keyword-cell">${keyword.keyword}</td>
+                    <td>${(keyword.searchVolume || 0).toLocaleString()}</td>
+                    <td><span class="difficulty-badge ${difficultyClass}">${keyword.difficulty || 0}</span></td>
+                    <td><span class="competition-badge ${competitionClass}">${keyword.competition || 'Unknown'}</span></td>
+                    <td>${keyword.cpc || '$0.00'}</td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="optimizeKeyword('${keyword.keyword}')">
+                            Optimize
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function getDifficultyClass(difficulty) {
+            if (difficulty <= 30) return 'difficulty-low';
+            if (difficulty <= 70) return 'difficulty-medium';
+            return 'difficulty-high';
+        }
+
+        function getCompetitionClass(competition) {
+            if (competition === 'Low') return 'competition-low';
+            if (competition === 'Medium') return 'competition-medium';
+            return 'competition-high';
+        }
+
+        function optimizeKeyword(keyword) {
+            addMessageToChat('user', `How can I optimize for the keyword "${keyword}"?`);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+
+            // Disable send button
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch('/api/ai/mozarex-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: 'keywords',
+                        analysis: currentAnalysis,
+                        domain: currentDomain
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessageToChat('ai', data.response);
+                } else {
+                    addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
+        function addMessageToChat(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            if (!chatMessages) return; // Exit if chat container doesn't exist
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? 'U' : 'AI';
+            
+            // Process message for formatting (only for AI responses)
+            let processedMessage = message;
+            if (sender === 'ai') {
+                processedMessage = formatAIResponse(message);
+            }
+            
+            messageElement.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">${processedMessage}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Save to chat history with quota management
+            chatHistory.push({ sender, message, timestamp: new Date().toISOString() });
+            
+            // Limit chat history to prevent quota exceeded errors (keep last 20 messages)
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
+            }
+            
+            // Try to save to localStorage with error handling
+            try {
+                localStorage.setItem('keywordsChatHistory', JSON.stringify(chatHistory));
+            } catch (error) {
+                console.warn('Chat history could not be saved due to storage quota:', error);
+                // Clear old chat history and try again
+                try {
+                    localStorage.removeItem('keywordsChatHistory');
+                    localStorage.setItem('keywordsChatHistory', JSON.stringify(chatHistory.slice(-10)));
+                } catch (retryError) {
+                    console.warn('Could not save chat history even after clearing:', retryError);
+                }
+            }
+        }
+
+        function formatAIResponse(message) {
+            // Convert markdown-like formatting to HTML
+            let formatted = message;
+            
+            // Handle line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            // Handle bold text (**text**)
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Handle italic text (*text*)
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Handle code blocks (```code```)
+            formatted = formatted.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+            
+            // Handle inline code (`code`)
+            formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
+            
+            // Handle lists (- item)
+            formatted = formatted.replace(/^- (.*$)/gm, '<li>$1</li>');
+            formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Handle numbered lists (1. item)
+            formatted = formatted.replace(/^\d+\. (.*$)/gm, '<li>$1</li>');
+            
+            // Handle headers (## Header)
+            formatted = formatted.replace(/^## (.*$)/gm, '<h3>$1</h3>');
+            formatted = formatted.replace(/^### (.*$)/gm, '<h4>$1</h4>');
+            
+            // Handle emojis and special characters
+            formatted = formatted.replace(/✅/g, '<span style="color: #22c55e;">✅</span>');
+            formatted = formatted.replace(/❌/g, '<span style="color: #ef4444;">❌</span>');
+            formatted = formatted.replace(/⚠️/g, '<span style="color: #f59e0b;">⚠️</span>');
+            formatted = formatted.replace(/📝/g, '<span style="color: #3b82f6;">📝</span>');
+            formatted = formatted.replace(/🔍/g, '<span style="color: #8b5cf6;">🔍</span>');
+            formatted = formatted.replace(/💡/g, '<span style="color: #f59e0b;">💡</span>');
+            formatted = formatted.replace(/🎯/g, '<span style="color: #ef4444;">🎯</span>');
+            formatted = formatted.replace(/📊/g, '<span style="color: #06b6d4;">📊</span>');
+            formatted = formatted.replace(/🚀/g, '<span style="color: #10b981;">🚀</span>');
+            formatted = formatted.replace(/👉/g, '<span style="color: #6366f1;">👉</span>');
+            formatted = formatted.replace(/📈/g, '<span style="color: #059669;">📈</span>');
+            formatted = formatted.replace(/🔧/g, '<span style="color: #7c3aed;">🔧</span>');
+            formatted = formatted.replace(/⭐/g, '<span style="color: #f59e0b;">⭐</span>');
+            formatted = formatted.replace(/📋/g, '<span style="color: #3b82f6;">📋</span>');
+            formatted = formatted.replace(/🎨/g, '<span style="color: #ec4899;">🎨</span>');
+            formatted = formatted.replace(/🏠/g, '<span style="color: #059669;">🏠</span>');
+            formatted = formatted.replace(/🚨/g, '<span style="color: #dc2626;">🚨</span>');
+            formatted = formatted.replace(/🔴/g, '<span style="color: #dc2626;">🔴</span>');
+            formatted = formatted.replace(/🟡/g, '<span style="color: #f59e0b;">🟡</span>');
+            formatted = formatted.replace(/🟢/g, '<span style="color: #22c55e;">🟢</span>');
+            formatted = formatted.replace(/🏆/g, '<span style="color: #f59e0b;">🏆</span>');
+            formatted = formatted.replace(/🔗/g, '<span style="color: #3b82f6;">🔗</span>');
+            
+            return formatted;
+        }
+
+        function displayChatHistory() {
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.innerHTML = '';
+
+                chatHistory.forEach(chat => {
+                    // Display message without saving to localStorage (avoid recursive saving)
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `message ${chat.sender}`;
+                    
+                    const avatar = chat.sender === 'user' ? 'U' : 'AI';
+                    
+                    // Process message for formatting (only for AI responses)
+                    let processedMessage = chat.message;
+                    if (chat.sender === 'ai') {
+                        processedMessage = formatAIResponse(chat.message);
+                    }
+                    
+                    messageElement.innerHTML = `
+                        <div class="message-avatar">${avatar}</div>
+                        <div class="message-content">${processedMessage}</div>
+                    `;
+                    
+                    chatMessages.appendChild(messageElement);
+                });
+                
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Allow Enter key to send message
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        // User dropdown functionality
+        function showUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.add('show');
+        }
+
+        function hideUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.remove('show');
+        }
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored authentication data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                
+                // Redirect to login page or home
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "dfs": {
+      "command": "npx",
+      "args": ["-y", "dataforseo-mcp-server"],
+      "env": {
+        "DATAFORSEO_USERNAME": "mohammad.nikkhah@mozarex.com",
+        "DATAFORSEO_PASSWORD": "5fa07e54063b133c"
+      }
+    }
+  }
+}

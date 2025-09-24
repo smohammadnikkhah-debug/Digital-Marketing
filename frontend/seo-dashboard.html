@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Analysis Dashboard - Digital Marketing Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .overview-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .overview-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+
+        .overview-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .score-excellent { background: linear-gradient(135deg, #28a745, #20c997); }
+        .score-good { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+        .score-poor { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .metric-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .expandable-section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .section-header h2 {
+            font-size: 1.5em;
+            font-weight: 300;
+        }
+
+        .section-toggle {
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .section-toggle.expanded {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            padding: 25px;
+            display: none;
+        }
+
+        .section-content.expanded {
+            display: block;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .analysis-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .page-analysis-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .page-analysis-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .page-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .page-metrics .metric {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .recommendation-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        .recommendation-card.high {
+            border-left-color: #dc3545;
+        }
+
+        .recommendation-card.medium {
+            border-left-color: #ffc107;
+        }
+
+        .recommendation-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-card .issue {
+            color: #dc3545;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-card .recommendation {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-card .pages {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .analysis-card h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .issue-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .issue-item:last-child {
+            border-bottom: none;
+        }
+
+        .issue-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .issue-error { background: #dc3545; }
+        .issue-warning { background: #ffc107; color: #000; }
+        .issue-success { background: #28a745; }
+
+        .issue-text {
+            flex: 1;
+            color: #495057;
+        }
+
+        .keyword-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .keyword-text {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .keyword-density {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .content-suggestion {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #bbdefb;
+        }
+
+        .content-suggestion h5 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .content-suggestion p {
+            color: #424242;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            margin: 20px 0;
+        }
+
+        .website-screenshot {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .overview-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 SEO Analysis Dashboard</h1>
+            <p>Comprehensive website analysis with AI-powered insights</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="websiteUrl" placeholder="Enter website URL (e.g., example.com)" />
+                <button class="btn" id="analyzeBtn">🔍 Analyze Website</button>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- Welcome Section -->
+            <div class="welcome-section" id="welcomeSection">
+                <div style="text-align: center; padding: 60px 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 20px; margin-bottom: 30px;">
+                    <h2 style="color: #495057; margin-bottom: 20px; font-size: 2.2em;">🎯 Comprehensive SEO Analysis Dashboard</h2>
+                    <p style="color: #6c757d; font-size: 1.2em; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        Get detailed SEO analysis with AI-powered insights. Enter any website URL above and click "Analyze Website" to get started.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px;">
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">📊 Technical SEO Analysis</h4>
+                            <p style="color: #6c757d; font-size: 14px;">Page title, meta data, headings, images, links, and technical issues</p>
+                        </div>
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">🤖 AI Content Optimization</h4>
+                            <p style="color: #6c757d; font-size: 14px;">AI-powered content suggestions and keyword recommendations</p>
+                        </div>
+                        <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">📈 Performance Insights</h4>
+                            <p style="color: #6c757d; font-size: 14px;">Load times, performance scores, and optimization recommendations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results Section (Hidden initially) -->
+            <div id="analysisResults" style="display: none;">
+                <!-- High-Level Overview -->
+            <div class="overview-section" id="overviewSection">
+                <div class="overview-card">
+                    <h3>🎯 Overall SEO Score</h3>
+                    <div class="score-circle" id="overallScore">--</div>
+                    <p id="scoreDescription">Analyzing...</p>
+                </div>
+
+                <div class="overview-card">
+                    <h3>⚡ Performance Metrics</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Desktop Load Time</span>
+                        <span class="metric-value" id="desktopLoadTime">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Mobile Load Time</span>
+                        <span class="metric-value" id="mobileLoadTime">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Page Size</span>
+                        <span class="metric-value" id="pageSize">--</span>
+                    </div>
+                </div>
+
+                <div class="overview-card">
+                    <h3>🔗 Link Analysis</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Internal Links</span>
+                        <span class="metric-value" id="internalLinks">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">External Links</span>
+                        <span class="metric-value" id="externalLinks">--</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Broken Links</span>
+                        <span class="metric-value" id="brokenLinks">--</span>
+                    </div>
+                </div>
+
+                <div class="overview-card">
+                    <h3>📱 Website Screenshot</h3>
+                    <img id="websiteScreenshot" class="website-screenshot" src="" alt="Website Screenshot" style="display: none;" />
+                    <p id="screenshotStatus">Screenshot will appear here</p>
+                </div>
+            </div>
+
+            <!-- Technical SEO Analysis -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('technical')">
+                    <h2>⚙️ Technical SEO Analysis</h2>
+                    <span class="section-toggle" id="technicalToggle">▼</span>
+                </div>
+                <div class="section-content" id="technicalContent">
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>📄 Page Title & Meta Data</h4>
+                            <div id="titleMetaIssues">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🖼️ Image Optimization</h4>
+                            <div id="imageIssues">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📝 Headlines & Structure</h4>
+                            <div id="headlineIssues">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🔗 Link Issues</h4>
+                            <div id="linkIssues">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📱 Open Graph & Social</h4>
+                            <div id="socialIssues">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🔧 Miscellaneous</h4>
+                            <div id="miscIssues">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Optimization -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('content')">
+                    <h2>📝 Content Optimization</h2>
+                    <span class="section-toggle" id="contentToggle">▼</span>
+                </div>
+                <div class="section-content" id="contentContent">
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>🔍 Current Keywords</h4>
+                            <div id="currentKeywords">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📈 Keyword Rankings</h4>
+                            <div id="keywordRankings">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🎯 Optimization Opportunities</h4>
+                            <div id="optimizationOpportunities">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Content Suggestions -->
+            <div class="expandable-section">
+                <div class="section-header" onclick="toggleSection('suggestions')">
+                    <h2>💡 AI-Powered Content Suggestions</h2>
+                    <span class="section-toggle" id="suggestionsToggle">▼</span>
+                </div>
+                <div class="section-content" id="suggestionsContent">
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>🔍 Missing Keywords</h4>
+                            <div id="missingKeywords">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>📝 Content Ideas</h4>
+                            <div id="contentIdeas">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h4>🚀 Visibility Boost</h4>
+                            <div id="visibilityBoost">
+                                <div class="loading">Analyzing...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End of analysis results section -->
+        </div>
+
+        <div id="loadingSection" class="loading" style="display: none;">
+            <h3>🔍 Analyzing Website...</h3>
+            <p>Please wait while we perform comprehensive SEO analysis</p>
+        </div>
+
+        <div id="errorSection" class="error" style="display: none;">
+            <h3>❌ Analysis Failed</h3>
+            <p id="errorMessage">Please check the URL and try again.</p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Initialize socket connection
+        const socket = io();
+        
+        // Elements
+        const websiteUrlInput = document.getElementById('websiteUrl');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const mainContent = document.getElementById('mainContent');
+        const loadingSection = document.getElementById('loadingSection');
+        const errorSection = document.getElementById('errorSection');
+
+        // Handle analyze button click
+        analyzeBtn.addEventListener('click', () => {
+            const url = websiteUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            analyzeWebsite(url);
+        });
+
+        // Handle Enter key
+        websiteUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                analyzeBtn.click();
+            }
+        });
+
+        function analyzeWebsite(url) {
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔄 Analyzing...';
+            document.getElementById('welcomeSection').style.display = 'none';
+            document.getElementById('analysisResults').style.display = 'none';
+            errorSection.style.display = 'none';
+            loadingSection.style.display = 'block';
+
+            // Process URL - add https:// if missing
+            let processedUrl = url.trim();
+            if (!processedUrl.match(/^https?:\/\//)) {
+                processedUrl = 'https://' + processedUrl;
+            }
+
+            // Send analysis request
+            socket.emit('analyze_website', { url: processedUrl });
+        }
+
+        // Handle analysis progress updates
+        socket.on('analysis_progress', (data) => {
+            const progressMessage = document.getElementById('progressMessage');
+            const progressBar = document.getElementById('progressBar');
+            
+            if (progressMessage) {
+                progressMessage.textContent = data.message;
+            }
+            
+            if (progressBar) {
+                progressBar.style.width = data.progress + '%';
+            }
+        });
+
+        // Handle analysis complete
+        socket.on('analysis_complete', (data) => {
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = '🔍 Analyze Website';
+            loadingSection.style.display = 'none';
+
+            if (data.success) {
+                displayAnalysis(data.analysis);
+                mainContent.style.display = 'block';
+            } else {
+                showError(data.error || 'Analysis failed');
+            }
+        });
+
+        function displayAnalysis(analysis) {
+            // Hide welcome section and show analysis results
+            document.getElementById('welcomeSection').style.display = 'none';
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Check if this is a comprehensive website analysis
+            if (analysis.totalPages && analysis.analyzedPages) {
+                displayWebsiteAnalysis(analysis);
+            } else {
+                // Single page analysis (legacy)
+                displaySinglePageAnalysis(analysis);
+            }
+        }
+
+        function displayWebsiteAnalysis(analysis) {
+            // Update overview section with website-wide data
+            updateOverallScore(analysis.overallScore || 0);
+            
+            // Display website statistics
+            updateWebsiteStats(analysis);
+            
+            // Display aggregated data
+            updateAggregatedData(analysis.aggregatedData);
+            
+            // Display page-by-page analysis
+            updatePageAnalyses(analysis.pageAnalyses);
+            
+            // Display recommendations
+            updateRecommendations(analysis.recommendations);
+        }
+
+        function displaySinglePageAnalysis(analysis) {
+            // Legacy single page analysis display
+            updateOverallScore(analysis.score || 0);
+            updatePerformanceMetrics(analysis.performance);
+            updateLinkAnalysis(analysis.links);
+            updateTechnicalAnalysis(analysis);
+            updateContentAnalysis(analysis);
+            generateAISuggestions(analysis);
+        }
+
+        function updateWebsiteStats(analysis) {
+            // Create or update website stats section
+            let statsSection = document.getElementById('websiteStats');
+            if (!statsSection) {
+                statsSection = document.createElement('div');
+                statsSection.id = 'websiteStats';
+                statsSection.className = 'overview-section';
+                document.getElementById('analysisResults').insertBefore(statsSection, document.getElementById('overviewSection'));
+            }
+            
+            statsSection.innerHTML = `
+                <div class="overview-card">
+                    <h3>📊 Website Overview</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Pages Found</span>
+                        <span class="metric-value">${analysis.totalPages}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Pages Analyzed</span>
+                        <span class="metric-value">${analysis.analyzedPages}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Analysis Success Rate</span>
+                        <span class="metric-value">${Math.round((analysis.analyzedPages / analysis.totalPages) * 100)}%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAggregatedData(aggregatedData) {
+            // Create aggregated data section
+            let aggregatedSection = document.getElementById('aggregatedData');
+            if (!aggregatedSection) {
+                aggregatedSection = document.createElement('div');
+                aggregatedSection.id = 'aggregatedData';
+                aggregatedSection.className = 'analysis-section';
+                aggregatedSection.innerHTML = '<h3>📈 Website-Wide Analysis</h3>';
+                document.getElementById('analysisResults').appendChild(aggregatedSection);
+            }
+            
+            aggregatedSection.innerHTML = `
+                <h3>📈 Website-Wide Analysis</h3>
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <h4>Title Optimization</h4>
+                        <p>Short titles: ${aggregatedData.titles.filter(t => t.length < 30).length}</p>
+                        <p>Long titles: ${aggregatedData.titles.filter(t => t.length > 60).length}</p>
+                        <p>Optimal titles: ${aggregatedData.titles.filter(t => t.length >= 30 && t.length <= 60).length}</p>
+                    </div>
+                    <div class="analysis-card">
+                        <h4>Meta Descriptions</h4>
+                        <p>Pages with meta descriptions: ${aggregatedData.metaDescriptions.length}</p>
+                        <p>Missing meta descriptions: ${aggregatedData.titles.length - aggregatedData.metaDescriptions.length}</p>
+                    </div>
+                    <div class="analysis-card">
+                        <h4>Images</h4>
+                        <p>Total images: ${aggregatedData.images.total}</p>
+                        <p>Missing alt text: ${aggregatedData.images.missingAlt}</p>
+                        <p>Alt text coverage: ${Math.round(((aggregatedData.images.total - aggregatedData.images.missingAlt) / aggregatedData.images.total) * 100)}%</p>
+                    </div>
+                    <div class="analysis-card">
+                        <h4>Technical SEO</h4>
+                        <p>Pages with canonical: ${aggregatedData.technical.hasCanonical}</p>
+                        <p>Pages with viewport: ${aggregatedData.technical.hasViewport}</p>
+                        <p>Pages with language: ${aggregatedData.technical.hasLanguage}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updatePageAnalyses(pageAnalyses) {
+            // Create page analyses section
+            let pagesSection = document.getElementById('pageAnalyses');
+            if (!pagesSection) {
+                pagesSection = document.createElement('div');
+                pagesSection.id = 'pageAnalyses';
+                pagesSection.className = 'analysis-section';
+                pagesSection.innerHTML = '<h3>📄 Page-by-Page Analysis</h3>';
+                document.getElementById('analysisResults').appendChild(pagesSection);
+            }
+            
+            const pagesHtml = pageAnalyses.map(page => `
+                <div class="page-analysis-card">
+                    <h4>${page.url}</h4>
+                    <div class="page-metrics">
+                        <span class="metric">Score: ${page.analysis?.score || 'N/A'}/100</span>
+                        <span class="metric">Title: ${page.analysis?.title ? page.analysis.title.substring(0, 50) + '...' : 'Missing'}</span>
+                        <span class="metric">Meta: ${page.analysis?.metaDescription ? 'Present' : 'Missing'}</span>
+                        <span class="metric">Images: ${page.analysis?.images?.total || 0}</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            pagesSection.innerHTML = `
+                <h3>📄 Page-by-Page Analysis</h3>
+                <div class="pages-grid">
+                    ${pagesHtml}
+                </div>
+            `;
+        }
+
+        function displayAnalysis(analysis) {
+            // Hide welcome section and show analysis results
+            document.getElementById('welcomeSection').style.display = 'none';
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Check if this is a comprehensive website analysis
+            if (analysis.totalPages && analysis.analyzedPages) {
+                displayWebsiteAnalysis(analysis);
+            } else {
+                // Single page analysis (legacy)
+                displaySinglePageAnalysis(analysis);
+            }
+        }
+
+        function displayWebsiteAnalysis(analysis) {
+            // Update overview section with website-wide data
+            updateOverallScore(analysis.score || 0);
+            
+            // Display domain-level metrics
+            updateDomainMetrics(analysis);
+            
+            // Display aggregated technical analysis
+            updateTechnicalAnalysis(analysis);
+            
+            // Display aggregated content analysis
+            updateContentAnalysis(analysis);
+            
+            // Display recommendations
+            updateRecommendations(analysis.recommendations);
+        }
+
+        function displaySinglePageAnalysis(analysis) {
+            // Legacy single page analysis display
+            updateOverallScore(analysis.score || 0);
+            updatePerformanceMetrics(analysis.performance);
+            updateLinkAnalysis(analysis.links);
+            updateTechnicalAnalysis(analysis);
+            updateContentAnalysis(analysis);
+            generateAISuggestions(analysis);
+        }
+
+        function updateDomainMetrics(analysis) {
+            // Create or update domain metrics section
+            let metricsSection = document.getElementById('domainMetrics');
+            if (!metricsSection) {
+                metricsSection = document.createElement('div');
+                metricsSection.id = 'domainMetrics';
+                metricsSection.className = 'overview-section';
+                document.getElementById('analysisResults').insertBefore(metricsSection, document.getElementById('overviewSection'));
+            }
+            
+            metricsSection.innerHTML = `
+                <div class="overview-card">
+                    <h3>📊 Domain Analysis Summary</h3>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Pages Analyzed</span>
+                        <span class="metric-value">${analysis.analyzedPages}/${analysis.totalPages}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Healthy Pages</span>
+                        <span class="metric-value">${analysis.healthyPages}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Pages with Issues</span>
+                        <span class="metric-value">${analysis.pagesWithIssues}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Issues Fixed</span>
+                        <span class="metric-value">${analysis.fixedIssues}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateRecommendations(recommendations) {
+            // Create recommendations section
+            let recommendationsSection = document.getElementById('recommendations');
+            if (!recommendationsSection) {
+                recommendationsSection = document.createElement('div');
+                recommendationsSection.id = 'recommendations';
+                recommendationsSection.className = 'analysis-section';
+                recommendationsSection.innerHTML = '<h3>💡 Domain-Wide Recommendations</h3>';
+                document.getElementById('analysisResults').appendChild(recommendationsSection);
+            }
+            
+            if (!recommendations || recommendations.length === 0) {
+                recommendationsSection.innerHTML = `
+                    <h3>💡 Domain-Wide Recommendations</h3>
+                    <p>No specific recommendations at this time. Your website is performing well!</p>
+                `;
+                return;
+            }
+            
+            const recommendationsHtml = recommendations.map(rec => `
+                <div class="recommendation-card ${rec.priority.toLowerCase()}">
+                    <h4>${rec.category}</h4>
+                    <p class="issue">${rec.issue}</p>
+                    <p class="recommendation">${rec.recommendation}</p>
+                    <p class="pages">Affects ${rec.pages.length} page${rec.pages.length !== 1 ? 's' : ''}</p>
+                </div>
+            `).join('');
+            
+            recommendationsSection.innerHTML = `
+                <h3>💡 Domain-Wide Recommendations</h3>
+                <div class="recommendations-grid">
+                    ${recommendationsHtml}
+                </div>
+            `;
+        }
+
+        function updateOverallScore(score) {
+            const scoreElement = document.getElementById('overallScore');
+            const descriptionElement = document.getElementById('scoreDescription');
+            
+            scoreElement.textContent = score;
+            
+            // Update score styling
+            scoreElement.className = 'score-circle';
+            if (score >= 80) {
+                scoreElement.classList.add('score-excellent');
+                descriptionElement.textContent = 'Excellent SEO Performance';
+            } else if (score >= 60) {
+                scoreElement.classList.add('score-good');
+                descriptionElement.textContent = 'Good SEO Performance';
+            } else {
+                scoreElement.classList.add('score-poor');
+                descriptionElement.textContent = 'Needs SEO Improvement';
+            }
+        }
+
+        function updatePerformanceMetrics(performance) {
+            document.getElementById('desktopLoadTime').textContent = performance?.loadTime || 'Unknown';
+            document.getElementById('mobileLoadTime').textContent = performance?.loadTime || 'Unknown';
+            document.getElementById('pageSize').textContent = performance?.pageSize ? `${performance.pageSize} KB` : 'Unknown';
+        }
+
+        function updateLinkAnalysis(links) {
+            document.getElementById('internalLinks').textContent = links?.internal || 0;
+            document.getElementById('externalLinks').textContent = links?.external || 0;
+            document.getElementById('brokenLinks').textContent = links?.brokenLinks || 0;
+        }
+
+        function updateTechnicalAnalysis(analysis) {
+            // Title & Meta Data
+            const titleMetaIssues = document.getElementById('titleMetaIssues');
+            let titleHtml = '';
+            
+            if (!analysis.title) {
+                titleHtml += '<div class="issue-item"><div class="issue-icon issue-error">!</div><div class="issue-text">Missing page title</div></div>';
+            } else if (analysis.title.length < 30 || analysis.title.length > 60) {
+                titleHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Title length issue (' + analysis.title.length + ' chars)</div></div>';
+            } else {
+                titleHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">Title length is optimal</div></div>';
+            }
+            
+            if (!analysis.metaDescription) {
+                titleHtml += '<div class="issue-item"><div class="issue-icon issue-error">!</div><div class="issue-text">Missing meta description</div></div>';
+            } else if (analysis.metaDescription.length < 120 || analysis.metaDescription.length > 160) {
+                titleHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Meta description length issue (' + analysis.metaDescription.length + ' chars)</div></div>';
+            } else {
+                titleHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">Meta description is optimal</div></div>';
+            }
+            
+            titleMetaIssues.innerHTML = titleHtml;
+
+            // Image Issues
+            const imageIssues = document.getElementById('imageIssues');
+            let imageHtml = '';
+            
+            if (analysis.images?.missingAlt > 0) {
+                imageHtml += '<div class="issue-item"><div class="issue-icon issue-error">!</div><div class="issue-text">' + analysis.images.missingAlt + ' images missing alt text</div></div>';
+            } else {
+                imageHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">All images have alt text</div></div>';
+            }
+            
+            imageIssues.innerHTML = imageHtml;
+
+            // Headlines
+            const headlineIssues = document.getElementById('headlineIssues');
+            let headlineHtml = '';
+            
+            if (analysis.headings?.h1 === 0) {
+                headlineHtml += '<div class="issue-item"><div class="issue-icon issue-error">!</div><div class="issue-text">No H1 tag found</div></div>';
+            } else if (analysis.headings?.h1 > 1) {
+                headlineHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Multiple H1 tags (' + analysis.headings.h1 + ')</div></div>';
+            } else {
+                headlineHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">H1 tag structure is correct</div></div>';
+            }
+            
+            headlineIssues.innerHTML = headlineHtml;
+
+            // Link Issues
+            const linkIssues = document.getElementById('linkIssues');
+            let linkHtml = '';
+            
+            if (analysis.links?.external === 0) {
+                linkHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">No external links found</div></div>';
+            } else {
+                linkHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">External links present (' + analysis.links.external + ')</div></div>';
+            }
+            
+            linkIssues.innerHTML = linkHtml;
+
+            // Social Issues
+            const socialIssues = document.getElementById('socialIssues');
+            let socialHtml = '';
+            
+            const openGraphData = analysis.technical?.openGraph || {};
+            if (!openGraphData || Object.keys(openGraphData).length === 0) {
+                socialHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Missing Open Graph tags</div></div>';
+            } else {
+                socialHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">Open Graph tags present</div></div>';
+            }
+            
+            socialIssues.innerHTML = socialHtml;
+
+            // Miscellaneous
+            const miscIssues = document.getElementById('miscIssues');
+            let miscHtml = '';
+            
+            if (!analysis.technical?.sslCertificate) {
+                miscHtml += '<div class="issue-item"><div class="issue-icon issue-error">!</div><div class="issue-text">No SSL certificate</div></div>';
+            } else {
+                miscHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">SSL certificate present</div></div>';
+            }
+            
+            if (!analysis.technical?.mobileFriendly) {
+                miscHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Not mobile-friendly</div></div>';
+            } else {
+                miscHtml += '<div class="issue-item"><div class="issue-icon issue-success">✓</div><div class="issue-text">Mobile-friendly</div></div>';
+            }
+            
+            miscIssues.innerHTML = miscHtml;
+        }
+
+        function updateContentAnalysis(analysis) {
+            // Current Keywords
+            const currentKeywords = document.getElementById('currentKeywords');
+            let keywordHtml = '';
+            
+            if (analysis.keywords?.extracted && analysis.keywords.extracted.length > 0) {
+                analysis.keywords.extracted.slice(0, 10).forEach(keyword => {
+                    keywordHtml += '<div class="keyword-item"><span class="keyword-text">' + keyword + '</span><span class="keyword-density">Found</span></div>';
+                });
+            } else {
+                keywordHtml = '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">No keywords detected</div></div>';
+            }
+            
+            currentKeywords.innerHTML = keywordHtml;
+
+            // Keyword Rankings (simulated)
+            const keywordRankings = document.getElementById('keywordRankings');
+            keywordRankings.innerHTML = '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Keyword ranking data requires additional analysis</div></div>';
+
+            // Optimization Opportunities
+            const optimizationOpportunities = document.getElementById('optimizationOpportunities');
+            let optHtml = '';
+            
+            if (analysis.content?.wordCount < 300) {
+                optHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">Content too short (' + analysis.content.wordCount + ' words)</div></div>';
+            }
+            
+            if (analysis.headings?.h2 === 0) {
+                optHtml += '<div class="issue-item"><div class="issue-icon issue-warning">!</div><div class="issue-text">No H2 tags for content structure</div></div>';
+            }
+            
+            optimizationOpportunities.innerHTML = optHtml;
+        }
+
+        function generateAISuggestions(analysis) {
+            // Request AI-powered content suggestions
+            socket.emit('get_content_suggestions', { websiteAnalysis: analysis });
+        }
+
+        // Handle content suggestions response
+        socket.on('content_suggestions', (data) => {
+            if (data.success && data.suggestions) {
+                updateContentSuggestions(data.suggestions);
+            } else {
+                // Fallback to basic suggestions
+                updateContentSuggestionsFallback();
+            }
+        });
+
+        function updateContentSuggestions(suggestions) {
+            // Update missing keywords
+            const missingKeywords = document.getElementById('missingKeywords');
+            let keywordHtml = '';
+            
+            if (suggestions.missingKeywords && suggestions.missingKeywords.length > 0) {
+                suggestions.missingKeywords.forEach(keyword => {
+                    keywordHtml += `<div class="content-suggestion">
+                        <h5>${keyword.keyword}</h5>
+                        <p><strong>Search Volume:</strong> ${keyword.searchVolume} | <strong>Difficulty:</strong> ${keyword.difficulty}</p>
+                        <p>${keyword.reason}</p>
+                    </div>`;
+                });
+            } else {
+                keywordHtml = '<div class="content-suggestion"><h5>No Missing Keywords Detected</h5><p>Your current keyword strategy appears comprehensive</p></div>';
+            }
+            
+            missingKeywords.innerHTML = keywordHtml;
+
+            // Update content ideas
+            const contentIdeas = document.getElementById('contentIdeas');
+            let contentHtml = '';
+            
+            if (suggestions.contentIdeas && suggestions.contentIdeas.length > 0) {
+                suggestions.contentIdeas.forEach(idea => {
+                    contentHtml += `<div class="content-suggestion">
+                        <h5>${idea.title}</h5>
+                        <p><strong>Type:</strong> ${idea.type} | <strong>Words:</strong> ${idea.estimatedWords}</p>
+                        <p><strong>Target Keywords:</strong> ${idea.targetKeywords.join(', ')}</p>
+                        <p>${idea.valueProposition}</p>
+                    </div>`;
+                });
+            } else {
+                contentHtml = '<div class="content-suggestion"><h5>Content Ideas</h5><p>Focus on creating comprehensive, valuable content for your audience</p></div>';
+            }
+            
+            contentIdeas.innerHTML = contentHtml;
+
+            // Update visibility boost strategies
+            const visibilityBoost = document.getElementById('visibilityBoost');
+            let visibilityHtml = '';
+            
+            if (suggestions.visibilityBoost && suggestions.visibilityBoost.length > 0) {
+                suggestions.visibilityBoost.forEach(strategy => {
+                    visibilityHtml += `<div class="content-suggestion">
+                        <h5>${strategy.strategy}</h5>
+                        <p><strong>Priority:</strong> ${strategy.priority} | <strong>Timeframe:</strong> ${strategy.timeframe}</p>
+                        <p><strong>Effort:</strong> ${strategy.effort} | <strong>Impact:</strong> ${strategy.expectedImpact}</p>
+                    </div>`;
+                });
+            } else {
+                visibilityHtml = '<div class="content-suggestion"><h5>Visibility Strategy</h5><p>Focus on long-tail keywords, create pillar content, and build internal linking structure</p></div>';
+            }
+            
+            visibilityBoost.innerHTML = visibilityHtml;
+        }
+
+        function updateContentSuggestionsFallback() {
+            const missingKeywords = document.getElementById('missingKeywords');
+            missingKeywords.innerHTML = '<div class="content-suggestion"><h5>Industry Keywords</h5><p>Based on your content, consider targeting: business, service, solution, professional, quality</p></div>';
+            
+            const contentIdeas = document.getElementById('contentIdeas');
+            contentIdeas.innerHTML = '<div class="content-suggestion"><h5>Blog Post Ideas</h5><p>Create content around: "How to optimize your business", "Best practices for your industry", "Common challenges and solutions"</p></div>';
+            
+            const visibilityBoost = document.getElementById('visibilityBoost');
+            visibilityBoost.innerHTML = '<div class="content-suggestion"><h5>Visibility Strategy</h5><p>Focus on long-tail keywords, create pillar content, and build internal linking structure</p></div>';
+        }
+
+        function toggleSection(sectionName) {
+            const content = document.getElementById(sectionName + 'Content');
+            const toggle = document.getElementById(sectionName + 'Toggle');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.add('expanded');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorSection.style.display = 'block';
+        }
+
+        // Handle socket connection
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+    </script>
+</body>
+</html>

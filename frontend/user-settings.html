@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>User Settings - Mozarex AI v2.1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .sidebar-brand-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            border-left-color: #6366f1;
+            color: #ffffff;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: transparent;
+        }
+
+        .top-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background-color 0.3s ease;
+        }
+
+        .top-header.scrolled {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .user-avatar i {
+            color: white;
+            font-size: 1.125rem;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 99999;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .dropdown-item.danger {
+            color: #ef4444;
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-details h4 {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #ffffff;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #94a3b8;
+            font-size: 1.125rem;
+        }
+
+        /* Settings Cards */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .settings-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-description {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #e2e8f0;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #64748b;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.875rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.2s;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea::placeholder {
+            color: #64748b;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        /* Subscription Info */
+        .subscription-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .subscription-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subscription-details {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard-mantis-v2" class="sidebar-brand">
+                    <img src="/images/Logo_M.png" alt="Mozarex AI">
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/blog" class="nav-item" data-page="blog-generator">
+                        <i class="fas fa-pen-fancy"></i>
+                        Blog Generator
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Connections</div>
+                    <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <div class="top-header">
+                <div class="breadcrumb">
+                    <a href="/dashboard-mantis-v2">Dashboard</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Settings</span>
+                </div>
+
+                <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-item">
+                            <div class="user-info">
+                                <div class="user-avatar" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h4>Loading...</h4>
+                                    <div class="user-role">Premium User</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="/user-settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="#" class="dropdown-item danger" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">User Settings</h1>
+                    <p class="page-subtitle">Manage your profile and subscription settings</p>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Profile Settings -->
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Profile Information</h3>
+                                <p class="card-description">Update your personal details</p>
+                            </div>
+                        </div>
+
+                        <form id="profileForm">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-input" id="fullName" value="" placeholder="Enter your full name">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" id="email" value="" placeholder="Enter your email">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Company</label>
+                                <input type="text" class="form-input" id="company" value="" placeholder="Enter your company name">
+                            </div>
+
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Subscription Settings -->
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Subscription</h3>
+                                <p class="card-description">Manage your subscription plan</p>
+                            </div>
+                        </div>
+
+                        <div class="subscription-info">
+                            <div class="subscription-status">
+                                <i class="fas fa-check-circle"></i>
+                                Premium Plan
+                            </div>
+                            <div class="subscription-details">
+                                Next billing date: March 15, 2024<br>
+                                Monthly billing: $49.99/month
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-credit-card"></i>
+                                Update Payment
+                            </button>
+                            <button class="btn btn-danger">
+                                <i class="fas fa-times"></i>
+                                Cancel Subscription
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Security</h3>
+                                <p class="card-description">Manage your account security</p>
+                            </div>
+                        </div>
+
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-input" id="currentPassword" placeholder="Enter current password">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-input" id="newPassword" placeholder="Enter new password">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i>
+                                Update Password
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Preferences -->
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Preferences</h3>
+                                <p class="card-description">Customize your experience</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Default Dashboard</label>
+                            <select class="form-input" id="defaultDashboard">
+                                <option value="overview" selected>Overview</option>
+                                <option value="technical">Technical SEO</option>
+                                <option value="keywords">Keywords</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email Notifications</label>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; color: #e2e8f0;">
+                                    <input type="checkbox" checked style="margin: 0;">
+                                    <span>Weekly reports</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; color: #e2e8f0;">
+                                    <input type="checkbox" checked style="margin: 0;">
+                                    <span>Keyword alerts</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; color: #e2e8f0;">
+                                    <input type="checkbox" style="margin: 0;">
+                                    <span>Marketing updates</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Preferences
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // User dropdown functionality
+        function showUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.add('show');
+        }
+
+        function hideUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.remove('show');
+        }
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored authentication data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                
+                // Redirect to login page or home
+                window.location.href = '/login';
+            }
+        }
+
+        // Profile form submission
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+        const formData = {
+            name: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            company: document.getElementById('company').value
+        };
+
+            // Show loading state
+            const saveButton = this.querySelector('button[type="submit"]');
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/user/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showSuccessMessage('Profile updated successfully!');
+                    // Update localStorage
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    Object.assign(userData, formData);
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                } else {
+                    const error = await response.json();
+                    showErrorMessage(error.message || 'Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showErrorMessage('An error occurred while updating your profile');
+            } finally {
+                // Reset button state
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            }
+        });
+
+        // Password form submission
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showErrorMessage('New passwords do not match!');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showErrorMessage('New password must be at least 8 characters long!');
+                return;
+            }
+
+            // Show loading state
+            const saveButton = this.querySelector('button[type="submit"]');
+            const originalText = saveButton.innerHTML;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            saveButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/user/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    showSuccessMessage('Password updated successfully!');
+                    // Clear form
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    const error = await response.json();
+                    if (error.message && error.message.includes('Client is not authorized')) {
+                        showErrorMessage('Password update is temporarily unavailable. Please contact support or update your password directly in Auth0.');
+                    } else {
+                        showErrorMessage(error.message || 'Failed to update password');
+                    }
+                }
+            } catch (error) {
+                console.error('Password update error:', error);
+                showErrorMessage('An error occurred while updating your password');
+            } finally {
+                // Reset button state
+                saveButton.innerHTML = originalText;
+                saveButton.disabled = false;
+            }
+        });
+
+        // Success/Error message functions
+        function showSuccessMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'success-message';
+            messageDiv.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                ${message}
+            `;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.3);
+                color: #86efac;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+            `;
+            
+            document.body.appendChild(messageDiv);
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        function showErrorMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'error-message';
+            messageDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                ${message}
+            `;
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                color: #fca5a5;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+            `;
+            
+            document.body.appendChild(messageDiv);
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            loadSubscriptionData();
+            setupScrollHandler();
+            setupSubscriptionButtons();
+        });
+
+        // Setup scroll handler for navbar background
+        function setupScrollHandler() {
+            const topHeader = document.querySelector('.top-header');
+            
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    topHeader.classList.add('scrolled');
+                } else {
+                    topHeader.classList.remove('scrolled');
+                }
+            });
+        }
+
+        // Load user data from API
+        async function loadUserData() {
+            try {
+                console.log('🔍 Loading user data...');
+                const response = await fetch('/auth/user');
+                console.log('📡 Auth response status:', response.status);
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    console.log('👤 User data received:', userData);
+                    
+                    if (userData.authenticated && userData.user) {
+                        // Update profile form
+                        document.getElementById('fullName').value = userData.user.name || '';
+                        document.getElementById('email').value = userData.user.email || '';
+                        document.getElementById('company').value = userData.user.company || '';
+                        
+                        // Update user dropdown
+                        const userNameElements = document.querySelectorAll('.user-details h4');
+                        userNameElements.forEach(element => {
+                            element.textContent = userData.user.name || userData.user.email || 'User';
+                        });
+                        
+                        // Update user avatar
+                        const userAvatarElements = document.querySelectorAll('.user-avatar');
+                        userAvatarElements.forEach(element => {
+                            const name = userData.user.name || userData.user.email || 'User';
+                            element.innerHTML = `<i class="fas fa-user"></i>`;
+                            element.textContent = name.charAt(0).toUpperCase();
+                        });
+                        
+                        console.log('✅ User data loaded successfully');
+                    } else {
+                        console.log('❌ User not authenticated or no user data');
+                        showErrorMessage('Please log in to view your profile information');
+                        // Redirect to login page after 2 seconds
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                    }
+                } else if (response.status === 401) {
+                    console.log('❌ User not authenticated (401)');
+                    showErrorMessage('Please log in to view your profile information');
+                    // Redirect to login page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    console.log('❌ Failed to load user data:', response.status);
+                    showErrorMessage('Failed to load user data. Please try refreshing the page.');
+                }
+            } catch (error) {
+                console.error('❌ Error loading user data:', error);
+                showErrorMessage('An error occurred while loading your profile. Please try refreshing the page.');
+            }
+        }
+
+        // Load subscription data
+        async function loadSubscriptionData() {
+            try {
+                const response = await fetch('/api/subscription/current');
+                if (response.ok) {
+                    const subscription = await response.json();
+                    if (subscription.subscription) {
+                        const sub = subscription.subscription;
+                        const isYearly = sub.plan_name && sub.plan_name.toLowerCase().includes('yearly');
+                        const billingText = isYearly ? 'Yearly billing' : 'Monthly billing';
+                        const amount = isYearly ? '$419.99/year' : '$49.99/month';
+                        
+                        document.querySelector('.subscription-status').innerHTML = `
+                            <i class="fas fa-check-circle"></i>
+                            ${sub.plan_name || 'Premium Plan'}
+                        `;
+                        
+                        document.querySelector('.subscription-details').innerHTML = `
+                            Next billing date: ${new Date(sub.current_period_end * 1000).toLocaleDateString()}<br>
+                            ${billingText}: ${amount}
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading subscription data:', error);
+            }
+        }
+
+        // Setup subscription buttons
+        function setupSubscriptionButtons() {
+            // Update Payment button
+            const updatePaymentBtn = document.querySelector('.btn-secondary');
+            if (updatePaymentBtn) {
+                updatePaymentBtn.addEventListener('click', handleUpdatePayment);
+            }
+
+            // Cancel Subscription button
+            const cancelSubscriptionBtn = document.querySelector('.btn-danger');
+            if (cancelSubscriptionBtn) {
+                cancelSubscriptionBtn.addEventListener('click', handleCancelSubscription);
+            }
+        }
+
+        // Handle update payment
+        async function handleUpdatePayment() {
+            try {
+                showSuccessMessage('Redirecting to payment update...');
+                // Redirect to Stripe customer portal
+                const response = await fetch('/api/subscription/create-portal-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const { url } = await response.json();
+                    window.location.href = url;
+                } else {
+                    showErrorMessage('Failed to create payment update session');
+                }
+            } catch (error) {
+                console.error('Update payment error:', error);
+                showErrorMessage('An error occurred while updating payment');
+            }
+        }
+
+        // Handle cancel subscription
+        async function handleCancelSubscription() {
+            if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your current billing period.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/subscription/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    showSuccessMessage('Subscription cancelled successfully. You will retain access until the end of your billing period.');
+                    // Reload subscription data
+                    loadSubscriptionData();
+                } else {
+                    const error = await response.json();
+                    showErrorMessage(error.message || 'Failed to cancel subscription');
+                }
+            } catch (error) {
+                console.error('Cancel subscription error:', error);
+                showErrorMessage('An error occurred while cancelling subscription');
+            }
+        }
+    </script>
+</body>
+</html>

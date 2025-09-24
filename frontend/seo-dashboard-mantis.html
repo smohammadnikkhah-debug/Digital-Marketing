@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mozarex AI - Professional SEO Dashboard v3.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="components/top-navbar.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: #cbd5e1;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .sidebar-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .sidebar-brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            border-left-color: #6366f1;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        /* Top navbar styles are now in components/top-navbar.css */
+
+        /* Top navbar styles are now in components/top-navbar.css */
+
+        .content-area {
+            padding: 24px;
+        }
+
+        /* Main Container */
+        .main-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Performance Section */
+        .performance-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .performance-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .performance-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            height: 100%;
+            justify-content: space-between;
+        }
+
+        .score-gauge-centered {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speedometer-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speedometer-arc {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #8b5cf6 0deg,
+                #a855f7 22.5deg,
+                #c084fc 45deg,
+                #ddd6fe 67.5deg,
+                rgba(255, 255, 255, 0.1) 90deg,
+                transparent 90deg,
+                transparent 360deg
+            );
+        }
+
+        .speedometer-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .speedometer-center {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .speedometer-score {
+            font-size: 5rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .speedometer-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            color: #a855f7;
+            font-weight: 600;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .score-excellent {
+            color: #22c55e;
+        }
+
+        .score-good {
+            color: #3b82f6;
+        }
+
+        .score-poor {
+            color: #ef4444;
+        }
+
+        .metrics-grid-below {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            margin-top: auto;
+            padding-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .metric-change.positive {
+            color: #22c55e;
+        }
+
+        .metric-change.negative {
+            color: #f87171;
+        }
+
+        /* AI Insights */
+        .ai-insights {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            margin-left: 18px;
+            z-index: -1 !important;
+        }
+
+        .ai-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .ai-icon {
+            background: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #764ba2;
+            position: absolute;
+            left: -18px;
+            top: 0;
+            z-index: 1;
+        }
+
+        .insight-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .insight-text {
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .insight-impact {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .impact-badge, .effort-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .impact-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .effort-badge {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        .insight-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .chart-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 2rem 0;
+        }
+
+        .combined-chart-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .combined-chart-item {
+            position: relative;
+            height: 350px;
+            padding: 2rem;
+        }
+
+        .chart-left {
+            background: rgba(139, 92, 246, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-right {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .sub-chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        /* Opportunities Section */
+        .opportunities-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .opportunities-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .opportunity-card, .competitors-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .opportunity-title, .competitors-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .keywords-list, .competitors-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .keyword-item, .competitor-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .keyword-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .keyword-text {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .keyword-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .keyword-volume {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .keyword-difficulty {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .keyword-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .keyword-metric {
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .keyword-opportunity {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .optimize-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .optimize-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* AI Modal Styles */
+        .ai-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            padding: 0;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-modal-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-modal-header h3 {
+            margin: 0;
+            color: #e2e8f0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+
+        .ai-modal-body {
+            padding: 24px;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .recommendation-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .rec-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .rec-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .rec-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .rec-priority {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .rec-priority.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .rec-priority.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+        }
+
+        .rec-priority.low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .rec-action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .rec-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .ai-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover, .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-details {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .success-details p {
+            margin: 8px 0;
+            color: #86efac;
+        }
+
+        /* Competitor-specific styles */
+        .competitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .competitor-domain {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .competitor-rank {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .competitor-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .competitor-metric {
+            text-align: center;
+        }
+
+        .competitor-metric-title {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            margin-bottom: 0.25rem;
+        }
+
+        .competitor-metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .competitor-traffic {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 2rem;
+            color: #f87171;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .metrics-grid-below {
+                grid-template-columns: 1fr;
+                max-width: 300px;
+            }
+            
+            .score-gauge-centered {
+                width: 320px;
+                height: 320px;
+            }
+            
+            .speedometer-score {
+                font-size: 4rem;
+            }
+            
+            .speedometer-label {
+                font-size: 0.9rem;
+            }
+
+            .combined-chart-container {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .chart-left {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .chart-right {
+                border-bottom: none;
+            }
+
+            .combined-chart-item {
+                height: 300px;
+                padding: 1.5rem;
+            }
+
+            .sub-chart-title {
+                font-size: 0.9rem;
+                margin-bottom: 0.75rem;
+            }
+        }
+
+        /* User Dropdown Styles */
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            min-width: 200px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 99999;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .dropdown-item.danger {
+            color: #ef4444;
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        .user-details h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item active" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/technical-seo" class="nav-item" data-page="technical-seo">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item" data-page="keywords">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item" data-page="competitors">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item" data-page="backlinks">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="/blog" class="nav-item" data-page="blog-generator">
+                        <i class="fas fa-pen-fancy"></i>
+                        Blog Generator
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item" data-page="content-calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Connections</div>
+                    <a href="/seo-tools-social-connections" class="nav-item" data-page="social-connections">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/">Home</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="currentPage">Overview</span>
+                    </nav>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="delayedHideDropdown()">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item">
+                                <div class="user-info">
+                                    <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                                    <div class="user-details">
+                                        <h4>Mozarex User</h4>
+                                        <div class="user-role">Admin</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="/user-settings" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item danger" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                        </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="main-container">
+                    <!-- Performance Section -->
+                    <div class="performance-section">
+                        <!-- SEO Performance Card -->
+                        <div class="performance-card">
+                            <h2 class="performance-title">Your SEO Performance at a Glance</h2>
+                            
+                            <div class="score-container">
+                                <div class="score-gauge-centered">
+                                    <div class="speedometer-container">
+                                        <div class="speedometer-background"></div>
+                                        <div class="speedometer-arc"></div>
+                                        <div class="speedometer-center">
+                                            <div class="speedometer-score" id="overallScore">85</div>
+                                            <div class="speedometer-label">
+                                                <span id="scoreLabel">Excellent</span>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+
+                                <div class="metrics-grid-below">
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="organicTraffic">12,450</div>
+                                        <div class="metric-label">Organic Traffic</div>
+                                        <div class="metric-change positive">
+                                            <i class="fas fa-arrow-up"></i>
+                                            <span>18%</span>
+                        </div>
+                    </div>
+
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="topKeywords">85</div>
+                                        <div class="metric-label">Top 10 Keywords</div>
+                                        <div class="metric-change positive">
+                                            <i class="fas fa-arrow-up"></i>
+                                            <span>12 Keywords</span>
+                        </div>
+                    </div>
+
+                                    <div class="metric-card">
+                                        <div class="metric-value" id="seoIssues">3</div>
+                                        <div class="metric-label">SEO Health Issues</div>
+                                        <div class="metric-change negative">
+                                            <i class="fas fa-arrow-down"></i>
+                                            <span>✔ Effort 1 Issue</span>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                        <!-- AI Insights Card -->
+                        <div class="ai-insights">
+                            <h2 class="ai-title">
+                                <div class="ai-icon">🧠</div>
+                                AI Insights: Your Smartest Next Moves
+                            </h2>
+                            
+                            <div class="insight-item">
+                                <div class="insight-text">
+                                    Improve Blog Post 'SEO for Beginners' for higher ranking on 'what is SEO'. 
+                                    Estimated Impact: High, Effort Homepage.
+                    </div>
+                                <div class="insight-impact">
+                                    <span class="impact-badge">High Impact</span>
+                                    <span class="effort-badge">Low Effort</span>
+                            </div>
+                                <div class="insight-actions">
+                                    <button class="action-btn primary" onclick="optimizeNow()">Optimize Now</button>
+                                    <button class="action-btn secondary" onclick="viewDetails()">View Details</button>
+                            </div>
+                        </div>
+
+                            <div class="insight-item">
+                                <div class="insight-text">
+                                    Address 3 broken internal links found on homepage. 
+                                    Estimated Impact: Medium, Effort Low.
+                            </div>
+                                <div class="insight-impact">
+                                    <span class="impact-badge">Medium Impact</span>
+                                    <span class="effort-badge">Low Effort</span>
+                            </div>
+                                <div class="insight-actions">
+                                    <button class="action-btn primary" onclick="fixLinks()">Fix Links</button>
+                                    <button class="action-btn secondary" onclick="viewDetails()">View Details</button>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="charts-section">
+                        <!-- Organic Performance Trends -->
+                        <div class="chart-card">
+                            <h3 class="chart-title">Organic Performance Trends</h3>
+                            
+                            <div class="combined-chart-container">
+                                <div class="combined-chart-item chart-left">
+                                    <h4 class="sub-chart-title">Organic Traffic & Impressions</h4>
+                                    <canvas id="organicChart"></canvas>
+                        </div>
+                                <div class="combined-chart-item chart-right">
+                                    <h4 class="sub-chart-title">Average Keyword Position</h4>
+                                    <canvas id="positionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opportunities Section -->
+                    <div class="opportunities-section">
+                        <!-- Top Keyword Opportunities (Left) -->
+                        <div class="opportunity-card">
+                            <h3 class="opportunity-title">Top Keyword Opportunities</h3>
+                            <div class="keywords-list" id="keywordsList">
+                                <!-- Keywords will be populated by JavaScript -->
+                        </div>
+                                </div>
+
+                        <!-- Top Competitors (Right) -->
+                        <div class="competitors-card">
+                            <h3 class="competitors-title">Top Competitors</h3>
+                                <div class="competitors-list" id="competitorsList">
+                                <!-- Competitors will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+        </main>
+    </div>
+
+    <script src="components/top-navbar.js"></script>
+    <script>
+        // Update speedometer arc color based on score
+        function updateSpeedometerArc(score) {
+            const speedometerArc = document.querySelector('.speedometer-arc');
+            if (!speedometerArc) return;
+            
+            // Calculate percentage (score out of 100)
+            const percentage = Math.min(Math.max(score, 0), 100);
+            const degrees = (percentage / 100) * 360;
+            
+            // Create dynamic gradient based on score
+            let color1, color2, color3, color4;
+            
+            if (percentage >= 80) {
+                // Excellent (80-100): Green gradient
+                color1 = '#22c55e';
+                color2 = '#16a34a';
+                color3 = '#15803d';
+                color4 = '#166534';
+            } else if (percentage >= 50) {
+                // Not Bad (50-79): Blue gradient
+                color1 = '#3b82f6';
+                color2 = '#2563eb';
+                color3 = '#1d4ed8';
+                color4 = '#1e40af';
+            } else {
+                // Poor (0-39): Red gradient
+                color1 = '#ef4444';
+                color2 = '#dc2626';
+                color3 = '#b91c1c';
+                color4 = '#991b1b';
+            }
+            
+            // Update the gradient to show only the percentage
+            speedometerArc.style.background = `conic-gradient(
+                from 0deg,
+                ${color1} 0deg,
+                ${color2} ${degrees * 0.25}deg,
+                ${color3} ${degrees * 0.5}deg,
+                ${color4} ${degrees * 0.75}deg,
+                rgba(255, 255, 255, 0.1) ${degrees}deg,
+                transparent ${degrees}deg,
+                transparent 360deg
+            )`;
+        }
+
+        // Update score label based on score range
+        function updateScoreLabel(score) {
+            const scoreLabel = document.getElementById('scoreLabel');
+            if (!scoreLabel) return;
+
+            console.log(`🎯 Updating score label for score: ${score}`);
+
+            let label;
+            
+            if (score >= 80) {
+                label = 'Excellent';
+            } else if (score >= 60) {
+                label = 'Good';
+            } else if (score >= 40) {
+                label = 'Fair';
+            } else {
+                label = 'Poor';
+            }
+
+            console.log(`🎯 Score ${score} classified as: ${label}`);
+            scoreLabel.textContent = label;
+        }
+
+        // Load dashboard data from DataForSEO
+        async function loadDashboardData() {
+            try {
+                console.log('📊 Loading dashboard data...');
+                
+                // Get current domain from URL or use default
+                const currentDomain = window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname;
+                
+                // Fetch historical DataForSEO data
+                const response = await fetch(`/api/supabase/historical-data/${currentDomain}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch historical DataForSEO data');
+                }
+                
+                const historicalData = await response.json();
+                console.log('✅ Historical DataForSEO data loaded:', historicalData);
+                
+                // Check if the response was successful
+                if (!historicalData.success) {
+                    throw new Error(historicalData.error || 'Failed to fetch historical DataForSEO data');
+                }
+                
+                // Wait a bit for Chart.js to be fully loaded
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Update dashboard with real DataForSEO data
+                updateDashboardWithHistoricalData(historicalData.data);
+                
+            } catch (error) {
+                console.error('❌ Error loading dashboard data:', error);
+                showErrorState();
+            }
+        }
+
+        // Update dashboard with historical DataForSEO data
+        function updateDashboardWithHistoricalData(data) {
+            console.log('📈 Updating dashboard with historical DataForSEO data:', data);
+            
+            const metrics = data.metrics || {};
+            const chartData = data.chartData || {};
+            
+        // Update overall score based on real metrics
+        const overallScore = calculateOverallScoreFromMetrics(metrics);
+        document.getElementById('overallScore').textContent = overallScore;
+        
+        // Update score label based on score range
+        updateScoreLabel(overallScore);
+        
+        // Update speedometer arc color based on score
+        updateSpeedometerArc(overallScore);
+            
+            // Update metrics with real DataForSEO data
+            document.getElementById('organicTraffic').textContent = formatNumber(metrics.estimatedTraffic || 0);
+            document.getElementById('topKeywords').textContent = metrics.totalKeywords || 0;
+            document.getElementById('seoIssues').textContent = metrics.seoIssues || 0;
+            
+            // Update charts with real historical data
+            updateChartsWithHistoricalData(chartData);
+            
+            // Update keyword opportunities with real DataForSEO data
+            updateKeywordOpportunitiesWithRealData(data.rankedKeywords || []);
+            updateCompetitorsWithRealData(data.competitors || []);
+            
+            // Update AI insights with strategic recommendations
+            updateAIInsightsWithStrategicRecommendations(data);
+        }
+
+        // Update AI insights with strategic, competitor-focused recommendations
+        function updateAIInsightsWithStrategicRecommendations(data) {
+            const aiInsightsContainer = document.querySelector('.ai-insights .insight-item');
+            if (!aiInsightsContainer) return;
+            
+            const insights = generateStrategicRecommendations(data);
+            
+            // Update the first insight item with strategic recommendation
+            const firstInsight = document.querySelector('.ai-insights .insight-item:first-child');
+            if (firstInsight) {
+                firstInsight.querySelector('.insight-text').innerHTML = insights.primary;
+                firstInsight.querySelector('.impact-badge').textContent = insights.primaryImpact;
+                firstInsight.querySelector('.effort-badge').textContent = insights.primaryEffort;
+            }
+            
+            // Update additional insights if they exist
+            const additionalInsights = document.querySelectorAll('.ai-insights .insight-item:not(:first-child)');
+            additionalInsights.forEach((insight, index) => {
+                if (insights.additional[index]) {
+                    insight.querySelector('.insight-text').innerHTML = insights.additional[index].text;
+                    insight.querySelector('.impact-badge').textContent = insights.additional[index].impact;
+                    insight.querySelector('.effort-badge').textContent = insights.additional[index].effort;
+                }
+            });
+        }
+        
+        // Generate strategic recommendations based on DataForSEO analysis
+        function generateStrategicRecommendations(data) {
+            const keywords = data.rankedKeywords || [];
+            const competitors = data.competitors || [];
+            const metrics = data.metrics || {};
+            
+            // Analyze competitor gaps and opportunities
+            const topCompetitors = competitors.slice(0, 3);
+            const highVolumeKeywords = keywords.filter(k => k.search_volume > 1000);
+            const lowCompetitionKeywords = keywords.filter(k => k.competition_level === 'LOW');
+            
+            const recommendations = {
+                primary: '',
+                primaryImpact: 'High Impact',
+                primaryEffort: 'Medium Effort',
+                additional: []
+            };
+            
+            // Primary recommendation based on data analysis
+            if (topCompetitors.length > 0 && highVolumeKeywords.length > 0) {
+                const competitor = topCompetitors[0];
+                const keyword = highVolumeKeywords[0];
+                
+                recommendations.primary = `
+                    <strong>🎯 Target "${keyword.keyword}" Gap</strong><br>
+                    Competitor "${competitor.domain}" ranks #${competitor.avgPosition || 'N/A'} for this high-volume keyword (${keyword.search_volume.toLocaleString()} monthly searches). 
+                    You can capture this traffic by creating comprehensive content targeting this keyword.
+                `;
+                recommendations.primaryImpact = 'High Impact';
+                recommendations.primaryEffort = 'Medium Effort';
+            } else if (lowCompetitionKeywords.length > 0) {
+                const keyword = lowCompetitionKeywords[0];
+                recommendations.primary = `
+                    <strong>💡 Quick Win Opportunity</strong><br>
+                    Target "${keyword.keyword}" (${keyword.search_volume.toLocaleString()} monthly searches, Low competition). 
+                    This is a perfect opportunity to rank quickly with targeted content.
+                `;
+                recommendations.primaryImpact = 'Medium Impact';
+                recommendations.primaryEffort = 'Low Effort';
+            } else {
+                recommendations.primary = `
+                    <strong>📈 Content Strategy Focus</strong><br>
+                    Based on your current keyword profile, focus on creating comprehensive, long-form content that targets your core services. 
+                    This will help establish topical authority and improve overall rankings.
+                `;
+                recommendations.primaryImpact = 'High Impact';
+                recommendations.primaryEffort = 'High Effort';
+            }
+            
+            // Additional recommendations
+            if (topCompetitors.length > 1) {
+                recommendations.additional.push({
+                    text: `<strong>🔍 Competitive Analysis</strong><br>Analyze "${topCompetitors[1].domain}" content strategy - they're ranking for ${topCompetitors[1].totalKeywords || 0} keywords you're missing.`,
+                    impact: 'Medium Impact',
+                    effort: 'Low Effort'
+                });
+            }
+            
+            if (metrics.seoIssues > 0) {
+                recommendations.additional.push({
+                    text: `<strong>🚨 Technical SEO Priority</strong><br>Fix ${metrics.seoIssues} technical SEO issues found. These are blocking your organic growth potential.`,
+                    impact: 'High Impact',
+                    effort: 'Low Effort'
+                });
+            }
+            
+            if (keywords.length > 0) {
+                const avgPosition = keywords.reduce((sum, k) => sum + (k.rank_absolute || 50), 0) / keywords.length;
+                if (avgPosition > 20) {
+                    recommendations.additional.push({
+                        text: `<strong>📊 Ranking Improvement</strong><br>Your average keyword position is ${avgPosition.toFixed(1)}. Focus on optimizing existing content to improve rankings.`,
+                        impact: 'High Impact',
+                        effort: 'Medium Effort'
+                    });
+                }
+            }
+            
+            return recommendations;
+        }
+
+        // Calculate overall score from DataForSEO metrics
+        function calculateOverallScoreFromMetrics(metrics) {
+            let score = 0;
+            
+            console.log('📊 Calculating score from metrics:', metrics);
+            
+            // Traffic score (0-30 points)
+            const traffic = metrics.estimatedTraffic || 0;
+            if (traffic > 10000) score += 30;
+            else if (traffic > 5000) score += 25;
+            else if (traffic > 1000) score += 20;
+            else if (traffic > 500) score += 15;
+            else if (traffic > 100) score += 10;
+            else if (traffic > 0) score += 5;
+            console.log(`📊 Traffic: ${traffic}, Score: ${score}`);
+            
+            // Keywords score (0-25 points)
+            const keywords = metrics.totalKeywords || 0;
+            if (keywords > 100) score += 25;
+            else if (keywords > 50) score += 20;
+            else if (keywords > 20) score += 15;
+            else if (keywords > 10) score += 10;
+            else if (keywords > 0) score += 5;
+            console.log(`📊 Keywords: ${keywords}, Score: ${score}`);
+            
+            // Position score (0-25 points)
+            const avgPosition = metrics.averagePosition || 0;
+            if (avgPosition > 0 && avgPosition <= 10) score += 25;
+            else if (avgPosition <= 20) score += 20;
+            else if (avgPosition <= 30) score += 15;
+            else if (avgPosition <= 50) score += 10;
+            else if (avgPosition > 0) score += 5;
+            console.log(`📊 Position: ${avgPosition}, Score: ${score}`);
+            
+            // SEO Issues score (0-20 points) - fewer issues = higher score
+            const issues = metrics.seoIssues || 0;
+            if (issues === 0) score += 20;
+            else if (issues <= 2) score += 15;
+            else if (issues <= 5) score += 10;
+            else if (issues <= 8) score += 5;
+            console.log(`📊 Issues: ${issues}, Final Score: ${score}`);
+            
+            const finalScore = Math.min(Math.max(score, 0), 100);
+            console.log(`📊 Final calculated score: ${finalScore}`);
+            return finalScore;
+        }
+
+        // Update charts with historical DataForSEO data
+        function updateChartsWithHistoricalData(chartData) {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js not loaded, skipping chart updates');
+                return;
+            }
+
+            // Update organic traffic chart
+            if (window.organicChart && typeof window.organicChart.destroy === 'function') {
+                window.organicChart.destroy();
+            }
+            
+            const organicCtx = document.getElementById('organicChart');
+            if (organicCtx) {
+                // Use real DataForSEO traffic data
+                const months = chartData.traffic?.months || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                const trafficValues = chartData.traffic?.values || [8500, 9200, 10800, 11200, 11800, 12450];
+                
+                window.organicChart = new Chart(organicCtx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Organic Traffic',
+                            data: trafficValues,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update keyword position chart
+            if (window.positionChart && typeof window.positionChart.destroy === 'function') {
+                window.positionChart.destroy();
+            }
+            
+            const positionCtx = document.getElementById('positionChart');
+            if (positionCtx) {
+                // Use real DataForSEO position data
+                const months = chartData.positions?.months || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                const positionValues = chartData.positions?.values || [45, 42, 38, 35, 32, 28];
+                
+                window.positionChart = new Chart(positionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Avg Position',
+                            data: positionValues,
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                reverse: true // Lower position numbers are better
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Update keyword opportunities with real DataForSEO data
+        function updateKeywordOpportunitiesWithRealData(rankedKeywords) {
+            const keywordsList = document.querySelector('.keywords-list');
+            if (!keywordsList) return;
+            
+            // Clear existing keywords
+            keywordsList.innerHTML = '';
+            
+            // Take top 4 keywords from DataForSEO data
+            const topKeywords = rankedKeywords.slice(0, 4);
+            
+            topKeywords.forEach((keywordData, index) => {
+                const keyword = keywordData.keyword_data?.keyword_info?.keyword || `Keyword ${index + 1}`;
+                const volume = keywordData.keyword_data?.keyword_info?.search_volume || 0;
+                const difficulty = keywordData.keyword_data?.keyword_info?.competition_level || 'MEDIUM';
+                const position = keywordData.ranked_serp_element?.serp_item?.rank_group || 0;
+                
+                const keywordItem = document.createElement('div');
+                keywordItem.className = 'keyword-item';
+                keywordItem.innerHTML = `
+                    <div class="keyword-header">
+                        <div class="keyword-text">${keyword}</div>
+                        <div class="keyword-stats">
+                            <span class="keyword-volume">Volume: ${formatNumber(volume)}</span>
+                            <span class="keyword-difficulty">Difficulty: ${difficulty}</span>
+                    </div>
+                </div>
+                    <div class="keyword-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Current Position</span>
+                            <span class="metric-value">${position || 'N/A'}</span>
+                    </div>
+                        <div class="metric">
+                            <span class="metric-label">Potential Traffic</span>
+                            <span class="metric-value">${formatNumber(Math.round(volume * 0.1))}</span>
+                    </div>
+                        <div class="metric">
+                            <span class="metric-label">Priority</span>
+                            <span class="metric-value ${getPriorityClass(position, difficulty)}">${getPriorityText(position, difficulty)}</span>
+                    </div>
+                </div>
+            `;
+            
+                keywordsList.appendChild(keywordItem);
+            });
+        }
+
+        // Update competitors with real DataForSEO data
+        function updateCompetitorsWithRealData(competitors) {
+            const competitorsList = document.querySelector('.competitors-list');
+            if (!competitorsList) return;
+            
+            // Clear existing competitors
+            competitorsList.innerHTML = '';
+            
+            // Generate sample competitors if none provided
+            const sampleCompetitors = competitors.length > 0 ? competitors : [
+                { domain: 'competitor1.com', rank: 1, traffic: 45000, keywords: 1250 },
+                { domain: 'competitor2.com', rank: 2, traffic: 38000, keywords: 980 },
+                { domain: 'competitor3.com', rank: 3, traffic: 32000, keywords: 850 },
+                { domain: 'competitor4.com', rank: 4, traffic: 28000, keywords: 720 }
+            ];
+            
+            // Take top 4 competitors
+            const topCompetitors = sampleCompetitors.slice(0, 4);
+            
+            topCompetitors.forEach((competitor, index) => {
+                const competitorItem = document.createElement('div');
+                competitorItem.className = 'competitor-item';
+                competitorItem.innerHTML = `
+                    <div class="competitor-header">
+                        <div class="competitor-domain">${competitor.domain}</div>
+                        <div class="competitor-rank">Rank #${competitor.rank}</div>
+                            </div>
+                    <div class="competitor-metrics">
+                        <div class="competitor-metric">
+                            <div class="competitor-metric-title">Monthly Traffic</div>
+                            <div class="competitor-metric-value">${formatNumber(competitor.traffic)}</div>
+                    </div>
+                        <div class="competitor-metric">
+                            <div class="competitor-metric-title">Keywords</div>
+                            <div class="competitor-metric-value">${formatNumber(competitor.keywords)}</div>
+                    </div>
+                </div>
+                    <div class="competitor-traffic">Analyze Competitor</div>
+                `;
+                
+                competitorsList.appendChild(competitorItem);
+            });
+        }
+
+        // Helper function to get priority class
+        function getPriorityClass(position, difficulty) {
+            if (position > 0 && position <= 20) return 'high';
+            if (position > 20 && position <= 50) return 'medium';
+            return 'low';
+        }
+
+        // Helper function to get priority text
+        function getPriorityText(position, difficulty) {
+            if (position > 0 && position <= 20) return 'High';
+            if (position > 20 && position <= 50) return 'Medium';
+            return 'Low';
+        }
+
+        // Update dashboard with data
+        function updateDashboard(analysis) {
+            console.log('📈 Updating dashboard with analysis data:', analysis);
+            
+            // Update overall score
+            const overallScore = analysis.overallScore || analysis.score || 85;
+            document.getElementById('overallScore').textContent = overallScore;
+            
+            // Update speedometer arc color based on score
+            updateSpeedometerArc(overallScore);
+            
+            // Update metrics
+            document.getElementById('organicTraffic').textContent = formatNumber(analysis.organicTraffic || 12450);
+            document.getElementById('topKeywords').textContent = analysis.topKeywords || 85;
+            document.getElementById('seoIssues').textContent = analysis.seoIssues || 3;
+            
+            // Update charts with real data
+            updateCharts(analysis);
+            
+            // Update keyword opportunities with real data
+            updateKeywordOpportunities(analysis);
+        }
+
+        // Update charts with real data
+        function updateCharts(analysis) {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js not loaded, skipping chart updates');
+                return;
+            }
+            
+            // Update organic traffic chart
+            if (window.organicChart && typeof window.organicChart.destroy === 'function') {
+                window.organicChart.destroy();
+            }
+            
+            const organicCtx = document.getElementById('organicChart');
+            if (organicCtx) {
+                // Use sample data if analysis data doesn't have traffic data
+                const months = analysis.trafficData?.months || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                const trafficValues = analysis.trafficData?.values || [8500, 9200, 10800, 11200, 11800, 12450];
+                
+                window.organicChart = new Chart(organicCtx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Organic Traffic',
+                            data: trafficValues,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update keyword position chart
+            if (window.positionChart && typeof window.positionChart.destroy === 'function') {
+                window.positionChart.destroy();
+            }
+            
+            const positionCtx = document.getElementById('positionChart');
+            if (positionCtx) {
+                // Use sample data if analysis data doesn't have position data
+                const months = analysis.positionData?.months || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                const positionValues = analysis.positionData?.values || [45, 42, 38, 35, 32, 28];
+                
+                window.positionChart = new Chart(positionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Avg Position',
+                            data: positionValues,
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#cbd5e1'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Update keyword opportunities with real data
+        function updateKeywordOpportunities(analysis) {
+            const keywordsList = document.querySelector('.keywords-list');
+            if (!keywordsList || !analysis.keywordOpportunities) return;
+            
+            // Clear existing keywords
+            keywordsList.innerHTML = '';
+            
+            // Add real keyword opportunities
+            analysis.keywordOpportunities.slice(0, 4).forEach(keyword => {
+                const keywordItem = document.createElement('div');
+                keywordItem.className = 'keyword-item';
+                keywordItem.innerHTML = `
+                    <div class="keyword-header">
+                        <div class="keyword-text">${keyword.keyword}</div>
+                        <div class="keyword-stats">
+                            <span class="keyword-volume">Volume: ${formatNumber(keyword.volume)}</span>
+                            <span class="keyword-difficulty">Difficulty: ${keyword.difficulty}</span>
+                </div>
+                    </div>
+                    <div class="keyword-metrics">
+                        <div class="keyword-metric">
+                            <div class="metric-title">Current Rank</div>
+                            <div class="metric-value">#${keyword.currentRank}</div>
+                    </div>
+                        <div class="keyword-metric">
+                            <div class="metric-title">AI Score</div>
+                            <div class="metric-value">${keyword.aiScore}/100</div>
+                    </div>
+                    </div>
+                    <div class="keyword-opportunity">${keyword.opportunity}</div>
+                    <button class="optimize-btn" onclick="optimizeKeyword('${keyword.keyword}', ${keyword.aiScore})">Optimize Page</button>
+                `;
+                keywordsList.appendChild(keywordItem);
+            });
+        }
+
+        // Format numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // AI-powered keyword optimization
+        async function optimizeKeyword(keyword, aiScore) {
+            try {
+                console.log(`🚀 Starting AI optimization for keyword: ${keyword}`);
+                
+                // Show loading state
+                showOptimizationLoading(keyword);
+                
+                // Get AI recommendations
+                const response = await fetch('/api/ai/optimize-keyword', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        aiScore: aiScore,
+                        domain: 'mozarex.com'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get AI recommendations');
+                }
+                
+                const recommendations = await response.json();
+                
+                // Show AI recommendations
+                showAIRecommendations(keyword, recommendations);
+                
+            } catch (error) {
+                console.error('❌ Error optimizing keyword:', error);
+                showOptimizationError(keyword, error.message);
+            }
+        }
+
+        // Show optimization loading state
+        function showOptimizationLoading(keyword) {
+            const modal = document.createElement('div');
+            modal.className = 'ai-modal';
+            modal.innerHTML = `
+                <div class="ai-modal-content">
+                    <div class="ai-modal-header">
+                        <h3>🤖 AI Optimization in Progress</h3>
+                        <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                    </div>
+                    <div class="ai-modal-body">
+                        <div class="loading-spinner"></div>
+                        <p>Analyzing keyword: <strong>${keyword}</strong></p>
+                        <p>Generating AI-powered recommendations...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Show AI recommendations
+        function showAIRecommendations(keyword, recommendations) {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>🎯 AI Recommendations for "${keyword}"</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <div class="recommendations-grid">
+                                ${recommendations.map(rec => `
+                                    <div class="recommendation-card">
+                                        <div class="rec-icon">${rec.icon}</div>
+                                        <div class="rec-title">${rec.title}</div>
+                                        <div class="rec-description">${rec.description}</div>
+                                        <div class="rec-priority ${rec.priority.toLowerCase()}">${rec.priority} Priority</div>
+                                        <button class="rec-action-btn" onclick="implementRecommendation('${rec.id}', '${keyword}')">
+                                            ${rec.actionText}
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="ai-actions">
+                                <button class="btn-primary" onclick="redirectToTechnicalSEO()">View Technical SEO</button>
+                                <button class="btn-secondary" onclick="redirectToKeywords()">View Keywords</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Show optimization error
+        function showOptimizationError(keyword, error) {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>❌ Optimization Error</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <p>Failed to optimize keyword: <strong>${keyword}</strong></p>
+                            <p>Error: ${error}</p>
+                            <div class="ai-actions">
+                                <button class="btn-primary" onclick="closeAIModal()">Close</button>
+                                <button class="btn-secondary" onclick="optimizeKeyword('${keyword}', 0)">Retry</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Close AI modal
+        function closeAIModal() {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Implement recommendation
+        async function implementRecommendation(recId, keyword) {
+            try {
+                console.log(`🔧 Implementing recommendation: ${recId} for keyword: ${keyword}`);
+                
+                // Show implementation progress
+                showImplementationProgress(recId, keyword);
+                
+                // Call API to implement recommendation
+                const response = await fetch('/api/ai/implement-recommendation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recommendationId: recId,
+                        keyword: keyword,
+                        domain: 'mozarex.com'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to implement recommendation');
+                }
+                
+                const result = await response.json();
+                
+                // Show success message
+                showImplementationSuccess(recId, result);
+                
+            } catch (error) {
+                console.error('❌ Error implementing recommendation:', error);
+                showImplementationError(recId, error.message);
+            }
+        }
+
+        // Show implementation progress
+        function showImplementationProgress(recId, keyword) {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>🔧 Implementing Recommendation</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <div class="loading-spinner"></div>
+                            <p>Implementing recommendation for: <strong>${keyword}</strong></p>
+                            <p>Please wait...</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Show implementation success
+        function showImplementationSuccess(recId, result) {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>✅ Recommendation Implemented</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <p>Successfully implemented recommendation!</p>
+                            <div class="success-details">
+                                <p><strong>Result:</strong> ${result.message}</p>
+                                <p><strong>Impact:</strong> ${result.impact}</p>
+                            </div>
+                            <div class="ai-actions">
+                                <button class="btn-primary" onclick="closeAIModal()">Close</button>
+                                <button class="btn-secondary" onclick="redirectToTechnicalSEO()">View Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Show implementation error
+        function showImplementationError(recId, error) {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>❌ Implementation Error</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <p>Failed to implement recommendation</p>
+                            <p>Error: ${error}</p>
+                            <div class="ai-actions">
+                                <button class="btn-primary" onclick="closeAIModal()">Close</button>
+                                <button class="btn-secondary" onclick="implementRecommendation('${recId}', '')">Retry</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Redirect to Technical SEO page
+        function redirectToTechnicalSEO() {
+            window.location.href = '/technical-seo-dashboard';
+        }
+
+        // Redirect to Keywords page
+        function redirectToKeywords() {
+            window.location.href = '/seo-tools-keywords';
+        }
+
+        // AI-powered optimization functions
+        function optimizeNow() {
+            console.log('🚀 Starting AI optimization...');
+            showAIOptimizationModal('general');
+        }
+
+        function viewDetails() {
+            console.log('📊 Viewing detailed analysis...');
+            showDetailsModal();
+        }
+
+        function fixLinks() {
+            console.log('🔗 Fixing broken links...');
+            showLinkFixModal();
+        }
+
+        // Show AI optimization modal
+        function showAIOptimizationModal(type) {
+            const modal = document.createElement('div');
+            modal.className = 'ai-modal';
+            modal.innerHTML = `
+                <div class="ai-modal-content">
+                    <div class="ai-modal-header">
+                        <h3>🤖 AI Optimization in Progress</h3>
+                        <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                    </div>
+                    <div class="ai-modal-body">
+                        <div class="loading-spinner"></div>
+                        <p>Analyzing your website for optimization opportunities...</p>
+                        <p>Generating AI-powered recommendations...</p>
+                        <div class="ai-actions">
+                            <button class="btn-primary" onclick="redirectToTechnicalSEO()">View Technical SEO</button>
+                            <button class="btn-secondary" onclick="redirectToKeywords()">View Keywords</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Show details modal
+        function showDetailsModal() {
+            const modal = document.createElement('div');
+            modal.className = 'ai-modal';
+            modal.innerHTML = `
+                <div class="ai-modal-content">
+                    <div class="ai-modal-header">
+                        <h3>📊 Detailed Analysis</h3>
+                        <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                    </div>
+                    <div class="ai-modal-body">
+                        <div class="recommendations-grid">
+                            <div class="recommendation-card">
+                                <div class="rec-icon">📈</div>
+                                <div class="rec-title">Performance Metrics</div>
+                                <div class="rec-description">View detailed performance metrics and trends for your website.</div>
+                                <div class="rec-priority high">High Priority</div>
+                                <button class="rec-action-btn" onclick="redirectToTechnicalSEO()">View Technical SEO</button>
+                            </div>
+                            <div class="recommendation-card">
+                                <div class="rec-icon">🔍</div>
+                                <div class="rec-title">Keyword Analysis</div>
+                                <div class="rec-description">Analyze keyword performance and discover new opportunities.</div>
+                                <div class="rec-priority medium">Medium Priority</div>
+                                <button class="rec-action-btn" onclick="redirectToKeywords()">View Keywords</button>
+                            </div>
+                            <div class="recommendation-card">
+                                <div class="rec-icon">🔗</div>
+                                <div class="rec-title">Link Analysis</div>
+                                <div class="rec-description">Check backlinks, internal links, and link health.</div>
+                                <div class="rec-priority medium">Medium Priority</div>
+                                <button class="rec-action-btn" onclick="redirectToBacklinks()">View Backlinks</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Show link fix modal
+        function showLinkFixModal() {
+            const modal = document.createElement('div');
+            modal.className = 'ai-modal';
+            modal.innerHTML = `
+                <div class="ai-modal-content">
+                    <div class="ai-modal-header">
+                        <h3>🔗 Fix Broken Links</h3>
+                        <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                    </div>
+                    <div class="ai-modal-body">
+                        <div class="recommendations-grid">
+                            <div class="recommendation-card">
+                                <div class="rec-icon">🔍</div>
+                                <div class="rec-title">Scan for Broken Links</div>
+                                <div class="rec-description">Automatically scan your website for broken internal and external links.</div>
+                                <div class="rec-priority high">High Priority</div>
+                                <button class="rec-action-btn" onclick="scanBrokenLinks()">Scan Now</button>
+                            </div>
+                            <div class="recommendation-card">
+                                <div class="rec-icon">🔧</div>
+                                <div class="rec-title">Fix Internal Links</div>
+                                <div class="rec-description">Fix broken internal links to improve user experience and SEO.</div>
+                                <div class="rec-priority high">High Priority</div>
+                                <button class="rec-action-btn" onclick="fixInternalLinks()">Fix Internal Links</button>
+                            </div>
+                            <div class="recommendation-card">
+                                <div class="rec-icon">🌐</div>
+                                <div class="rec-title">Check External Links</div>
+                                <div class="rec-description">Verify external links and update or remove broken ones.</div>
+                                <div class="rec-priority medium">Medium Priority</div>
+                                <button class="rec-action-btn" onclick="checkExternalLinks()">Check External Links</button>
+                            </div>
+                        </div>
+                        <div class="ai-actions">
+                            <button class="btn-primary" onclick="redirectToTechnicalSEO()">View Technical SEO</button>
+                            <button class="btn-secondary" onclick="closeAIModal()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Link fixing functions
+        function scanBrokenLinks() {
+            console.log('🔍 Scanning for broken links...');
+            showLinkScanProgress();
+        }
+
+        function fixInternalLinks() {
+            console.log('🔧 Fixing internal links...');
+            showLinkFixProgress('internal');
+        }
+
+        function checkExternalLinks() {
+            console.log('🌐 Checking external links...');
+            showLinkFixProgress('external');
+        }
+
+        // Show link scan progress
+        function showLinkScanProgress() {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>🔍 Scanning for Broken Links</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <div class="loading-spinner"></div>
+                            <p>Scanning your website for broken links...</p>
+                            <p>This may take a few minutes depending on your site size.</p>
+                            <div class="ai-actions">
+                                <button class="btn-primary" onclick="closeAIModal()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Show link fix progress
+        function showLinkFixProgress(type) {
+            const modal = document.querySelector('.ai-modal');
+            if (modal) {
+                modal.innerHTML = `
+                    <div class="ai-modal-content">
+                        <div class="ai-modal-header">
+                            <h3>🔧 Fixing ${type} Links</h3>
+                            <button class="close-modal" onclick="closeAIModal()">&times;</button>
+                        </div>
+                        <div class="ai-modal-body">
+                            <div class="loading-spinner"></div>
+                            <p>Fixing ${type} links...</p>
+                            <p>Please wait while we process your links.</p>
+                            <div class="ai-actions">
+                                <button class="btn-primary" onclick="closeAIModal()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Redirect to Backlinks page
+        function redirectToBacklinks() {
+            window.location.href = '/seo-tools-backlinks';
+        }
+            
+            // Show loading state
+        function showLoadingState() {
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    </div>
+                `;
+        }
+
+        // Show error state
+        function showErrorState() {
+            const mainContainer = document.querySelector('.main-container');
+            mainContainer.innerHTML = `
+                    <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-message">Failed to load dashboard data</div>
+                    <button class="retry-btn" onclick="loadDashboardData()">Retry</button>
+                    </div>
+                `;
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Mozarex AI Ignite Dashboard initialized');
+            loadDashboardData();
+            
+            // Initialize speedometer with default score
+            updateSpeedometerArc(85);
+            updateScoreLabel(85);
+            
+            // Initialize top navbar
+            initializeTopNavbar();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.organicChart) window.organicChart.resize();
+            if (window.positionChart) window.positionChart.resize();
+        });
+
+        // User dropdown functionality
+        function showUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            const userMenu = document.querySelector('.user-menu');
+            
+            if (!dropdown || !userMenu) return;
+
+            const rect = userMenu.getBoundingClientRect();
+            
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = (rect.bottom + 5) + 'px';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdown.style.zIndex = '2147483647';
+            
+            dropdown.classList.add('show');
+        }
+
+        function hideUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+        }
+
+        function delayedHideDropdown() {
+            setTimeout(hideUserDropdown, 300);
+        }
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored authentication data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                
+                // Redirect to login page or home
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>

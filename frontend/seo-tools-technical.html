@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical SEO Analysis - Mozarex AI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: #334155;
+            color: white;
+            border-left-color: #667eea;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f8fafc;
+        }
+
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        /* Analysis Input */
+        .input-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            max-width: 600px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        #urlInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Analysis Results */
+        .analysis-results {
+            display: none;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* Issues List */
+        .issues-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .issue-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .issue-item:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .issue-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .issue-icon.high {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .issue-icon.medium {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .issue-icon.low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .issue-content {
+            flex: 1;
+        }
+
+        .issue-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .issue-description {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .issue-page {
+            font-size: 0.75rem;
+            color: #667eea;
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* New Technical Analysis Report Styles */
+        .technical-analysis-report {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .analysis-summary {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+
+        .analysis-summary p {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .issue-category {
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .issue-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .issue-category-title {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 16px;
+        }
+
+        .issue-category-count {
+            background: #ef4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .issue-category-actions {
+            padding: 12px 20px;
+            background: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .view-details-link {
+            display: inline-flex;
+            align-items: center;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        .view-details-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .view-details-link i {
+            margin-left: 6px;
+            font-size: 12px;
+        }
+
+        .technical-subpages-nav {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .subpages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .subpage-card {
+            display: block;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .subpage-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+        }
+
+        .subpage-card.active {
+            border-color: #667eea;
+            background-color: #f8faff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .subpage-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .subpage-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .subpage-description {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .issue-category-description {
+            padding: 16px 20px;
+            color: #64748b;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .page-issues-list {
+            background: #fef2f2;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .page-issue {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px 20px;
+            border-bottom: 1px solid #fecaca;
+        }
+
+        .page-issue:last-child {
+            border-bottom: none;
+        }
+
+        .page-name {
+            font-weight: 600;
+            color: #dc2626;
+            font-size: 14px;
+        }
+
+        .page-url {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #6b7280;
+            background: #f9fafb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .issue-detail {
+            font-size: 13px;
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .recommendation-action {
+            padding: 16px 20px;
+            background: #f0f9ff;
+            border-top: 1px solid #bae6fd;
+            font-size: 14px;
+            color: #0c4a6e;
+        }
+
+        .no-issues-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+        }
+
+        .no-issues-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .no-issues-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #16a34a;
+            margin-bottom: 8px;
+        }
+
+        .no-issues-description {
+            color: #15803d;
+            font-size: 14px;
+        }
+
+        /* AI Chat Section */
+        .ai-chat-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .ai-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .chat-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .message-content {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Enhanced formatting for AI responses */
+        .message-content strong {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .message-content em {
+            font-style: italic;
+            color: #64748b;
+        }
+
+        .message-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #e11d48;
+        }
+
+        .message-content pre {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            color: #334155;
+        }
+
+        .message-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+
+        .message-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 12px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .message-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin: 10px 0 6px 0;
+        }
+
+        .message-content br {
+            margin: 4px 0;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-right: 0.75rem;
+        }
+
+        .chat-input button {
+            padding: 0.75rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <span class="sidebar-brand-text">Mozarex AI</span>
+                </a>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="/dashboard-mantis-v2" class="nav-item">
+                        <i class="fas fa-chart-pie"></i>
+                        Overview
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">SEO Tools</div>
+                    <a href="/seo-tools-technical" class="nav-item active">
+                        <i class="fas fa-cogs"></i>
+                        Technical SEO
+                    </a>
+                    <a href="/seo-tools-keywords" class="nav-item">
+                        <i class="fas fa-key"></i>
+                        Keywords
+                    </a>
+                    <a href="/seo-tools-competitors" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        Competitors
+                    </a>
+                    <a href="/seo-tools-backlinks" class="nav-item">
+                        <i class="fas fa-link"></i>
+                        Backlinks
+                    </a>
+                    <a href="/seo-tools-content-calendar" class="nav-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        Content Calendar
+                    </a>
+                    <a href="/seo-tools-social-connections" class="nav-item">
+                        <i class="fas fa-share-alt"></i>
+                        Social Connections
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="/dashboard-mantis-v2">Dashboard</a>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>Technical SEO Analysis</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <div class="user-name">Mozarex User</div>
+                            <div class="user-role">Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">🔧 Technical SEO Analysis</h1>
+                    <p class="page-subtitle">Comprehensive technical analysis of your website's SEO foundation</p>
+                </div>
+
+                <!-- Analysis Input -->
+                <div class="input-section">
+                    <div class="domain-info">
+                        <h2 id="currentDomain">Loading...</h2>
+                        <p>Technical SEO Analysis</p>
+                    </div>
+                </div>
+
+                <!-- Analysis Results -->
+                <div id="analysisResults" class="analysis-results">
+                    <!-- Technical Metrics -->
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="card-title">Overall Score</div>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric">
+                                    <div class="metric-value" id="technicalScore">-</div>
+                                    <div class="metric-label">Technical Score</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value" id="technicalIssues">-</div>
+                                    <div class="metric-label">Issues Found</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="card-title">Page Health</div>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric">
+                                    <div class="metric-value" id="totalPages">-</div>
+                                    <div class="metric-label">Total Pages</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value" id="healthyPages">-</div>
+                                    <div class="metric-label">Healthy Pages</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value" id="pagesWithIssues">-</div>
+                                    <div class="metric-label">Pages with Issues</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Issues -->
+                    <div class="issues-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Technical Issues Found
+                        </h2>
+                        <div id="technicalIssuesList">
+                            <!-- Issues will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- AI Chat -->
+                    <div class="ai-chat-section">
+                        <div class="ai-header">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-title">Mozarex AI - Technical SEO Assistant</div>
+                        </div>
+                        <!-- AI Chat Component Container - DISABLED -->
+                        <div id="aiChatContainer" style="display: none;">
+                            <p>Chat functionality temporarily disabled to prevent storage issues.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI Chat Component -->
+    <script src="components/ai-chat-component.js"></script>
+    <script>
+        let chatHistory = [];
+        let currentAnalysis = null;
+        let currentDomain = null;
+        let currentFilter = 'all'; // Track current filter
+
+        // Load chat history and initialize AI chat
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load chat history
+            const savedChatHistory = localStorage.getItem('technicalChatHistory');
+            if (savedChatHistory) {
+                chatHistory = JSON.parse(savedChatHistory);
+                // displayChatHistory(); // Removed - using AI chat component instead
+            }
+            
+            // Initialize AI chat component - DISABLED to prevent storage quota issues
+            // aiChatComponent = initAIChat('aiChatContainer', {
+            //     context: 'technical',
+            //     chatHistoryKey: 'technicalChatHistory',
+            //     placeholder: 'Ask me about technical SEO issues...'
+            // });
+            
+            // Load domain and analysis data
+            const domain = getDomainFromCache();
+            if (domain) {
+                console.log('🔍 Loading technical analysis for domain:', domain);
+                document.getElementById('currentDomain').textContent = domain;
+                loadAnalysisData(domain);
+            } else {
+                console.log('❌ No domain found in cache');
+                showError('No domain found. Please analyze a website first from the dashboard.');
+            }
+        });
+        
+        // Update analysis when it changes
+        function updateAIChatAnalysis(analysis, domain) {
+            if (aiChatComponent) {
+                aiChatComponent.setAnalysis(analysis);
+                aiChatComponent.setDomain(domain);
+            }
+        }
+
+        // Get domain from localStorage cache
+        function getDomainFromCache() {
+            // First priority: get the selected domain from dashboard
+            const selectedDomain = localStorage.getItem('selectedDomain');
+            if (selectedDomain) {
+                // Clear it after use to prevent it from persisting
+                localStorage.removeItem('selectedDomain');
+                return selectedDomain;
+            }
+            
+            // Second priority: get the last analyzed domain from cache
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            if (lastAnalyzedDomain) {
+                return lastAnalyzedDomain;
+            }
+            
+            // Fallback: get from analyzed domains list
+            const analyzedDomains = JSON.parse(localStorage.getItem('analyzedDomains') || '[]');
+            if (analyzedDomains.length > 0) {
+                return analyzedDomains[0].domain; // Get the most recent domain
+            }
+            
+            return null;
+        }
+
+        // Load analysis data for the domain
+        async function loadAnalysisData(domain) {
+            try {
+                console.log('Loading analysis data for domain:', domain);
+                const response = await fetch(`/api/supabase/analysis/${encodeURIComponent(domain)}`);
+                const data = await response.json();
+                console.log('API response:', data);
+                
+                if (data.success && data.data) {
+                    currentAnalysis = data.data;
+                    currentDomain = domain;
+                    console.log('Analysis data loaded:', currentAnalysis);
+                    displayAnalysisResults();
+                    
+                    // Update AI chat component with analysis data - DISABLED
+                    // updateAIChatAnalysis(currentAnalysis, currentDomain);
+                } else {
+                    // Fallback to localStorage
+                    const analysisData = localStorage.getItem('analysisData');
+                    if (analysisData) {
+                        const analysis = JSON.parse(analysisData);
+                        if (analysis.domain === domain || analysis.url === domain) {
+                            currentAnalysis = analysis;
+                            currentDomain = domain;
+                            displayAnalysisResults();
+                            
+                            // Update AI chat component with analysis data
+                            updateAIChatAnalysis(currentAnalysis, currentDomain);
+                            return;
+                        }
+                    }
+                    throw new Error('No analysis data found for this domain');
+                }
+            } catch (error) {
+                console.error('Error loading analysis data:', error);
+                showError('Failed to load analysis data for this domain');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('currentDomain').textContent = 'Error';
+            document.getElementById('analysisResults').innerHTML = `
+                <div class="error-message" style="text-align: center; padding: 4rem; color: #64748b;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; color: #ef4444;"></i>
+                    <h3 style="margin-bottom: 1rem; color: #1e293b;">${message}</h3>
+                    <p style="margin-bottom: 2rem;">Please go back to the dashboard and try again.</p>
+                    <a href="/dashboard-main" class="btn btn-primary">Back to Dashboard</a>
+                </div>
+            `;
+            document.getElementById('analysisResults').style.display = 'block';
+        }
+
+        function displayAnalysisResults() {
+            if (!currentAnalysis) {
+                console.log('No current analysis data');
+                return;
+            }
+            console.log('Displaying analysis results for:', currentDomain);
+
+            // Show domain name
+            document.getElementById('currentDomain').textContent = currentDomain;
+
+            // Update metrics
+            updateMetrics();
+            
+            // Show results
+            document.getElementById('analysisResults').style.display = 'block';
+            
+            // Display technical issues
+            displayTechnicalIssues();
+        }
+
+        function updateMetrics() {
+            // Technical Score
+            const technicalScore = currentAnalysis.score || 85;
+            const technicalScoreElement = document.getElementById('technicalScore');
+            if (technicalScoreElement) {
+                technicalScoreElement.textContent = technicalScore;
+            }
+
+            // Technical Issues Count
+            const technicalIssues = currentAnalysis.recommendations?.filter(rec => 
+                rec.category === 'On-Page SEO' || rec.category === 'Accessibility' || rec.category === 'Technical'
+            ).length || 0;
+            const technicalIssuesElement = document.getElementById('technicalIssues');
+            if (technicalIssuesElement) {
+                technicalIssuesElement.textContent = technicalIssues;
+            }
+
+            // Page Health - Handle both data structures
+            let totalPages, pagesWithIssues, healthyPages;
+            
+            if (currentAnalysis.onPage?.pages) {
+                // Legacy format with individual pages
+                totalPages = currentAnalysis.onPage.pages.length;
+                pagesWithIssues = currentAnalysis.onPage.pages.filter(page => 
+                    page.issues && page.issues.length > 0
+                ).length;
+                healthyPages = totalPages - pagesWithIssues;
+            } else {
+                // New aggregated format
+                totalPages = currentAnalysis.totalPages || currentAnalysis.analyzedPages || 0;
+                pagesWithIssues = currentAnalysis.pagesWithIssues || 0;
+                healthyPages = currentAnalysis.healthyPages || 0;
+            }
+            
+            const totalPagesElement = document.getElementById('totalPages');
+            if (totalPagesElement) {
+                totalPagesElement.textContent = totalPages;
+            }
+            
+            const pagesWithIssuesElement = document.getElementById('pagesWithIssues');
+            if (pagesWithIssuesElement) {
+                pagesWithIssuesElement.textContent = pagesWithIssues;
+            }
+            
+            const healthyPagesElement = document.getElementById('healthyPages');
+            if (healthyPagesElement) {
+                healthyPagesElement.textContent = healthyPages;
+            }
+        }
+
+        function displayTechnicalIssues() {
+            console.log('🔧 displayTechnicalIssues called - v3.0 with improved page identification');
+            const issuesList = document.getElementById('technicalIssuesList');
+            issuesList.innerHTML = '';
+
+            // Get analysis data
+            const analysis = currentAnalysis?.onPage || {};
+            console.log('Technical analysis data:', analysis);
+            console.log('Pages data:', analysis.pages);
+
+            if (!analysis.pages || analysis.pages.length === 0) {
+                issuesList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">No analysis data available. Please run an analysis first.</p>';
+                return;
+            }
+
+            let html = '';
+            html += '<div class="technical-analysis-report">';
+            html += '<div class="analysis-summary">';
+            html += '<p>Analyzing <strong>' + analysis.pages.length + '</strong> pages for technical SEO issues</p>';
+            html += '</div>';
+
+            // Technical SEO Sub-pages Navigation
+            html += '<div class="technical-subpages-nav">';
+            html += '<h3 style="margin-bottom: 15px; color: #1e293b; font-size: 18px;">📋 Detailed Technical Analysis</h3>';
+            html += '<div class="subpages-grid">';
+            html += '<div class="subpage-card" onclick="filterTechnicalContent(\'h1\')">';
+            html += '<div class="subpage-icon">📋</div>';
+            html += '<div class="subpage-title">Heading Optimization</div>';
+            html += '<div class="subpage-description">Analyze heading structure and hierarchy</div>';
+            html += '</div>';
+            html += '<div class="subpage-card" onclick="filterTechnicalContent(\'titles\')">';
+            html += '<div class="subpage-icon">📝</div>';
+            html += '<div class="subpage-title">Title Tags</div>';
+            html += '<div class="subpage-description">Review title tag optimization and length</div>';
+            html += '</div>';
+            html += '<div class="subpage-card" onclick="filterTechnicalContent(\'meta\')">';
+            html += '<div class="subpage-icon">📄</div>';
+            html += '<div class="subpage-title">Meta Tags</div>';
+            html += '<div class="subpage-description">Review meta descriptions and keywords</div>';
+            html += '</div>';
+            html += '<div class="subpage-card" onclick="filterTechnicalContent(\'images\')">';
+            html += '<div class="subpage-icon">🖼️</div>';
+            html += '<div class="subpage-title">Image Alt Text</div>';
+            html += '<div class="subpage-description">Analyze image accessibility and alt text</div>';
+            html += '</div>';
+            html += '<div class="subpage-card" onclick="filterTechnicalContent(\'links\')">';
+            html += '<div class="subpage-icon">🔗</div>';
+            html += '<div class="subpage-title">Link Analysis</div>';
+            html += '<div class="subpage-description">Check internal and external link structure</div>';
+            html += '</div>';
+            html += '<div class="subpage-card" onclick="filterTechnicalContent(\'all\')">';
+            html += '<div class="subpage-icon">📊</div>';
+            html += '<div class="subpage-title">Show All</div>';
+            html += '<div class="subpage-description">View all technical SEO issues</div>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+
+            // H1 Tags - Detailed breakdown with page-specific issues
+            const pagesWithH1Issues = analysis.pages?.filter(page => {
+                return !page.headings?.h1 || page.headings.h1 === 0;
+            }) || [];
+            const h1Issues = pagesWithH1Issues.length;
+
+            if (h1Issues > 0) {
+                html += '<div class="issue-category">';
+                html += '<div class="issue-category-header">';
+                html += '<div class="issue-category-title">📋 H1 Tags</div>';
+                html += '<div class="issue-category-count">' + h1Issues + ' missing</div>';
+                html += '</div>';
+                html += '<div class="issue-category-actions">';
+                html += '<a href="#" onclick="filterTechnicalContent(\'h1\'); return false;" class="view-details-link">View Detailed Analysis <i class="fas fa-arrow-right"></i></a>';
+                html += '</div>';
+                html += '<div class="issue-category-description">⚠️ <strong>' + h1Issues + '</strong> pages missing H1 tags:</div>';
+                html += '<div class="page-issues-list">';
+                pagesWithH1Issues.forEach((page, index) => {
+                    const pageName = page.url.split('/').pop() || page.url.split('/')[page.url.split('/').length - 2] || 'Homepage';
+                    html += '<div class="page-issue">';
+                    html += '<div class="page-name">' + (index + 1) + '. ' + pageName + '</div>';
+                    html += '<div class="page-url">' + page.url + '</div>';
+                    html += '<div class="issue-detail">❌ Missing H1 tag</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '<div class="recommendation-action">';
+                html += '<strong>Recommendation:</strong> Add descriptive H1 tags to each page. H1 tags should be unique, descriptive, and contain your primary keyword.';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // Image Alt Text - Detailed breakdown
+            const pagesWithImageIssues = analysis.pages?.filter(page => {
+                return page.images?.missingAlt > 0;
+            }) || [];
+            const totalMissingAlt = analysis.pages?.reduce((sum, page) => sum + (page.images?.missingAlt || 0), 0) || 0;
+
+            if (totalMissingAlt > 0) {
+                html += '<div class="issue-category">';
+                html += '<div class="issue-category-header">';
+                html += '<div class="issue-category-title">🖼️ Image Alt Text</div>';
+                html += '<div class="issue-category-count">' + totalMissingAlt + ' missing</div>';
+                html += '</div>';
+                html += '<div class="issue-category-actions">';
+                html += '<a href="#" onclick="filterTechnicalContent(\'images\'); return false;" class="view-details-link">View Detailed Analysis <i class="fas fa-arrow-right"></i></a>';
+                html += '</div>';
+                html += '<div class="issue-category-description">⚠️ <strong>' + totalMissingAlt + '</strong> images missing alt text across ' + pagesWithImageIssues.length + ' pages:</div>';
+                html += '<div class="page-issues-list">';
+                pagesWithImageIssues.forEach((page, index) => {
+                    const pageName = page.url.split('/').pop() || page.url.split('/')[page.url.split('/').length - 2] || 'Homepage';
+                    html += '<div class="page-issue">';
+                    html += '<div class="page-name">' + (index + 1) + '. ' + pageName + '</div>';
+                    html += '<div class="page-url">' + page.url + '</div>';
+                    html += '<div class="issue-detail">❌ ' + page.images.missingAlt + ' images missing alt text</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '<div class="recommendation-action">';
+                html += '<strong>Recommendation:</strong> Add descriptive alt text to all images. Alt text should describe the image content and include relevant keywords when appropriate.';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // Title Tags - Detailed breakdown
+            const pagesWithTitleIssues = analysis.pages?.filter(page => {
+                return !page.title || page.title.length > 60 || page.title.length < 30;
+            }) || [];
+            const titleIssues = pagesWithTitleIssues.length;
+
+            if (titleIssues > 0) {
+                html += '<div class="issue-category">';
+                html += '<div class="issue-category-header">';
+                html += '<div class="issue-category-title">📝 Title Tags</div>';
+                html += '<div class="issue-category-count">' + titleIssues + ' issues</div>';
+                html += '</div>';
+                html += '<div class="issue-category-actions">';
+                html += '<a href="#" onclick="filterTechnicalContent(\'titles\'); return false;" class="view-details-link">View Detailed Analysis <i class="fas fa-arrow-right"></i></a>';
+                html += '</div>';
+                html += '<div class="issue-category-description">⚠️ <strong>' + titleIssues + '</strong> pages have title tag issues:</div>';
+                html += '<div class="page-issues-list">';
+                pagesWithTitleIssues.forEach((page, index) => {
+                    const pageName = page.url.split('/').pop() || page.url.split('/')[page.url.split('/').length - 2] || 'Homepage';
+                    let issueText = '';
+                    if (!page.title) issueText = 'Missing title';
+                    else if (page.title.length > 60) issueText = 'Too long (' + page.title.length + ' chars)';
+                    else if (page.title.length < 30) issueText = 'Too short (' + page.title.length + ' chars)';
+                    
+                    html += '<div class="page-issue">';
+                    html += '<div class="page-name">' + (index + 1) + '. ' + pageName + '</div>';
+                    html += '<div class="page-url">' + page.url + '</div>';
+                    html += '<div class="issue-detail">❌ ' + issueText + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '<div class="recommendation-action">';
+                html += '<strong>Recommendation:</strong> Optimize title tags to be 30-60 characters, include primary keywords, and be descriptive.';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // Meta Description - Detailed breakdown
+            const pagesWithMetaIssues = analysis.pages?.filter(page => {
+                return !page.metaDescription || page.metaDescription.length < 120 || page.metaDescription.length > 160;
+            }) || [];
+            const metaIssues = pagesWithMetaIssues.length;
+
+            if (metaIssues > 0) {
+                html += '<div class="issue-category">';
+                html += '<div class="issue-category-header">';
+                html += '<div class="issue-category-title">📄 Meta Description</div>';
+                html += '<div class="issue-category-count">' + metaIssues + ' issues</div>';
+                html += '</div>';
+                html += '<div class="issue-category-actions">';
+                html += '<a href="#" onclick="filterTechnicalContent(\'meta\'); return false;" class="view-details-link">View Detailed Analysis <i class="fas fa-arrow-right"></i></a>';
+                html += '</div>';
+                html += '<div class="issue-category-description">⚠️ <strong>' + metaIssues + '</strong> pages have meta description issues:</div>';
+                html += '<div class="page-issues-list">';
+                pagesWithMetaIssues.forEach((page, index) => {
+                    const pageName = page.url.split('/').pop() || page.url.split('/')[page.url.split('/').length - 2] || 'Homepage';
+                    let issueText = '';
+                    if (!page.metaDescription) issueText = 'Missing meta description';
+                    else if (page.metaDescription.length < 120) issueText = 'Too short (' + page.metaDescription.length + ' chars)';
+                    else if (page.metaDescription.length > 160) issueText = 'Too long (' + page.metaDescription.length + ' chars)';
+                    
+                    html += '<div class="page-issue">';
+                    html += '<div class="page-name">' + (index + 1) + '. ' + pageName + '</div>';
+                    html += '<div class="page-url">' + page.url + '</div>';
+                    html += '<div class="issue-detail">❌ ' + issueText + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '<div class="recommendation-action">';
+                html += '<strong>Recommendation:</strong> Write compelling meta descriptions (120-160 characters) that include keywords and encourage clicks.';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // Link Analysis - Detailed breakdown
+            const linkAnalysis = analysis.links || {};
+            const internalLinks = linkAnalysis.internal || 0;
+            const externalLinks = linkAnalysis.external || 0;
+            const noFollowLinks = linkAnalysis.noFollow || 0;
+            
+            // Calculate link issues
+            let linkIssues = 0;
+            let linkIssuesList = [];
+            
+            // Check for pages with no internal links
+            const pagesWithNoInternalLinks = analysis.pages?.filter(page => {
+                const pageInternalLinks = page.links?.internal || 0;
+                return pageInternalLinks === 0;
+            }) || [];
+            
+            if (pagesWithNoInternalLinks.length > 0) {
+                linkIssues += pagesWithNoInternalLinks.length;
+                linkIssuesList = linkIssuesList.concat(pagesWithNoInternalLinks.map(page => ({
+                    url: page.url,
+                    issue: 'No internal links found'
+                })));
+            }
+            
+            // Check for pages with too many external links (potential spam)
+            const pagesWithTooManyExternalLinks = analysis.pages?.filter(page => {
+                const pageExternalLinks = page.links?.external || 0;
+                return pageExternalLinks > 10; // Threshold for too many external links
+            }) || [];
+            
+            if (pagesWithTooManyExternalLinks.length > 0) {
+                linkIssues += pagesWithTooManyExternalLinks.length;
+                linkIssuesList = linkIssuesList.concat(pagesWithTooManyExternalLinks.map(page => ({
+                    url: page.url,
+                    issue: `Too many external links (${page.links?.external || 0})`
+                })));
+            }
+            
+            if (linkIssues > 0) {
+                html += '<div class="issue-category">';
+                html += '<div class="issue-category-header">';
+                html += '<div class="issue-category-title">🔗 Link Analysis</div>';
+                html += '<div class="issue-category-count">' + linkIssues + ' issues</div>';
+                html += '</div>';
+                html += '<div class="issue-category-actions">';
+                html += '<a href="#" onclick="filterTechnicalContent(\'links\'); return false;" class="view-details-link">View Detailed Analysis <i class="fas fa-arrow-right"></i></a>';
+                html += '</div>';
+                html += '<div class="issue-category-description">⚠️ <strong>' + linkIssues + '</strong> pages have link structure issues:</div>';
+                html += '<div class="page-issues-list">';
+                linkIssuesList.forEach((page, index) => {
+                    const pageName = page.url.split('/').pop() || page.url.split('/')[page.url.split('/').length - 2] || 'Homepage';
+                    html += '<div class="page-issue">';
+                    html += '<div class="page-name">' + pageName + '</div>';
+                    html += '<div class="page-url">' + page.url + '</div>';
+                    html += '<div class="issue-detail">❌ ' + page.issue + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '<div class="recommendation-action">';
+                html += '<strong>Recommendation:</strong> Ensure each page has 3-5 relevant internal links and limit external links to authoritative sources.';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // Meta Keywords Analysis (if available)
+            const metaKeywordsIssues = analysis.pages?.filter(page => {
+                // Check if meta keywords are present (though not recommended for SEO)
+                const metaKeywords = page.metaKeywords || '';
+                return metaKeywords.length > 0; // Meta keywords are generally not recommended
+            }).length || 0;
+            
+            if (metaKeywordsIssues > 0) {
+                html += '<div class="issue-category">';
+                html += '<div class="issue-category-header">';
+                html += '<div class="issue-category-title">📄 Meta Keywords</div>';
+                html += '<div class="issue-category-count">' + metaKeywordsIssues + ' pages</div>';
+                html += '</div>';
+                html += '<div class="issue-category-actions">';
+                html += '<a href="#" onclick="filterTechnicalContent(\'meta\'); return false;" class="view-details-link">View Detailed Analysis <i class="fas fa-arrow-right"></i></a>';
+                html += '</div>';
+                html += '<div class="issue-category-description">⚠️ <strong>' + metaKeywordsIssues + '</strong> pages have meta keywords (not recommended):</div>';
+                html += '<div class="page-issues-list">';
+                analysis.pages?.filter(page => page.metaKeywords && page.metaKeywords.length > 0).forEach((page, index) => {
+                    const pageName = page.url.split('/').pop() || page.url.split('/')[page.url.split('/').length - 2] || 'Homepage';
+                    html += '<div class="page-issue">';
+                    html += '<div class="page-name">' + pageName + '</div>';
+                    html += '<div class="page-url">' + page.url + '</div>';
+                    html += '<div class="issue-detail">⚠️ Meta keywords present: "' + page.metaKeywords + '"</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '<div class="recommendation-action">';
+                html += '<strong>Recommendation:</strong> Remove meta keywords as they are not used by modern search engines and can be considered spam.';
+                html += '</div>';
+                html += '</div>';
+            }
+
+            // If no issues found
+            if (h1Issues === 0 && totalMissingAlt === 0 && titleIssues === 0 && metaIssues === 0 && linkIssues === 0 && metaKeywordsIssues === 0) {
+                html += '<div class="no-issues-message">';
+                html += '<div class="no-issues-icon">✅</div>';
+                html += '<div class="no-issues-title">Excellent Technical SEO!</div>';
+                html += '<div class="no-issues-description">No critical technical issues found. Your website is well-optimized.</div>';
+                html += '</div>';
+            }
+
+            html += '</div>'; // Close technical-analysis-report
+            issuesList.innerHTML = html;
+        }
+
+        function formatAIResponse(message) {
+            // Convert markdown-like formatting to HTML
+            let formatted = message;
+            
+            // Handle line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            // Handle bold text (**text**)
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Handle italic text (*text*)
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            // Handle code blocks (```code```)
+            formatted = formatted.replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+            
+            // Handle inline code (`code`)
+            formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
+            
+            // Handle lists (- item)
+            formatted = formatted.replace(/^- (.*$)/gm, '<li>$1</li>');
+            formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Handle numbered lists (1. item)
+            formatted = formatted.replace(/^\d+\. (.*$)/gm, '<li>$1</li>');
+            
+            // Handle headers (## Header)
+            formatted = formatted.replace(/^## (.*$)/gm, '<h3>$1</h3>');
+            formatted = formatted.replace(/^### (.*$)/gm, '<h4>$1</h4>');
+            
+            // Handle emojis and special characters with Font Awesome icons
+            formatted = formatted.replace(/✅/g, '<i class="fas fa-check-circle" style="color: #22c55e; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/❌/g, '<i class="fas fa-times-circle" style="color: #ef4444; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/⚠️/g, '<i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📝/g, '<i class="fas fa-edit" style="color: #3b82f6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🔍/g, '<i class="fas fa-search" style="color: #8b5cf6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/💡/g, '<i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🎯/g, '<i class="fas fa-bullseye" style="color: #ef4444; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📊/g, '<i class="fas fa-chart-bar" style="color: #06b6d4; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🚀/g, '<i class="fas fa-rocket" style="color: #10b981; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/👉/g, '<i class="fas fa-hand-point-right" style="color: #6366f1; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📈/g, '<i class="fas fa-chart-line" style="color: #10b981; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🔧/g, '<i class="fas fa-tools" style="color: #6b7280; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/⭐/g, '<i class="fas fa-star" style="color: #fbbf24; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📋/g, '<i class="fas fa-clipboard-list" style="color: #3b82f6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🎨/g, '<i class="fas fa-palette" style="color: #8b5cf6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🔗/g, '<i class="fas fa-link" style="color: #06b6d4; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📱/g, '<i class="fas fa-mobile-alt" style="color: #3b82f6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/💻/g, '<i class="fas fa-laptop" style="color: #6b7280; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🌐/g, '<i class="fas fa-globe" style="color: #10b981; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📄/g, '<i class="fas fa-file-alt" style="color: #3b82f6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🎪/g, '<i class="fas fa-magic" style="color: #8b5cf6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🏆/g, '<i class="fas fa-trophy" style="color: #fbbf24; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/⚡/g, '<i class="fas fa-bolt" style="color: #f59e0b; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🛡️/g, '<i class="fas fa-shield-alt" style="color: #10b981; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🎭/g, '<i class="fas fa-theater-masks" style="color: #8b5cf6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🔐/g, '<i class="fas fa-lock" style="color: #6b7280; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/📦/g, '<i class="fas fa-box" style="color: #3b82f6; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🎁/g, '<i class="fas fa-gift" style="color: #ef4444; margin-right: 6px;"></i>');
+            formatted = formatted.replace(/🎉/g, '<i class="fas fa-party-horn" style="color: #f59e0b; margin-right: 6px;"></i>');
+            
+            return formatted;
+        }
+
+        // Filter technical content based on selected category
+        function filterTechnicalContent(filterType) {
+            currentFilter = filterType;
+            
+            // Update active state of navigation cards
+            document.querySelectorAll('.subpage-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active class to clicked card
+            // Note: event.target is available in the global scope for onclick attributes
+            // A more robust solution would pass event as an argument or use event listeners
+            const clickedCard = event.target.closest('.subpage-card');
+            if (clickedCard) {
+                clickedCard.classList.add('active');
+            }
+            
+            // Show/hide content sections based on filter
+            const allSections = document.querySelectorAll('.issue-category');
+            allSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show relevant sections based on filter
+            if (filterType === 'h1') {
+                // Show only H1 Tags section
+                allSections.forEach(section => {
+                    const title = section.querySelector('.issue-category-title');
+                    if (title && title.textContent.includes('H1 Tags')) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            } else if (filterType === 'titles') {
+                // Show only Title Tags section
+                allSections.forEach(section => {
+                    const title = section.querySelector('.issue-category-title');
+                    if (title && title.textContent.includes('Title Tags')) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            } else if (filterType === 'meta') {
+                // Show only Meta Description section
+                allSections.forEach(section => {
+                    const title = section.querySelector('.issue-category-title');
+                    if (title && (title.textContent.includes('Meta Description') || title.textContent.includes('Meta Keywords'))) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            } else if (filterType === 'images') {
+                // Show only Image Alt Text section
+                allSections.forEach(section => {
+                    const title = section.querySelector('.issue-category-title');
+                    if (title && title.textContent.includes('Image Alt Text')) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            } else if (filterType === 'links') {
+                // Show only Link Analysis section
+                allSections.forEach(section => {
+                    const title = section.querySelector('.issue-category-title');
+                    if (title && title.textContent.includes('Link Analysis')) {
+                        section.style.display = 'block';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            } else {
+                // Show all sections
+                allSections.forEach(section => {
+                    section.style.display = 'block';
+                });
+            }
+            
+            // Update page title to show current filter
+            const pageTitle = document.querySelector('.page-title');
+            if (pageTitle) {
+                const filterNames = {
+                    'h1': 'Heading Optimization Analysis',
+                    'titles': 'Title Tags Analysis', 
+                    'meta': 'Meta Tags Analysis',
+                    'images': 'Image Alt Text Analysis',
+                    'links': 'Link Analysis',
+                    'all': 'Technical SEO Analysis'
+                };
+                pageTitle.textContent = filterNames[filterType] || 'Technical SEO Analysis';
+            }
+        }
+
+        // Initialize the page (moved to the main DOMContentLoaded listener above)
+    </script>
+</body>
+</html>

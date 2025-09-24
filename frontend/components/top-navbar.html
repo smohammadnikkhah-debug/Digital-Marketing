@@ -1,0 +1,42 @@
+<!-- Reusable Top Navbar Component -->
+<header class="top-header">
+    <div class="header-left">
+        <nav class="breadcrumb">
+            <a href="/">Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span id="currentPage">Page Title</span>
+        </nav>
+    </div>
+    
+    <div class="header-right">
+        <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="hideUserDropdown()">
+            <div class="user-avatar">M</div>
+            <div class="user-info">
+                <div class="user-name">Mozarex User</div>
+                <div class="user-role">Admin</div>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="dropdown-item">
+                    <div class="user-info">
+                        <div class="user-avatar" style="width: 32px; height: 32px;">M</div>
+                        <div class="user-details">
+                            <h4>Mozarex User</h4>
+                            <div class="user-role">Admin</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="/user-settings" class="dropdown-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="#" class="dropdown-item danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+

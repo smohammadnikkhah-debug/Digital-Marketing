@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding Redirect Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Onboarding Redirect Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Direct Redirect</h2>
+        <p>Test if direct redirect to dashboard works</p>
+        <button class="btn" onclick="testDirectRedirect()">Test Direct Redirect</button>
+        <div class="log" id="direct-log">No test run yet</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: API Call + Redirect</h2>
+        <p>Test if API call followed by redirect works</p>
+        <button class="btn btn-success" onclick="testApiAndRedirect()">Test API + Redirect</button>
+        <div class="log" id="api-log">No test run yet</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Simulate Onboarding Flow</h2>
+        <p>Test the complete onboarding flow</p>
+        <button class="btn btn-danger" onclick="testOnboardingFlow()">Test Complete Flow</button>
+        <div class="log" id="flow-log">No test run yet</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4: Check localStorage</h2>
+        <p>Check what's in localStorage</p>
+        <button class="btn" onclick="checkLocalStorage()">Check localStorage</button>
+        <div class="log" id="storage-log">No check run yet</div>
+    </div>
+    
+    <div class="message" id="error-message"></div>
+    <div class="message" id="success-message"></div>
+
+    <script>
+        function log(elementId, message) {
+            const logEl = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.textContent += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.className = 'message error';
+            errorEl.style.display = 'block';
+            
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            successEl.textContent = message;
+            successEl.className = 'message success';
+            successEl.style.display = 'block';
+            
+            setTimeout(() => {
+                successEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        function testDirectRedirect() {
+            log('direct-log', 'Testing direct redirect...');
+            log('direct-log', 'Current URL: ' + window.location.href);
+            log('direct-log', 'Attempting redirect to /dashboard...');
+            
+            setTimeout(() => {
+                log('direct-log', 'Executing redirect now...');
+                window.location.href = '/dashboard';
+            }, 1000);
+        }
+        
+        async function testApiAndRedirect() {
+            log('api-log', 'Testing API call + redirect...');
+            
+            try {
+                const testData = {
+                    domain: 'test-redirect-api.com',
+                    businessDescription: 'Test business for API redirect',
+                    analysisData: { test: 'data' },
+                    integrations: { console: false, business: false }
+                };
+                
+                log('api-log', 'Calling save-onboarding API...');
+                const response = await fetch('/api/user/save-onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                log('api-log', 'API Response: ' + JSON.stringify(result));
+                
+                if (result.success) {
+                    log('api-log', 'API call successful, redirecting in 2 seconds...');
+                    showSuccess('API call successful! Redirecting to dashboard...');
+                    
+                    setTimeout(() => {
+                        log('api-log', 'Executing redirect now...');
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                } else {
+                    log('api-log', 'API call failed: ' + result.error);
+                    showError('API call failed: ' + result.error);
+                }
+                
+            } catch (error) {
+                log('api-log', 'Error: ' + error.message);
+                showError('Error: ' + error.message);
+            }
+        }
+        
+        async function testOnboardingFlow() {
+            log('flow-log', 'Testing complete onboarding flow...');
+            
+            try {
+                // Step 1: Set localStorage
+                log('flow-log', 'Setting localStorage...');
+                localStorage.setItem('lastAnalyzedDomain', 'test-flow.com');
+                localStorage.setItem('analysisData', JSON.stringify({ test: 'flow data' }));
+                
+                // Step 2: Call API
+                log('flow-log', 'Calling save-onboarding API...');
+                const testData = {
+                    domain: 'test-flow.com',
+                    businessDescription: 'Test business for complete flow',
+                    analysisData: { test: 'flow data' },
+                    integrations: { console: false, business: false }
+                };
+                
+                const response = await fetch('/api/user/save-onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                log('flow-log', 'API Response: ' + JSON.stringify(result));
+                
+                if (result.success) {
+                    log('flow-log', 'Onboarding completed successfully!');
+                    showSuccess('Onboarding completed! Redirecting to dashboard...');
+                    
+                    // Simulate the exact same logic as the real onboarding
+                    setTimeout(() => {
+                        log('flow-log', 'Executing redirect to dashboard...');
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    log('flow-log', 'Onboarding failed: ' + result.error);
+                    showError('Onboarding failed: ' + result.error);
+                }
+                
+            } catch (error) {
+                log('flow-log', 'Error: ' + error.message);
+                showError('Error: ' + error.message);
+            }
+        }
+        
+        function checkLocalStorage() {
+            log('storage-log', 'Checking localStorage...');
+            log('storage-log', 'lastAnalyzedDomain: ' + localStorage.getItem('lastAnalyzedDomain'));
+            log('storage-log', 'analysisData: ' + localStorage.getItem('analysisData'));
+            log('storage-log', 'All localStorage keys: ' + Object.keys(localStorage).join(', '));
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('direct-log', 'Page loaded, ready for testing');
+            log('api-log', 'Page loaded, ready for testing');
+            log('flow-log', 'Page loaded, ready for testing');
+            log('storage-log', 'Page loaded, ready for testing');
+        });
+    </script>
+</body>
+</html>
+
+
+
+
