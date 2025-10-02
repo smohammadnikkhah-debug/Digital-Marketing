@@ -56,9 +56,9 @@ services:
   - key: AUTH0_SESSION_SECRET
     value: ${AUTH0_SESSION_SECRET}
   - key: AUTH0_CALLBACK_URL
-    value: ${AUTH0_CALLBACK_URL}
+    value: https://mozarex.com/auth/callback
   - key: AUTH0_LOGOUT_URL
-    value: ${AUTH0_LOGOUT_URL}
+    value: https://mozarex.com
   - key: JWT_SECRET
     value: ${JWT_SECRET}
   - key: SENDGRID_API_KEY
