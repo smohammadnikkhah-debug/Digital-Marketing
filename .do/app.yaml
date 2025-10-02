@@ -1,0 +1,98 @@
+name: digital-marketing-seo-analyzer
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: smohammadnikkhah-debug/Digital-Marketing
+    branch: master
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 3000
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "3000"
+  - key: DATAFORSEO_USERNAME
+    value: ${DATAFORSEO_USERNAME}
+  - key: DATAFORSEO_PASSWORD
+    value: ${DATAFORSEO_PASSWORD}
+  - key: DATAFORSEO_BASE_URL
+    value: ${DATAFORSEO_BASE_URL}
+  - key: DATAFORSEO_ENVIRONMENT
+    value: ${DATAFORSEO_ENVIRONMENT}
+  - key: OPENAI_API_KEY
+    value: ${OPENAI_API_KEY}
+  - key: SUPABASE_URL
+    value: ${SUPABASE_URL}
+  - key: SUPABASE_ANON_KEY
+    value: ${SUPABASE_ANON_KEY}
+  - key: SUPABASE_SERVICE_ROLE_KEY
+    value: ${SUPABASE_SERVICE_ROLE_KEY}
+  - key: STRIPE_SECRET_KEY
+    value: ${STRIPE_SECRET_KEY}
+  - key: STRIPE_PUBLISHABLE_KEY
+    value: ${STRIPE_PUBLISHABLE_KEY}
+  - key: STRIPE_WEBHOOK_SECRET
+    value: ${STRIPE_WEBHOOK_SECRET}
+  - key: STRIPE_STARTER_MONTHLY_PRICE_ID
+    value: ${STRIPE_STARTER_MONTHLY_PRICE_ID}
+  - key: STRIPE_STARTER_YEARLY_PRICE_ID
+    value: ${STRIPE_STARTER_YEARLY_PRICE_ID}
+  - key: STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID
+    value: ${STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID}
+  - key: STRIPE_PROFESSIONAL_YEARLY_PRICE_ID
+    value: ${STRIPE_PROFESSIONAL_YEARLY_PRICE_ID}
+  - key: AUTH0_DOMAIN
+    value: ${AUTH0_DOMAIN}
+  - key: AUTH0_CLIENT_ID
+    value: ${AUTH0_CLIENT_ID}
+  - key: AUTH0_CLIENT_SECRET
+    value: ${AUTH0_CLIENT_SECRET}
+  - key: AUTH0_SESSION_SECRET
+    value: ${AUTH0_SESSION_SECRET}
+  - key: AUTH0_CALLBACK_URL
+    value: ${AUTH0_CALLBACK_URL}
+  - key: AUTH0_LOGOUT_URL
+    value: ${AUTH0_LOGOUT_URL}
+  - key: JWT_SECRET
+    value: ${JWT_SECRET}
+  - key: SENDGRID_API_KEY
+    value: ${SENDGRID_API_KEY}
+  - key: SENDGRID_FROM_EMAIL
+    value: ${SENDGRID_FROM_EMAIL}
+  - key: SENDGRID_TEST_EMAIL
+    value: ${SENDGRID_TEST_EMAIL}
+  - key: GOOGLE_PLACES_API_KEY
+    value: ${GOOGLE_PLACES_API_KEY}
+  - key: ENABLE_DEBUG_LOGS
+    value: ${ENABLE_DEBUG_LOGS}
+  - key: ENABLE_DEMO_DATA
+    value: ${ENABLE_DEMO_DATA}
+  - key: ENABLE_EMAIL_NOTIFICATIONS
+    value: ${ENABLE_EMAIL_NOTIFICATIONS}
+  - key: ENABLE_FEATURE_RESTRICTIONS
+    value: ${ENABLE_FEATURE_RESTRICTIONS}
+  - key: ENABLE_MOCK_RESPONSES
+    value: ${ENABLE_MOCK_RESPONSES}
+  - key: ENABLE_SANDBOX_MODE
+    value: ${ENABLE_SANDBOX_MODE}
+  - key: ENABLE_TRIAL_SYSTEM
+    value: ${ENABLE_TRIAL_SYSTEM}
+  - key: TRIAL_DURATION_DAYS
+    value: ${TRIAL_DURATION_DAYS}
+  - key: YEARLY_DISCOUNT_PERCENTAGE
+    value: ${YEARLY_DISCOUNT_PERCENTAGE}
+  - key: LOG_LEVEL
+    value: ${LOG_LEVEL}
+  health_check:
+    http_path: /
+    initial_delay_seconds: 10
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
