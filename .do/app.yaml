@@ -70,25 +70,25 @@ services:
   - key: GOOGLE_PLACES_API_KEY
     value: ${GOOGLE_PLACES_API_KEY}
   - key: ENABLE_DEBUG_LOGS
-    value: ${ENABLE_DEBUG_LOGS}
+    value: "true"
   - key: ENABLE_DEMO_DATA
-    value: ${ENABLE_DEMO_DATA}
+    value: "true"
   - key: ENABLE_EMAIL_NOTIFICATIONS
-    value: ${ENABLE_EMAIL_NOTIFICATIONS}
+    value: "true"
   - key: ENABLE_FEATURE_RESTRICTIONS
-    value: ${ENABLE_FEATURE_RESTRICTIONS}
+    value: "true"
   - key: ENABLE_MOCK_RESPONSES
-    value: ${ENABLE_MOCK_RESPONSES}
+    value: "true"
   - key: ENABLE_SANDBOX_MODE
-    value: ${ENABLE_SANDBOX_MODE}
+    value: "true"
   - key: ENABLE_TRIAL_SYSTEM
-    value: ${ENABLE_TRIAL_SYSTEM}
+    value: "true"
   - key: TRIAL_DURATION_DAYS
-    value: ${TRIAL_DURATION_DAYS}
+    value: "7"
   - key: YEARLY_DISCOUNT_PERCENTAGE
-    value: ${YEARLY_DISCOUNT_PERCENTAGE}
+    value: "35"
   - key: LOG_LEVEL
-    value: ${LOG_LEVEL}
+    value: debug
   health_check:
     http_path: /
     initial_delay_seconds: 10
