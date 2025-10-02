@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "npm run build:frontend",
-    "build:frontend": "cd frontend && npm run build",
+    "build": "echo 'No build step required for this Node.js app'",
     "test:mcp": "node test-mcp-integration.js",
     "test:hybrid": "node test-hybrid-integration.js",
     "test:demo": "node test-demo-service.js",
