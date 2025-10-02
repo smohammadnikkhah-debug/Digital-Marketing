@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const Auth0Service = require('../services/auth0Service');
+const sessionService = require('../services/sessionService');
 
 const auth0Service = new Auth0Service();
 
@@ -18,14 +19,29 @@ router.put('/profile', async (req, res) => {
         }
 
         // Check if user is authenticated
-        if (!req.isAuthenticated()) {
+        const token = sessionService.extractToken(req);
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 message: 'User not authenticated'
             });
         }
 
-        const user = req.user;
+        const decoded = sessionService.verifyToken(token);
+        if (!decoded) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid or expired token'
+            });
+        }
+
+        const user = {
+            id: decoded.userId,
+            email: decoded.email,
+            name: decoded.name,
+            domain: decoded.domain,
+            auth0Id: decoded.auth0Id
+        };
 
         // Get current user data to check for changes
         const { data: currentUser, error: fetchError } = await auth0Service.supabase
@@ -112,14 +128,29 @@ router.put('/password', async (req, res) => {
         }
 
         // Check if user is authenticated
-        if (!req.isAuthenticated()) {
+        const token = sessionService.extractToken(req);
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 message: 'User not authenticated'
             });
         }
 
-        const user = req.user;
+        const decoded = sessionService.verifyToken(token);
+        if (!decoded) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid or expired token'
+            });
+        }
+
+        const user = {
+            id: decoded.userId,
+            email: decoded.email,
+            name: decoded.name,
+            domain: decoded.domain,
+            auth0Id: decoded.auth0Id
+        };
 
         // Get user's Auth0 ID from database
         const { data: userData, error: fetchError } = await auth0Service.supabase

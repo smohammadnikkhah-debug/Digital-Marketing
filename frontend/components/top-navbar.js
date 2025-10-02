@@ -10,7 +10,9 @@ async function loadUserData() {
             updateUserName(userData.name || userData.email || 'User');
             return;
         }
-        const response = await fetch('/auth/user');
+        const response = await fetch('/auth/user', {
+            credentials: 'include' // Include cookies for JWT session
+        });
         console.log('📡 User API response status:', response.status);
         if (response.ok) {
             const userData = await response.json();
@@ -23,11 +25,16 @@ async function loadUserData() {
             } else {
                 console.log('⚠️ User not authenticated, keeping default name');
             }
+        } else if (response.status === 401) {
+            console.log('⚠️ User not authenticated (401), keeping default name');
+            updateUserName('User');
         } else {
-            console.log('⚠️ User API request failed, keeping default name');
+            console.log('⚠️ User API request failed with status:', response.status);
+            updateUserName('User');
         }
     } catch (error) {
         console.error('❌ Error loading user data:', error);
+        updateUserName('User');
     }
 }
 

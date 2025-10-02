@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   picture TEXT,
   domain TEXT UNIQUE,
   business_description TEXT,
+  plan TEXT DEFAULT 'basic', -- User's subscription plan
   integrations JSONB DEFAULT '{}',
   analysis_data JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

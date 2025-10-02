@@ -424,6 +424,27 @@
             text-decoration: underline;
         }
 
+        .loading-message {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-message p {
+            color: #cbd5e1;
+            font-size: 16px;
+            margin: 0;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 1rem;
@@ -456,52 +477,14 @@
                     Start your 7-day free trial
                 </div>
                 <h2>Create your account</h2>
-                <p>Join thousands of businesses optimizing their SEO</p>
+                <p id="planDescription">Join thousands of businesses optimizing their SEO</p>
             </div>
             
-            <div class="error-message" id="errorMessage"></div>
-            <div class="success-message" id="successMessage"></div>
-
-            <form id="signupForm">
-                <div class="form-group">
-                    <label for="fullName">
-                        <i class="fas fa-user"></i>
-                        Full Name
-                    </label>
-                    <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">
-                        <i class="fas fa-envelope"></i>
-                        Business Email
-                    </label>
-                    <input type="email" id="email" name="email" placeholder="Enter your business email" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">
-                        <i class="fas fa-lock"></i>
-                        Password
-                    </label>
-                    <input type="password" id="password" name="password" placeholder="Create a strong password" required>
-                    <div class="password-strength" id="passwordStrength"></div>
-                </div>
-
-                <button type="submit" class="signup-button" id="signupButton">
-                    <i class="fas fa-rocket"></i>
-                    Start 7-Day Free Trial
-                </button>
-            </form>
-
-            <div class="divider">
-                <span>or</span>
+            <!-- Loading Message -->
+            <div class="loading-message">
+                <div class="loading-spinner"></div>
+                <p>Redirecting to secure signup...</p>
             </div>
-
-            <button type="button" class="google-signup-btn" id="googleSignupBtn">
-                <i class="fab fa-google"></i>
-                Continue with Google
-            </button>
 
             <div class="divider">
                 <span>Already have an account?</span>
@@ -526,182 +509,25 @@
     </div>
 
     <script>
-        // Handle URL parameters for success/error messages
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const success = urlParams.get('success');
-            const error = urlParams.get('error');
-            
-            if (success) {
-                showSuccess(getSuccessMessage(success));
-            }
-            
-            if (error) {
-                showError(getErrorMessage(error));
-            }
-
-            // Initialize password strength checker
-            const passwordInput = document.getElementById('password');
-            passwordInput.addEventListener('input', checkPasswordStrength);
-
-            // Initialize form submission
-            document.getElementById('signupForm').addEventListener('submit', handleFormSubmission);
-
-            // Initialize Google signup button
-            const googleSignupBtn = document.getElementById('googleSignupBtn');
-            googleSignupBtn.addEventListener('click', handleGoogleSignup);
-        });
-
-        function getSuccessMessage(success) {
-            switch (success) {
-                case 'account_created':
-                    return 'Account created successfully! You can now sign in.';
-                case 'email_verified':
-                    return 'Email verified successfully! You can now sign in.';
-                default:
-                    return 'Operation completed successfully.';
-            }
+        // Redirect immediately to Auth0 Universal Login for signup
+        const urlParams = new URLSearchParams(window.location.search);
+        const plan = urlParams.get('plan');
+        const priceId = urlParams.get('priceId');
+        const billing = urlParams.get('billing');
+        
+        // Build redirect URL with all plan parameters
+        let redirectUrl = '/login?signup=true';
+        if (plan) {
+            redirectUrl += `&plan=${encodeURIComponent(plan)}`;
         }
-
-        function getErrorMessage(error) {
-            switch (error) {
-                case 'auth_failed':
-                    return 'Authentication failed. Please try again.';
-                case 'email_exists':
-                    return 'An account with this email already exists.';
-                case 'invalid_email':
-                    return 'Please enter a valid email address.';
-                case 'weak_password':
-                    return 'Password is too weak. Please choose a stronger password.';
-                default:
-                    return 'An error occurred. Please try again.';
-            }
+        if (priceId) {
+            redirectUrl += `&priceId=${encodeURIComponent(priceId)}`;
         }
-
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
+        if (billing) {
+            redirectUrl += `&billing=${encodeURIComponent(billing)}`;
         }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            document.getElementById('errorMessage').style.display = 'none';
-        }
-
-
-        // Check password strength
-        function checkPasswordStrength() {
-            const password = document.getElementById('password').value;
-            const strengthDiv = document.getElementById('passwordStrength');
-            
-            if (password.length === 0) {
-                strengthDiv.textContent = '';
-                strengthDiv.className = 'password-strength';
-                return;
-            }
-            
-            let strength = 0;
-            if (password.length >= 8) strength++;
-            if (/[a-z]/.test(password)) strength++;
-            if (/[A-Z]/.test(password)) strength++;
-            if (/[0-9]/.test(password)) strength++;
-            if (/[^A-Za-z0-9]/.test(password)) strength++;
-            
-            if (strength < 3) {
-                strengthDiv.textContent = 'Weak password';
-                strengthDiv.className = 'password-strength strength-weak';
-            } else if (strength < 4) {
-                strengthDiv.textContent = 'Medium strength';
-                strengthDiv.className = 'password-strength strength-medium';
-            } else {
-                strengthDiv.textContent = 'Strong password';
-                strengthDiv.className = 'password-strength strength-strong';
-            }
-        }
-
-        // Handle form submission
-        async function handleFormSubmission(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const data = {
-                fullName: formData.get('fullName'),
-                email: formData.get('email'),
-                password: formData.get('password')
-            };
-            
-            // Validate form
-            if (!data.fullName || !data.email || !data.password) {
-                showError('Please fill in all fields.');
-                return;
-            }
-            
-            if (data.password.length < 8) {
-                showError('Password must be at least 8 characters long.');
-                return;
-            }
-            
-            const loading = document.getElementById('loading');
-            const signupButton = document.getElementById('signupButton');
-            
-            loading.classList.add('show');
-            signupButton.disabled = true;
-            signupButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
-            
-            try {
-                const response = await fetch('/auth/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showSuccess('Account created successfully! Redirecting to plan selection...');
-                    setTimeout(() => {
-                        window.location.href = '/subscription?signup=success';
-                    }, 2000);
-                } else {
-                    showError(result.error || 'Failed to create account. Please try again.');
-                }
-            } catch (error) {
-                console.error('Signup error:', error);
-                showError('An error occurred. Please try again.');
-            } finally {
-                loading.classList.remove('show');
-                signupButton.disabled = false;
-                signupButton.innerHTML = '<i class="fas fa-rocket"></i> Start 7-Day Free Trial';
-            }
-        }
-
-        // Handle Google signup
-        function handleGoogleSignup() {
-            // Redirect directly to Auth0's Google OAuth (skip Auth0 login page)
-            const auth0Domain = 'mozarex.au.auth0.com';
-            const clientId = 'X17O3qhsPeFMskBS2von2dok7LZSiLAA';
-            const redirectUri = encodeURIComponent('http://localhost:3000/auth/callback');
-            const scope = encodeURIComponent('openid email profile');
-            const responseType = 'code';
-            const connection = 'google-oauth2';
-            const state = encodeURIComponent(JSON.stringify({ signup: true }));
-            
-            const googleAuthUrl = `https://${auth0Domain}/authorize?` +
-                `response_type=${responseType}&` +
-                `client_id=${clientId}&` +
-                `redirect_uri=${redirectUri}&` +
-                `scope=${scope}&` +
-                `connection=${connection}&` +
-                `state=${state}`;
-            
-            window.location.href = googleAuthUrl;
-        }
+        
+        window.location.href = redirectUrl;
     </script>
 </body>
 </html>

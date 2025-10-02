@@ -1,6 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const dataforseoService = require('./dataforseoService');
+const dataforseoService = require('./dataforseoEnvironmentService');
 
 class DomainAnalysisService {
   constructor() {

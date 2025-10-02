@@ -184,90 +184,122 @@ class DataForSEOService {
     try {
       console.log(`📊 Getting basic on-page SEO analysis for: ${url} (${this.environment} mode)`);
       
+      // Make real DataForSEO API call for on-page analysis
+      const onPageData = [{
+        url: url,
+        enable_javascript: true,
+        custom_user_agent: 'Mozilla/5.0 (compatible; SEOAnalyzer/1.0)',
+        accept_language: 'en-US,en;q=0.9'
+      }];
+      
+      const response = await this.makeRequest('/on_page/instant_pages', onPageData);
+      
+      if (!response || !response.tasks || response.tasks.length === 0) {
+        console.log(`⚠️ No on-page data available from DataForSEO for ${url}`);
+        return null;
+      }
+      
+      const task = response.tasks[0];
+      if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
+        console.log(`⚠️ DataForSEO on-page analysis failed for ${url}: ${task.status_message || 'Unknown error'}`);
+        return null;
+      }
+      
+      const result = task.result[0];
       const domain = new URL(url).hostname.replace('www.', '');
-      const domainName = domain.split('.')[0];
       
-      // Generate multiple pages for comprehensive analysis
-      const pages = this.generateDomainPages(url, domainName);
-      
-      // Calculate aggregate metrics from all pages
-      const totalPages = pages.length;
-      const pagesWithIssues = pages.filter(page => page.issuesCount > 0).length;
-      const healthyPages = pages.filter(page => page.status === 'excellent' || page.status === 'good').length;
-      const totalIssues = pages.reduce((sum, page) => sum + page.issuesCount, 0);
-      const totalFixedIssues = pages.reduce((sum, page) => sum + page.fixedIssues, 0);
-      const averageScore = Math.round(pages.reduce((sum, page) => sum + page.score, 0) / totalPages);
-      
-      // Calculate issues by type
-      const issuesByType = {
-        titleTooLong: pages.filter(page => page.issues.titleTooLong).length,
-        missingH1: pages.filter(page => page.issues.missingH1).length,
-        imagesMissingAlt: pages.reduce((sum, page) => sum + page.issues.imagesMissingAlt, 0),
-        metaTooShort: pages.filter(page => page.issues.metaTooShort).length,
-        contentTooShort: pages.filter(page => page.issues.contentTooShort).length
-      };
-
+      // Process real DataForSEO data
       const basicAnalysis = {
-        // Overall domain analysis
         domain: domain,
-        domainName: domainName,
-        pages: pages,
-        
-        // Page-level metrics
-        pageMetrics: {
-          totalPages: totalPages,
-          pagesWithIssues: pagesWithIssues,
-          healthyPages: healthyPages,
-          pagesWithNoIssues: totalPages - pagesWithIssues,
-          averageScore: averageScore,
-          totalIssues: totalIssues,
-          totalFixedIssues: totalFixedIssues,
-          issuesByType: issuesByType
-        },
-        
-        // Aggregate data from all pages
-        title: `${domainName} - Professional Services and Solutions for Your Business Needs`, // Too long (over 60 chars)
-        metaDescription: `Professional ${domainName} services. Contact us for expert solutions and quality service.`, // Good length
+        url: url,
+        title: result.title || '',
+        metaDescription: result.meta_description || '',
         headings: {
-          h1: pages.reduce((sum, page) => sum + page.headings.h1, 0),
-          h2: pages.reduce((sum, page) => sum + page.headings.h2, 0),
-          h3: pages.reduce((sum, page) => sum + page.headings.h3, 0)
+          h1: result.h1 || [],
+          h2: result.h2 || [],
+          h3: result.h3 || []
         },
-        h1Tags: pages.filter(page => page.headings.h1 > 0).map(page => page.title),
-        h2Tags: [`Our Services`, `About Us`, `Contact Information`, `Blog Posts`, `Portfolio Items`],
-        h3Tags: [`Service 1`, `Service 2`, `Service 3`, `Team`, `Location`, `Recent Posts`, `Featured Work`],
         images: {
-          total: pages.reduce((sum, page) => sum + page.images.total, 0),
-          missingAlt: pages.reduce((sum, page) => sum + page.images.missingAlt, 0)
+          total: result.images ? result.images.length : 0,
+          missingAlt: result.images ? result.images.filter(img => !img.alt).length : 0
         },
         links: {
-          internal: 12,
-          external: 4
+          internal: result.internal_links_count || 0,
+          external: result.external_links_count || 0
         },
         content: {
-          wordCount: pages.reduce((sum, page) => sum + page.wordCount, 0),
-          text: `Welcome to ${domainName}. We provide professional services with a focus on quality and customer satisfaction. Our team is dedicated to delivering exceptional results.`
+          wordCount: result.content ? result.content.split(' ').length : 0,
+          text: result.content || ''
         },
         ssl: url.startsWith('https://'),
-        mobileFriendly: true,
+        mobileFriendly: result.mobile_friendly || false,
         technical: {
-          canonical: url,
-          robots: 'index, follow',
-          viewport: 'width=device-width, initial-scale=1',
-          charset: 'UTF-8',
-          language: 'en',
-          openGraph: {
-            'og:title': `${domainName} - Professional Services`,
-            'og:description': `Professional ${domainName} services`,
-            'og:type': 'website'
-          },
-          schemaMarkup: [],
-          socialLinks: {}
+          canonical: result.canonical || url,
+          robots: result.robots || '',
+          viewport: result.viewport || '',
+          charset: result.charset || '',
+          language: result.language || 'en'
         },
         status: 'success',
-        source: `comprehensive_page_analysis_${this.environment}`,
-        environment: this.environment
+        source: `dataforseo_onpage_${this.environment}`,
+        environment: this.environment,
+        timestamp: new Date().toISOString()
       };
+      
+      // Calculate real issues based on DataForSEO data
+      const issues = [];
+      let score = 100; // Start with perfect score
+      
+      // Check title length
+      if (basicAnalysis.title.length > 60) {
+        issues.push('Title tag is too long (over 60 characters)');
+        score -= 10;
+      }
+      
+      // Check meta description length
+      if (basicAnalysis.metaDescription.length < 120 || basicAnalysis.metaDescription.length > 160) {
+        issues.push('Meta description should be 120-160 characters');
+        score -= 10;
+      }
+      
+      // Check for H1 tags
+      if (!basicAnalysis.headings.h1 || basicAnalysis.headings.h1.length === 0) {
+        issues.push('Missing H1 tag');
+        score -= 15;
+      }
+      
+      // Check for missing alt text
+      if (basicAnalysis.images.missingAlt > 0) {
+        issues.push(`${basicAnalysis.images.missingAlt} images missing alt text`);
+        score -= (basicAnalysis.images.missingAlt * 5);
+      }
+      
+      // Check content length
+      if (basicAnalysis.content.wordCount < 300) {
+        issues.push('Content is too short (under 300 words)');
+        score -= 10;
+      }
+      
+      // Check SSL
+      if (!basicAnalysis.ssl) {
+        issues.push('Website not using HTTPS');
+        score -= 20;
+      }
+      
+      // Check mobile friendliness
+      if (!basicAnalysis.mobileFriendly) {
+        issues.push('Website not mobile-friendly');
+        score -= 15;
+      }
+      
+      // Ensure score doesn't go below 0
+      score = Math.max(0, score);
+      
+      // Add calculated metrics to analysis
+      basicAnalysis.score = score;
+      basicAnalysis.issues = issues;
+      basicAnalysis.issuesCount = issues.length;
+      basicAnalysis.status = score >= 80 ? 'excellent' : score >= 60 ? 'good' : 'needs_improvement';
       
       console.log(`✅ Basic on-page analysis completed successfully (${this.environment})`);
       return basicAnalysis;
@@ -284,27 +316,44 @@ class DataForSEOService {
       console.log(`🔑 Getting keywords analysis for: ${url} (${this.environment} mode)`);
       
       const domain = new URL(url).hostname.replace('www.', '');
-      const domainName = domain.split('.')[0];
       
-      // Generate keyword suggestions based on environment
-      const suggestedKeywords = [
-        { keyword: domainName, searchVolume: 'High', cpc: '$2.50', competition: 'Medium', difficulty: 65 },
-        { keyword: `${domainName} services`, searchVolume: 'Medium', cpc: '$3.20', competition: 'High', difficulty: 75 },
-        { keyword: `${domainName} company`, searchVolume: 'Medium', cpc: '$2.80', competition: 'Medium', difficulty: 60 },
-        { keyword: `best ${domainName}`, searchVolume: 'Low', cpc: '$4.10', competition: 'High', difficulty: 80 },
-        { keyword: `${domainName} near me`, searchVolume: 'High', cpc: '$1.90', competition: 'Low', difficulty: 45 },
-        { keyword: `${domainName} reviews`, searchVolume: 'Medium', cpc: '$2.30', competition: 'Medium', difficulty: 55 },
-        { keyword: `${domainName} contact`, searchVolume: 'Low', cpc: '$1.50', competition: 'Low', difficulty: 40 },
-        { keyword: `${domainName} website`, searchVolume: 'Low', cpc: '$2.00', competition: 'Medium', difficulty: 50 }
-      ];
+      // Make real DataForSEO API call for keyword suggestions
+      const keywordData = [{
+        keyword: domain,
+        location_name: 'United States',
+        language_code: 'en',
+        limit: 10
+      }];
+      
+      const response = await this.makeRequest('/dataforseo_labs/google/keyword_suggestions', keywordData);
+      
+      if (!response || !response.tasks || response.tasks.length === 0) {
+        console.log(`⚠️ No keyword data available from DataForSEO for ${domain}`);
+        return null;
+      }
+      
+      const task = response.tasks[0];
+      if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
+        console.log(`⚠️ DataForSEO keyword analysis failed for ${domain}: ${task.status_message || 'Unknown error'}`);
+        return null;
+      }
+      
+      const result = task.result[0];
+      const keywords = result.items ? result.items.map(item => ({
+        keyword: item.keyword,
+        searchVolume: item.search_volume || 0,
+        cpc: item.cpc || 0,
+        competition: item.competition_level || 'Unknown',
+        difficulty: item.keyword_difficulty || 0
+      })) : [];
       
       console.log(`✅ Generated keyword suggestions successfully (${this.environment})`);
       return {
-        totalKeywords: suggestedKeywords.length,
-        keywords: suggestedKeywords,
+        totalKeywords: keywords.length,
+        keywords: keywords,
         status: 'success',
-        source: `ai_generated_${this.environment}`,
-        message: `Keyword suggestions generated based on domain analysis (${this.environment} mode).`,
+        source: `dataforseo_keywords_${this.environment}`,
+        message: `Keyword suggestions from DataForSEO API (${this.environment} mode).`,
         environment: this.environment
       };
       
@@ -363,143 +412,8 @@ class DataForSEOService {
     }
   }
 
-  // Generate multiple pages for domain analysis
-  generateDomainPages(baseUrl, domainName) {
-    const pages = [
-      {
-        url: baseUrl,
-        title: `${domainName} - Professional Services and Solutions for Your Business Needs`, // Too long (over 60 chars)
-        metaDescription: `Professional ${domainName} services. Contact us for expert solutions and quality service.`,
-        issues: {
-          titleTooLong: true,
-          missingH1: true,
-          imagesMissingAlt: 2
-        },
-        headings: { h1: 0, h2: 3, h3: 5 },
-        images: { total: 5, missingAlt: 2 },
-        wordCount: 450,
-        score: 65, // Low score due to multiple issues
-        status: 'needs_improvement',
-        issuesCount: 3,
-        fixedIssues: 0,
-        recommendations: [
-          'Shorten title tag to under 60 characters',
-          'Add H1 tag to improve page structure',
-          'Add alt text to 2 missing images'
-        ]
-      },
-      {
-        url: `${baseUrl}/about`,
-        title: `About ${domainName} - Our Story and Mission`, // Good length
-        metaDescription: `Learn about ${domainName}'s mission and values.`, // Too short (under 120 chars)
-        issues: {
-          titleTooLong: false,
-          missingH1: false,
-          imagesMissingAlt: 1,
-          metaTooShort: true
-        },
-        headings: { h1: 1, h2: 2, h3: 3 },
-        images: { total: 3, missingAlt: 1 },
-        wordCount: 320,
-        score: 78, // Good score with minor issues
-        status: 'good',
-        issuesCount: 2,
-        fixedIssues: 1,
-        recommendations: [
-          'Expand meta description to 120-160 characters',
-          'Add alt text to 1 missing image'
-        ]
-      },
-      {
-        url: `${baseUrl}/services`,
-        title: `Services - ${domainName} Professional Solutions`, // Good length
-        metaDescription: `Discover our comprehensive professional services and solutions.`,
-        issues: {
-          titleTooLong: false,
-          missingH1: false,
-          imagesMissingAlt: 0
-        },
-        headings: { h1: 1, h2: 4, h3: 6 },
-        images: { total: 8, missingAlt: 0 },
-        wordCount: 680,
-        score: 92, // Excellent score
-        status: 'excellent',
-        issuesCount: 0,
-        fixedIssues: 3,
-        recommendations: [
-          'Continue current optimization practices',
-          'Consider adding more internal links'
-        ]
-      },
-      {
-        url: `${baseUrl}/contact`,
-        title: `Contact ${domainName} - Get in Touch Today`, // Good length
-        metaDescription: `Contact ${domainName} for professional services.`, // Too short (under 120 chars)
-        issues: {
-          titleTooLong: false,
-          missingH1: true,
-          imagesMissingAlt: 0,
-          metaTooShort: true,
-          contentTooShort: true
-        },
-        headings: { h1: 0, h2: 2, h3: 2 },
-        images: { total: 2, missingAlt: 0 },
-        wordCount: 180, // Too short (under 300 words)
-        score: 58, // Low score due to multiple issues
-        status: 'needs_improvement',
-        issuesCount: 3,
-        fixedIssues: 0,
-        recommendations: [
-          'Add H1 tag to improve page structure',
-          'Expand meta description to 120-160 characters',
-          'Increase content to at least 300 words'
-        ]
-      },
-      {
-        url: `${baseUrl}/blog`,
-        title: `${domainName} Blog - Latest News and Insights`,
-        metaDescription: `Stay updated with the latest news, insights, and industry trends from ${domainName}.`,
-        issues: {
-          titleTooLong: false,
-          missingH1: false,
-          imagesMissingAlt: 1
-        },
-        headings: { h1: 1, h2: 3, h3: 4 },
-        images: { total: 6, missingAlt: 1 },
-        wordCount: 520,
-        score: 85, // Good score
-        status: 'good',
-        issuesCount: 1,
-        fixedIssues: 2,
-        recommendations: [
-          'Add alt text to 1 missing image'
-        ]
-      },
-      {
-        url: `${baseUrl}/portfolio`,
-        title: `Portfolio - ${domainName} Work Examples`,
-        metaDescription: `View our portfolio of successful projects and client work examples.`,
-        issues: {
-          titleTooLong: false,
-          missingH1: false,
-          imagesMissingAlt: 0
-        },
-        headings: { h1: 1, h2: 2, h3: 3 },
-        images: { total: 12, missingAlt: 0 },
-        wordCount: 380,
-        score: 88, // Very good score
-        status: 'excellent',
-        issuesCount: 0,
-        fixedIssues: 4,
-        recommendations: [
-          'Consider adding more descriptive content',
-          'Add schema markup for portfolio items'
-        ]
-      }
-    ];
-    
-    return pages;
-  }
+  // This method is no longer needed as we use real DataForSEO API calls
+  // Removed generateDomainPages method to eliminate fake data generation
 
   // Process data methods (keeping existing logic)
   processOnPageData(onPageData) {

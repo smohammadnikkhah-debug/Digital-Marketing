@@ -165,6 +165,31 @@ class Auth0Service {
     }
   }
 
+  // Update user business description
+  async updateUserBusinessDescription(userId, business_description) {
+    try {
+      const { data: user, error } = await this.supabase
+        .from('users')
+        .update({
+          business_description: business_description,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating user business description:', error);
+        return null;
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Update user business description error:', error);
+      return null;
+    }
+  }
+
   // Get user by email
   async getUserByEmail(email) {
     try {
@@ -172,7 +197,7 @@ class Auth0Service {
         .from('users')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 rows gracefully
 
       if (error) {
         console.error('Error fetching user by email:', error);
@@ -183,6 +208,181 @@ class Auth0Service {
     } catch (error) {
       console.error('Get user by email error:', error);
       return null;
+    }
+  }
+
+  // Get user by ID
+  async getUserById(userId) {
+    try {
+      const { data: user, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching user by ID:', error);
+        return null;
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Get user by ID error:', error);
+      return null;
+    }
+  }
+
+  // Create Supabase user (used by server.js callback)
+  async createSupabaseUser(userData) {
+    try {
+      const userRecord = {
+        id: userData.id,
+        auth0_id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        picture: userData.picture,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Add customer_id if provided
+      if (userData.customer_id) {
+        userRecord.customer_id = userData.customer_id;
+      }
+
+      const { data: newUser, error } = await this.supabase
+        .from('users')
+        .insert(userRecord)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating Supabase user:', error);
+        return null;
+      }
+
+      return newUser;
+    } catch (error) {
+      console.error('Create Supabase user error:', error);
+      return null;
+    }
+  }
+
+  // Create customer record with plan information
+  async createCustomer(userData, planId = 'basic') {
+    try {
+      console.log('Creating customer record for:', userData.email, 'with plan:', planId);
+      
+      const { data: newCustomer, error } = await this.supabase
+        .from('customers')
+        .insert({
+          company_name: userData.name || userData.email.split('@')[0],
+          contact_email: userData.email,
+          business_description: null,
+          industry: null,
+          plan_id: planId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating customer:', error);
+        return null;
+      }
+
+      console.log('Customer created successfully:', newCustomer.id);
+      return newCustomer;
+    } catch (error) {
+      console.error('Create customer error:', error);
+      return null;
+    }
+  }
+
+  // Get customer by email
+  async getCustomerByEmail(email) {
+    try {
+      const { data: customer, error } = await this.supabase
+        .from('customers')
+        .select('*')
+        .eq('contact_email', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching customer by email:', error);
+        return null;
+      }
+
+      return customer;
+    } catch (error) {
+      console.error('Get customer by email error:', error);
+      return null;
+    }
+  }
+
+  // Get customer by ID
+  async getCustomerById(customerId) {
+    try {
+      const { data: customer, error } = await this.supabase
+        .from('customers')
+        .select('*')
+        .eq('id', customerId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching customer by ID:', error);
+        return null;
+      }
+
+      return customer;
+    } catch (error) {
+      console.error('Get customer by ID error:', error);
+      return null;
+    }
+  }
+
+  // Check if user has used trial before
+  async hasUsedTrial(email) {
+    try {
+      const { data: customer, error } = await this.supabase
+        .from('customers')
+        .select('trial_used')
+        .eq('contact_email', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking trial usage:', error);
+        return false; // Default to allowing trial if we can't check
+      }
+
+      return customer ? customer.trial_used === true : false;
+    } catch (error) {
+      console.error('Trial usage check error:', error);
+      return false;
+    }
+  }
+
+  // Mark trial as used for a customer
+  async markTrialAsUsed(customerId) {
+    try {
+      const { error } = await this.supabase
+        .from('customers')
+        .update({ 
+          trial_used: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', customerId);
+
+      if (error) {
+        console.error('Error marking trial as used:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Mark trial as used error:', error);
+      return false;
     }
   }
 
@@ -205,7 +405,6 @@ class Auth0Service {
           email: email,
           name: name,
           stripe_customer_id: stripeCustomerId,
-          trial_user: true, // Flag to indicate this is a trial user
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -234,11 +433,9 @@ class Auth0Service {
         .from('users')
         .update({
           auth0_id: auth0Id,
-          trial_user: false, // Remove trial flag
           updated_at: new Date().toISOString()
         })
         .eq('email', email)
-        .eq('trial_user', true) // Only update trial users
         .select()
         .single();
 

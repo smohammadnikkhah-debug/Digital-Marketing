@@ -154,13 +154,13 @@
 
 ### **Payment Options:**
 - **Monthly Billing**: Standard monthly payments
-- **Annual Billing**: 20% discount (2 months free)
+- **Annual Billing**: 30% discount (3 months free)
 - **Quarterly Billing**: 10% discount
 
 ### **Pricing Examples:**
-- **Basic Annual**: $49 × 10 = $490 (save $98)
-- **Pro Annual**: $99 × 10 = $990 (save $198)
-- **Business Annual**: $199 × 10 = $1,990 (save $398)
+- **Basic Annual**: $49 × 9 = $441 (save $147)
+- **Pro Annual**: $99 × 9 = $891 (save $297)
+- **Business Annual**: $199 × 9 = $1,791 (save $597)
 
 ### **Payment Methods:**
 - Credit/Debit Cards
@@ -185,7 +185,7 @@
 ## 📊 **Customer Acquisition Strategy**
 
 ### **Free Trial:**
-- **14-day free trial** for all plans
+- **7-day free trial** for all plans
 - **No credit card required**
 - **Full access to all features**
 - **Conversion rate target**: 15-20%

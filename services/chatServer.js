@@ -2,7 +2,7 @@
 const { Server } = require('socket.io');
 const aiChatService = require('./aiChatService');
 const boostrampService = require('./boostrampService');
-const dataforseoService = require('./dataforseoService');
+const dataforseoService = require('./dataforseoEnvironmentService');
 const seoResponseService = require('./seoResponseService');
 const contentSuggestionService = require('./contentSuggestionService');
 const subpageAnalysisService = require('./subpageAnalysisService');
@@ -39,7 +39,7 @@ class ChatServer {
               }
               
               // Try DataForSEO first (which will return demo data if not configured)
-              const dataforseoService = require('./dataforseoService');
+              const dataforseoService = require('./dataforseoEnvironmentService');
               const analysis = await dataforseoService.analyzeWebsite(processedUrl);
               if (analysis.success) {
                 websiteData = analysis.analysis;

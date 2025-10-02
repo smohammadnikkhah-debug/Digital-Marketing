@@ -309,7 +309,18 @@ router.post('/create', async (req, res) => {
 // Get user's current subscription
 router.get('/current', async (req, res) => {
     try {
-        const userId = req.user?.id || req.query.user_id;
+        // Try to get user from JWT token
+        const sessionService = require('../services/sessionService');
+        const token = sessionService.extractToken(req);
+        
+        let userId = req.query.user_id;
+        
+        if (!userId && token) {
+            const decoded = sessionService.verifyToken(token);
+            if (decoded) {
+                userId = decoded.userId;
+            }
+        }
         
         // If no user ID provided, return no subscription (user not logged in)
         if (!userId) {
@@ -320,30 +331,88 @@ router.get('/current', async (req, res) => {
             });
         }
 
-        const subscription = await subscriptionService.getUserSubscription(userId);
-        
-        if (!subscription) {
+        // Get user to get customer_id
+        const user = await auth0Service.getUserById(userId);
+        if (!user || !user.customer_id) {
             return res.json({
                 success: true,
-                subscription: null
+                subscription: null,
+                plan: user?.plan || 'basic',
+                message: 'No subscription found'
             });
         }
 
-        // Get full subscription details from Stripe
-        const stripeSubscription = await subscriptionService.getSubscription(subscription.id);
+        // Get customer data
+        const customer = await auth0Service.getCustomerById(user.customer_id);
+        if (!customer) {
+            return res.json({
+                success: true,
+                subscription: null,
+                plan: user.plan || 'basic',
+                message: 'No customer found'
+            });
+        }
+
+        // Try to get subscription from Stripe if customer has one
+        let stripeSubscription = null;
+        let planName = customer.plan_id || user.plan || 'basic';
+        let billingCycle = 'monthly';
+        let nextBillingDate = null;
+        let amount = 0;
+
+        // Format plan name for display
+        const planDisplayNames = {
+            'basic': 'Basic Plan',
+            'Starter Monthly': 'Starter Plan',
+            'Starter Yearly': 'Starter Plan (Yearly)',
+            'Professional Monthly': 'Professional Plan',
+            'Professional Yearly': 'Professional Plan (Yearly)'
+        };
+
+        const displayPlanName = planDisplayNames[planName] || planName;
+
+        // Try to fetch Stripe subscription if customer has Stripe data
+        if (customer.stripe_customer_id) {
+            try {
+                const customerSubscriptions = await stripe.subscriptions.list({
+                    customer: customer.stripe_customer_id,
+                    status: 'active',
+                    limit: 1
+                });
+
+                if (customerSubscriptions.data.length > 0) {
+                    stripeSubscription = customerSubscriptions.data[0];
+                    
+                    // Get price details
+                    if (stripeSubscription.items?.data?.[0]?.price) {
+                        const price = stripeSubscription.items.data[0].price;
+                        amount = price.unit_amount / 100; // Convert cents to dollars
+                        billingCycle = price.recurring.interval === 'year' ? 'yearly' : 'monthly';
+                    }
+                    
+                    nextBillingDate = new Date(stripeSubscription.current_period_end * 1000);
+                }
+            } catch (stripeError) {
+                console.error('Error fetching Stripe subscription:', stripeError);
+            }
+        }
         
         res.json({
             success: true,
-            subscription: {
-                id: subscription.id,
-                status: subscription.status,
-                plan: subscription.plan,
-                billing_cycle: subscription.billing_cycle,
-                trial_start: subscription.trial_start,
-                trial_end: subscription.trial_end,
-                current_period_start: subscription.current_period_start,
-                current_period_end: subscription.current_period_end,
-                stripe_subscription: stripeSubscription
+            subscription: stripeSubscription ? {
+                id: stripeSubscription.id,
+                status: stripeSubscription.status,
+                plan_name: displayPlanName,
+                billing_cycle: billingCycle,
+                current_period_end: stripeSubscription.current_period_end,
+                amount: amount,
+                currency: stripeSubscription.currency || 'aud'
+            } : {
+                plan_name: displayPlanName,
+                billing_cycle: billingCycle,
+                status: 'active',
+                amount: 0,
+                current_period_end: null
             }
         });
     } catch (error) {

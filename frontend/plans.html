@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Plan - Mozarex AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Billing Toggle Styles */
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .billing-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #374151;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #6366f1;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .savings-badge {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .savings-text {
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        .loading-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-left: 4px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-state h3 {
+            color: #e2e8f0;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .loading-state p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .no-products-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .no-products-message h3 {
+            color: #e2e8f0;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .no-products-message p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .plan-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            border-color: #6366f1;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .plan-card.popular {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            transform: scale(1.05);
+        }
+
+        .plan-card.popular::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #f1f5f9;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #6366f1;
+            margin-bottom: 8px;
+        }
+
+        .plan-period {
+            color: #94a3b8;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .plan-features li i {
+            color: #10b981;
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+        .plan-features li.unlimited i {
+            color: #f59e0b;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .plan-card.popular .plan-button {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+
+        .comparison-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .comparison-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #f1f5f9;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-table th {
+            background: rgba(99, 102, 241, 0.1);
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .comparison-table td {
+            color: #cbd5e1;
+        }
+
+        .comparison-table .feature-name {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .comparison-table .check {
+            color: #10b981;
+            font-size: 1.2rem;
+        }
+
+        .comparison-table .unlimited {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .faq-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 20px;
+            padding: 40px;
+        }
+
+        .faq-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #f1f5f9;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .faq-question {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .faq-answer {
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .money-back {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+        }
+
+        .money-back i {
+            color: #10b981;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .money-back h3 {
+            color: #10b981;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .money-back p {
+            color: #cbd5e1;
+        }
+
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .plan-card.popular {
+                transform: none;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .plan-price {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Choose Your Yearly Plan</h1>
+            <p>Unlock the power of AI-driven SEO and digital marketing. Start your free trial today!</p>
+            
+            <!-- Billing Toggle -->
+            <div class="billing-toggle">
+                <span class="billing-label">Monthly</span>
+               <label class="toggle-switch">
+                   <input type="checkbox" id="yearlyToggle" checked>
+                   <span class="toggle-slider"></span>
+               </label>
+                <span class="billing-label">
+                    Yearly 
+                    <span class="savings-badge">Save 30%</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="plans-grid" id="plansGrid">
+            <!-- Loading state -->
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <h3>Loading Plans...</h3>
+                <p>Please wait while we load our pricing plans.</p>
+            </div>
+        </div>
+
+        <div class="comparison-section" style="display: none;">
+            <h2 class="comparison-title">Feature Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Features</th>
+                        <th>Basic</th>
+                        <th>Pro</th>
+                        <th>Business</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feature-name">Websites</td>
+                        <td>1</td>
+                        <td>3</td>
+                        <td class="unlimited">Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">AI Chat Messages</td>
+                        <td>50/month</td>
+                        <td>200/month</td>
+                        <td class="unlimited">Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">SEO Analyses</td>
+                        <td>5/month</td>
+                        <td>15/month</td>
+                        <td class="unlimited">Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">Content Writing</td>
+                        <td>2/month</td>
+                        <td>10/month</td>
+                        <td class="unlimited">Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">Automation</td>
+                        <td><i class="fas fa-times"></i></td>
+                        <td class="check"><i class="fas fa-check"></i></td>
+                        <td class="check"><i class="fas fa-check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">API Access</td>
+                        <td><i class="fas fa-times"></i></td>
+                        <td class="check"><i class="fas fa-check"></i></td>
+                        <td class="check"><i class="fas fa-check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">Team Collaboration</td>
+                        <td><i class="fas fa-times"></i></td>
+                        <td><i class="fas fa-times"></i></td>
+                        <td class="check"><i class="fas fa-check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">Support</td>
+                        <td>Email</td>
+                        <td>Priority</td>
+                        <td>Dedicated Manager</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="faq-section">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">Is there a free trial?</div>
+                <div class="faq-answer">Yes! All plans come with a 7-day free trial. No credit card required to start.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Can I change plans later?</div>
+                <div class="faq-answer">Absolutely! You can upgrade or downgrade your plan at any time. Changes take effect immediately.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Do you offer annual discounts?</div>
+                <div class="faq-answer">Yes! Save 30% with annual billing - that's 3 months free every year.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">What payment methods do you accept?</div>
+                <div class="faq-answer">We accept all major credit cards, PayPal, and bank transfers for enterprise plans.</div>
+            </div>
+        </div>
+
+        <div class="money-back">
+            <i class="fas fa-shield-alt"></i>
+            <h3>30-Day Money-Back Guarantee</h3>
+            <p>Not satisfied? Get a full refund within 30 days, no questions asked.</p>
+        </div>
+    </div>
+
+    <script>
+        // Add smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Fetch and display Stripe products
+        async function loadStripeProducts() {
+            try {
+                console.log('🔄 Loading Stripe products...');
+                const response = await fetch('/api/stripe/products');
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📋 API Response:', data);
+                
+                if (data.success) {
+                    console.log(`✅ Found ${data.products.length} products`);
+                    window.currentProducts = data.products; // Store globally for toggle
+                    displayProducts(data.products);
+                } else {
+                    console.error('❌ Failed to load products:', data.error);
+                    showFallbackContent();
+                }
+            } catch (error) {
+                console.error('❌ Error loading products:', error);
+                showFallbackContent();
+            }
+        }
+
+        // Show fallback content when Stripe products fail to load
+        function showFallbackContent() {
+            console.log('🔄 Showing fallback content');
+            const plansGrid = document.querySelector('.plans-grid');
+            if (plansGrid) {
+                plansGrid.innerHTML = `
+                    <div class="no-products-message">
+                        <h3>Plans Coming Soon</h3>
+                        <p>We're setting up our pricing plans. Please check back soon!</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display products from Stripe
+        function displayProducts(products) {
+            console.log('🎨 Displaying products:', products);
+            const plansGrid = document.querySelector('.plans-grid');
+            if (!plansGrid) {
+                console.error('❌ Plans grid not found');
+                return;
+            }
+
+            // Clear existing content
+            plansGrid.innerHTML = '';
+
+            const isYearly = document.getElementById('yearlyToggle')?.checked || false;
+            console.log(`📅 Displaying ${isYearly ? 'yearly' : 'monthly'} plans`);
+
+            let cardsAdded = 0;
+            products.forEach((product, index) => {
+                console.log(`Creating card for product ${index + 1}: ${product.name}`);
+                const planCard = createPlanCard(product, index);
+                if (planCard) {
+                    plansGrid.appendChild(planCard);
+                    cardsAdded++;
+                    console.log(`✅ Added card for ${product.name}`);
+                } else {
+                    console.log(`❌ Failed to create card for ${product.name}`);
+                }
+            });
+
+            // If no cards were added, show a message
+            if (cardsAdded === 0) {
+                console.log('⚠️ No products could be displayed, showing fallback message');
+                plansGrid.innerHTML = `
+                    <div class="no-products-message">
+                        <h3>Loading Plans...</h3>
+                        <p>Please wait while we load our pricing plans.</p>
+                    </div>
+                `;
+            } else {
+                console.log(`✅ Successfully displayed ${cardsAdded} ${isYearly ? 'yearly' : 'monthly'} products`);
+            }
+        }
+
+        // Create plan card element
+        function createPlanCard(product, index) {
+            console.log(`Creating card for: ${product.name}`, product);
+            
+            const card = document.createElement('div');
+            card.className = `plan-card ${product.popular ? 'popular' : ''}`;
+            
+            const isYearly = document.getElementById('yearlyToggle')?.checked || false;
+            const priceInfo = isYearly ? product.yearly : product.monthly;
+            
+            console.log(`Price info for ${product.name}:`, priceInfo);
+            console.log(`Is yearly: ${isYearly}`);
+            
+            // If no price for selected billing, skip this product
+            if (!priceInfo) {
+                console.log(`No ${isYearly ? 'yearly' : 'monthly'} price for ${product.name}, skipping`);
+                return null;
+            }
+            
+            // Use features from Stripe metadata
+            const features = product.features || [];
+            console.log(`📋 Features for ${product.name}:`, features);
+            
+            const cardHTML = `
+                ${product.popular ? '<div class="plan-badge">Most Popular</div>' : ''}
+                <div class="plan-name">${product.name}</div>
+                <div class="plan-price">${priceInfo.formatted}</div>
+                <div class="plan-period">per ${isYearly ? 'year' : 'month'}</div>
+                ${isYearly && product.yearly?.savings ? 
+                    `<div class="savings-text">Save $${product.yearly.savings} annually</div>` : ''}
+                <ul class="plan-features">
+                    ${features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
+                </ul>
+                <button class="plan-button" onclick="selectPlan('${product.id}', '${priceInfo.priceId}', ${isYearly})">
+                    Start Free Trial
+                </button>
+            `;
+            
+            card.innerHTML = cardHTML;
+            console.log(`Successfully created card for ${product.name}`);
+            return card;
+        }
+
+        // Handle plan selection
+        function selectPlan(productId, priceId, isYearly) {
+            // Find the product name from the products array
+            const product = window.currentProducts?.find(p => p.id === productId);
+            const planName = product ? product.name : productId;
+            
+            console.log('🎯 Plan selection:', { productId, planName, priceId, isYearly });
+            
+            // Store selected plan in sessionStorage
+            sessionStorage.setItem('selectedPlan', planName);
+            sessionStorage.setItem('selectedPriceId', priceId);
+            sessionStorage.setItem('isYearly', isYearly);
+            
+            // Redirect to signup (which will redirect to Stripe Checkout)
+            window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+        }
+
+        // Update header text based on billing period
+        function updateHeaderText() {
+            const isYearly = document.getElementById('yearlyToggle')?.checked || false;
+            const header = document.querySelector('.header h1');
+            if (header) {
+                header.textContent = isYearly ? 'Choose Your Yearly Plan' : 'Choose Your Monthly Plan';
+            }
+        }
+
+        // Handle billing toggle
+        function handleBillingToggle() {
+            const toggle = document.getElementById('yearlyToggle');
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    console.log(`🔄 Billing toggle changed to: ${this.checked ? 'yearly' : 'monthly'}`);
+                    // Update header text
+                    updateHeaderText();
+                    // Re-render products with new billing period
+                    if (window.currentProducts) {
+                        displayProducts(window.currentProducts);
+                    }
+                });
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Page loaded, initializing...');
+            try {
+                loadStripeProducts();
+                handleBillingToggle();
+                updateHeaderText(); // Set initial header text
+                console.log('✅ Initialization complete');
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

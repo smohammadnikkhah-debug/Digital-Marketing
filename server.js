@@ -6,19 +6,19 @@ const cors = require('cors');
 const path = require('path');
 const http = require('http');
 const session = require('express-session');
-const passport = require('passport');
+const cookieParser = require('cookie-parser');
+// Auth0 SDK - no passport needed
 const boostrampService = require('./services/boostrampService');
 const ChatServer = require('./services/chatServer');
-const dataforseoService = require('./services/dataforseoService');
+const dataforseoService = require('./services/dataforseoEnvironmentService');
 const dataforseoAIRecommendations = require('./services/dataforseoAIRecommendations');
 const dataforseoMCPService = require('./services/dataforseoMCPService');
 const dataforseoMCPIntegration = require('./services/dataforseoMCPIntegration');
 const dataforseoMCPDirectService = require('./services/dataforseoMCPDirectService');
 const dataforseoHybridService = require('./services/dataforseoHybridService');
 const dataforseoDemoService = require('./services/dataforseoDemoService');
-const dataforseoSandboxService = require('./services/dataforseoSandboxService');
-const dataforseoSmartService = require('./services/dataforseoSmartService');
 const dataforseoEnvironmentService = require('./services/dataforseoEnvironmentService');
+const dataforseoSmartService = require('./services/dataforseoSmartService');
 const environmentConfig = require('./services/environmentConfig');
 const databaseService = require('./services/databaseService');
 const domainAnalysisService = require('./services/domainAnalysisService');
@@ -27,6 +27,33 @@ const supabaseService = require('./services/supabaseService');
 const IntelligentContentService = require('./services/intelligentContentService');
 const Auth0Service = require('./services/auth0Service');
 const subscriptionService = require('./services/subscriptionService');
+
+// Helper function to get customer_id from authenticated user
+async function getCustomerIdFromRequest(req) {
+  try {
+    const sessionService = require('./services/sessionService');
+    const token = sessionService.extractToken(req);
+    
+    if (!token) {
+      return null;
+    }
+    
+    const decoded = sessionService.verifyToken(token);
+    if (!decoded || !decoded.userId) {
+      return null;
+    }
+    
+    // Get user from database to get customer_id
+    const Auth0Service = require('./services/auth0Service');
+    const auth0Service = new Auth0Service();
+    const user = await auth0Service.getUserById(decoded.userId);
+    
+    return user ? user.customer_id : null;
+  } catch (error) {
+    console.error('Error getting customer_id from request:', error);
+    return null;
+  }
+}
 const emailTemplateService = require('./services/emailTemplates');
 const { requireFeature, FEATURES, addSubscriptionInfo } = require('./services/featureAccessMiddleware');
 
@@ -52,6 +79,7 @@ const auth0Service = new Auth0Service();
 
 // Middleware
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -80,9 +108,7 @@ app.use(session({
   }
 }));
 
-// Passport middleware
-app.use(passport.initialize());
-app.use(passport.session());
+// Auth0 SDK configuration - no passport needed
 
 // Serve static files from frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
@@ -104,7 +130,7 @@ app.get('/dashboard-mantis', (req, res) => {
 });
 
 // Serve Mantis-inspired dashboard V2 (with overview section)
-app.get('/dashboard-mantis-v2', (req, res) => {
+app.get('/dashboard-mantis-v2', requireAuth, (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
@@ -112,7 +138,7 @@ app.get('/dashboard-mantis-v2', (req, res) => {
 });
 
 // Serve Technical SEO Dashboard
-app.get('/technical-seo', (req, res) => {
+app.get('/technical-seo', requireAuth, (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
@@ -178,19 +204,19 @@ app.get('/seo-tools-technical', (req, res) => {
 //     res.sendFile(path.join(__dirname, 'frontend', 'seo-tools-technical-titles.html'));
 // });
 
-app.get('/seo-tools-keywords', (req, res) => {
+app.get('/seo-tools-keywords', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-tools-keywords.html'));
 });
 
-app.get('/seo-tools-competitors', (req, res) => {
+app.get('/seo-tools-competitors', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-tools-competitors.html'));
 });
 
-app.get('/seo-tools-backlinks', (req, res) => {
+app.get('/seo-tools-backlinks', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-tools-backlinks.html'));
 });
 
-app.get('/seo-tools-content-calendar', (req, res) => {
+app.get('/seo-tools-content-calendar', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-tools-content-calendar.html'));
 });
 
@@ -344,44 +370,390 @@ app.post('/api/analyze-url', async (req, res) => {
   }
 });
 
+// Test route to verify server is running latest code
+app.get('/test-callback', (req, res) => {
+  console.log('🔍 Test callback route hit!');
+  res.json({ message: 'Test callback working', timestamp: new Date().toISOString() });
+});
+
+// Auth0 callback - handle server-side (must be before auth routes)
+app.get('/auth/callback', async (req, res) => {
+  console.log('🔍 Auth0 callback route hit!');
+  console.log('🔍 Query params:', req.query);
+  
+  try {
+    const { code, state, error } = req.query;
+    
+    // Parse state parameter to get plan data
+    let planData = {};
+    if (state) {
+      try {
+        planData = JSON.parse(decodeURIComponent(state));
+        console.log('📋 Plan data from state:', planData);
+      } catch (e) {
+        console.error('Error parsing state parameter:', e);
+      }
+    }
+    
+    // Handle Auth0 errors (like rate limiting)
+    if (error) {
+      console.error('Auth0 error in callback:', error);
+      if (error === 'access_denied' && req.query.error_description?.includes('Too Many Requests')) {
+        console.log('🚨 Auth0 rate limiting detected - redirecting to homepage');
+        return res.redirect('/?error=rate_limit');
+      }
+      return res.redirect('/login?error=' + encodeURIComponent(error));
+    }
+    
+    if (!code) {
+      console.error('No authorization code received');
+      return res.redirect('/login?error=no_code');
+    }
+    
+    console.log('Auth0 callback received with code:', code);
+    
+    // Exchange code for tokens
+    const tokenResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        grant_type: 'authorization_code',
+        client_id: process.env.AUTH0_CLIENT_ID,
+        client_secret: process.env.AUTH0_CLIENT_SECRET,
+        code: code,
+        redirect_uri: process.env.AUTH0_CALLBACK_URL,
+      }),
+    });
+    
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('Token exchange failed:', errorText);
+      
+      // Handle rate limiting in token exchange
+      if (tokenResponse.status === 429 || errorText.includes('Too Many Requests')) {
+        console.log('🚨 Auth0 rate limiting in token exchange - redirecting to homepage');
+        return res.redirect('/?error=rate_limit');
+      }
+      
+      return res.redirect('/login?error=token_exchange_failed');
+    }
+    
+    const tokens = await tokenResponse.json();
+    console.log('Tokens received successfully');
+    
+    // Get user info
+    const userResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/userinfo`, {
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`,
+      },
+    });
+    
+    if (!userResponse.ok) {
+      const errorText = await userResponse.text();
+      console.error('User info fetch failed:', errorText);
+      
+      // Handle rate limiting in user info fetch
+      if (userResponse.status === 429 || errorText.includes('Too Many Requests')) {
+        console.log('🚨 Auth0 rate limiting in user info fetch - redirecting to homepage');
+        return res.redirect('/?error=rate_limit');
+      }
+      
+      return res.redirect('/login?error=user_info_failed');
+    }
+    
+    const user = await userResponse.json();
+    console.log('User info received:', { email: user.email, name: user.name });
+    
+    // Check if user exists in database
+    const existingUser = await auth0Service.getUserByEmail(user.email);
+
+    let currentUser;
+    if (existingUser) {
+      console.log('Existing user found:', existingUser);
+      currentUser = existingUser;
+    } else {
+      // Create new user
+      console.log('Creating new user:', { email: user.email, name: user.name });
+      
+      // Determine plan from state data or derive from price ID
+      let selectedPlan = planData.plan;
+      
+      // If plan is undefined, try to derive it from price ID
+      if (!selectedPlan || selectedPlan === 'undefined') {
+        const priceId = planData.priceId;
+        if (priceId) {
+          // Map price IDs to plan names
+          const priceIdToPlan = {
+            'price_1SB8IyBFUEdVmecWKH5suX6H': 'Starter Monthly',
+            'price_1S9k6kBFUEdVmecWiYNLbXia': 'Starter Yearly',
+            'price_1SB8gWBFUEdVmecWkHXlvki6': 'Professional Monthly',
+            'price_1S9kCwBFUEdVmecWP4DTGzBy': 'Professional Yearly'
+          };
+          selectedPlan = priceIdToPlan[priceId] || 'basic';
+        } else {
+          selectedPlan = 'basic';
+        }
+      }
+      
+      console.log('Selected plan for new user:', selectedPlan);
+      
+      // Create customer record first (with selected plan)
+      const customer = await auth0Service.createCustomer({
+        email: user.email,
+        name: user.name
+      }, selectedPlan);
+      
+      if (!customer) {
+        console.error('Failed to create customer record for new user');
+        return res.redirect('/login?error=customer_creation_failed');
+      }
+      
+      // Create user with customer_id
+      currentUser = await auth0Service.createSupabaseUser({
+        id: user.sub,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        customer_id: customer.id
+      });
+      console.log('New user created:', currentUser);
+    }
+
+    // Create JWT session token
+    const sessionToken = sessionService.createToken(currentUser);
+    
+    // Set token as HTTP-only cookie
+    res.cookie('authToken', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
+    console.log('✅ Auth0 callback completed successfully - redirecting user');
+    
+    // Check if this is a signup flow with plan data
+    if (planData.signup && planData.priceId) {
+      console.log('🔄 Signup flow detected with plan data');
+      
+      // Check if user has used trial before
+      const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
+      console.log('🔍 Trial usage check:', { email: user.email, hasUsedTrial });
+      
+      // Use the same plan derivation logic for redirect
+      let redirectPlan = planData.plan;
+      if (!redirectPlan || redirectPlan === 'undefined') {
+        const priceId = planData.priceId;
+        if (priceId) {
+          const priceIdToPlan = {
+            'price_1SB8IyBFUEdVmecWKH5suX6H': 'Starter Monthly',
+            'price_1S9k6kBFUEdVmecWiYNLbXia': 'Starter Yearly',
+            'price_1SB8gWBFUEdVmecWkHXlvki6': 'Professional Monthly',
+            'price_1S9kCwBFUEdVmecWP4DTGzBy': 'Professional Yearly'
+          };
+          redirectPlan = priceIdToPlan[priceId] || 'basic';
+        } else {
+          redirectPlan = 'basic';
+        }
+      }
+      
+      // Create Stripe Checkout session directly
+      console.log('💳 Creating Stripe Checkout session for user');
+      try {
+        const stripeService = require('./services/stripeService');
+        
+        const trialPeriodDays = hasUsedTrial ? 0 : 7; // 0 days for purchase, 7 for trial
+        const successUrl = `${req.protocol}://${req.get('host')}/onboarding`;
+        const cancelUrl = `${req.protocol}://${req.get('host')}/plans`;
+        
+        const session = await stripeService.createCheckoutSession(
+          planData.priceId,
+          successUrl,
+          cancelUrl,
+          currentUser.email,
+          trialPeriodDays
+        );
+        
+        console.log('✅ Stripe Checkout session created:', session.id);
+        return res.redirect(session.url);
+      } catch (error) {
+        console.error('❌ Error creating Stripe Checkout session:', error);
+        return res.redirect('/plans?error=checkout_failed');
+      }
+    }
+    
+    // Redirect based on domain status for existing users or users without plan data
+    if (currentUser.domain) {
+      return res.redirect('/dashboard');
+    } else {
+      return res.redirect('/onboarding');
+    }
+    
+  } catch (error) {
+    console.error('Auth0 callback error:', error);
+    
+    // Handle specific error types
+    if (error.message?.includes('Too Many Requests') || error.message?.includes('rate limit')) {
+      console.log('🚨 Rate limiting error caught - redirecting to homepage');
+      return res.redirect('/?error=rate_limit');
+    }
+    
+    res.redirect('/login?error=callback_error');
+  }
+});
+
 // Auth0 routes
 const authRoutes = require('./routes/auth');
+const stripeRoutes = require('./routes/stripe');
 app.use('/auth', authRoutes);
+app.use('/api/stripe', stripeRoutes);
 
-// Authentication middleware
+// Import session service
+const sessionService = require('./services/sessionService');
+
+// Authentication middleware using JWT sessions
 function requireAuth(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.redirect('/login');
+  sessionService.authenticate(req, res, next);
 }
 
 // Serve the main page - redirect to login or dashboard
-app.get('/', (req, res) => {
-  if (req.isAuthenticated()) {
+app.get('/', sessionService.optionalAuthenticate.bind(sessionService), (req, res) => {
+  // Check for rate limit error
+  if (req.query.error === 'rate_limit') {
+    console.log('🚨 Rate limit error detected on homepage');
+    // Serve homepage with rate limit message
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+    return;
+  }
+  
+  if (req.user) {
     // User is logged in, redirect based on whether they have a domain
     if (req.user.domain) {
-      res.redirect('/dashboard-mantis-v2');
+      res.redirect('/dashboard');
     } else {
       res.redirect('/onboarding');
     }
   } else {
-    // User is not logged in, redirect to login
-    res.redirect('/login');
+    // User is not logged in, serve the homepage
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
   }
 });
 
-// Login page
+// Serve plans page
+app.get('/plans', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'plans.html'));
+});
+
+// Serve signup page
+app.get('/signup', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'auth0-signup.html'));
+});
+
+// Serve Stripe test page
+app.get('/stripe-test', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'stripe-test.html'));
+});
+
+// Trial signup page removed - now using direct Stripe Checkout
+
+// Login page - redirect directly to Auth0 Universal Login
 app.get('/login', (req, res) => {
-  if (req.isAuthenticated()) {
-    // User is already logged in, redirect appropriately
-    if (req.user.domain) {
-      return res.redirect('/dashboard-mantis-v2');
-    } else {
-      return res.redirect('/onboarding');
-    }
+  const auth0Domain = process.env.AUTH0_DOMAIN;
+  const clientId = process.env.AUTH0_CLIENT_ID;
+  const redirectUri = encodeURIComponent(process.env.AUTH0_CALLBACK_URL);
+  const scope = encodeURIComponent('openid email profile');
+  
+  // Get plan parameters from query string
+  const { plan, priceId, billing, signup } = req.query;
+  
+  // Build state parameter to pass plan data through Auth0
+  let state = '';
+  if (plan || priceId || billing || signup) {
+    const stateData = {};
+    if (plan) stateData.plan = plan;
+    if (priceId) stateData.priceId = priceId;
+    if (billing) stateData.billing = billing;
+    if (signup) stateData.signup = signup;
+    state = encodeURIComponent(JSON.stringify(stateData));
   }
-  res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
+  
+  let auth0Url = `https://${auth0Domain}/authorize?` +
+    `response_type=code&` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${redirectUri}&` +
+    `scope=${scope}&` +
+    `prompt=login`;
+  
+  if (state) {
+    auth0Url += `&state=${state}`;
+  }
+  
+  res.redirect(auth0Url);
+});
+
+// Duplicate callback route removed - using the one defined earlier
+
+// Auth0 callback API endpoint
+app.post('/api/auth/callback', async (req, res) => {
+  try {
+    const { user, email, name, picture } = req.body;
+    
+    console.log('Auth0 callback received:', { email, name });
+    
+    // Check if user exists in database
+    const existingUser = await auth0Service.getUserByEmail(email);
+    
+    if (existingUser) {
+      console.log('Existing user found:', existingUser);
+      // User exists, check if they have a domain
+      if (existingUser.domain) {
+        return res.json({ 
+          success: true, 
+          redirect: '/dashboard',
+          user: existingUser 
+        });
+      } else {
+        return res.json({ 
+          success: true, 
+          redirect: '/onboarding',
+          user: existingUser 
+        });
+      }
+    } else {
+      // Create new user
+      console.log('Creating new user:', { email, name });
+      const newUser = await auth0Service.createSupabaseUser({
+        id: user.sub,
+        email: email,
+        name: name,
+        picture: picture
+      });
+      
+      console.log('New user created:', newUser);
+      return res.json({ 
+        success: true, 
+        redirect: '/onboarding',
+        user: newUser 
+      });
+    }
+  } catch (error) {
+    console.error('Auth0 callback error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to process authentication' 
+    });
+  }
 });
 
 // AI Chat route
@@ -439,7 +811,7 @@ app.get('/onboarding', requireAuth, (req, res) => {
 
 // Serve dashboard page
 app.get('/dashboard', requireAuth, (req, res) => {
-  res.redirect('/dashboard-mantis-v2');
+  res.sendFile(path.join(__dirname, 'frontend', 'dashboard.html'));
 });
 
 // DataForSEO Analysis API
@@ -487,7 +859,7 @@ app.post('/api/dataforseo/analyze', async (req, res) => {
 // Test DataForSEO API connection
 app.get('/api/dataforseo/test', async (req, res) => {
   try {
-    const dataforseoService = require('./services/dataforseoService');
+    const dataforseoService = require('./services/dataforseoEnvironmentService');
     
     // Test with a simple request to check account balance
     const testResponse = await dataforseoService.makeRequest('/user', []);
@@ -510,7 +882,7 @@ app.get('/api/dataforseo/test', async (req, res) => {
 // Test DataForSEO on-page analysis endpoint
 app.get('/api/dataforseo/test-onpage', async (req, res) => {
   try {
-    const dataforseoService = require('./services/dataforseoService');
+    const dataforseoService = require('./services/dataforseoEnvironmentService');
     
     // Test with a simple on-page analysis request
     const testData = [{
@@ -539,7 +911,7 @@ app.get('/api/dataforseo/test-onpage', async (req, res) => {
 // Debug DataForSEO raw response
 app.get('/api/dataforseo/debug-raw', async (req, res) => {
   try {
-    const dataforseoService = require('./services/dataforseoService');
+    const dataforseoService = require('./services/dataforseoEnvironmentService');
     
     // Test with a simple on-page analysis request
     const testData = [{
@@ -1364,7 +1736,7 @@ app.get('/api/dataforseo/hybrid/status', async (req, res) => {
 });
 
 // DataForSEO Demo Service Endpoints (MCP + Demo Data)
-// Demo Keyword Overview API
+// Demo Keyword Overview API - Redirected to Production Service
 app.post('/api/dataforseo/demo/keyword-overview', async (req, res) => {
   try {
     const { keywords, location = 'United States', language = 'en' } = req.body;
@@ -1376,16 +1748,17 @@ app.post('/api/dataforseo/demo/keyword-overview', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.getKeywordOverview(keywords, location, language);
+    // Use production service instead of demo
+    const result = await dataforseoEnvironmentService.getKeywordOverview(keywords, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
-    console.error('Demo Keyword Overview error:', error);
+    console.error('Production Keyword Overview error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get keyword overview'
@@ -1393,7 +1766,7 @@ app.post('/api/dataforseo/demo/keyword-overview', async (req, res) => {
   }
 });
 
-// Demo SERP Analysis API
+// Demo SERP Analysis API - Redirected to Production Service
 app.post('/api/dataforseo/demo/serp-analysis', async (req, res) => {
   try {
     const { keyword, location = 'United States', language = 'en', depth = 10 } = req.body;
@@ -1405,16 +1778,17 @@ app.post('/api/dataforseo/demo/serp-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.getSerpAnalysis(keyword, location, language, depth);
+    // Use production service instead of demo
+    const result = await dataforseoEnvironmentService.getSerpAnalysis(keyword, location, language, depth);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
-    console.error('Demo SERP Analysis error:', error);
+    console.error('Production SERP Analysis error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get SERP analysis'
@@ -1422,7 +1796,7 @@ app.post('/api/dataforseo/demo/serp-analysis', async (req, res) => {
   }
 });
 
-// Demo Competitor Analysis API
+// Demo Competitor Analysis API - Redirected to Production Service
 app.post('/api/dataforseo/demo/competitor-analysis', async (req, res) => {
   try {
     const { target, location = 'United States', language = 'en' } = req.body;
@@ -1434,16 +1808,17 @@ app.post('/api/dataforseo/demo/competitor-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.getCompetitorAnalysis(target, location, language);
+    // Use production service instead of demo
+    const result = await dataforseoEnvironmentService.getCompetitorAnalysis(target, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
-    console.error('Demo Competitor Analysis error:', error);
+    console.error('Production Competitor Analysis error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to get competitor analysis'
@@ -1463,13 +1838,13 @@ app.post('/api/dataforseo/demo/backlink-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.getBacklinkAnalysis(target);
+    const result = await dataforseoEnvironmentService.getBacklinkAnalysis(target);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Demo Backlink Analysis error:', error);
@@ -1492,13 +1867,13 @@ app.post('/api/dataforseo/demo/onpage-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.getOnPageAnalysis(url);
+    const result = await dataforseoEnvironmentService.getOnPageAnalysis(url);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Demo On-Page Analysis error:', error);
@@ -1521,13 +1896,13 @@ app.post('/api/dataforseo/demo/domain-rank', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.getDomainRankOverview(target, location, language);
+    const result = await dataforseoEnvironmentService.getDomainRankOverview(target, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Demo Domain Rank error:', error);
@@ -1550,13 +1925,13 @@ app.post('/api/dataforseo/demo/analyze-website', async (req, res) => {
       });
     }
 
-    const result = await dataforseoDemoService.analyzeWebsite(url, { location, language });
+    const result = await dataforseoEnvironmentService.analyzeWebsite(url, { location, language });
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoDemoService.getServiceStatus().serviceMode,
-      note: 'This endpoint provides demo data when MCP tools are not available'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Demo Website Analysis error:', error);
@@ -1570,7 +1945,7 @@ app.post('/api/dataforseo/demo/analyze-website', async (req, res) => {
 // Demo Service Status API
 app.get('/api/dataforseo/demo/status', async (req, res) => {
   try {
-    const status = dataforseoDemoService.getServiceStatus();
+    const status = dataforseoEnvironmentService.getServiceStatus();
     
     res.json({
       success: true,
@@ -1598,13 +1973,13 @@ app.post('/api/dataforseo/sandbox/keyword-overview', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getKeywordOverview(keywords, location, language);
+    const result = await dataforseoEnvironmentService.getKeywordOverview(keywords, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Keyword Overview error:', error);
@@ -1627,13 +2002,13 @@ app.post('/api/dataforseo/sandbox/serp-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getSerpAnalysis(keyword, location, language, depth);
+    const result = await dataforseoEnvironmentService.getSerpAnalysis(keyword, location, language, depth);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox SERP Analysis error:', error);
@@ -1656,13 +2031,13 @@ app.post('/api/dataforseo/sandbox/competitor-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getCompetitorAnalysis(target, location, language);
+    const result = await dataforseoEnvironmentService.getCompetitorAnalysis(target, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Competitor Analysis error:', error);
@@ -1685,13 +2060,13 @@ app.post('/api/dataforseo/sandbox/backlink-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getBacklinkAnalysis(target);
+    const result = await dataforseoEnvironmentService.getBacklinkAnalysis(target);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Backlink Analysis error:', error);
@@ -1714,13 +2089,13 @@ app.post('/api/dataforseo/sandbox/onpage-analysis', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getOnPageAnalysis(url);
+    const result = await dataforseoEnvironmentService.getOnPageAnalysis(url);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox On-Page Analysis error:', error);
@@ -1743,13 +2118,13 @@ app.post('/api/dataforseo/sandbox/domain-rank', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getDomainRankOverview(target, location, language);
+    const result = await dataforseoEnvironmentService.getDomainRankOverview(target, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Domain Rank error:', error);
@@ -1772,13 +2147,13 @@ app.post('/api/dataforseo/sandbox/keyword-suggestions', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getKeywordSuggestions(keyword, location, language);
+    const result = await dataforseoEnvironmentService.getKeywordSuggestions(keyword, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Keyword Suggestions error:', error);
@@ -1801,13 +2176,13 @@ app.post('/api/dataforseo/sandbox/keyword-ideas', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.getKeywordIdeas(keywords, location, language);
+    const result = await dataforseoEnvironmentService.getKeywordIdeas(keywords, location, language);
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Keyword Ideas error:', error);
@@ -1830,13 +2205,13 @@ app.post('/api/dataforseo/sandbox/analyze-website', async (req, res) => {
       });
     }
 
-    const result = await dataforseoSandboxService.analyzeWebsite(url, { location, language });
+    const result = await dataforseoEnvironmentService.analyzeWebsite(url, { location, language });
     
     res.json({
       success: true,
       data: result,
-      serviceMode: dataforseoSandboxService.getServiceStatus().serviceMode,
-      note: 'Using DataForSEO Sandbox API for free testing'
+      serviceMode: dataforseoEnvironmentService.getServiceStatus().serviceMode,
+      note: 'Using production DataForSEO service'
     });
   } catch (error) {
     console.error('Sandbox Website Analysis error:', error);
@@ -1850,7 +2225,7 @@ app.post('/api/dataforseo/sandbox/analyze-website', async (req, res) => {
 // Sandbox Service Base API
 app.get('/api/dataforseo/sandbox', async (req, res) => {
   try {
-    const status = dataforseoSandboxService.getServiceStatus();
+    const status = dataforseoEnvironmentService.getServiceStatus();
     
     res.json({
       success: true,
@@ -1890,7 +2265,7 @@ app.get('/api/dataforseo/sandbox', async (req, res) => {
 // Sandbox Service Status API
 app.get('/api/dataforseo/sandbox/status', async (req, res) => {
   try {
-    const status = dataforseoSandboxService.getServiceStatus();
+    const status = dataforseoEnvironmentService.getServiceStatus();
     
     res.json({
       success: true,
@@ -2201,6 +2576,37 @@ app.post('/api/seo/analyze-domain', async (req, res) => {
   }
 });
 
+// Check website limit API
+app.get('/api/user/check-website-limit', async (req, res) => {
+  try {
+    const customerId = await getCustomerIdFromRequest(req);
+    
+    if (!customerId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    // Use SupabaseService to validate website limit
+    const supabaseService = require('./services/supabaseService');
+    const limitCheck = await supabaseService.validateWebsiteLimit(customerId);
+    
+    res.json({
+      success: true,
+      canAddMore: limitCheck.allowed,
+      limit: limitCheck.limit,
+      current: limitCheck.current
+    });
+  } catch (error) {
+    console.error('Check website limit API error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check website limit'
+    });
+  }
+});
+
 // User Data Management API
 app.post('/api/user/save-onboarding', async (req, res) => {
   try {
@@ -2215,7 +2621,28 @@ app.post('/api/user/save-onboarding', async (req, res) => {
 
     console.log(`💾 Saving user data for: ${userData.domain}`);
     
+    // Get authenticated user's ID from JWT token
+    const sessionService = require('./services/sessionService');
+    const token = sessionService.extractToken(req);
+    
+    if (token) {
+      const decoded = sessionService.verifyToken(token);
+      if (decoded && decoded.userId) {
+        // Update the authenticated user's domain
+        const Auth0Service = require('./services/auth0Service');
+        const auth0Service = new Auth0Service();
+        const updateResult = await auth0Service.updateUserDomain(decoded.userId, userData.domain);
+        
+        if (updateResult) {
+          console.log(`✅ Updated user domain to: ${userData.domain}`);
+        } else {
+          console.log(`⚠️ Failed to update user domain`);
+        }
+      }
+    }
+    
     // Save user data to database
+    userData.req = req; // Pass request object for token extraction
     const saveResult = await databaseService.saveUserData(userData);
     
     if (saveResult.success) {
@@ -2537,10 +2964,7 @@ app.post('/api/google/business-profile/data', async (req, res) => {
   }
 });
 
-// Dashboard route
-app.get('/dashboard', (req, res) => {
-  res.redirect('/dashboard-mantis-v2');
-});
+// Dashboard route - removed duplicate (already defined above with requireAuth)
 
 // Debug onboarding route
 app.get('/debug-onboarding', (req, res) => {
@@ -2781,7 +3205,8 @@ app.post('/api/ai/generate-content-calendar', async (req, res) => {
     if (supabaseService.isReady() && analysis.domain) {
       try {
         const normalizedDomain = analysis.domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
-        const website = await supabaseService.createOrGetWebsite(normalizedDomain);
+        const customerId = await getCustomerIdFromRequest(req);
+        const website = await supabaseService.createOrGetWebsite(normalizedDomain, null, customerId);
         
         if (website) {
           // Convert calendar data to the format expected by Supabase
@@ -3451,7 +3876,8 @@ CRITICAL: Always use emojis/icons, priority levels (🚨 HIGH, ⚠️ MEDIUM, �
     if (supabaseService.isReady() && domain) {
       try {
         const normalizedDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
-        const website = await supabaseService.createOrGetWebsite(normalizedDomain);
+        const customerId = await getCustomerIdFromRequest(req);
+        const website = await supabaseService.createOrGetWebsite(normalizedDomain, null, customerId);
         
         if (website) {
           await supabaseService.storeChatMessage(website.id, message, aiResponse);
@@ -3590,7 +4016,8 @@ app.post('/api/dataforseo/environment/analyze-website', async (req, res) => {
     if (supabaseService.isReady()) {
       try {
         // Get or create website record
-        website = await supabaseService.createOrGetWebsite(normalizedUrl);
+        const customerId = await getCustomerIdFromRequest(req);
+        website = await supabaseService.createOrGetWebsite(normalizedUrl, null, customerId);
         
         if (website) {
           // Check for cached analysis
@@ -3683,11 +4110,14 @@ app.get('/api/supabase/analysis/:domain', async (req, res) => {
     const { forceRegenerate } = req.query;
     console.log('Getting analysis data for domain:', domain, forceRegenerate ? '(force regenerate)' : '');
     
+    // Get customer ID from authenticated user
+    const customerId = await getCustomerIdFromRequest(req);
+    
     let analysisData = null;
     
     // Only get cached data if not forcing regeneration
     if (!forceRegenerate) {
-      analysisData = await supabaseService.getAnalysisData(domain);
+      analysisData = await supabaseService.getAnalysisData(domain, customerId);
     }
     
     if (analysisData && !forceRegenerate) {
@@ -3701,9 +4131,9 @@ app.get('/api/supabase/analysis/:domain', async (req, res) => {
         
         if (analysisResult.success && analysisResult.analysis) {
           // Get or create website record
-          const website = await supabaseService.createOrGetWebsite(domain);
+          const website = await supabaseService.createOrGetWebsite(domain, null, customerId);
           
-          if (website) {
+          if (website && !website.error) {
             // Store the analysis data
             await supabaseService.storeAnalysis(website.id, analysisResult.analysis);
             console.log('✅ Analysis data generated and stored for:', domain);
@@ -3711,7 +4141,11 @@ app.get('/api/supabase/analysis/:domain', async (req, res) => {
             res.json({ success: true, data: analysisResult.analysis });
           } else {
             console.error('❌ Failed to get or create website record for:', domain);
-            res.json({ success: false, message: 'Failed to create website record' });
+            if (website && website.error) {
+              res.json({ success: false, message: website.error, limit: website.limit, current: website.current });
+            } else {
+              res.json({ success: false, message: 'Failed to create website record' });
+            }
           }
         } else {
           console.error('❌ Failed to generate analysis data for:', domain);
@@ -3746,10 +4180,10 @@ app.get('/api/supabase/historical-data/:domain', async (req, res) => {
         console.log('✅ Got real DataForSEO analysis data');
       }
     } catch (analysisError) {
-      console.log('⚠️ Could not get real analysis data, using sample data:', analysisError.message);
+      console.log('⚠️ Could not get real analysis data:', analysisError.message);
     }
     
-    // Process the data - use real data if available, otherwise use sample data
+    // Process the data - only use real data, no fallback to sample data
     const processedData = {
       success: true,
       data: {
@@ -4005,7 +4439,7 @@ app.get('/api/technical-seo/:domain', async (req, res) => {
 
     if (!analysisResult.success || !analysisResult.analysis) {
       console.error('❌ Failed to get real DataForSEO analysis data:', analysisResult.error);
-      // Fallback to a structured error response with sample data
+      // Return error response without sample data
       return res.json({
         success: false,
         error: analysisResult.error || 'Failed to fetch real DataForSEO data',
@@ -4468,106 +4902,73 @@ function generateLinkAnalysis(analysisData) {
   const onPage = analysisData?.onPage || {};
   const links = Array.isArray(onPage.links) ? onPage.links : [];
   
-  // Generate sample link analysis if no real data
+  // Return empty array if no real data available
   if (links.length === 0) {
-    return [
-      {
-        url: '/services',
-        text: 'Digital Marketing Services',
-        type: 'internal',
-        status: 'good',
-        issue: null,
-        recommendation: 'Well-structured internal link with descriptive anchor text. Good for SEO.'
-      },
-      {
-        url: 'https://mozarex.com/contact',
-        text: 'Contact Us',
-        type: 'internal',
-        status: 'good',
-        issue: null,
-        recommendation: 'Clear call-to-action link with proper internal linking structure.'
-      },
-      {
-        url: 'https://example.com',
-        text: 'Learn More',
-        type: 'external',
-        status: 'warning',
-        issue: 'Generic anchor text',
-        recommendation: 'Use more descriptive anchor text like "Learn More About Digital Marketing" to improve SEO value.'
-      },
-      {
-        url: '/about',
-        text: 'About',
-        type: 'internal',
-        status: 'warning',
-        issue: 'Short anchor text',
-        recommendation: 'Expand anchor text to "About Mozarex AI" for better context and SEO.'
-      },
-      {
-        url: '#',
-        text: 'Read More',
-        type: 'placeholder',
-        status: 'error',
-        issue: 'Placeholder link with no destination',
-        recommendation: 'Replace with actual destination URL or remove the link entirely.'
-      }
-    ];
+    return [];
   }
   
-  // Process real link data
-  return links.map((link, index) => {
-    const isInternal = link.href && (link.href.startsWith('/') || link.href.includes('mozarex.com'));
-    const isPlaceholder = link.href === '#' || !link.href;
-    
-    let status = 'good';
-    let issue = null;
-    let recommendation = 'Good link structure with proper anchor text.';
-    
-    if (isPlaceholder) {
-      status = 'error';
-      issue = 'Placeholder link with no destination';
-      recommendation = 'Replace with actual destination URL or remove the link entirely.';
-    } else if (link.text && link.text.length < 3) {
-      status = 'warning';
-      issue = 'Anchor text too short';
-      recommendation = 'Use more descriptive anchor text to improve SEO value and user experience.';
-    } else if (link.text && ['click here', 'read more', 'learn more'].includes(link.text.toLowerCase())) {
-      status = 'warning';
-      issue = 'Generic anchor text';
-      recommendation = 'Use more descriptive anchor text that describes the destination content.';
-    }
-    
-    return {
-      url: link.href || '#',
-      text: link.text || 'Untitled Link',
-      type: isInternal ? 'internal' : 'external',
-      status: status,
-      issue: issue,
-      recommendation: recommendation
-    };
-  });
+  // Process real links from DataForSEO data
+  return links.map(link => ({
+    url: link.url || '',
+    text: link.text || link.anchor || '',
+    type: link.type || 'unknown',
+    status: link.status || 'unknown',
+    issue: link.issue || null,
+    recommendation: link.recommendation || null
+  }));
 }
 
-// Helper function to generate chart data
+// Helper function to generate chart data from real historical data
 function generateChartData(historicalData) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-  const trafficValues = [8500, 9200, 10800, 11200, 11800, 12450]; // Sample data
-  const positionValues = [45, 42, 38, 35, 32, 28]; // Sample data
+  // Return empty data if no real historical data available
+  if (!historicalData || !Array.isArray(historicalData) || historicalData.length === 0) {
+    return {
+      traffic: {
+        months: [],
+        values: []
+      },
+      positions: {
+        months: [],
+        values: []
+      }
+    };
+  }
   
-  // TODO: Process actual historical data when available
-  // For now, return sample data structure
-  
+  // Process real historical data
   return {
     traffic: {
-      months: months,
-      values: trafficValues
+      months: historicalData.map(item => item.month || ''),
+      values: historicalData.map(item => item.traffic || 0)
     },
     positions: {
-      months: months,
-      values: positionValues
+      months: historicalData.map(item => item.month || ''),
+      values: historicalData.map(item => item.position || 0)
     }
   };
 }
+
+// Get all customer websites and analysis data
+app.get('/api/supabase/customer-websites', async (req, res) => {
+  try {
+    // Get customer ID from authenticated user
+    const customerId = await getCustomerIdFromRequest(req);
+
+    if (!customerId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    const analysisData = await supabaseService.getCustomerAnalysisData(customerId);
+    
+    if (analysisData) {
+      res.json({ success: true, data: analysisData });
+    } else {
+      res.json({ success: false, error: 'Failed to fetch customer websites' });
+    }
+  } catch (error) {
+    console.error('Error fetching customer websites:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
 // Get cached keywords for a website
 app.get('/api/supabase/keywords/:domain', async (req, res) => {
@@ -4582,7 +4983,8 @@ app.get('/api/supabase/keywords/:domain', async (req, res) => {
       });
     }
 
-    const website = await supabaseService.createOrGetWebsite(domain);
+    const customerId = await getCustomerIdFromRequest(req);
+    const website = await supabaseService.createOrGetWebsite(domain, null, customerId);
     if (!website) {
       return res.status(404).json({
         success: false,
@@ -4628,7 +5030,8 @@ app.post('/api/supabase/keywords', async (req, res) => {
       });
     }
 
-    const website = await supabaseService.createOrGetWebsite(domain);
+    const customerId = await getCustomerIdFromRequest(req);
+    const website = await supabaseService.createOrGetWebsite(domain, null, customerId);
     if (!website) {
       return res.status(500).json({
         success: false,
@@ -4673,7 +5076,8 @@ app.get('/api/supabase/calendar/:domain', async (req, res) => {
       });
     }
 
-    const website = await supabaseService.createOrGetWebsite(domain);
+    const customerId = await getCustomerIdFromRequest(req);
+    const website = await supabaseService.createOrGetWebsite(domain, null, customerId);
     if (!website) {
       return res.status(404).json({
         success: false,
@@ -4719,7 +5123,8 @@ app.post('/api/supabase/calendar', async (req, res) => {
       });
     }
 
-    const website = await supabaseService.createOrGetWebsite(domain);
+    const customerId = await getCustomerIdFromRequest(req);
+    const website = await supabaseService.createOrGetWebsite(domain, null, customerId);
     if (!website) {
       return res.status(500).json({
         success: false,
@@ -5686,7 +6091,7 @@ app.post('/api/content-calendar/:id/schedule', async (req, res) => {
 // Blog Generation API Endpoints
 
 // Route for blog page
-app.get('/blog', (req, res) => {
+app.get('/blog', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/blog.html'));
 });
 

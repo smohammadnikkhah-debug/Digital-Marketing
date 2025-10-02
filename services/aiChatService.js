@@ -532,7 +532,7 @@ Make it SEO-friendly and engaging for users.`;
   // Generate intelligent SEO recommendations using DataForSEO data
   async generateIntelligentRecommendations(userId, message, websiteUrl = null) {
     try {
-      const dataforseoService = require('./dataforseoService');
+      const dataforseoService = require('./dataforseoEnvironmentService');
       
       // If website URL is provided, get real data
       let seoData = null;

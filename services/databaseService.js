@@ -59,61 +59,40 @@ class DatabaseService {
         return this.saveToLocalStorage(userData);
       }
 
-      // Generate a simple user ID based on domain
-      const userId = this.generateUserId(userData.domain);
+      // Get authenticated user's customer_id from JWT token
+      let customerId = null;
       
-      // First, try to find existing user by domain
-      const { data: existingUser, error: findError } = await this.supabase
-        .from('users')
-        .select('id')
-        .eq('domain', userData.domain)
-        .single();
-
-      let result;
-      
-      if (existingUser) {
-        // Update existing user (don't change the ID to avoid foreign key conflicts)
-        const { data, error } = await this.supabase
-          .from('users')
-          .update({
-            business_description: userData.businessDescription,
-            integrations: userData.integrations,
-            analysis_data: userData.analysisData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('domain', userData.domain);
+      if (userData.req) {
+        const sessionService = require('./sessionService');
+        const token = sessionService.extractToken(userData.req);
         
-        result = { data, error };
-      } else {
-        // Insert new user
-        const { data, error } = await this.supabase
-          .from('users')
-          .insert({
-            id: userId,
-            domain: userData.domain,
-            business_description: userData.businessDescription,
-            integrations: userData.integrations,
-            analysis_data: userData.analysisData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-        
-        result = { data, error };
-      }
-
-      if (result.error) {
-        console.error('Database save error:', result.error);
-        
-        // If the error is about missing table, fall back to local storage
-        if (result.error.code === 'PGRST205' || result.error.message.includes('Could not find the table')) {
-          console.log('⚠️ Users table not found, falling back to local storage');
-          return this.saveToLocalStorage(userData);
+        if (token) {
+          const decoded = sessionService.verifyToken(token);
+          if (decoded && decoded.userId) {
+            // Get user from database to get customer_id
+            const auth0Service = require('./auth0Service');
+            const auth0 = new auth0Service();
+            const user = await auth0.getUserById(decoded.userId);
+            if (user && user.customer_id) {
+              customerId = user.customer_id;
+            }
+          }
         }
-        
-        return { success: false, error: result.error.message };
       }
 
-      return { success: true, data: result.data };
+      // Use SupabaseService to create/get website with customer_id
+      const supabaseService = require('./supabaseService');
+      const website = await supabaseService.createOrGetWebsite(
+        userData.domain, 
+        userData.businessDescription, 
+        customerId
+      );
+
+      if (website && website.error) {
+        return { success: false, error: website.error };
+      }
+
+      return { success: true, data: website };
     } catch (error) {
       console.error('Save user data error:', error);
       

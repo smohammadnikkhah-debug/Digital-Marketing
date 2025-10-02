@@ -97,6 +97,39 @@
             background: rgba(30, 41, 59, 0.5);
         }
 
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .website-limit-info {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .limit-text {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        .limit-count {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin: 4px 0 0 0;
+        }
+
         .card-title {
             font-size: 18px;
             font-weight: 600;
@@ -385,8 +418,15 @@
         <!-- Content Card -->
         <div class="content-card">
             <div class="card-header">
-                <h2 class="card-title">Your Websites</h2>
-                <p class="card-subtitle">Click on any domain to view detailed analysis and SEO tools</p>
+                <div class="header-content">
+                    <div class="header-text">
+                        <h2 class="card-title">Your Websites</h2>
+                        <p class="card-subtitle">Click on any domain to view detailed analysis and SEO tools</p>
+                    </div>
+                    <div class="website-limit-info" id="website-limit-info">
+                        <!-- Website limit info will be populated here -->
+                    </div>
+                </div>
             </div>
             
             <div class="card-content">
@@ -441,50 +481,91 @@
             try {
                 console.log('Dashboard: Loading user data...');
                 
-                // Use the same logic as the working debug dashboard
-                const lastDomain = localStorage.getItem('lastAnalyzedDomain');
-                console.log('Dashboard: Last domain from localStorage:', lastDomain);
+                // First, get user info from /auth/user endpoint
+                const userResponse = await fetch('/auth/user', {
+                    credentials: 'include'
+                });
+                console.log('Dashboard: User response status:', userResponse.status);
                 
-                if (!lastDomain) {
-                    console.log('Dashboard: No domain in localStorage, showing empty state');
+                if (!userResponse.ok) {
+                    console.log('Dashboard: User not authenticated, showing empty state');
                     displayEmptyState();
                     return;
                 }
                 
-                console.log('Dashboard: Fetching user data for domain:', lastDomain);
-                console.log('Dashboard: Making API call to:', `/api/user/get-data?domain=${encodeURIComponent(lastDomain)}`);
-                const response = await fetch(`/api/user/get-data?domain=${encodeURIComponent(lastDomain)}`);
-                console.log('Dashboard: Response status:', response.status);
-                const result = await response.json();
-                console.log('Dashboard: API response:', result);
+                const userResult = await userResponse.json();
+                console.log('Dashboard: User API response:', userResult);
                 
-                if (result.success) {
-                    userData = result.data;
-                    console.log('Dashboard: User data loaded successfully:', userData);
-                    
-                    // Load analysis data from Supabase first
-                    await loadAnalysisData(lastDomain);
-                    
-                    // Then display websites (after analysis data is loaded)
-                    displayWebsites();
-                } else {
-                    console.log('Dashboard: User data not found, checking if analysis data exists');
-                    // If user data doesn't exist, check if analysis data exists
-                    await loadAnalysisData(lastDomain);
-                    
-                    console.log('Dashboard: After loadAnalysisData, userData:', userData);
-                    console.log('Dashboard: userData.analysisData:', userData ? userData.analysisData : 'userData is null');
-                    
-                    if (userData && userData.analysisData) {
-                        console.log('Dashboard: Found analysis data, displaying websites');
-                        displayWebsites();
-                    } else {
-                        console.log('Dashboard: No analysis data found, showing empty state');
-                        displayEmptyState();
-                    }
+                if (!userResult.authenticated || !userResult.user) {
+                    console.log('Dashboard: User not authenticated, showing empty state');
+                    displayEmptyState();
+                    return;
                 }
+                
+                const user = userResult.user;
+                console.log('Dashboard: User data:', user);
+                
+                if (!user.domain) {
+                    console.log('Dashboard: No domain found for user, showing empty state');
+                    displayEmptyState();
+                    return;
+                }
+                
+                console.log('Dashboard: User has domain:', user.domain);
+                
+                // Store domain in localStorage for consistency
+                localStorage.setItem('lastAnalyzedDomain', user.domain);
+                
+                // Create userData object with the user's domain
+                userData = {
+                    domain: user.domain,
+                    name: user.name,
+                    email: user.email,
+                    company: user.company,
+                    business_description: user.business_description
+                };
+                
+                console.log('Dashboard: Created userData:', userData);
+                
+                // Load all customer websites and analysis data
+                await loadCustomerWebsites();
+                
+                // Load website limit info
+                await loadWebsiteLimitInfo();
+                
             } catch (error) {
                 console.error('Dashboard: Error loading user data:', error);
+                displayEmptyState();
+            }
+        }
+
+        async function loadCustomerWebsites() {
+            try {
+                console.log('Dashboard: Loading customer websites...');
+                
+                const response = await fetch('/api/supabase/customer-websites', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                console.log('Dashboard: Customer websites response:', result);
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    console.log('Dashboard: Customer websites loaded successfully');
+                    console.log('Dashboard: Websites data:', result.data);
+                    
+                    // Store all websites data
+                    userData.websites = result.data;
+                    
+                    // Display all websites
+                    displayAllWebsites();
+                    
+                } else {
+                    console.log('Dashboard: No websites found, showing empty state');
+                    displayEmptyState();
+                }
+                
+            } catch (error) {
+                console.error('Dashboard: Error loading customer websites:', error);
                 displayEmptyState();
             }
         }
@@ -550,37 +631,51 @@
             `;
         }
 
-        function displayWebsites() {
-            console.log('Dashboard: displayWebsites called');
+        function displayAllWebsites() {
+            console.log('Dashboard: displayAllWebsites called');
             console.log('Dashboard: userData:', userData);
-            console.log('Dashboard: userData.analysisData:', userData ? userData.analysisData : 'userData is null');
+            console.log('Dashboard: userData.websites:', userData ? userData.websites : 'userData is null');
             
             const tbody = document.getElementById('websites-tbody');
             
-            if (!userData || !userData.analysisData) {
-                console.log('Dashboard: No userData or analysisData, showing empty state');
+            if (!userData || !userData.websites || userData.websites.length === 0) {
+                console.log('Dashboard: No userData or websites, showing empty state');
                 displayEmptyState();
                 return;
             }
 
-            console.log('Dashboard: Displaying website with analysis data');
-            const analysis = userData.analysisData;
-            const score = calculateOverallScore(analysis);
-            const scoreClass = getScoreClass(score);
+            console.log('Dashboard: Displaying', userData.websites.length, 'websites');
             
-            console.log('Dashboard: Calculated score:', score, 'Class:', scoreClass);
+            // Clear existing rows
+            tbody.innerHTML = '';
             
-            // Calculate page health metrics
-            const pageHealthMetrics = calculatePageHealthMetrics(analysis);
-            const healthyPages = pageHealthMetrics.healthyPages;
-            const pagesWithIssues = pageHealthMetrics.pagesWithIssues;
-            const fixedIssues = pageHealthMetrics.fixedIssues;
+            // Display each website
+            userData.websites.forEach((websiteData, index) => {
+                const website = websiteData.website;
+                const analysis = websiteData.analysis;
+                
+                if (!analysis) {
+                    console.log('Dashboard: No analysis data for website:', website.domain);
+                    return;
+                }
+                
+                const score = calculateOverallScore(analysis);
+                const scoreClass = getScoreClass(score);
+                
+                console.log('Dashboard: Website', website.domain, 'score:', score, 'Class:', scoreClass);
+                
+                // Calculate page health metrics
+                const pageHealthMetrics = calculatePageHealthMetrics(analysis);
+                const healthyPages = pageHealthMetrics.healthyPages;
+                const pagesWithIssues = pageHealthMetrics.pagesWithIssues;
+                const fixedIssues = pageHealthMetrics.fixedIssues;
 
-            console.log('Dashboard: Page health metrics:', pageHealthMetrics);
+                console.log('Dashboard: Page health metrics for', website.domain, ':', pageHealthMetrics);
 
-            tbody.innerHTML = `
-                <tr>
-                    <td class="domain-cell" onclick="openMantisDashboard('${userData.domain}')">${userData.domain}</td>
+                // Create row for this website
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="domain-cell" onclick="openMantisDashboard('${website.domain}')">${website.domain}</td>
                     <td class="score-cell">
                         <span class="score-badge ${scoreClass}">${score}/100</span>
                     </td>
@@ -595,13 +690,15 @@
                     </td>
                     <td class="last-analysis">${new Date().toLocaleDateString()}</td>
                     <td class="action-buttons">
-                        <button class="btn btn-primary" onclick="openMantisDashboard('${userData.domain}')">View Details</button>
-                        <button class="btn btn-secondary" onclick="reanalyzeWebsite('${userData.domain}')">Re-analyze</button>
+                        <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')">View Details</button>
+                        <button class="btn btn-secondary" onclick="reanalyzeWebsite('${website.domain}')">Re-analyze</button>
                     </td>
-                </tr>
-            `;
+                `;
+                
+                tbody.appendChild(row);
+            });
             
-            console.log('Dashboard: Website displayed successfully');
+            console.log('Dashboard: All websites displayed successfully');
         }
 
         function calculatePageHealthMetrics(analysis) {
@@ -799,8 +896,207 @@
             return 'score-poor';
         }
 
-        function addNewWebsite() {
-            window.location.href = '/onboarding-simple';
+        async function addNewWebsite() {
+            try {
+                // Check website limit before allowing user to add new website
+                const response = await fetch('/api/user/check-website-limit', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.canAddMore) {
+                        // User can add more websites, proceed to onboarding
+                        window.location.href = '/onboarding-simple';
+                    } else {
+                        // User has reached their limit, show upgrade prompt
+                        showUpgradePrompt(result.limit, result.current);
+                    }
+                } else {
+                    console.error('Error checking website limit:', result.error);
+                    // Fallback to onboarding if check fails
+                    window.location.href = '/onboarding-simple';
+                }
+            } catch (error) {
+                console.error('Error checking website limit:', error);
+                // Fallback to onboarding if check fails
+                window.location.href = '/onboarding-simple';
+            }
+        }
+
+        function showUpgradePrompt(limit, current) {
+            // Create modal for upgrade prompt
+            const modal = document.createElement('div');
+            modal.className = 'upgrade-modal-overlay';
+            modal.innerHTML = `
+                <div class="upgrade-modal">
+                    <div class="upgrade-modal-header">
+                        <h3>Website Limit Reached</h3>
+                        <button class="close-btn" onclick="closeUpgradeModal()">&times;</button>
+                    </div>
+                    <div class="upgrade-modal-body">
+                        <div class="limit-info">
+                            <p>You've reached your plan limit of <strong>${limit} website${limit > 1 ? 's' : ''}</strong>.</p>
+                            <p>Currently using: <strong>${current}/${limit}</strong></p>
+                        </div>
+                        <div class="upgrade-options">
+                            <h4>Upgrade to add more websites:</h4>
+                            <div class="plan-comparison">
+                                <div class="plan-option">
+                                    <h5>Professional Plan</h5>
+                                    <p>Up to 5 websites</p>
+                                    <a href="/plans" class="upgrade-btn">Upgrade Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .upgrade-modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                    backdrop-filter: blur(5px);
+                }
+                .upgrade-modal {
+                    background: rgba(15, 23, 42, 0.95);
+                    border-radius: 16px;
+                    padding: 0;
+                    max-width: 500px;
+                    width: 90%;
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+                }
+                .upgrade-modal-header {
+                    padding: 24px 24px 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .upgrade-modal-header h3 {
+                    color: #f1f5f9;
+                    font-size: 20px;
+                    font-weight: 600;
+                    margin: 0;
+                }
+                .close-btn {
+                    background: none;
+                    border: none;
+                    color: #94a3b8;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    transition: all 0.2s ease;
+                }
+                .close-btn:hover {
+                    background: rgba(102, 126, 234, 0.2);
+                    color: #f1f5f9;
+                }
+                .upgrade-modal-body {
+                    padding: 24px;
+                }
+                .limit-info {
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-bottom: 24px;
+                }
+                .limit-info p {
+                    color: #f1f5f9;
+                    margin: 0 0 8px 0;
+                    font-size: 14px;
+                }
+                .limit-info p:last-child {
+                    margin-bottom: 0;
+                }
+                .upgrade-options h4 {
+                    color: #f1f5f9;
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin: 0 0 16px 0;
+                }
+                .plan-option {
+                    background: rgba(30, 41, 59, 0.5);
+                    border: 1px solid rgba(102, 126, 234, 0.2);
+                    border-radius: 12px;
+                    padding: 20px;
+                    text-align: center;
+                }
+                .plan-option h5 {
+                    color: #f1f5f9;
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin: 0 0 8px 0;
+                }
+                .plan-option p {
+                    color: #94a3b8;
+                    font-size: 14px;
+                    margin: 0 0 16px 0;
+                }
+                .upgrade-btn {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    text-decoration: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 14px;
+                    display: inline-block;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                }
+                .upgrade-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+                }
+            `;
+            
+            document.head.appendChild(style);
+            document.body.appendChild(modal);
+        }
+
+        function closeUpgradeModal() {
+            const modal = document.querySelector('.upgrade-modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function loadWebsiteLimitInfo() {
+            try {
+                const response = await fetch('/api/user/check-website-limit', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    const limitInfo = document.getElementById('website-limit-info');
+                    limitInfo.innerHTML = `
+                        <p class="limit-text">Website Limit</p>
+                        <p class="limit-count">${result.current}/${result.limit}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading website limit info:', error);
+            }
         }
 
 
@@ -869,7 +1165,7 @@
                         
                         // Hide progress bar and refresh display
                         hideReanalysisProgress();
-                        displayWebsites();
+                        displayAllWebsites();
                         
                         console.log('Dashboard: Website reanalyzed with subpage analysis successfully');
                     } else {

@@ -27,28 +27,48 @@ class SupabaseService {
   }
 
   // Website Management
-  async createOrGetWebsite(domain, companyName = null) {
+  async createOrGetWebsite(domain, companyName = null, customerId = null) {
     if (!this.isConfigured) return null;
 
     try {
-      // Check if website already exists
+      // Check if website already exists for this customer
       const { data: existingWebsite, error: fetchError } = await this.supabase
         .from('websites')
         .select('*')
         .eq('domain', domain)
+        .eq('customer_id', customerId)
         .single();
 
       if (existingWebsite && !fetchError) {
         return existingWebsite;
       }
 
+      // Validate website limit if customerId is provided
+      if (customerId) {
+        const canAdd = await this.validateWebsiteLimit(customerId);
+        if (!canAdd.allowed) {
+          console.error('Website limit exceeded for customer:', customerId);
+          return { error: 'Website limit exceeded', limit: canAdd.limit, current: canAdd.current };
+        }
+      }
+
       // Create new website
+      const websiteData = {
+        domain: domain,
+        company_name: companyName || domain.replace(/^https?:\/\//, '').replace(/^www\./, ''),
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Add customer_id if provided
+      if (customerId) {
+        websiteData.customer_id = customerId;
+      }
+
       const { data: newWebsite, error: createError } = await this.supabase
         .from('websites')
-        .insert({
-          domain: domain,
-          company_name: companyName || domain.replace(/^https?:\/\//, '').replace(/^www\./, '')
-        })
+        .insert(websiteData)
         .select()
         .single();
 
@@ -64,11 +84,60 @@ class SupabaseService {
     }
   }
 
+  // Validate website limit for a customer
+  async validateWebsiteLimit(customerId) {
+    try {
+      // Get customer with plan information
+      const { data: customer, error: customerError } = await this.supabase
+        .from('customers')
+        .select('plan_id')
+        .eq('id', customerId)
+        .single();
+
+      if (customerError || !customer) {
+        console.error('Error fetching customer:', customerError);
+        return { allowed: false, limit: 0, current: 0 };
+      }
+
+      // Get current website count for this customer
+      const { data: websites, error: websitesError } = await this.supabase
+        .from('websites')
+        .select('id')
+        .eq('customer_id', customerId);
+
+      if (websitesError) {
+        console.error('Error fetching websites:', websitesError);
+        return { allowed: false, limit: 0, current: 0 };
+      }
+
+      const currentCount = websites ? websites.length : 0;
+
+      // Get plan limit
+      const planLimits = require('../plan-limits-config');
+      const limit = planLimits.getWebsiteLimit(customer.plan_id);
+
+      return {
+        allowed: currentCount < limit,
+        limit: limit,
+        current: currentCount
+      };
+    } catch (error) {
+      console.error('Website limit validation error:', error);
+      return { allowed: false, limit: 0, current: 0 };
+    }
+  }
+
   // SEO Analysis Storage
   async storeAnalysis(websiteId, analysisData, analysisType = 'comprehensive') {
     if (!this.isConfigured) return null;
 
     try {
+      // First, check if websiteId exists
+      if (!websiteId) {
+        console.error('Error storing analysis: websiteId is required');
+        return null;
+      }
+
       const { data, error } = await this.supabase
         .from('seo_analyses')
         .insert({
@@ -122,19 +191,24 @@ class SupabaseService {
   }
 
   // Get analysis data by domain
-  async getAnalysisData(domain) {
+  async getAnalysisData(domain, customerId = null) {
     if (!this.isConfigured) return null;
 
     try {
-      // First get the website ID for this domain
-      const { data: website, error: websiteError } = await this.supabase
+      // First get the website ID for this domain and customer
+      let query = this.supabase
         .from('websites')
         .select('id')
-        .eq('domain', domain)
-        .single();
+        .eq('domain', domain);
+      
+      if (customerId) {
+        query = query.eq('customer_id', customerId);
+      }
+      
+      const { data: website, error: websiteError } = await query.single();
 
       if (websiteError || !website) {
-        console.log('No website found for domain:', domain);
+        console.log('No website found for domain:', domain, 'customer:', customerId);
         return null;
       }
 
@@ -160,11 +234,70 @@ class SupabaseService {
     }
   }
 
+  // Get all websites for a customer
+  async getCustomerWebsites(customerId) {
+    if (!this.isConfigured) return null;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('websites')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching customer websites:', error);
+        return null;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting customer websites:', error);
+      return null;
+    }
+  }
+
+  // Get analysis data for all customer websites
+  async getCustomerAnalysisData(customerId) {
+    if (!this.isConfigured) return null;
+
+    try {
+      // Get all websites for this customer
+      const websites = await this.getCustomerWebsites(customerId);
+      if (!websites || websites.length === 0) {
+        return [];
+      }
+
+      // Get analysis data for each website
+      const analysisData = [];
+      for (const website of websites) {
+        const analysis = await this.getAnalysisData(website.domain, customerId);
+        if (analysis) {
+          analysisData.push({
+            website: website,
+            analysis: analysis
+          });
+        }
+      }
+
+      return analysisData;
+    } catch (error) {
+      console.error('Error getting customer analysis data:', error);
+      return null;
+    }
+  }
+
   // Keyword Management
   async storeKeywords(websiteId, keywords) {
     if (!this.isConfigured) return null;
 
     try {
+      // First, check if websiteId exists
+      if (!websiteId) {
+        console.error('Error storing keywords: websiteId is required');
+        return null;
+      }
+
       // First, delete existing keywords for this website
       await this.supabase
         .from('keywords')

@@ -998,26 +998,72 @@
             try {
                 const response = await fetch('/api/subscription/current');
                 if (response.ok) {
-                    const subscription = await response.json();
-                    if (subscription.subscription) {
-                        const sub = subscription.subscription;
-                        const isYearly = sub.plan_name && sub.plan_name.toLowerCase().includes('yearly');
-                        const billingText = isYearly ? 'Yearly billing' : 'Monthly billing';
-                        const amount = isYearly ? '$419.99/year' : '$49.99/month';
+                    const result = await response.json();
+                    console.log('📊 Subscription data:', result);
+                    
+                    if (result.subscription) {
+                        const sub = result.subscription;
+                        const isYearly = sub.billing_cycle === 'yearly' || (sub.plan_name && sub.plan_name.toLowerCase().includes('yearly'));
                         
+                        // Format billing text and amount
+                        let billingText = isYearly ? 'Yearly billing' : 'Monthly billing';
+                        let amount = '';
+                        
+                        if (sub.amount && sub.amount > 0) {
+                            const currencySymbol = sub.currency === 'aud' ? 'A$' : '$';
+                            amount = isYearly ? `${currencySymbol}${sub.amount.toFixed(2)}/year` : `${currencySymbol}${sub.amount.toFixed(2)}/month`;
+                        }
+                        
+                        // Check if in trial period
+                        const isTrial = sub.trial_end && new Date(sub.trial_end * 1000) > new Date();
+                        const trialDaysLeft = isTrial ? Math.ceil((new Date(sub.trial_end * 1000) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+                        
+                        // Update subscription status
+                        if (isTrial) {
+                            document.querySelector('.subscription-status').innerHTML = `
+                                <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                                ${sub.plan_name || 'Basic Plan'} - Free Trial
+                            `;
+                        } else {
+                            document.querySelector('.subscription-status').innerHTML = `
+                                <i class="fas fa-check-circle"></i>
+                                ${sub.plan_name || 'Basic Plan'}
+                            `;
+                        }
+                        
+                        // Update subscription details
+                        let detailsHtml = '';
+                        if (isTrial) {
+                            detailsHtml = `Trial ends in: ${trialDaysLeft} days<br>`;
+                        }
+                        
+                        if (sub.current_period_end && sub.amount > 0) {
+                            const nextBillingDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            detailsHtml += `Next billing date: ${nextBillingDate}<br>${billingText}: ${amount}`;
+                        } else {
+                            detailsHtml += `${billingText}: ${amount || 'Free'}`;
+                        }
+                        
+                        document.querySelector('.subscription-details').innerHTML = detailsHtml;
+                    } else {
+                        // No subscription found
                         document.querySelector('.subscription-status').innerHTML = `
-                            <i class="fas fa-check-circle"></i>
-                            ${sub.plan_name || 'Premium Plan'}
+                            <i class="fas fa-info-circle"></i>
+                            Basic Plan
                         `;
-                        
-                        document.querySelector('.subscription-details').innerHTML = `
-                            Next billing date: ${new Date(sub.current_period_end * 1000).toLocaleDateString()}<br>
-                            ${billingText}: ${amount}
-                        `;
+                        document.querySelector('.subscription-details').innerHTML = 'No active subscription';
                     }
+                } else {
+                    console.error('Failed to load subscription data:', response.status);
+                    document.querySelector('.subscription-details').innerHTML = 'Unable to load subscription data';
                 }
             } catch (error) {
                 console.error('Error loading subscription data:', error);
+                document.querySelector('.subscription-details').innerHTML = 'Unable to load subscription data';
             }
         }
 

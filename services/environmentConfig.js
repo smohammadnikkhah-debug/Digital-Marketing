@@ -14,14 +14,11 @@ class EnvironmentConfig {
     }
 
     loadEnvironmentConfig() {
-        const envFile = this.currentEnvironment === 'production' 
-            ? 'env.production' 
-            : 'env.development';
-
-        const envPath = path.join(process.cwd(), envFile);
+        // Use .env file directly instead of environment-specific files
+        const envPath = path.join(process.cwd(), '.env');
         
         if (!fs.existsSync(envPath)) {
-            console.warn(`⚠️ Environment file ${envFile} not found, using defaults`);
+            console.warn(`⚠️ Environment file .env not found, using defaults`);
             return this.getDefaultConfig();
         }
 
@@ -34,8 +31,8 @@ class EnvironmentConfig {
             isSandbox: process.env.ENABLE_SANDBOX_MODE === 'true',
             
             dataforseo: {
-                environment: process.env.DATAFORSEO_ENVIRONMENT || 'sandbox',
-                baseUrl: process.env.DATAFORSEO_BASE_URL || 'https://sandbox.dataforseo.com/v3',
+                environment: process.env.DATAFORSEO_ENVIRONMENT || 'production',
+                baseUrl: process.env.DATAFORSEO_BASE_URL || 'https://api.dataforseo.com/v3',
                 username: process.env.DATAFORSEO_USERNAME,
                 password: process.env.DATAFORSEO_PASSWORD
             },
@@ -106,13 +103,13 @@ class EnvironmentConfig {
 
     getDefaultConfig() {
         return {
-            environment: 'development',
-            isDevelopment: true,
-            isProduction: false,
-            isSandbox: true,
+            environment: 'production',
+            isDevelopment: false,
+            isProduction: true,
+            isSandbox: false,
             dataforseo: {
-                environment: 'sandbox',
-                baseUrl: 'https://sandbox.dataforseo.com/v3',
+                environment: 'production',
+                baseUrl: 'https://api.dataforseo.com/v3',
                 username: null,
                 password: null
             },
@@ -141,9 +138,9 @@ class EnvironmentConfig {
                 logLevel: 'debug'
             },
             features: {
-                enableSandboxMode: true,
-                enableDemoData: true,
-                enableMockResponses: true
+                enableSandboxMode: false,
+                enableDemoData: false,
+                enableMockResponses: false
             }
         };
     }

@@ -103,7 +103,6 @@ router.post('/login', async (req, res) => {
             email: email,
             name: auth0User.name || email,
             auth0_id: auth0User.sub,
-            trial_user: false,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -222,82 +221,79 @@ router.get('/reset-password', (req, res) => {
   res.redirect(resetURL);
 });
 
-// Auth0 callback route
-router.get('/callback', 
-  passport.authenticate('auth0', { failureRedirect: '/login' }),
-  async (req, res) => {
-    try {
-      // User is now authenticated and stored in session
-      const user = req.user;
-      const isSignup = req.session.signupMode;
-      
-      console.log('User authenticated:', user.email, 'Signup mode:', isSignup);
-      
-      // Check if this is a trial user linking their Auth0 account
-      if (user.trial_user) {
-        console.log('🔗 Linking trial user with Auth0 ID:', user.email);
-        await auth0Service.linkTrialUserWithAuth0(user.email, user.auth0_id);
-      }
-      
-      // Clear signup mode from session
-      if (isSignup) {
-        req.session.signupMode = false;
-      }
-      
-      // Redirect based on user status and signup mode
-      if (isSignup && !user.domain) {
-        // New user signup - redirect to plan selection
-        res.redirect('/subscription?signup=success');
-      } else if (user.domain) {
-        // Existing user with domain - go to dashboard
-        res.redirect('/dashboard');
-      } else {
-        // Existing user without domain - go to onboarding
-        res.redirect('/onboarding');
-      }
-    } catch (error) {
-      console.error('Auth callback error:', error);
-      res.redirect('/login?error=auth_failed');
-    }
-  }
-);
+// Auth0 callback route - removed Passport.js implementation
+// Now handled by server.js directly
 
 // Logout route
 router.get('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      console.error('Logout error:', err);
-      return res.redirect('/login?error=logout_failed');
-    }
-    
-    // Redirect to Auth0 logout
-    const logoutURL = `https://${process.env.AUTH0_DOMAIN}/v2/logout?` +
-      `returnTo=${encodeURIComponent(process.env.AUTH0_LOGOUT_URL)}&` +
-      `client_id=${process.env.AUTH0_CLIENT_ID}`;
-    
-    res.redirect(logoutURL);
-  });
+  // Clear the session cookie
+  res.clearCookie('authToken');
+  
+  // Redirect to Auth0 logout
+  const logoutURL = `https://${process.env.AUTH0_DOMAIN}/v2/logout?` +
+    `returnTo=${encodeURIComponent(process.env.AUTH0_LOGOUT_URL)}&` +
+    `client_id=${process.env.AUTH0_CLIENT_ID}`;
+  
+  res.redirect(logoutURL);
 });
 
 // Get current user info
-router.get('/user', (req, res) => {
-  if (req.isAuthenticated()) {
+router.get('/user', async (req, res) => {
+  try {
+    const sessionService = require('../services/sessionService');
+    const token = sessionService.extractToken(req);
+    
+    if (!token) {
+      return res.json({
+        authenticated: false,
+        user: null
+      });
+    }
+
+    const decoded = sessionService.verifyToken(token);
+    
+    if (!decoded) {
+      return res.json({
+        authenticated: false,
+        user: null
+      });
+    }
+
+    // Get fresh user data from database
+    const user = await auth0Service.getUserById(decoded.userId);
+    
+    if (!user) {
+      return res.json({
+        authenticated: false,
+        user: null
+      });
+    }
+
+    // Get customer data if customer_id exists
+    let customerData = null;
+    if (user.customer_id) {
+      customerData = await auth0Service.getCustomerById(user.customer_id);
+    }
+
     res.json({
       authenticated: true,
       user: {
-        id: req.user.id,
-        email: req.user.email,
-        name: req.user.name,
-        picture: req.user.picture,
-        domain: req.user.domain,
-        business_description: req.user.business_description,
-        integrations: req.user.integrations
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        domain: user.domain,
+        company: customerData?.company_name || user.company || '',
+        business_description: customerData?.business_description || user.business_description || '',
+        plan: user.plan || customerData?.plan_id || 'basic',
+        customer_id: user.customer_id
       }
     });
-  } else {
-    res.json({
+  } catch (error) {
+    console.error('Error getting user info:', error);
+    res.status(500).json({
       authenticated: false,
-      user: null
+      user: null,
+      error: 'Failed to get user info'
     });
   }
 });
@@ -305,31 +301,33 @@ router.get('/user', (req, res) => {
 // Update user domain
 router.post('/user/domain', async (req, res) => {
   try {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: 'Not authenticated' });
+    const sessionService = require('../services/sessionService');
+    const token = sessionService.extractToken(req);
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const decoded = sessionService.verifyToken(token);
+    
+    if (!decoded) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
     const { domain } = req.body;
-    
+
     if (!domain) {
       return res.status(400).json({ error: 'Domain is required' });
     }
 
-    // Update user domain (multiple users can use same domain)
-    const updatedUser = await auth0Service.updateUserDomain(req.user.id, domain);
+    // Update user domain in database
+    const result = await auth0Service.updateUserDomain(decoded.userId, domain);
     
-    if (!updatedUser) {
-      return res.status(500).json({ error: 'Failed to update domain' });
+    if (result) {
+      res.json({ success: true, message: 'Domain updated successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to update domain' });
     }
-
-    // Update session user
-    req.user.domain = domain;
-
-    res.json({
-      success: true,
-      user: updatedUser,
-      message: 'Domain saved successfully!'
-    });
   } catch (error) {
     console.error('Update domain error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -339,8 +337,17 @@ router.post('/user/domain', async (req, res) => {
 // Update user business description
 router.post('/user/business', async (req, res) => {
   try {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: 'Not authenticated' });
+    const sessionService = require('../services/sessionService');
+    const token = sessionService.extractToken(req);
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const decoded = sessionService.verifyToken(token);
+    
+    if (!decoded) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
     const { business_description } = req.body;
@@ -349,29 +356,14 @@ router.post('/user/business', async (req, res) => {
       return res.status(400).json({ error: 'Business description is required' });
     }
 
-    // Update user business description
-    const { data: updatedUser, error } = await auth0Service.supabase
-      .from('users')
-      .update({
-        business_description: business_description,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', req.user.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating business description:', error);
-      return res.status(500).json({ error: 'Failed to update business description' });
+    // Update user business description in database
+    const result = await auth0Service.updateUserBusinessDescription(decoded.userId, business_description);
+    
+    if (result) {
+      res.json({ success: true, message: 'Business description updated successfully' });
+    } else {
+      res.status(500).json({ error: 'Failed to update business description' });
     }
-
-    // Update session user
-    req.user.business_description = business_description;
-
-    res.json({
-      success: true,
-      user: updatedUser
-    });
   } catch (error) {
     console.error('Update business description error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -379,22 +371,49 @@ router.post('/user/business', async (req, res) => {
 });
 
 // Check authentication status
-router.get('/status', (req, res) => {
-  res.json({
-    authenticated: req.isAuthenticated(),
-    user: req.isAuthenticated() ? {
-      id: req.user.id,
-      email: req.user.email,
-      name: req.user.name,
-      domain: req.user.domain
-    } : null
-  });
+router.get('/status', async (req, res) => {
+  try {
+    const sessionService = require('../services/sessionService');
+    const token = sessionService.extractToken(req);
+    
+    if (!token) {
+      return res.json({
+        authenticated: false,
+        user: null
+      });
+    }
+
+    const decoded = sessionService.verifyToken(token);
+    
+    if (!decoded) {
+      return res.json({
+        authenticated: false,
+        user: null
+      });
+    }
+
+    res.json({
+      authenticated: true,
+      user: {
+        id: decoded.userId,
+        email: decoded.email,
+        name: decoded.name,
+        domain: decoded.domain
+      }
+    });
+  } catch (error) {
+    console.error('Auth status check error:', error);
+    res.json({
+      authenticated: false,
+      user: null
+    });
+  }
 });
 
 // Create user account using Auth0 Management API
 router.post('/signup', async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, plan } = req.body;
     
     if (!fullName || !email || !password) {
       return res.status(400).json({
@@ -402,6 +421,13 @@ router.post('/signup', async (req, res) => {
         error: 'Full name, email, and password are required'
       });
     }
+    
+    // Validate plan selection (now accepts Stripe product IDs)
+    const validPlans = ['basic', 'pro', 'business']; // Keep legacy support
+    const selectedPlan = plan || 'basic'; // Default to basic if no plan specified
+    
+    // For now, we'll store the plan as-is (could be Stripe product ID or legacy plan name)
+    // TODO: Add validation for Stripe product IDs if needed
     
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -441,14 +467,30 @@ router.post('/signup', async (req, res) => {
       email_verified: false
     });
     
+        // Create customer record first
+        const customer = await auth0Service.createCustomer({
+          email: email,
+          name: fullName
+        }, selectedPlan);
+
+        if (!customer) {
+          console.error('Failed to create customer record');
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to create customer account'
+          });
+        }
+
         // Create user in our Supabase database
         const { data: newUser, error: createError } = await auth0Service.supabase
           .from('users')
           .insert({
+            id: auth0User.user_id, // Use Auth0 user ID as primary key
             email: email,
             name: fullName,
             auth0_id: auth0User.user_id,
-            trial_user: false,
+            customer_id: customer.id, // Link user to customer
+            plan: selectedPlan,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -457,9 +499,17 @@ router.post('/signup', async (req, res) => {
     
     if (createError) {
       console.error('Error creating user in Supabase:', createError);
+      console.error('Auth0 user created:', auth0User);
+      console.error('Attempted user data:', {
+        id: auth0User.user_id,
+        email: email,
+        name: fullName,
+        auth0_id: auth0User.user_id
+      });
       return res.status(500).json({
         success: false,
-        error: 'Failed to create user account'
+        error: 'Failed to create user account',
+        details: createError.message
       });
     }
     
@@ -469,17 +519,30 @@ router.post('/signup', async (req, res) => {
         id: newUser.id,
         email: newUser.email,
         name: newUser.name,
-        auth0_id: newUser.auth0_id
+        auth0_id: newUser.auth0_id,
+        plan: selectedPlan // Return the selected plan from request
       },
-      message: 'Account created successfully. You can now select a plan.'
+      message: 'Account created successfully. Welcome to Mozarex AI!'
     });
     
   } catch (error) {
     console.error('Signup error:', error);
+    console.error('Error stack:', error.stack);
     
     // Handle specific Auth0 errors
     if (error.response && error.response.data) {
       const auth0Error = error.response.data;
+      console.error('Auth0 error details:', auth0Error);
+      
+      // Handle user already exists error (409 Conflict)
+      if (error.response.status === 409 && auth0Error.message === 'The user already exists.') {
+        return res.status(400).json({
+          success: false,
+          error: 'An account with this email already exists'
+        });
+      }
+      
+      // Handle other Auth0 errors
       if (auth0Error.code === 'user_exists') {
         return res.status(400).json({
           success: false,
@@ -490,7 +553,8 @@ router.post('/signup', async (req, res) => {
     
     res.status(500).json({
       success: false,
-      error: 'Internal server error'
+      error: 'Internal server error',
+      details: error.message
     });
   }
 });
