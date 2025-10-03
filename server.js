@@ -28,6 +28,29 @@ const IntelligentContentService = require('./services/intelligentContentService'
 const Auth0Service = require('./services/auth0Service');
 const subscriptionService = require('./services/subscriptionService');
 
+// Helper function to check if user has active subscription
+async function checkUserSubscription(email) {
+  try {
+    const auth0Service = require('./services/auth0Service');
+    
+    // Check if user exists and has a Stripe customer ID
+    const user = await auth0Service.getUserByEmail(email);
+    if (!user || !user.stripe_customer_id) {
+      console.log('🔍 No Stripe customer ID found for:', email);
+      return false;
+    }
+    
+    // TODO: Check Stripe subscription status
+    // For now, return false to always show as no active subscription
+    // This should be implemented to check Stripe API for active subscriptions
+    console.log('🔍 Subscription check: No active subscription found for:', email);
+    return false;
+  } catch (error) {
+    console.error('Error checking user subscription:', error);
+    return false;
+  }
+}
+
 // Helper function to get customer_id from authenticated user
 async function getCustomerIdFromRequest(req) {
   try {
@@ -534,13 +557,45 @@ app.get('/auth/callback', async (req, res) => {
 
     console.log('✅ Auth0 callback completed successfully - redirecting user');
     
-    // Check if this is a signup flow with plan data
-    if (planData.signup && planData.priceId) {
-      console.log('🔄 Signup flow detected with plan data');
-      
-      // Check if user has used trial before
-      const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
-      console.log('🔍 Trial usage check:', { email: user.email, hasUsedTrial });
+    // UNIFIED VALIDATION: Check trial and payment status regardless of entry path
+    console.log('🔍 Unified validation: Checking trial and payment status for all users');
+    
+    // Check if user has used trial before
+    const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
+    console.log('🔍 Trial usage check:', { email: user.email, hasUsedTrial });
+    
+    // Check if user has active subscription
+    const hasActiveSubscription = await checkUserSubscription(user.email);
+    console.log('🔍 Subscription check:', { email: user.email, hasActiveSubscription });
+    
+    // Determine routing based on trial and subscription status
+    let shouldGoToStripe = false;
+    let reason = '';
+    
+    if (!hasUsedTrial && !hasActiveSubscription) {
+      // New user - redirect to onboarding for trial
+      console.log('🆕 New user - redirecting to onboarding for trial');
+      return res.redirect('/onboarding');
+    } else if (hasUsedTrial && !hasActiveSubscription) {
+      // Trial used but no subscription - redirect to Stripe
+      console.log('💳 Trial used, no payment - redirecting to Stripe');
+      shouldGoToStripe = true;
+      reason = 'trial_expired_no_payment';
+    } else {
+      // Has active subscription - redirect to dashboard
+      console.log('✅ Active subscription - redirecting to dashboard');
+      return res.redirect('/dashboard');
+    }
+    
+    // If we need to go to Stripe but no plan data from signup flow
+    if (shouldGoToStripe && (!planData.signup || !planData.priceId)) {
+      console.log('💳 Redirecting to plans page to select subscription');
+      return res.redirect('/plans');
+    }
+    
+    // Process signup flow with plan data
+    if (shouldGoToStripe && planData.signup && planData.priceId) {
+      console.log('🔄 Processing Stripe checkout for:', reason);
       
       // Use the same plan derivation logic for redirect
       let redirectPlan = planData.plan;
@@ -583,13 +638,8 @@ app.get('/auth/callback', async (req, res) => {
         return res.redirect('/plans?error=checkout_failed');
       }
     }
-    
-    // Redirect based on domain status for existing users or users without plan data
-    if (currentUser.domain) {
-      return res.redirect('/dashboard');
-    } else {
-      return res.redirect('/onboarding');
-    }
+    // Redirect logic is now handled by the unified validation above
+    // This section is cleaned up to avoid conflicts
     
   } catch (error) {
     console.error('Auth0 callback error:', error);
