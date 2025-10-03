@@ -440,6 +440,156 @@
             font-size: 0.875rem;
         }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            margin: 1rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .modal-body {
+            margin-bottom: 2rem;
+        }
+
+        .modal-description {
+            color: #94a3b8;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-details {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-details-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-details-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-details-label {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .modal-details-value {
+            color: #fca5a5;
+            font-weight: 600;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel-modal {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-cancel-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+
+        /* Payment Modal Styles */
+        .payment-modal .modal-icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .payment-success {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .payment-success .modal-icon {
+            margin: 0 auto 1rem auto;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .payment-success h3 {
+            color: #10b981;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-success p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -461,6 +611,15 @@
 
             .content-area {
                 padding: 1rem;
+            }
+
+            .modal {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+
+            .modal-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -729,6 +888,97 @@
         </div>
     </div>
 
+    <!-- Cancel Subscription Modal -->
+    <div class="modal-overlay" id="cancelSubscriptionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">Cancel Subscription</h3>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">
+                    Are you sure you want to cancel your subscription? You will retain access to all premium features until the end of your current billing period.
+                </p>
+                <div class="modal-details">
+                    <div class="modal-details-item">
+                        <span class="modal-details-label">Access until:</span>
+                        <span class="modal-details-value" id="cancelAccessUntil">Loading...</span>
+                    </div>
+                    <div class="modal-details-item">
+                        <span class="modal-details-label">Current plan:</span>
+                        <span class="modal-details-value" id="cancelCurrentPlan">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel-modal" onclick="closeCancelModal()">
+                    <i class="fas fa-times"></i>
+                    Keep Subscription
+                </button>
+                <button class="btn btn-danger" onclick="confirmCancelSubscription()">
+                    <i class="fas fa-ban"></i>
+                    Cancel Subscription
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Update Modal -->
+    <div class="modal-overlay" id="paymentUpdateModal">
+        <div class="modal payment-modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h3 class="modal-title">Update Payment Method</h3>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">
+                    This will redirect the current payment method.
+                </p>
+                <div class="modal-details">
+                    <div class="modal-details-item">
+                        <span class="modal-details-label">Security:</span>
+                        <span class="modal-details-value">🛡️ Hosted by Stripe</span>
+                    </div>
+                    <div class="modal-details-item">
+                        <span class="modal-details-label">PCI Compliance:</span>
+                        <span class="modal-details-value">✅ Fully Compliant</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel-modal" onclick="closePaymentModal()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+                <button class="btn btn-primary" onclick="confirmPaymentUpdate()">
+                    <i class="fas fa-external-link-alt"></i>
+                    Update Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Success Modal -->
+    <div class="modal-overlay" id="paymentSuccessModal">
+        <div class="modal">
+            <div class="payment-success">
+                <div class="modal-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Payment Updated Successfully!</h3>
+                <p>Your payment method has been updated. You can continue using all premium features.</p>
+                <button class="btn btn-primary" onclick="closePaymentSuccessModal()">
+                    <i class="fas fa-check"></i>
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // User dropdown functionality
         function showUserDropdown() {
@@ -855,6 +1105,42 @@
                 saveButton.disabled = false;
             }
         });
+
+        // Get auth token from localStorage
+        function getAuthToken() {
+            return localStorage.getItem('authToken');
+        }
+
+        // Make authenticated API request
+        async function makeAuthenticatedRequest(url, options = {}) {
+            const token = getAuthToken();
+            if (!token) {
+                throw new Error('Authentication token not found');
+            }
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers
+            };
+
+            return sendRequest(url, { ...options, headers });
+        }
+
+        // Generic request function with error handling
+        async function sendRequest(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'include',
+                ...options
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
+                throw new Error(errorData.error || errorData.message || 'Request failed');
+            }
+
+            return response.json();
+        }
 
         // Success/Error message functions
         function showSuccessMessage(message) {
@@ -1084,33 +1370,132 @@
 
         // Handle update payment
         async function handleUpdatePayment() {
-            try {
-                showSuccessMessage('Redirecting to payment update...');
-                // Redirect to Stripe customer portal
-                const response = await fetch('/api/subscription/create-portal-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
+            showPaymentModal();
+        }
 
+        // Handle cancel subscription  
+        async function handleCancelSubscription() {
+            await loadSubscriptionDataForModal();
+            showCancelModal();
+        }
+
+        // Modal Functions
+        function showPaymentModal() {
+            const modal = document.getElementById('paymentUpdateModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentUpdateModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function showCancelModal() {
+            const modal = document.getElementById('cancelSubscriptionModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCancelModal() {
+            const modal = document.getElementById('cancelSubscriptionModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function showPaymentSuccessModal() {
+            const modal = document.getElementById('paymentSuccessModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePaymentSuccessModal() {
+            const modal = document.getElementById('paymentSuccessModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Load subscription data for modal display
+        async function loadSubscriptionDataForModal() {
+            try {
+                const response = await fetch('/api/subscription/current');
                 if (response.ok) {
-                    const { url } = await response.json();
-                    window.location.href = url;
-                } else {
-                    showErrorMessage('Failed to create payment update session');
+                    const result = await response.json();
+                    
+                    if (result.subscription) {
+                        const sub = result.subscription;
+                        
+                        // Update cancel modal details
+                        document.getElementById('cancelCurrentPlan').textContent = sub.plan_name || 'Basic Plan';
+                        
+                        if (sub.current_period_end) {
+                            const accessUntil = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long', 
+                                day: 'numeric'
+                            });
+                            document.getElementById('cancelAccessUntil').textContent = accessUntil;
+                        } else {
+                            document.getElementById('cancelAccessUntil').textContent = 'Unknown';
+                        }
+                    } else {
+                        document.getElementById('cancelCurrentPlan').textContent = 'Basic Plan';
+                        document.getElementById('cancelAccessUntil').textContent = 'N/A';
+                    }
                 }
             } catch (error) {
-                console.error('Update payment error:', error);
-                showErrorMessage('An error occurred while updating payment');
+                console.error('Error loading subscription data for modal:', error);
+                document.getElementById('cancelCurrentPlan').textContent = 'Unknown';
+                document.getElementById('cancelAccessUntil').textContent = 'Unknown';
             }
         }
 
-        // Handle cancel subscription
-        async function handleCancelSubscription() {
-            if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your current billing period.')) {
-                return;
+        // Confirm payment update (Enhanced Stripe integration)
+        async function confirmPaymentUpdate() {
+            const button = document.querySelector('#paymentUpdateModal .btn-primary');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            button.disabled = true;
+
+            try {
+                // Close the modal first
+                closePaymentModal();
+
+                // Create Stripe customer portal session for payment update
+                const result = await makeAuthenticatedRequest('/api/stripe/create-portal-session', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        return_url: window.location.origin + '/user-settings',
+                        features: ['payment_method_update']
+                    })
+                });
+
+                if (result.url) {
+                    // Show success message and redirect to Stripe customer portal
+                    showSuccessMessage('Redirecting to Stripe portal for secure payment update...');
+                    setTimeout(() => {
+                        window.location.href = result.url;
+                    }, 1000);
+                } else {
+                    throw new Error('No URL returned from Stripe');
+                }
+            } catch (error) {
+                console.error('Payment update error:', error);
+                showErrorMessage('An error occurred while updating payment method: ' + error.message);
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
             }
+        }
+
+        // Confirm subscription cancellation
+        async function confirmCancelSubscription() {
+            const button = document.querySelector('#cancelSubscriptionModal .btn-danger');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+            button.disabled = true;
 
             try {
                 const response = await fetch('/api/subscription/cancel', {
@@ -1121,18 +1506,36 @@
                 });
 
                 if (response.ok) {
+                    // Close modal and show success message
+                    closeCancelModal();
                     showSuccessMessage('Subscription cancelled successfully. You will retain access until the end of your billing period.');
+                    
                     // Reload subscription data
-                    loadSubscriptionData();
+                    setTimeout(() => {
+                        loadSubscriptionData();
+                    }, 1000);
                 } else {
                     const error = await response.json();
-                    showErrorMessage(error.message || 'Failed to cancel subscription');
+                    throw new Error(error.message || 'Failed to cancel subscription');
                 }
             } catch (error) {
                 console.error('Cancel subscription error:', error);
-                showErrorMessage('An error occurred while cancelling subscription');
+                showErrorMessage('An error occurred while cancelling subscription: ' + error.message);
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
             }
         }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        });
     </script>
 </body>
 </html>
+

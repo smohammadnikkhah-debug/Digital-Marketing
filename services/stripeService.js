@@ -506,6 +506,28 @@ class StripeService {
       console.error('Error updating customer subscription:', error);
     }
   }
+
+  // Create customer portal session for payment updates and subscription management
+  async createCustomerPortalSession(customerId, returnUrl, features = []) {
+    try {
+      console.log('🔗 Creating customer portal session for:', customerId);
+
+      const session = await this.stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl,
+        flow_data: {
+          type: 'payment_method_update',
+          payment_method_update: {}
+        }
+      });
+
+      console.log('✅ Customer portal session created:', session.id);
+      return session;
+    } catch (error) {
+      console.error('❌ Error creating customer portal session:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new StripeService();

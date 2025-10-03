@@ -78,6 +78,60 @@ router.get('/prices/:priceId', async (req, res) => {
   }
 });
 
+// Create customer portal session for payment updates
+router.post('/create-portal-session', async (req, res) => {
+  try {
+    const { return_url, features = [] } = req.body;
+    
+    // Get user authentication from session/JWT
+    const authToken = req.headers.authorization?.replace('Bearer ', '');
+    if (!authToken) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const sessionService = require('../services/sessionService');
+    const decoded = sessionService.verifyToken(authToken);
+    
+    // Get customer data from database
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const { data: customer, error: customerError } = await supabase
+      .from('customers')
+      .select('stripe_customer_id')
+      .eq('auth0_user_id', decoded.userId)
+      .single();
+
+    if (customerError || !customer?.stripe_customer_id) {
+      return res.status(404).json({
+        success: false,
+        error: 'Stripe customer not found'
+      });
+    }
+
+    const portalSession = await stripeService.createCustomerPortalSession(
+      customer.stripe_customer_id,
+      return_url || `${req.protocol}://${req.get('host')}/user-settings`,
+      features
+    );
+
+    res.json({ success: true, url: portalSession.url });
+  } catch (error) {
+    console.error('Error creating portal session:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to create portal session',
+      details: error.message 
+    });
+  }
+});
+
 // Stripe webhook handler
 router.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
