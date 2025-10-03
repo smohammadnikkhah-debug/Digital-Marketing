@@ -7,6 +7,169 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Default mobile menu toggle styles */
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            /* Navigation */
+            .nav-container {
+                padding: 0 1rem;
+            }
+            .nav-menu {
+                display: none;
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: #1a1a1a;
+                flex-direction: column;
+                padding: 2rem;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            .nav-menu.active {
+                display: flex;
+            }
+            .nav-link {
+                padding: 1rem 0;
+                border-bottom: 1px solid #333;
+                width: 100%;
+                text-align: left;
+            }
+            .mobile-menu-toggle {
+                display: block;
+                color: #fff;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 0.5rem;
+                border: none;
+                background: none;
+            }
+
+            /* Hero Section */
+            .hero-container {
+                flex-direction: column;
+                padding: 2rem 1rem;
+                text-align: center;
+            }
+            .hero-title {
+                font-size: 2rem;
+                line-height: 1.2;
+                margin-bottom: 1rem;
+            }
+            .hero-subtitle {
+                font-size: 1rem;
+                line-height: 1.5;
+                margin-bottom: 2rem;
+            }
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+            .hero-actions {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                max-width: 300px;
+                padding: 1rem 2rem;
+                font-size: 1rem;
+            }
+            .hero-visual {
+                margin-top: 2rem;
+            }
+            .dashboard-preview {
+                max-width: 100%;
+                padding: 1.5rem;
+            }
+
+            /* Features Grid */
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 0 1rem;
+            }
+            .feature-card {
+                padding: 2rem 1.5rem;
+            }
+            .feature-icon {
+                font-size: 2rem;
+                margin-bottom: 1.5rem;
+            }
+
+            /* Comparison Section */
+            .comparison-grid {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            .comparison-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            .vs-arrow {
+                transform: rotate(90deg);
+                margin: 1rem 0;
+            }
+
+            /* Testimonials */
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .testimonial-card {
+                padding: 2rem 1.5rem;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            /* Container */
+            .container {
+                padding: 0 1rem;
+            }
+
+            /* Button */
+            .cta-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            /* Footer */
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 2rem;
+            }
+            .footer-links {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 2rem;
+            }
+
+            /* Typography */
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.75rem; }
+            h3 { font-size: 1.5rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.75rem;
+            }
+            .hero-subtitle {
+                font-size: 0.9rem;
+            }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+        }
+    </style>
     <meta name="description" content="Revolutionary AI-powered SEO platform that combines DataForSEO intelligence with OpenAI automation. Get comprehensive website analysis, automated content generation, and intelligent marketing strategies.">
     <meta name="keywords" content="AI SEO, DataForSEO, OpenAI, digital marketing, website analysis, content generation, SEO automation">
 </head>
@@ -452,8 +615,55 @@
             return card;
         }
 
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.querySelector('.nav-menu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (menu.classList.contains('active')) {
+                menu.classList.remove('active');
+                toggle.innerHTML = '<i class="fas fa-bars"></i>';
+            } else {
+                menu.classList.add('active');
+                toggle.innerHTML = '<i class="fas fa-times"></i>';
+            }
+        }
+
+        // Close mobile menu when clicking on a link
+        function closeMobileMenu() {
+            const menu = document.querySelector('.nav-menu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            menu.classList.remove('active');
+            toggle.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Enable mobile menu toggle
+            const mobileToggle = document.querySelector('.mobile-menu-toggle');
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Close menu when clicking on nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(event) {
+                const menu = document.querySelector('.nav-menu');
+                const toggle = document.querySelector('.mobile-menu-toggle');
+                
+                if (menu.classList.contains('active') && 
+                    !menu.contains(event.target) && 
+                    !toggle.contains(event.target)) {
+                    closeMobileMenu();
+                }
+            });
+
             // Check for rate limit error
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('error') === 'rate_limit') {
