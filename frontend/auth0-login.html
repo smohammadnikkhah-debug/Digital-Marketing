@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - Mozarex SEO Dashboard</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -17,87 +12,58 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
         .auth-container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             padding: 40px;
             width: 100%;
             max-width: 400px;
             text-align: center;
         }
 
-        .auth-header {
+        .auth-logo {
             margin-bottom: 30px;
         }
 
-        .auth-logo {
-            margin-bottom: 20px;
-        }
-
-        .auth-logo img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-        }
-
-        .auth-title {
+        .auth-logo h1 {
+            color: #1a1a1a;
             font-size: 28px;
             font-weight: 700;
-            color: #2d3748;
             margin-bottom: 8px;
         }
 
         .auth-subtitle {
-            color: #718096;
+            color: #666;
             font-size: 16px;
         }
 
-        .login-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .login-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .login-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
+        .auth-message {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .loading-spinner {
             width: 20px;
             height: 20px;
-            border: 2px solid #ffffff40;
-            border-top: 2px solid #ffffff;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            display: inline-block;
         }
 
         @keyframes spin {
@@ -105,94 +71,24 @@
             100% { transform: rotate(360deg); }
         }
 
-        .auth-features {
-            margin-top: 30px;
-            text-align: left;
-        }
-
-        .auth-feature {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            color: #4a5568;
-            font-size: 14px;
-        }
-
-        .auth-feature-icon {
-            background: #48bb78;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
         .auth-footer {
             margin-top: 30px;
-            color: #718096;
+            color: #666;
             font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .error-message {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .success-message {
-            background: #c6f6d5;
-            color: #2f855a;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <div class="auth-header">
-            <div class="auth-logo">
-                <img src="/images/Logo_M.png" alt="Mozarex">
-            </div>
-            <h1 class="auth-title">Welcome Back</h1>
-            <p class="auth-subtitle">Sign in to access your SEO dashboard</p>
+        <div class="auth-logo">
+            <h1>Mozarex</h1>
+            <p class="auth-subtitle">Sign in to your account</p>
         </div>
 
-        <div id="error-message" class="error-message" style="display: none;"></div>
-        <div id="success-message" class="success-message" style="display: none;"></div>
-
-        <button id="login-button" class="login-button">
-            <i class="fas fa-sign-in-alt"></i>
-            <span>Sign In with Auth0</span>
-        </button>
-
-        <div class="auth-features">
-            <div class="auth-feature">
-                <div class="auth-feature-icon">✓</div>
-                <span>Comprehensive SEO Analysis</span>
-            </div>
-            <div class="auth-feature">
-                <div class="auth-feature-icon">✓</div>
-                <span>AI-Powered Content Calendar</span>
-            </div>
-            <div class="auth-feature">
-                <div class="auth-feature-icon">✓</div>
-                <span>Keyword Research & Tracking</span>
-            </div>
-            <div class="auth-feature">
-                <div class="auth-feature-icon">✓</div>
-                <span>Social Media Integration</span>
-            </div>
+        <div class="auth-message">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 10px;">Redirecting you to sign in...</p>
         </div>
 
         <div class="auth-footer">
@@ -200,104 +96,34 @@
         </div>
     </div>
 
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
     <script>
-        // Auth0 configuration
-        const auth0Config = {
-            domain: 'login.mozarex.com',
-            clientId: 'X17O3qhsPeFMskBS2von2dok7LZSiLAA',
-            authorizationParams: {
-                redirect_uri: window.location.origin + '/auth/callback',
-                scope: 'openid email profile'
-            }
-        };
-
-        // Initialize Auth0
-        let auth0Client = null;
-
-        async function initAuth0() {
-            try {
-                auth0Client = await auth0.createAuth0Client(auth0Config);
-                
-                // Check if user is already authenticated
-                const isAuthenticated = await auth0Client.isAuthenticated();
-                if (isAuthenticated) {
-                    // User is already logged in, redirect to dashboard
-                    window.location.href = '/dashboard';
-                    return;
-                }
-
-                // Check if we're returning from Auth0
-                const query = window.location.search;
-                if (query.includes('code=') && query.includes('state=')) {
-                    // Handle the redirect from Auth0
-                    await auth0Client.handleRedirectCallback();
-                    // Redirect to dashboard after successful login
-                    window.location.href = '/dashboard';
-                    return;
-                }
-            } catch (error) {
-                console.error('Auth0 initialization error:', error);
-                showError('Failed to initialize authentication. Please try again.');
-            }
-        }
-
-        // Login function
-        async function login() {
-            try {
-                const loginButton = document.getElementById('login-button');
-                const buttonText = loginButton.querySelector('span');
-                const buttonIcon = loginButton.querySelector('i');
-                
-                // Show loading state
-                loginButton.disabled = true;
-                buttonText.textContent = 'Redirecting...';
-                buttonIcon.style.display = 'none';
-                loginButton.innerHTML = '<div class="loading-spinner"></div><span>Redirecting...</span>';
-
-                // Redirect to Auth0 Universal Login
-                await auth0Client.loginWithRedirect({
-                    authorizationParams: {
-                        redirect_uri: window.location.origin + '/auth/callback'
-                    }
-                });
-            } catch (error) {
-                console.error('Login error:', error);
-                showError('Login failed. Please try again.');
-                
-                // Reset button state
-                const loginButton = document.getElementById('login-button');
-                loginButton.disabled = false;
-                loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>Sign In with Auth0</span>';
-            }
-        }
-
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+        // Redirect to server-side Auth0 login endpoint
+        function initiateLogin() {
+            // Get URL parameters from the current URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan');
+            const priceId = urlParams.get('priceId');
+            const billing = urlParams.get('billing');
+            const signup = urlParams.get('signup');
             
-            // Hide success message if shown
-            document.getElementById('success-message').style.display = 'none';
+            // Build the login URL with parameters
+            let loginUrl = '/auth/login?';
+            const params = new URLSearchParams();
+            
+            if (plan) params.append('plan', plan);
+            if (priceId) params.append('priceId', priceId);
+            if (billing) params.append('billing', billing);
+            if (signup) params.append('signup', signup);
+            
+            loginUrl += params.toString();
+            
+            console.log('Redirecting to server login:', loginUrl);
+            window.location.href = loginUrl;
         }
 
-        // Show success message
-        function showSuccess(message) {
-            const successDiv = document.getElementById('success-message');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            
-            // Hide error message if shown
-            document.getElementById('error-message').style.display = 'none';
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', async () => {
-            await initAuth0();
-            
-            // Add click event to login button
-            document.getElementById('login-button').addEventListener('click', login);
+        // Auto-initiate login when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initiateLogin();
         });
     </script>
 </body>
