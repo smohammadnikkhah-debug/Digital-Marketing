@@ -51,6 +51,36 @@ async function checkUserSubscription(email) {
   }
 }
 
+// Helper function to check if user has analyzed domains
+async function checkUserAnalyzedDomains(customerId) {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    // Query customer_websites table for any websites belonging to this customer
+    const { data: websites, error } = await supabase
+      .from('customer_websites')
+      .select('id')
+      .eq('customer_id', customerId)
+      .limit(1);
+
+    if (error) {
+      console.error('Error checking user domains:', error);
+      return false;
+    }
+
+    const hasDomains = websites && websites.length > 0;
+    console.log('🔍 Domain check for customer:', { customerId, websitesCount: websites?.length || 0, hasDomains });
+    return hasDomains;
+  } catch (error) {
+    console.error('Error checking user analyzed domains:', error);
+    return false;
+  }
+}
+
 // Helper function to get customer_id from authenticated user
 async function getCustomerIdFromRequest(req) {
   try {
@@ -568,22 +598,35 @@ app.get('/auth/callback', async (req, res) => {
     const hasActiveSubscription = await checkUserSubscription(user.email);
     console.log('🔍 Subscription check:', { email: user.email, hasActiveSubscription });
     
-    // Determine routing based on trial and subscription status
+    // Check if user has analyzed domains
+    const hasAnalyzedDomains = await checkUserAnalyzedDomains(currentUser.customer_id);
+    console.log('🔍 Domain analysis check:', { customerId: currentUser.customer_id, hasAnalyzedDomains });
+    
+    // Determine routing based on trial, subscription, and domain analysis status
     let shouldGoToStripe = false;
     let reason = '';
     
-    if (!hasUsedTrial && !hasActiveSubscription) {
-      // New user - redirect to onboarding for trial
-      console.log('🆕 New user - redirecting to onboarding for trial');
+    // ROUTING LOGIC: Consider trial status, subscription status, AND domain analysis
+    if (hasActiveSubscription) {
+      // Has active subscription - always go to dashboard regardless of domain status
+      console.log('✅ Active subscription - redirecting to dashboard');
+      return res.redirect('/dashboard');
+    } else if (!hasUsedTrial && !hasAnalyzedDomains) {
+      // Brand new user: no trial used + no analyzed domains = onboarding
+      console.log('🆕 New user with no domains - redirecting to onboarding');
       return res.redirect('/onboarding');
+    } else if (!hasUsedTrial && hasAnalyzedDomains) {
+      // User has domains but no trial used = dashboard (they can continue using trial)
+      console.log('🔍 User with domains but no trial used - redirecting to dashboard');
+      return res.redirect('/dashboard');
     } else if (hasUsedTrial && !hasActiveSubscription) {
-      // Trial used but no subscription - redirect to Stripe
+      // Trial used but no subscription = need payment
       console.log('💳 Trial used, no payment - redirecting to Stripe');
       shouldGoToStripe = true;
       reason = 'trial_expired_no_payment';
     } else {
-      // Has active subscription - redirect to dashboard
-      console.log('✅ Active subscription - redirecting to dashboard');
+      // Fallback - redirect to dashboard if unclear
+      console.log('🔍 Fallback - redirecting to dashboard');
       return res.redirect('/dashboard');
     }
     
