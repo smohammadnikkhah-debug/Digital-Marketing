@@ -60,9 +60,9 @@ async function checkUserAnalyzedDomains(customerId) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Query customer_websites table for any websites belonging to this customer
+    // Query websites table for any websites belonging to this customer
     const { data: websites, error } = await supabase
-      .from('customer_websites')
+      .from('websites')
       .select('id')
       .eq('customer_id', customerId)
       .limit(1);
