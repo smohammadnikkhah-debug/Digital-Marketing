@@ -1282,9 +1282,9 @@
         // Load subscription data
         async function loadSubscriptionData() {
             try {
-                const response = await fetch('/api/subscription/current');
-                if (response.ok) {
-                    const result = await response.json();
+                const response = await makeAuthenticatedRequest('/api/subscription/current');
+                if (response.success) {
+                    const result = response;
                     console.log('📊 Subscription data:', result);
                     
                     if (result.subscription) {
@@ -1301,25 +1301,31 @@
                         }
                         
                         // Check if in trial period
-                        const isTrial = sub.trial_end && new Date(sub.trial_end * 1000) > new Date();
-                        const trialDaysLeft = isTrial ? Math.ceil((new Date(sub.trial_end * 1000) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+                        const isTrial = sub.is_trial || (sub.trial_end && new Date(sub.trial_end * 1000) > new Date());
+                        const trialDaysLeft = isTrial && sub.current_period_end ? 
+                            Math.ceil((new Date(sub.current_period_end * 1000) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
                         
                         // Update subscription status
                         if (isTrial) {
                             document.querySelector('.subscription-status').innerHTML = `
                                 <i class="fas fa-clock" style="color: #f59e0b;"></i>
-                                ${sub.plan_name || 'Basic Plan'} - Free Trial
+                                ${sub.plan_name || 'Trial Plan'} - Free Trial
+                            `;
+                        } else if (sub.is_basic) {
+                            document.querySelector('.subscription-status').innerHTML = `
+                                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                                ${sub.plan_name || 'Basic Plan'}
                             `;
                         } else {
                             document.querySelector('.subscription-status').innerHTML = `
-                                <i class="fas fa-check-circle"></i>
-                                ${sub.plan_name || 'Basic Plan'}
+                                <i class="fas fa-check-circle" style="color: #3b82f6;"></i>
+                                ${sub.plan_name || 'Professional Plan'}
                             `;
                         }
                         
                         // Update subscription details
                         let detailsHtml = '';
-                        if (isTrial) {
+                        if (isTrial && trialDaysLeft > 0) {
                             detailsHtml = `Trial ends in: ${trialDaysLeft} days<br>`;
                         }
                         
@@ -1330,6 +1336,10 @@
                                 day: 'numeric'
                             });
                             detailsHtml += `Next billing date: ${nextBillingDate}<br>${billingText}: ${amount}`;
+                        } else if (sub.is_trial) {
+                            detailsHtml += `${billingText}: Free (Trial)`;
+                        } else if (sub.is_basic) {
+                            detailsHtml += `${billingText}: Free`;
                         } else {
                             detailsHtml += `${billingText}: ${amount || 'Free'}`;
                         }
@@ -1419,9 +1429,9 @@
         // Load subscription data for modal display
         async function loadSubscriptionDataForModal() {
             try {
-                const response = await fetch('/api/subscription/current');
-                if (response.ok) {
-                    const result = await response.json();
+                const response = await makeAuthenticatedRequest('/api/subscription/current');
+                if (response.success) {
+                    const result = response;
                     
                     if (result.subscription) {
                         const sub = result.subscription;
@@ -1436,8 +1446,10 @@
                                 day: 'numeric'
                             });
                             document.getElementById('cancelAccessUntil').textContent = accessUntil;
+                        } else if (sub.is_trial) {
+                            document.getElementById('cancelAccessUntil').textContent = 'Trial Period';
                         } else {
-                            document.getElementById('cancelAccessUntil').textContent = 'Unknown';
+                            document.getElementById('cancelAccessUntil').textContent = 'N/A';
                         }
                     } else {
                         document.getElementById('cancelCurrentPlan').textContent = 'Basic Plan';
@@ -1498,25 +1510,24 @@
             button.disabled = true;
 
             try {
-                const response = await fetch('/api/subscription/cancel', {
+                const response = await makeAuthenticatedRequest('/api/subscription/cancel', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     }
                 });
 
-                if (response.ok) {
+                if (response.success) {
                     // Close modal and show success message
                     closeCancelModal();
-                    showSuccessMessage('Subscription cancelled successfully. You will retain access until the end of your billing period.');
+                    showSuccessMessage(response.message || 'Subscription cancelled successfully. You will retain access until the end of your billing period.');
                     
                     // Reload subscription data
                     setTimeout(() => {
                         loadSubscriptionData();
                     }, 1000);
                 } else {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to cancel subscription');
+                    throw new Error(response.message || 'Failed to cancel subscription');
                 }
             } catch (error) {
                 console.error('Cancel subscription error:', error);

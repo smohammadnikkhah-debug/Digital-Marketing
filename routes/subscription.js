@@ -331,70 +331,109 @@ router.get('/current', async (req, res) => {
             });
         }
 
+        console.log('🔍 Getting subscription for user:', userId);
+
         // Get user to get customer_id
         const user = await auth0Service.getUserById(userId);
-        if (!user || !user.customer_id) {
+        if (!user) {
             return res.json({
                 success: true,
                 subscription: null,
-                plan: user?.plan || 'basic',
-                message: 'No subscription found'
+                plan: 'basic',
+                message: 'No user found'
             });
         }
 
-        // Get customer data
-        const customer = await auth0Service.getCustomerById(user.customer_id);
-        if (!customer) {
-            return res.json({
-                success: true,
-                subscription: null,
-                plan: user.plan || 'basic',
-                message: 'No customer found'
-            });
+        console.log('👤 User found:', { userId: user.id, customerId: user.customer_id, stripeCustomerId: user.stripe_customer_id });
+
+        // Check if user has used trial
+        const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
+        console.log('🔍 Trial status:', { email: user.email, hasUsedTrial });
+
+        // If user has no Stripe customer ID, they're likely on trial or basic plan
+        if (!user.stripe_customer_id) {
+            if (!hasUsedTrial) {
+                // User is on trial
+                const trialEndDate = new Date();
+                trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
+                
+                return res.json({
+                    success: true,
+                    subscription: {
+                        id: 'trial',
+                        status: 'trialing',
+                        plan_name: 'Trial Plan',
+                        billing_cycle: 'monthly',
+                        current_period_end: Math.floor(trialEndDate.getTime() / 1000),
+                        amount: 0,
+                        currency: 'aud',
+                        is_trial: true
+                    }
+                });
+            } else {
+                // User has used trial but no subscription - they're on basic plan
+                return res.json({
+                    success: true,
+                    subscription: {
+                        id: 'basic',
+                        status: 'active',
+                        plan_name: 'Basic Plan',
+                        billing_cycle: 'monthly',
+                        current_period_end: null,
+                        amount: 0,
+                        currency: 'aud',
+                        is_basic: true
+                    }
+                });
+            }
         }
-
-        // Try to get subscription from Stripe if customer has one
-        let stripeSubscription = null;
-        let planName = customer.plan_id || user.plan || 'basic';
-        let billingCycle = 'monthly';
-        let nextBillingDate = null;
-        let amount = 0;
-
-        // Format plan name for display
-        const planDisplayNames = {
-            'basic': 'Basic Plan',
-            'Starter Monthly': 'Starter Plan',
-            'Starter Yearly': 'Starter Plan (Yearly)',
-            'Professional Monthly': 'Professional Plan',
-            'Professional Yearly': 'Professional Plan (Yearly)'
-        };
-
-        const displayPlanName = planDisplayNames[planName] || planName;
 
         // Try to fetch Stripe subscription if customer has Stripe data
-        if (customer.stripe_customer_id) {
-            try {
-                const customerSubscriptions = await stripe.subscriptions.list({
-                    customer: customer.stripe_customer_id,
-                    status: 'active',
-                    limit: 1
-                });
+        let stripeSubscription = null;
+        let planName = 'Basic Plan';
+        let billingCycle = 'monthly';
+        let amount = 0;
 
-                if (customerSubscriptions.data.length > 0) {
-                    stripeSubscription = customerSubscriptions.data[0];
+        try {
+            const customerSubscriptions = await stripe.subscriptions.list({
+                customer: user.stripe_customer_id,
+                status: 'active',
+                limit: 1
+            });
+
+            if (customerSubscriptions.data.length > 0) {
+                stripeSubscription = customerSubscriptions.data[0];
+                
+                // Get price details
+                if (stripeSubscription.items?.data?.[0]?.price) {
+                    const price = stripeSubscription.items.data[0].price;
+                    amount = price.unit_amount / 100; // Convert cents to dollars
+                    billingCycle = price.recurring.interval === 'year' ? 'yearly' : 'monthly';
                     
-                    // Get price details
-                    if (stripeSubscription.items?.data?.[0]?.price) {
-                        const price = stripeSubscription.items.data[0].price;
-                        amount = price.unit_amount / 100; // Convert cents to dollars
-                        billingCycle = price.recurring.interval === 'year' ? 'yearly' : 'monthly';
+                    // Determine plan name from price ID
+                    const priceId = price.id;
+                    if (priceId === process.env.STRIPE_STARTER_MONTHLY_PRICE_ID) {
+                        planName = 'Starter Plan';
+                    } else if (priceId === process.env.STRIPE_STARTER_YEARLY_PRICE_ID) {
+                        planName = 'Starter Plan (Yearly)';
+                    } else if (priceId === process.env.STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID) {
+                        planName = 'Professional Plan';
+                    } else if (priceId === process.env.STRIPE_PROFESSIONAL_YEARLY_PRICE_ID) {
+                        planName = 'Professional Plan (Yearly)';
                     }
-                    
-                    nextBillingDate = new Date(stripeSubscription.current_period_end * 1000);
                 }
-            } catch (stripeError) {
-                console.error('Error fetching Stripe subscription:', stripeError);
+                
+                console.log('💳 Stripe subscription found:', {
+                    id: stripeSubscription.id,
+                    status: stripeSubscription.status,
+                    planName,
+                    amount,
+                    billingCycle,
+                    currentPeriodEnd: stripeSubscription.current_period_end
+                });
             }
+        } catch (stripeError) {
+            console.error('❌ Error fetching Stripe subscription:', stripeError);
         }
         
         res.json({
@@ -402,17 +441,19 @@ router.get('/current', async (req, res) => {
             subscription: stripeSubscription ? {
                 id: stripeSubscription.id,
                 status: stripeSubscription.status,
-                plan_name: displayPlanName,
+                plan_name: planName,
                 billing_cycle: billingCycle,
                 current_period_end: stripeSubscription.current_period_end,
                 amount: amount,
-                currency: stripeSubscription.currency || 'aud'
+                currency: stripeSubscription.currency || 'aud',
+                cancel_at_period_end: stripeSubscription.cancel_at_period_end
             } : {
-                plan_name: displayPlanName,
+                plan_name: planName,
                 billing_cycle: billingCycle,
                 status: 'active',
                 amount: 0,
-                current_period_end: null
+                current_period_end: null,
+                is_basic: true
             }
         });
     } catch (error) {
@@ -427,34 +468,78 @@ router.get('/current', async (req, res) => {
 // Cancel subscription
 router.post('/cancel', async (req, res) => {
     try {
-        const { subscriptionId, immediately = false } = req.body;
+        // Get user from JWT token
+        const sessionService = require('../services/sessionService');
+        const token = sessionService.extractToken(req);
         
-        if (!subscriptionId) {
-            return res.status(400).json({
+        if (!token) {
+            return res.status(401).json({
                 success: false,
-                error: 'Subscription ID required'
+                message: 'Authentication required'
             });
         }
 
-        const subscription = await subscriptionService.cancelSubscription(subscriptionId, immediately);
-        
-        // Send cancellation email
-        const customer = await stripe.customers.retrieve(subscription.customer);
-        await subscriptionService.sendCancellationEmail(customer.email, customer.name);
+        const decoded = sessionService.verifyToken(token);
+        const userId = decoded.userId;
+
+        console.log('🔍 Canceling subscription for user:', userId);
+
+        // Get user to get Stripe customer ID
+        const user = await auth0Service.getUserById(userId);
+        if (!user || !user.stripe_customer_id) {
+            return res.status(404).json({
+                success: false,
+                message: 'No active subscription found to cancel'
+            });
+        }
+
+        // Get active subscription from Stripe
+        const customerSubscriptions = await stripe.subscriptions.list({
+            customer: user.stripe_customer_id,
+            status: 'active',
+            limit: 1
+        });
+
+        if (customerSubscriptions.data.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No active subscription found to cancel'
+            });
+        }
+
+        const subscription = customerSubscriptions.data[0];
+
+        // Cancel subscription at period end (don't cancel immediately)
+        const cancelledSubscription = await stripe.subscriptions.update(
+            subscription.id,
+            {
+                cancel_at_period_end: true
+            }
+        );
+
+        console.log('✅ Subscription cancelled at period end:', {
+            subscriptionId: subscription.id,
+            cancelAtPeriodEnd: cancelledSubscription.cancel_at_period_end,
+            currentPeriodEnd: cancelledSubscription.current_period_end
+        });
 
         res.json({
             success: true,
+            message: 'Subscription cancelled successfully. You will retain access until the end of your billing period.',
             subscription: {
-                id: subscription.id,
-                status: subscription.status,
-                cancel_at_period_end: subscription.cancel_at_period_end
+                id: cancelledSubscription.id,
+                status: cancelledSubscription.status,
+                cancel_at_period_end: cancelledSubscription.cancel_at_period_end,
+                current_period_end: cancelledSubscription.current_period_end
             }
         });
+
     } catch (error) {
-        console.error('❌ Error canceling subscription:', error);
+        console.error('❌ Error cancelling subscription:', error);
         res.status(500).json({
             success: false,
-            error: error.message || 'Failed to cancel subscription'
+            message: 'Failed to cancel subscription',
+            error: error.message
         });
     }
 });
@@ -655,64 +740,6 @@ router.post('/create-portal-session', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to create portal session'
-        });
-    }
-});
-
-// Cancel subscription
-router.post('/cancel', async (req, res) => {
-    try {
-        // Get user from session or token
-        const user = req.user || req.session?.user;
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not authenticated'
-            });
-        }
-
-        // Get subscription from database
-        const { data: subscription } = await auth0Service.supabase
-            .from('subscriptions')
-            .select('stripe_subscription_id')
-            .eq('user_id', user.id)
-            .single();
-
-        if (!subscription || !subscription.stripe_subscription_id) {
-            return res.status(404).json({
-                success: false,
-                message: 'No subscription found'
-            });
-        }
-
-        // Cancel subscription at period end
-        const cancelledSubscription = await stripe.subscriptions.update(
-            subscription.stripe_subscription_id,
-            {
-                cancel_at_period_end: true
-            }
-        );
-
-        // Update database
-        await auth0Service.supabase
-            .from('subscriptions')
-            .update({
-                cancel_at_period_end: true,
-                updated_at: new Date().toISOString()
-            })
-            .eq('stripe_subscription_id', subscription.stripe_subscription_id);
-
-        res.json({
-            success: true,
-            message: 'Subscription cancelled successfully',
-            subscription: cancelledSubscription
-        });
-
-    } catch (error) {
-        console.error('Error cancelling subscription:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to cancel subscription'
         });
     }
 });
