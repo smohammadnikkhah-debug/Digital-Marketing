@@ -31,9 +31,7 @@ const subscriptionService = require('./services/subscriptionService');
 // Helper function to check if user has active subscription
 async function checkUserSubscription(email) {
   try {
-    const auth0Service = require('./services/auth0Service');
-    
-    // Check if user exists and has a Stripe customer ID
+    // Use the existing Auth0Service instance
     const user = await auth0Service.getUserByEmail(email);
     if (!user || !user.stripe_customer_id) {
       console.log('🔍 No Stripe customer ID found for:', email);
