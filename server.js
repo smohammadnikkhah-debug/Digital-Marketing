@@ -912,7 +912,7 @@ app.get('/login', (req, res) => {
     state = encodeURIComponent(JSON.stringify(stateData));
   }
   
-  let auth0Url = `https://${auth0Domain}/authorize?` +
+  let auth0Url = `${auth0Domain}/authorize?` +
     `response_type=code&` +
     `client_id=${clientId}&` +
     `redirect_uri=${redirectUri}&` +
