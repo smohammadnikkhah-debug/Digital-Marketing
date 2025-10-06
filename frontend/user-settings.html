@@ -1346,6 +1346,15 @@
                             detailsHtml = `Trial ends on: ${trialEndDate}<br>`;
                         }
                         
+                        // Add message for local trial users (not Stripe trial)
+                        if (sub.id === 'trial') {
+                            detailsHtml += `<br><strong>Note:</strong> You're on a local trial period. To continue after trial ends, please select a plan below.<br><br>`;
+                            detailsHtml += `<a href="/plans" class="btn btn-primary" style="display: inline-block; margin-top: 10px;">
+                                <i class="fas fa-credit-card"></i>
+                                Select a Plan
+                            </a>`;
+                        }
+                        
                         if (sub.current_period_end && sub.amount > 0) {
                             const nextBillingDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
                                 year: 'numeric',
@@ -1371,19 +1380,20 @@
                         console.log('🔍 Button visibility check:', {
                             subscriptionId: sub.id,
                             isNotBasic: sub.id !== 'basic',
+                            isNotFakeTrial: sub.id !== 'trial',
                             hasId: !!sub.id,
                             updateBtn: !!updatePaymentBtn,
                             cancelBtn: !!cancelSubscriptionBtn
                         });
                         
-                        if (sub.id && sub.id !== 'basic') {
+                        if (sub.id && sub.id !== 'basic' && sub.id !== 'trial') {
                             // Show subscription management for users with actual Stripe subscriptions (including trials)
                             console.log('✅ Showing subscription management buttons');
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'block';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'block';
                         } else {
                             // Hide subscription management for users without Stripe subscriptions
-                            console.log('❌ Hiding subscription management buttons');
+                            console.log('❌ Hiding subscription management buttons - no real Stripe subscription');
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
                         }
