@@ -585,12 +585,8 @@ app.get('/auth/callback', async (req, res) => {
 
     console.log('✅ Auth0 callback completed successfully - redirecting user');
     
-    // UNIFIED VALIDATION: Check trial and payment status regardless of entry path
-    console.log('🔍 Unified validation: Checking trial and payment status for all users');
-    
-    // Check if user has used trial before
-    const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
-    console.log('🔍 Trial usage check:', { email: user.email, hasUsedTrial });
+    // UNIFIED VALIDATION: Check subscription status regardless of entry path
+    console.log('🔍 Unified validation: Checking subscription status for all users');
     
     // Check if user has active subscription
     const hasActiveSubscription = await checkUserSubscription(user.email);
@@ -600,28 +596,24 @@ app.get('/auth/callback', async (req, res) => {
     const hasAnalyzedDomains = await checkUserAnalyzedDomains(currentUser.customer_id);
     console.log('🔍 Domain analysis check:', { customerId: currentUser.customer_id, hasAnalyzedDomains });
     
-    // Determine routing based on trial, subscription, and domain analysis status
+    // Determine routing based on subscription and domain analysis status
     let shouldGoToStripe = false;
     let reason = '';
     
-    // ROUTING LOGIC: Consider trial status, subscription status, AND domain analysis
+    // ROUTING LOGIC: Consider subscription status AND domain analysis
     if (hasActiveSubscription) {
       // Has active subscription - always go to dashboard regardless of domain status
       console.log('✅ Active subscription - redirecting to dashboard');
       return res.redirect('/dashboard');
-    } else if (!hasUsedTrial && !hasAnalyzedDomains) {
-      // Brand new user: no trial used + no analyzed domains = onboarding
-      console.log('🆕 New user with no domains - redirecting to onboarding');
+    } else if (!hasAnalyzedDomains) {
+      // No analyzed domains - go to onboarding
+      console.log('🆕 No analyzed domains - redirecting to onboarding');
       return res.redirect('/onboarding');
-    } else if (!hasUsedTrial && hasAnalyzedDomains) {
-      // User has domains but no trial used = dashboard (they can continue using trial)
-      console.log('🔍 User with domains but no trial used - redirecting to dashboard');
-      return res.redirect('/dashboard');
-    } else if (hasUsedTrial && !hasActiveSubscription) {
-      // Trial used but no subscription = need payment
-      console.log('💳 Trial used, no payment - redirecting to Stripe');
+    } else if (hasAnalyzedDomains) {
+      // Has domains but no subscription = need payment
+      console.log('💳 Has domains but no subscription - redirecting to Stripe');
       shouldGoToStripe = true;
-      reason = 'trial_expired_no_payment';
+      reason = 'has_domains_no_subscription';
     } else {
       // Fallback - redirect to dashboard if unclear
       console.log('🔍 Fallback - redirecting to dashboard');
@@ -660,7 +652,7 @@ app.get('/auth/callback', async (req, res) => {
       try {
         const stripeService = require('./services/stripeService');
         
-        const trialPeriodDays = hasUsedTrial ? 0 : 7; // 0 days for purchase, 7 for trial
+        const trialPeriodDays = 7; // Always 7-day trial for new signups
         const successUrl = `${req.protocol}://${req.get('host')}/onboarding`;
         const cancelUrl = `${req.protocol}://${req.get('host')}/plans`;
         

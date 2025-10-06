@@ -346,39 +346,14 @@ router.get('/current', async (req, res) => {
 
         console.log('👤 User found:', { userId: user.id, customerId: user.customer_id, stripeCustomerId: user.stripe_customer_id });
 
-        // Check if user has used trial
-        const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
-        console.log('🔍 Trial status:', { email: user.email, hasUsedTrial });
-
         // If user has no Stripe customer ID, they need to select a plan
         if (!user.stripe_customer_id) {
-            if (!hasUsedTrial) {
-                // User is on trial - show trial status
-                const trialEndDate = new Date();
-                trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
-                
-                return res.json({
-                    success: true,
-                    subscription: {
-                        id: 'trial',
-                        status: 'trialing',
-                        plan_name: 'Trial Period',
-                        billing_cycle: 'monthly',
-                        current_period_end: Math.floor(trialEndDate.getTime() / 1000),
-                        amount: 0,
-                        currency: 'aud',
-                        is_trial: true
-                    }
-                });
-            } else {
-                // User has used trial but no subscription - they need to select a plan
-                return res.json({
-                    success: true,
-                    subscription: null,
-                    message: 'No active subscription. Please select a plan to continue.',
-                    needs_plan_selection: true
-                });
-            }
+            return res.json({
+                success: true,
+                subscription: null,
+                message: 'No active subscription. Please select a plan to continue.',
+                needs_plan_selection: true
+            });
         }
 
         // Try to fetch Stripe subscription if customer has Stripe data
