@@ -74,7 +74,29 @@ class SupabaseService {
 
       if (createError) {
         console.error('Error creating website:', createError);
-        return null;
+        
+        // If it's a unique constraint error, try to get the existing website
+        if (createError.code === '23505' && createError.message.includes('domain')) {
+          console.log('Website already exists, attempting to retrieve it...');
+          
+          // Try to get the existing website for this customer
+          const { data: existingWebsite, error: fetchError } = await this.supabase
+            .from('websites')
+            .select('*')
+            .eq('domain', domain)
+            .eq('customer_id', customerId)
+            .single();
+            
+          if (existingWebsite && !fetchError) {
+            console.log('✅ Retrieved existing website for customer');
+            return existingWebsite;
+          } else {
+            console.error('Failed to retrieve existing website:', fetchError);
+            return { error: 'Website exists but could not be retrieved', details: createError };
+          }
+        }
+        
+        return { error: createError.message, details: createError };
       }
 
       return newWebsite;
