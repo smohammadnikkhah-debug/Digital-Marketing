@@ -532,7 +532,7 @@ app.get('/auth/callback', async (req, res) => {
     console.log('Auth0 callback received with code:', code);
     
     // Exchange code for tokens
-    const tokenResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
+    const tokenResponse = await fetch(`${process.env.AUTH0_DOMAIN}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -563,7 +563,7 @@ app.get('/auth/callback', async (req, res) => {
     console.log('Tokens received successfully');
     
     // Get user info
-    const userResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/userinfo`, {
+    const userResponse = await fetch(`${process.env.AUTH0_DOMAIN}/userinfo`, {
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
       },
