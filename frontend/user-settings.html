@@ -1304,8 +1304,8 @@
                         
                         // Check if in trial period
                         const isTrial = sub.is_trial || (sub.trial_end && new Date(sub.trial_end * 1000) > new Date());
-                        const trialDaysLeft = isTrial && sub.current_period_end ? 
-                            Math.ceil((new Date(sub.current_period_end * 1000) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+                        const trialDaysLeft = isTrial && sub.trial_end ? 
+                            Math.ceil((new Date(sub.trial_end * 1000) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
                         
                         // Update subscription status
                         if (isTrial) {
@@ -1327,7 +1327,14 @@
                         
                         // Update subscription details
                         let detailsHtml = '';
-                        if (isTrial && sub.current_period_end) {
+                        if (isTrial && sub.trial_end) {
+                            const trialEndDate = new Date(sub.trial_end * 1000).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            detailsHtml = `Trial ends on: ${trialEndDate}<br>`;
+                        } else if (isTrial && sub.current_period_end) {
                             const trialEndDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
@@ -1357,14 +1364,15 @@
                         const updatePaymentBtn = document.querySelector('.btn-secondary');
                         const cancelSubscriptionBtn = document.querySelector('.btn-danger');
                         
-                        if (sub.is_trial || sub.is_basic || !sub.id || sub.id === 'basic' || !sub.id) {
-                            // Hide subscription management for trial/basic users or users without subscriptions
-                            if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
-                            if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
-                        } else {
-                            // Show subscription management for paid users
+                        // Show subscription management buttons for users with Stripe subscriptions (including trials)
+                        if (sub.id && sub.id !== 'trial' && sub.id !== 'basic') {
+                            // Show subscription management for users with actual Stripe subscriptions
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'block';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'block';
+                        } else {
+                            // Hide subscription management for users without Stripe subscriptions
+                            if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
+                            if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
                         }
                     } else {
                         // No subscription found - user needs to select a plan

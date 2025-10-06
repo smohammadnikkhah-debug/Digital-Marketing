@@ -388,14 +388,18 @@ router.get('/current', async (req, res) => {
         let amount = 0;
 
         try {
+            // Get all subscriptions (including trialing ones)
             const customerSubscriptions = await stripe.subscriptions.list({
                 customer: user.stripe_customer_id,
-                status: 'active',
-                limit: 1
+                status: 'all', // Get all subscriptions including trialing
+                limit: 10
             });
 
             if (customerSubscriptions.data.length > 0) {
-                stripeSubscription = customerSubscriptions.data[0];
+                // Find the most recent subscription (active or trialing)
+                stripeSubscription = customerSubscriptions.data.find(sub => 
+                    sub.status === 'active' || sub.status === 'trialing'
+                ) || customerSubscriptions.data[0];
                 
                 // Get price details
                 if (stripeSubscription.items?.data?.[0]?.price) {
@@ -422,7 +426,8 @@ router.get('/current', async (req, res) => {
                     planName,
                     amount,
                     billingCycle,
-                    currentPeriodEnd: stripeSubscription.current_period_end
+                    currentPeriodEnd: stripeSubscription.current_period_end,
+                    trialEnd: stripeSubscription.trial_end
                 });
             }
         } catch (stripeError) {
@@ -437,16 +442,18 @@ router.get('/current', async (req, res) => {
                 plan_name: planName,
                 billing_cycle: billingCycle,
                 current_period_end: stripeSubscription.current_period_end,
+                trial_end: stripeSubscription.trial_end,
                 amount: amount,
                 currency: stripeSubscription.currency || 'aud',
-                cancel_at_period_end: stripeSubscription.cancel_at_period_end
+                cancel_at_period_end: stripeSubscription.cancel_at_period_end,
+                is_trial: stripeSubscription.status === 'trialing'
             } : {
                 plan_name: planName,
                 billing_cycle: billingCycle,
                 status: 'active',
                 amount: 0,
                 current_period_end: null,
-                is_basic: true
+                needs_plan_selection: true
             }
         });
     } catch (error) {
@@ -496,11 +503,11 @@ router.post('/cancel', async (req, res) => {
             });
         }
 
-        // Get active subscription from Stripe
+        // Get active or trialing subscription from Stripe
         const customerSubscriptions = await stripe.subscriptions.list({
             customer: user.stripe_customer_id,
-            status: 'active',
-            limit: 1
+            status: 'all', // Get all subscriptions including trialing
+            limit: 10
         });
 
         if (customerSubscriptions.data.length === 0) {
@@ -510,7 +517,9 @@ router.post('/cancel', async (req, res) => {
             });
         }
 
-        const subscription = customerSubscriptions.data[0];
+        const subscription = customerSubscriptions.data.find(sub => 
+            sub.status === 'active' || sub.status === 'trialing'
+        ) || customerSubscriptions.data[0];
 
         // Cancel subscription at period end (don't cancel immediately)
         const cancelledSubscription = await stripe.subscriptions.update(
