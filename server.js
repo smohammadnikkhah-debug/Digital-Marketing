@@ -33,16 +33,43 @@ async function checkUserSubscription(email) {
   try {
     // Use the existing Auth0Service instance
     const user = await auth0Service.getUserByEmail(email);
+    console.log('🔍 User record found:', { 
+      email: user?.email, 
+      stripeCustomerId: user?.stripe_customer_id,
+      customerId: user?.customer_id 
+    });
+    
     if (!user || !user.stripe_customer_id) {
       console.log('🔍 No Stripe customer ID found for:', email);
       return false;
     }
     
-    // TODO: Check Stripe subscription status
-    // For now, return false to always show as no active subscription
-    // This should be implemented to check Stripe API for active subscriptions
-    console.log('🔍 Subscription check: No active subscription found for:', email);
-    return false;
+    // Check Stripe subscription status
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const customerSubscriptions = await stripe.subscriptions.list({
+      customer: user.stripe_customer_id,
+      status: 'all', // Get all subscriptions including trialing
+      limit: 10
+    });
+    
+    console.log('🔍 Stripe subscriptions found:', customerSubscriptions.data.length);
+    
+    // Check if there's an active or trialing subscription
+    const activeSubscription = customerSubscriptions.data.find(sub => 
+      sub.status === 'active' || sub.status === 'trialing'
+    );
+    
+    if (activeSubscription) {
+      console.log('✅ Active subscription found for:', email, {
+        subscriptionId: activeSubscription.id,
+        status: activeSubscription.status,
+        trialEnd: activeSubscription.trial_end
+      });
+      return true;
+    } else {
+      console.log('🔍 No active subscription found for:', email);
+      return false;
+    }
   } catch (error) {
     console.error('Error checking user subscription:', error);
     return false;
