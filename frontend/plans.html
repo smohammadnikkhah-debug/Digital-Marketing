@@ -692,7 +692,7 @@
         }
 
         // Handle plan selection
-        function selectPlan(productId, priceId, isYearly) {
+        async function selectPlan(productId, priceId, isYearly) {
             // Find the product name from the products array
             const product = window.currentProducts?.find(p => p.id === productId);
             const planName = product ? product.name : productId;
@@ -704,8 +704,26 @@
             sessionStorage.setItem('selectedPriceId', priceId);
             sessionStorage.setItem('isYearly', isYearly);
             
-            // Redirect to signup (which will redirect to Stripe Checkout)
-            window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+            // Check if user is already authenticated
+            try {
+                const response = await fetch('/api/user/profile', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    // User is already authenticated - redirect directly to Stripe checkout
+                    console.log('✅ User already authenticated - redirecting to Stripe checkout');
+                    window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+                } else {
+                    // User not authenticated - redirect to signup flow
+                    console.log('🔐 User not authenticated - redirecting to signup');
+                    window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+                }
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+                // Fallback - redirect to signup
+                window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+            }
         }
 
         // Update header text based on billing period

@@ -819,10 +819,60 @@ app.get('/plans', (req, res) => {
 });
 
 // Serve signup page
-app.get('/signup', (req, res) => {
+app.get('/signup', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+    
+    // Check if user is already authenticated
+    try {
+        const sessionService = require('./services/sessionService');
+        const token = sessionService.extractToken(req);
+        
+        if (token) {
+            const decoded = sessionService.verifyToken(token);
+            if (decoded) {
+                console.log('✅ User already authenticated - bypassing signup page');
+                
+                // Get plan parameters
+                const { plan, priceId, billing } = req.query;
+                
+                if (plan && priceId) {
+                    // User is authenticated and has plan data - simulate Auth0 callback with plan data
+                    console.log('🔄 Simulating Auth0 callback for authenticated user with plan data');
+                    
+                    // Store plan data in session for the callback
+                    req.session = req.session || {};
+                    req.session.planData = {
+                        plan: plan,
+                        priceId: priceId,
+                        billing: billing,
+                        signup: true
+                    };
+                    
+                    // Redirect to Auth0 callback with plan data
+                    const auth0Url = `${process.env.AUTH0_DOMAIN}/authorize?` +
+                        `response_type=code&` +
+                        `client_id=${process.env.AUTH0_CLIENT_ID}&` +
+                        `redirect_uri=${encodeURIComponent(process.env.AUTH0_CALLBACK_URL)}&` +
+                        `scope=openid%20email%20profile&` +
+                        `prompt=none&` +
+                        `state=${encodeURIComponent(JSON.stringify({
+                            plan: plan,
+                            priceId: priceId,
+                            billing: billing,
+                            signup: true
+                        }))}`;
+                    
+                    return res.redirect(auth0Url);
+                }
+            }
+        }
+    } catch (error) {
+        console.log('User not authenticated or error checking auth:', error.message);
+    }
+    
+    // User not authenticated - serve signup page
     res.sendFile(path.join(__dirname, 'frontend', 'auth0-signup.html'));
 });
 
