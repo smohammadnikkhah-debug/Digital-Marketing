@@ -851,6 +851,10 @@ app.get('/signup', async (req, res) => {
                     };
                     
                     // Redirect to Auth0 callback with plan data
+                    console.log('🔍 AUTH0_DOMAIN:', process.env.AUTH0_DOMAIN);
+                    console.log('🔍 AUTH0_CLIENT_ID:', process.env.AUTH0_CLIENT_ID);
+                    console.log('🔍 AUTH0_CALLBACK_URL:', process.env.AUTH0_CALLBACK_URL);
+                    
                     const auth0Url = `${process.env.AUTH0_DOMAIN}/authorize?` +
                         `response_type=code&` +
                         `client_id=${process.env.AUTH0_CLIENT_ID}&` +
@@ -864,6 +868,7 @@ app.get('/signup', async (req, res) => {
                             signup: true
                         }))}`;
                     
+                    console.log('🔍 Final Auth0 URL:', auth0Url);
                     return res.redirect(auth0Url);
                 }
             }
