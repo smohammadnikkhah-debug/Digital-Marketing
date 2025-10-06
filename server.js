@@ -2842,46 +2842,57 @@ app.get('/api/user/check-website-limit', async (req, res) => {
 app.post('/api/user/save-onboarding', async (req, res) => {
   try {
     const userData = req.body;
+    console.log('🔍 Save onboarding: Received user data:', userData);
 
     if (!userData.domain) {
+      console.log('❌ Save onboarding: Domain is required');
       return res.status(400).json({
         success: false,
         error: 'Domain is required'
       });
     }
 
-    console.log(`💾 Saving user data for: ${userData.domain}`);
+    console.log(`💾 Save onboarding: Saving user data for: ${userData.domain}`);
     
     // Get authenticated user's ID from JWT token
     const sessionService = require('./services/sessionService');
     const token = sessionService.extractToken(req);
+    console.log('🔍 Save onboarding: Token extracted:', token ? 'Yes' : 'No');
     
     if (token) {
       const decoded = sessionService.verifyToken(token);
+      console.log('🔍 Save onboarding: Token decoded:', decoded ? 'Yes' : 'No');
       if (decoded && decoded.userId) {
+        console.log('🔍 Save onboarding: User ID:', decoded.userId);
         // Update the authenticated user's domain
         const Auth0Service = require('./services/auth0Service');
         const auth0Service = new Auth0Service();
         const updateResult = await auth0Service.updateUserDomain(decoded.userId, userData.domain);
         
         if (updateResult) {
-          console.log(`✅ Updated user domain to: ${userData.domain}`);
+          console.log(`✅ Save onboarding: Updated user domain to: ${userData.domain}`);
         } else {
-          console.log(`⚠️ Failed to update user domain`);
+          console.log(`⚠️ Save onboarding: Failed to update user domain`);
         }
       }
+    } else {
+      console.log('⚠️ Save onboarding: No authentication token found');
     }
     
     // Save user data to database
     userData.req = req; // Pass request object for token extraction
+    console.log('🔍 Save onboarding: Calling databaseService.saveUserData...');
     const saveResult = await databaseService.saveUserData(userData);
+    console.log('🔍 Save onboarding: Save result:', saveResult);
     
     if (saveResult.success) {
+      console.log('✅ Save onboarding: User data saved successfully');
       res.json({
         success: true,
         message: 'User data saved successfully'
       });
     } else {
+      console.log('❌ Save onboarding: Failed to save user data:', saveResult.error);
       res.status(500).json({
         success: false,
         error: saveResult.error

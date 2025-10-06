@@ -492,6 +492,10 @@
         }
 
         async function saveBusinessInfo(domain, business) {
+            console.log('🔍 Onboarding: Saving business info...');
+            console.log('   Domain:', domain);
+            console.log('   Business:', business);
+            
             const userData = {
                 domain: domain,
                 businessDescription: business,
@@ -499,6 +503,7 @@
                 analysisData: null
             };
 
+            console.log('🔍 Onboarding: Sending request to /api/user/save-onboarding');
             const response = await fetch('/api/user/save-onboarding', {
                 method: 'POST',
                 headers: {
@@ -508,13 +513,18 @@
             });
 
             const result = await response.json();
+            console.log('🔍 Onboarding: Save response:', result);
             
             if (!result.success) {
+                console.error('❌ Onboarding: Failed to save business info:', result.error);
                 throw new Error(result.error || 'Failed to save business info');
             }
 
+            console.log('✅ Onboarding: Business info saved successfully');
+
             // Store domain in localStorage for dashboard
             localStorage.setItem('lastAnalyzedDomain', domain);
+            console.log('🔍 Onboarding: Stored domain in localStorage:', domain);
         }
 
         async function analyzeWebsite(domain) {
