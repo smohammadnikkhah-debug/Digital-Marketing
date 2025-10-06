@@ -1,5 +1,7 @@
-// Load environment variables first
-require('dotenv').config();
+// Load environment variables first - only in development
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
 
 const express = require('express');
 const cors = require('cors');
@@ -6971,6 +6973,11 @@ app.use('/api/wordpress', wordpressRoutes);
 // Start server
 server.listen(PORT, () => {
   console.log(`🚀 Digital Marketing SEO Analyzer server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔍 DataForSEO Username: ${process.env.DATAFORSEO_USERNAME ? 'Set' : 'Not Set'}`);
+  console.log(`🔍 DataForSEO Password: ${process.env.DATAFORSEO_PASSWORD ? 'Set' : 'Not Set'}`);
+  console.log(`🔍 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Set' : 'Not Set'}`);
+  console.log(`🔍 Supabase URL: ${process.env.SUPABASE_URL ? 'Set' : 'Not Set'}`);
   console.log(`📊 Visit http://localhost:${PORT} to use the application`);
   console.log(`🤖 Visit http://localhost:${PORT}/chat for AI SEO Assistant`);
   console.log(`🚀 Visit http://localhost:${PORT}/seo-request for SEO Request Assistant`);
