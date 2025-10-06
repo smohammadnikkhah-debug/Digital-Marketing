@@ -39,15 +39,42 @@ async function checkUserSubscription(email) {
       customerId: user?.customer_id 
     });
     
-    if (!user || !user.stripe_customer_id) {
-      console.log('🔍 No Stripe customer ID found for:', email);
-      return false;
+    let stripeCustomerId = user?.stripe_customer_id;
+    
+    // If no stripe_customer_id in database, try to find customer by email in Stripe
+    if (!stripeCustomerId) {
+      console.log('🔍 No stripe_customer_id in database, searching Stripe by email...');
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      
+      try {
+        const customers = await stripe.customers.list({
+          email: email,
+          limit: 1
+        });
+        
+        if (customers.data.length > 0) {
+          stripeCustomerId = customers.data[0].id;
+          console.log('✅ Found Stripe customer by email:', stripeCustomerId);
+          
+          // Update user record with stripe_customer_id
+          if (user) {
+            await auth0Service.updateUser(user.id, { stripe_customer_id: stripeCustomerId });
+            console.log('✅ Updated user record with stripe_customer_id');
+          }
+        } else {
+          console.log('🔍 No Stripe customer found for email:', email);
+          return false;
+        }
+      } catch (stripeError) {
+        console.error('Error searching Stripe customers:', stripeError);
+        return false;
+      }
     }
     
     // Check Stripe subscription status
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const customerSubscriptions = await stripe.subscriptions.list({
-      customer: user.stripe_customer_id,
+      customer: stripeCustomerId,
       status: 'all', // Get all subscriptions including trialing
       limit: 10
     });
