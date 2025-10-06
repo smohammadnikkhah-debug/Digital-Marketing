@@ -1288,6 +1288,9 @@
                 if (response.ok) {
                     const result = await response.json();
                     console.log('📊 Subscription data:', result);
+                    console.log('🔍 Subscription ID:', result.subscription?.id);
+                    console.log('🔍 Subscription status:', result.subscription?.status);
+                    console.log('🔍 Is trial:', result.subscription?.is_trial);
                     
                     if (result.subscription) {
                         const sub = result.subscription;
@@ -1365,12 +1368,22 @@
                         const cancelSubscriptionBtn = document.querySelector('.btn-danger');
                         
                         // Show subscription management buttons for users with Stripe subscriptions (including trials)
-                        if (sub.id && sub.id !== 'trial' && sub.id !== 'basic') {
-                            // Show subscription management for users with actual Stripe subscriptions
+                        console.log('🔍 Button visibility check:', {
+                            subscriptionId: sub.id,
+                            isNotBasic: sub.id !== 'basic',
+                            hasId: !!sub.id,
+                            updateBtn: !!updatePaymentBtn,
+                            cancelBtn: !!cancelSubscriptionBtn
+                        });
+                        
+                        if (sub.id && sub.id !== 'basic') {
+                            // Show subscription management for users with actual Stripe subscriptions (including trials)
+                            console.log('✅ Showing subscription management buttons');
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'block';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'block';
                         } else {
                             // Hide subscription management for users without Stripe subscriptions
+                            console.log('❌ Hiding subscription management buttons');
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
                         }
