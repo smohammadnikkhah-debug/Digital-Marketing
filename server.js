@@ -58,8 +58,22 @@ async function checkUserSubscription(email) {
           
           // Update user record with stripe_customer_id
           if (user) {
-            await auth0Service.updateUser(user.id, { stripe_customer_id: stripeCustomerId });
-            console.log('✅ Updated user record with stripe_customer_id');
+            const { createClient } = require('@supabase/supabase-js');
+            const supabase = createClient(
+              process.env.SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_ROLE_KEY
+            );
+            
+            const { error: updateError } = await supabase
+              .from('users')
+              .update({ stripe_customer_id: stripeCustomerId })
+              .eq('id', user.id);
+              
+            if (updateError) {
+              console.error('Error updating user with stripe_customer_id:', updateError);
+            } else {
+              console.log('✅ Updated user record with stripe_customer_id');
+            }
           }
         } else {
           console.log('🔍 No Stripe customer found for email:', email);
