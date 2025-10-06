@@ -720,7 +720,17 @@ app.get('/auth/callback', async (req, res) => {
       try {
         const stripeService = require('./services/stripeService');
         
-        const trialPeriodDays = 7; // Always 7-day trial for new signups
+        // Check if user has already used their trial
+        const user = await auth0Service.getUserByEmail(email);
+        let trialPeriodDays = 0; // Default to no trial
+        
+        if (user && !user.trial_used) {
+          trialPeriodDays = 7; // Give 7-day trial only if not used before
+          console.log('🎁 User eligible for 7-day trial');
+        } else {
+          console.log('❌ User has already used trial - no trial period');
+        }
+        
         const successUrl = `${req.protocol}://${req.get('host')}/onboarding`;
         const cancelUrl = `${req.protocol}://${req.get('host')}/plans`;
         

@@ -1307,11 +1307,17 @@
                         
                         // Check if in trial period
                         const isTrial = sub.is_trial || (sub.trial_end && new Date(sub.trial_end * 1000) > new Date());
+                        const isCancelled = sub.cancel_at_period_end;
                         const trialDaysLeft = isTrial && sub.trial_end ? 
                             Math.ceil((new Date(sub.trial_end * 1000) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
                         
                         // Update subscription status
-                        if (isTrial) {
+                        if (isCancelled) {
+                            document.querySelector('.subscription-status').innerHTML = `
+                                <i class="fas fa-times-circle" style="color: #ef4444;"></i>
+                                ${sub.plan_name || 'Subscription'} - Cancelled
+                            `;
+                        } else if (isTrial) {
                             document.querySelector('.subscription-status').innerHTML = `
                                 <i class="fas fa-clock" style="color: #f59e0b;"></i>
                                 ${sub.plan_name || 'Trial Plan'} - Free Trial
@@ -1330,7 +1336,20 @@
                         
                         // Update subscription details
                         let detailsHtml = '';
-                        if (isTrial && sub.trial_end) {
+                        if (isCancelled) {
+                            // Show cancellation details
+                            const accessEndDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            detailsHtml = `Access until: ${accessEndDate}<br>`;
+                            detailsHtml += `Status: Cancelled (will not renew)<br>`;
+                            detailsHtml += `<br><a href="/plans" class="btn btn-primary" style="display: inline-block; margin-top: 10px;">
+                                <i class="fas fa-credit-card"></i>
+                                Subscribe Again
+                            </a>`;
+                        } else if (isTrial && sub.trial_end) {
                             const trialEndDate = new Date(sub.trial_end * 1000).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
@@ -1346,20 +1365,21 @@
                             detailsHtml = `Trial ends on: ${trialEndDate}<br>`;
                         }
                         
-                        
-                        if (sub.current_period_end && sub.amount > 0) {
-                            const nextBillingDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            });
-                            detailsHtml += `Next billing date: ${nextBillingDate}<br>${billingText}: ${amount}`;
-                        } else if (sub.is_trial) {
-                            detailsHtml += `${billingText}: Free (Trial)`;
-                        } else if (sub.is_basic) {
-                            detailsHtml += `${billingText}: Free`;
-                        } else {
-                            detailsHtml += `${billingText}: ${amount || 'Free'}`;
+                        if (!isCancelled) {
+                            if (sub.current_period_end && sub.amount > 0) {
+                                const nextBillingDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                                detailsHtml += `Next billing date: ${nextBillingDate}<br>${billingText}: ${amount}`;
+                            } else if (sub.is_trial) {
+                                detailsHtml += `${billingText}: Free (Trial)`;
+                            } else if (sub.is_basic) {
+                                detailsHtml += `${billingText}: Free`;
+                            } else {
+                                detailsHtml += `${billingText}: ${amount || 'Free'}`;
+                            }
                         }
                         
                         document.querySelector('.subscription-details').innerHTML = detailsHtml;
@@ -1376,14 +1396,14 @@
                             cancelBtn: !!cancelSubscriptionBtn
                         });
                         
-                        if (sub.id) {
-                            // Show subscription management for users with Stripe subscriptions
+                        if (sub.id && !isCancelled) {
+                            // Show subscription management for users with active Stripe subscriptions
                             console.log('✅ Showing subscription management buttons');
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'block';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'block';
                         } else {
-                            // Hide subscription management for users without Stripe subscriptions
-                            console.log('❌ Hiding subscription management buttons - no Stripe subscription');
+                            // Hide subscription management for users without Stripe subscriptions or cancelled subscriptions
+                            console.log('❌ Hiding subscription management buttons - no active Stripe subscription');
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
                         }

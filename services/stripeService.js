@@ -483,6 +483,18 @@ class StripeService {
         // Mark trial as used if subscription has trial period
         if (subscription.trial_end) {
           updateData.trial_used = true;
+          
+          // Also update the users table with trial_used flag
+          const { error: userUpdateError } = await supabase
+            .from('users')
+            .update({ trial_used: true })
+            .eq('email', email);
+            
+          if (userUpdateError) {
+            console.error('Error updating user trial_used flag:', userUpdateError);
+          } else {
+            console.log('✅ Updated user trial_used flag for:', email);
+          }
         }
       } else {
         // Subscription cancelled
