@@ -677,6 +677,11 @@ app.get('/auth/callback', async (req, res) => {
       // Has active subscription - always go to dashboard regardless of domain status
       console.log('✅ Active subscription - redirecting to dashboard');
       return res.redirect('/dashboard');
+    } else if (planData.signup && planData.priceId) {
+      // User is coming from plan selection with plan data - create Stripe checkout
+      console.log('💳 User selected plan - creating Stripe checkout session');
+      shouldGoToStripe = true;
+      reason = 'plan_selection';
     } else if (!hasSelectedPlan) {
       // New user who hasn't selected a plan yet - go to plans page
       console.log('🆕 New user - redirecting to plans page to select subscription');
@@ -729,10 +734,10 @@ app.get('/auth/callback', async (req, res) => {
         const stripeService = require('./services/stripeService');
         
         // Check if user has already used their trial
-        const user = await auth0Service.getUserByEmail(email);
+        const dbUser = await auth0Service.getUserByEmail(user.email);
         let trialPeriodDays = 0; // Default to no trial
         
-        if (user && !user.trial_used) {
+        if (dbUser && !dbUser.trial_used) {
           trialPeriodDays = 7; // Give 7-day trial only if not used before
           console.log('🎁 User eligible for 7-day trial');
         } else {
