@@ -14,15 +14,20 @@ class EnvironmentConfig {
     }
 
     loadEnvironmentConfig() {
-        // Use .env file directly instead of environment-specific files
-        const envPath = path.join(process.cwd(), '.env');
-        
-        if (!fs.existsSync(envPath)) {
-            console.warn(`⚠️ Environment file .env not found, using defaults`);
-            return this.getDefaultConfig();
+        // In production (DigitalOcean), environment variables are provided directly by the platform
+        // Only load .env file in development
+        if (this.currentEnvironment === 'development') {
+            const envPath = path.join(process.cwd(), '.env');
+            
+            if (fs.existsSync(envPath)) {
+                require('dotenv').config({ path: envPath });
+                console.log('✅ Loaded environment variables from .env file');
+            } else {
+                console.warn(`⚠️ Environment file .env not found in development, using defaults`);
+            }
+        } else {
+            console.log('✅ Using environment variables from platform (DigitalOcean)');
         }
-
-        require('dotenv').config({ path: envPath });
         
         return {
             environment: this.currentEnvironment,
@@ -225,15 +230,27 @@ class EnvironmentConfig {
         const warnings = [];
 
         if (!this.config.dataforseo.username || !this.config.dataforseo.password) {
-            errors.push('DataForSEO credentials not configured');
+            if (this.currentEnvironment === 'production') {
+                errors.push('⚠️ DataForSEO credentials not configured. Please set DATAFORSEO_USERNAME and DATAFORSEO_PASSWORD in DigitalOcean App Platform environment variables');
+            } else {
+                errors.push('DataForSEO credentials not configured. Please set DATAFORSEO_USERNAME and DATAFORSEO_PASSWORD');
+            }
         }
 
         if (!this.config.openai.apiKey) {
-            errors.push('OpenAI API key not configured');
+            if (this.currentEnvironment === 'production') {
+                errors.push('⚠️ OpenAI API key not configured. Please set OPENAI_API_KEY in DigitalOcean App Platform environment variables');
+            } else {
+                errors.push('OpenAI API key not configured');
+            }
         }
 
         if (!this.config.supabase.url || !this.config.supabase.anonKey) {
-            errors.push('Supabase configuration not complete');
+            if (this.currentEnvironment === 'production') {
+                errors.push('⚠️ Supabase configuration not complete. Please set SUPABASE_URL and SUPABASE_ANON_KEY in DigitalOcean App Platform environment variables');
+            } else {
+                errors.push('Supabase configuration not complete');
+            }
         }
 
         const socialPlatforms = Object.keys(this.config.social);

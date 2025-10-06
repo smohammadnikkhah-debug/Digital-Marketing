@@ -21,7 +21,11 @@ class DataForSEOService {
       console.log(`✅ DataForSEO API initialized successfully (${this.environment} mode)`);
       console.log(`   Base URL: ${this.baseUrl}`);
     } else {
-      console.log('⚠️ DataForSEO credentials not configured. Please set DATAFORSEO_USERNAME and DATAFORSEO_PASSWORD');
+      if (process.env.NODE_ENV === 'production') {
+        console.log('⚠️ DataForSEO credentials not configured. Please set DATAFORSEO_USERNAME and DATAFORSEO_PASSWORD in DigitalOcean App Platform environment variables');
+      } else {
+        console.log('⚠️ DataForSEO credentials not configured. Please set DATAFORSEO_USERNAME and DATAFORSEO_PASSWORD');
+      }
     }
   }
 
