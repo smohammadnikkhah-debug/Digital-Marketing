@@ -486,10 +486,20 @@ router.post('/cancel', async (req, res) => {
 
         // Get user to get Stripe customer ID
         const user = await auth0Service.getUserById(userId);
-        if (!user || !user.stripe_customer_id) {
+        if (!user) {
             return res.status(404).json({
                 success: false,
-                message: 'No active subscription found to cancel'
+                message: 'User not found'
+            });
+        }
+
+        console.log('👤 User found:', { userId: user.id, stripeCustomerId: user.stripe_customer_id });
+
+        // If user has no Stripe customer ID, they're on basic plan - nothing to cancel
+        if (!user.stripe_customer_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'You are currently on the basic plan. There is no subscription to cancel.'
             });
         }
 

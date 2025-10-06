@@ -1327,8 +1327,13 @@
                         
                         // Update subscription details
                         let detailsHtml = '';
-                        if (isTrial && trialDaysLeft > 0) {
-                            detailsHtml = `Trial ends in: ${trialDaysLeft} days<br>`;
+                        if (isTrial && sub.current_period_end) {
+                            const trialEndDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            detailsHtml = `Trial ends on: ${trialEndDate}<br>`;
                         }
                         
                         if (sub.current_period_end && sub.amount > 0) {
@@ -1347,6 +1352,20 @@
                         }
                         
                         document.querySelector('.subscription-details').innerHTML = detailsHtml;
+                        
+                        // Show/hide subscription management buttons based on plan type
+                        const updatePaymentBtn = document.querySelector('.btn-secondary');
+                        const cancelSubscriptionBtn = document.querySelector('.btn-danger');
+                        
+                        if (sub.is_trial || sub.is_basic || !sub.id || sub.id === 'basic') {
+                            // Hide subscription management for trial/basic users
+                            if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
+                            if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
+                        } else {
+                            // Show subscription management for paid users
+                            if (updatePaymentBtn) updatePaymentBtn.style.display = 'block';
+                            if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'block';
+                        }
                     } else {
                         // No subscription found
                         document.querySelector('.subscription-status').innerHTML = `
@@ -1354,6 +1373,12 @@
                             Basic Plan
                         `;
                         document.querySelector('.subscription-details').innerHTML = 'No active subscription';
+                        
+                        // Hide subscription management buttons for basic plan
+                        const updatePaymentBtn = document.querySelector('.btn-secondary');
+                        const cancelSubscriptionBtn = document.querySelector('.btn-danger');
+                        if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
+                        if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
                     }
                 } else {
                     console.error('Failed to load subscription data:', response.status);
