@@ -668,14 +668,22 @@ app.get('/auth/callback', async (req, res) => {
     let shouldGoToStripe = false;
     let reason = '';
     
-    // ROUTING LOGIC: Consider subscription status AND domain analysis
+    // Check if user has ever selected a plan (has stripe_customer_id)
+    const hasSelectedPlan = !!currentUser.stripe_customer_id;
+    console.log('🔍 Plan selection check:', { customerId: currentUser.customer_id, hasSelectedPlan });
+    
+    // ROUTING LOGIC: Consider subscription status, domain analysis, AND plan selection
     if (hasActiveSubscription) {
       // Has active subscription - always go to dashboard regardless of domain status
       console.log('✅ Active subscription - redirecting to dashboard');
       return res.redirect('/dashboard');
+    } else if (!hasSelectedPlan) {
+      // New user who hasn't selected a plan yet - go to plans page
+      console.log('🆕 New user - redirecting to plans page to select subscription');
+      return res.redirect('/plans');
     } else if (!hasAnalyzedDomains) {
-      // No analyzed domains - go to onboarding
-      console.log('🆕 No analyzed domains - redirecting to onboarding');
+      // Has selected plan but no analyzed domains - go to onboarding
+      console.log('🆕 Has plan but no analyzed domains - redirecting to onboarding');
       return res.redirect('/onboarding');
     } else if (hasAnalyzedDomains) {
       // Has domains but no subscription = need payment
