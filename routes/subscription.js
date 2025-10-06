@@ -513,17 +513,58 @@ router.post('/cancel', async (req, res) => {
 
         console.log('👤 User found:', { userId: user.id, stripeCustomerId: user.stripe_customer_id });
 
-        // If user has no Stripe customer ID, they're on basic plan - nothing to cancel
-        if (!user.stripe_customer_id) {
-            return res.status(400).json({
-                success: false,
-                message: 'You are currently on the basic plan. There is no subscription to cancel.'
-            });
+        let stripeCustomerId = user.stripe_customer_id;
+        
+        // If no stripe_customer_id in database, try to find customer by email in Stripe
+        if (!stripeCustomerId) {
+            console.log('🔍 No stripe_customer_id in database, searching Stripe by email...');
+            
+            try {
+                const customers = await stripe.customers.list({
+                    email: user.email,
+                    limit: 1
+                });
+                
+                if (customers.data.length > 0) {
+                    stripeCustomerId = customers.data[0].id;
+                    console.log('✅ Found Stripe customer by email:', stripeCustomerId);
+                    
+                    // Update user record with stripe_customer_id
+                    const { createClient } = require('@supabase/supabase-js');
+                    const supabase = createClient(
+                        process.env.SUPABASE_URL,
+                        process.env.SUPABASE_SERVICE_ROLE_KEY
+                    );
+                    
+                    const { error: updateError } = await supabase
+                        .from('users')
+                        .update({ stripe_customer_id: stripeCustomerId })
+                        .eq('id', user.id);
+                        
+                    if (updateError) {
+                        console.error('Error updating user with stripe_customer_id:', updateError);
+                    } else {
+                        console.log('✅ Updated user record with stripe_customer_id');
+                    }
+                } else {
+                    console.log('🔍 No Stripe customer found for email:', user.email);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'You are currently on the basic plan. There is no subscription to cancel.'
+                    });
+                }
+            } catch (stripeError) {
+                console.error('Error searching Stripe customers:', stripeError);
+                return res.status(400).json({
+                    success: false,
+                    message: 'You are currently on the basic plan. There is no subscription to cancel.'
+                });
+            }
         }
 
         // Get active or trialing subscription from Stripe
         const customerSubscriptions = await stripe.subscriptions.list({
-            customer: user.stripe_customer_id,
+            customer: stripeCustomerId,
             status: 'all', // Get all subscriptions including trialing
             limit: 10
         });
