@@ -1357,8 +1357,8 @@
                         const updatePaymentBtn = document.querySelector('.btn-secondary');
                         const cancelSubscriptionBtn = document.querySelector('.btn-danger');
                         
-                        if (sub.is_trial || sub.is_basic || !sub.id || sub.id === 'basic') {
-                            // Hide subscription management for trial/basic users
+                        if (sub.is_trial || sub.is_basic || !sub.id || sub.id === 'basic' || !sub.id) {
+                            // Hide subscription management for trial/basic users or users without subscriptions
                             if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'none';
                         } else {
@@ -1367,14 +1367,21 @@
                             if (cancelSubscriptionBtn) cancelSubscriptionBtn.style.display = 'block';
                         }
                     } else {
-                        // No subscription found
+                        // No subscription found - user needs to select a plan
                         document.querySelector('.subscription-status').innerHTML = `
-                            <i class="fas fa-info-circle"></i>
-                            Basic Plan
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                            No Active Subscription
                         `;
-                        document.querySelector('.subscription-details').innerHTML = 'No active subscription';
+                        document.querySelector('.subscription-details').innerHTML = `
+                            ${result.message || 'No active subscription. Please select a plan to continue.'}
+                            <br><br>
+                            <a href="/plans" class="btn btn-primary" style="display: inline-block; margin-top: 10px;">
+                                <i class="fas fa-credit-card"></i>
+                                Select a Plan
+                            </a>
+                        `;
                         
-                        // Hide subscription management buttons for basic plan
+                        // Hide subscription management buttons
                         const updatePaymentBtn = document.querySelector('.btn-secondary');
                         const cancelSubscriptionBtn = document.querySelector('.btn-danger');
                         if (updatePaymentBtn) updatePaymentBtn.style.display = 'none';

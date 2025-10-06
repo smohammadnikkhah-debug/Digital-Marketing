@@ -350,10 +350,10 @@ router.get('/current', async (req, res) => {
         const hasUsedTrial = await auth0Service.hasUsedTrial(user.email);
         console.log('🔍 Trial status:', { email: user.email, hasUsedTrial });
 
-        // If user has no Stripe customer ID, they're likely on trial or basic plan
+        // If user has no Stripe customer ID, they need to select a plan
         if (!user.stripe_customer_id) {
             if (!hasUsedTrial) {
-                // User is on trial
+                // User is on trial - show trial status
                 const trialEndDate = new Date();
                 trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
                 
@@ -362,7 +362,7 @@ router.get('/current', async (req, res) => {
                     subscription: {
                         id: 'trial',
                         status: 'trialing',
-                        plan_name: 'Trial Plan',
+                        plan_name: 'Trial Period',
                         billing_cycle: 'monthly',
                         current_period_end: Math.floor(trialEndDate.getTime() / 1000),
                         amount: 0,
@@ -371,26 +371,19 @@ router.get('/current', async (req, res) => {
                     }
                 });
             } else {
-                // User has used trial but no subscription - they're on basic plan
+                // User has used trial but no subscription - they need to select a plan
                 return res.json({
                     success: true,
-                    subscription: {
-                        id: 'basic',
-                        status: 'active',
-                        plan_name: 'Basic Plan',
-                        billing_cycle: 'monthly',
-                        current_period_end: null,
-                        amount: 0,
-                        currency: 'aud',
-                        is_basic: true
-                    }
+                    subscription: null,
+                    message: 'No active subscription. Please select a plan to continue.',
+                    needs_plan_selection: true
                 });
             }
         }
 
         // Try to fetch Stripe subscription if customer has Stripe data
         let stripeSubscription = null;
-        let planName = 'Basic Plan';
+        let planName = 'Unknown Plan';
         let billingCycle = 'monthly';
         let amount = 0;
 
