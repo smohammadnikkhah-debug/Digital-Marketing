@@ -734,86 +734,62 @@
                 };
             }
             
-            // Fallback to old logic if page metrics not available
+            // Fallback: Calculate from actual DataForSEO analysis data
+            console.log('Dashboard: Calculating metrics from analysis data:', {
+                hasOnPage: !!analysis.onPage,
+                hasIssues: !!analysis.issues,
+                hasScore: analysis.score !== undefined
+            });
+            
             let healthyPages = 0;
             let pagesWithIssues = 0;
             let fixedIssues = 0;
+            let totalIssues = 0;
             
-            // Analyze on-page data
-            if (analysis.onPage) {
-                const onPageIssues = [];
-                
-                // Check for common SEO issues
-                if (!analysis.onPage.title) {
-                    onPageIssues.push('Missing title tag');
-                }
-                if (!analysis.onPage.metaDescription) {
-                    onPageIssues.push('Missing meta description');
-                }
-                if (analysis.onPage.headings?.h1 === 0) {
-                    onPageIssues.push('Missing H1 tag');
-                }
-                if (analysis.onPage.headings?.h2 === 0) {
-                    onPageIssues.push('Missing H2 tags');
-                }
-                if (analysis.onPage.content?.wordCount < 300) {
-                    onPageIssues.push('Low content word count');
-                }
-                if (analysis.onPage.images?.missingAlt > 0) {
-                    onPageIssues.push(`${analysis.onPage.images.missingAlt} images missing alt text`);
-                }
-                if (!analysis.onPage.ssl) {
-                    onPageIssues.push('No SSL certificate');
-                }
-                if (!analysis.onPage.mobileFriendly) {
-                    onPageIssues.push('Not mobile friendly');
-                }
-                
-                // Calculate page health based on issues
-                if (onPageIssues.length === 0) {
-                    healthyPages = 1; // Main page is healthy
-                } else if (onPageIssues.length <= 2) {
-                    pagesWithIssues = 1; // Main page has minor issues
-                } else {
-                    pagesWithIssues = 1; // Main page has major issues
-                }
-                
-                fixedIssues = onPageIssues.length;
+            // Count issues from DataForSEO analysis
+            if (analysis.issues && Array.isArray(analysis.issues)) {
+                totalIssues = analysis.issues.length;
+                console.log('Dashboard: Found', totalIssues, 'issues from DataForSEO');
+            } else if (analysis.onPage && analysis.onPage.issues) {
+                totalIssues = analysis.onPage.issues.length;
+                console.log('Dashboard: Found', totalIssues, 'onPage issues');
             }
             
-            // Analyze keywords data
-            if (analysis.keywords && analysis.keywords.keywords) {
-                const keywordIssues = analysis.keywords.keywords.filter(k => k.difficulty > 70).length;
-                if (keywordIssues > 0) {
-                    pagesWithIssues += Math.min(keywordIssues, 3); // Cap at 3 additional pages
-                }
+            // Calculate page health based on analysis score
+            // Since we're only analyzing the homepage currently
+            const score = analysis.score || analysis.onPage?.score || 0;
+            
+            if (score >= 80) {
+                healthyPages = 1; // Homepage is healthy
+                pagesWithIssues = 0;
+            } else if (score >= 50) {
+                healthyPages = 0;
+                pagesWithIssues = 1; // Homepage has issues
+            } else {
+                healthyPages = 0;
+                pagesWithIssues = 1; // Homepage has major issues
             }
             
-            // Analyze recommendations
-            if (analysis.recommendations && analysis.recommendations.length > 0) {
-                const highPriorityIssues = analysis.recommendations.filter(r => r.priority === 'High').length;
-                const mediumPriorityIssues = analysis.recommendations.filter(r => r.priority === 'Medium').length;
-                
-                if (highPriorityIssues > 0) {
-                    pagesWithIssues += highPriorityIssues;
-                }
-                if (mediumPriorityIssues > 0) {
-                    pagesWithIssues += Math.ceil(mediumPriorityIssues / 2);
-                }
-            }
+            // Fixed issues should be 0 until user actually fixes them
+            // These metrics will be updated when user re-analyzes after fixing issues
+            fixedIssues = 0;
             
-            // Ensure we have at least 1 page (the main page)
-            if (healthyPages === 0 && pagesWithIssues === 0) {
-                healthyPages = 1;
-            }
+            console.log('Dashboard: Calculated metrics:', {
+                healthyPages,
+                pagesWithIssues,
+                fixedIssues,
+                totalIssues,
+                score
+            });
             
             return {
-                healthyPages: Math.max(healthyPages, 0),
-                pagesWithIssues: Math.max(pagesWithIssues, 0),
-                fixedIssues: Math.max(fixedIssues, 0),
-                totalPages: 1, // Fallback
-                averageScore: 0, // Fallback
-                issuesByType: {} // Fallback
+                healthyPages: healthyPages,
+                pagesWithIssues: pagesWithIssues,
+                fixedIssues: fixedIssues,
+                totalPages: 1, // Currently only analyzing homepage
+                totalIssues: totalIssues,
+                averageScore: score,
+                issuesByType: analysis.issues || []
             };
         }
 
