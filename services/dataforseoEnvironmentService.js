@@ -48,13 +48,18 @@ class DataForSEOService {
    */
   async makeRequest(endpoint, data) {
     try {
+      // Ensure no double slashes in URL
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      const cleanBaseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+      const fullUrl = `${cleanBaseUrl}${cleanEndpoint}`;
+      
       console.log(`🔍 DataForSEO API Request (${this.environment}):`, {
-        endpoint: `${this.baseUrl}${endpoint}`,
+        endpoint: fullUrl,
         dataLength: data.length,
         firstItem: data[0]
       });
       
-      const response = await axios.post(`${this.baseUrl}${endpoint}`, data, {
+      const response = await axios.post(fullUrl, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Basic ${this.authHeader}`
