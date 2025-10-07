@@ -75,12 +75,28 @@ class DataForSEOService {
       
       return response.data;
     } catch (error) {
-      console.error(`❌ DataForSEO API error (${this.environment}):`, {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        endpoint: endpoint
-      });
+      const errorStatus = error.response?.status;
+      const errorData = error.response?.data;
+      
+      // Handle 402 Payment Required error
+      if (errorStatus === 402) {
+        console.error(`💳 DataForSEO API error (${this.environment}): Payment Required`, {
+          message: 'Your DataForSEO account needs credits or a paid plan',
+          status: errorStatus,
+          statusCode: errorData?.status_code,
+          statusMessage: errorData?.status_message,
+          tasksError: errorData?.tasks_error,
+          endpoint: endpoint
+        });
+      } else {
+        console.error(`❌ DataForSEO API error (${this.environment}):`, {
+          message: error.message,
+          status: errorStatus,
+          data: errorData,
+          endpoint: endpoint
+        });
+      }
+      
       return null;
     }
   }
