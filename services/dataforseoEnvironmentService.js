@@ -11,10 +11,23 @@ class DataForSEOService {
   constructor() {
     const environmentConfig = new EnvironmentConfig();
     this.envConfig = environmentConfig.getDataForSEOConfig();
-    this.baseUrl = this.envConfig.baseURL;
+    this.baseUrl = this.envConfig.baseUrl || this.envConfig.baseURL;  // Support both baseUrl and baseURL
     this.username = this.envConfig.username;
     this.password = this.envConfig.password;
     this.environment = this.envConfig.environment;
+    
+    // Ensure baseUrl has a value
+    if (!this.baseUrl) {
+      this.baseUrl = 'https://api.dataforseo.com/v3';
+      console.log('⚠️ DataForSEO baseUrl not configured, using default:', this.baseUrl);
+    }
+    
+    console.log('🔍 DataForSEO Service Initialization:', {
+      baseUrl: this.baseUrl,
+      environment: this.environment,
+      hasUsername: !!this.username,
+      hasPassword: !!this.password
+    });
     
     // Create Base64 encoded authorization header
     if (this.username && this.password) {

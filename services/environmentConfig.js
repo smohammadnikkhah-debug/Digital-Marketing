@@ -207,7 +207,7 @@ class EnvironmentConfig {
     getDataForSEOConfig() {
         return {
             environment: this.config.dataforseo.environment,
-            baseURL: this.config.dataforseo.baseUrl,
+            baseUrl: this.config.dataforseo.baseUrl,  // Fixed: was baseURL, should be baseUrl
             username: this.config.dataforseo.username,
             password: this.config.dataforseo.password
         };
