@@ -101,7 +101,7 @@ class URLNormalizer {
 
   /**
    * Normalize URL for DataForSEO API
-   * DataForSEO requires specific format: https://domain.com
+   * DataForSEO requires specific format: https://domain.com (without trailing slash for root domain)
    * @param {string} url - The URL to normalize
    * @returns {string} - Normalized URL for DataForSEO
    */
@@ -112,7 +112,7 @@ class URLNormalizer {
       forceHTTPS: true,
       toLowerCase: true,
       removePath: false,  // Keep full URL with path
-      removeTrailingSlash: false
+      removeTrailingSlash: true  // Remove trailing slash - DataForSEO doesn't like it
     });
 
     if (!normalized.isValid) {

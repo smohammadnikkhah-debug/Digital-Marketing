@@ -35,15 +35,34 @@ class DataForSEOService {
    */
   async makeRequest(endpoint, data) {
     try {
+      console.log(`🔍 DataForSEO API Request (${this.environment}):`, {
+        endpoint: `${this.baseUrl}${endpoint}`,
+        dataLength: data.length,
+        firstItem: data[0]
+      });
+      
       const response = await axios.post(`${this.baseUrl}${endpoint}`, data, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Basic ${this.authHeader}`
         }
       });
+      
+      console.log(`✅ DataForSEO API Response (${this.environment}):`, {
+        status: response.data.status_code,
+        tasksCount: response.data.tasks?.length,
+        firstTaskStatus: response.data.tasks?.[0]?.status_code,
+        firstTaskMessage: response.data.tasks?.[0]?.status_message
+      });
+      
       return response.data;
     } catch (error) {
-      console.error(`DataForSEO API error (${this.environment}):`, error.response?.data || error.message);
+      console.error(`❌ DataForSEO API error (${this.environment}):`, {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        endpoint: endpoint
+      });
       return null;
     }
   }
@@ -198,10 +217,16 @@ class DataForSEOService {
       console.log(`📊 Getting basic on-page SEO analysis for: ${url} (${this.environment} mode)`);
       
       // Make real DataForSEO API call for on-page analysis
+      // Include parameters to handle robots.txt, JavaScript, and popups
       const onPageData = [{
         url: url,
         enable_javascript: true,
-        custom_user_agent: 'Mozilla/5.0 (compatible; SEOAnalyzer/1.0)',
+        enable_browser_rendering: true,
+        disable_cookie_popup: true,
+        load_resources: true,
+        enable_xhr: true,
+        custom_js: "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
+        custom_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         accept_language: 'en-US,en;q=0.9'
       }];
       
@@ -214,7 +239,13 @@ class DataForSEOService {
       
       const task = response.tasks[0];
       if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
-        console.log(`⚠️ DataForSEO on-page analysis failed for ${url}: ${task.status_message || 'Unknown error'}`);
+        console.log(`⚠️ DataForSEO on-page analysis failed for ${url}:`, {
+          status_code: task.status_code,
+          status_message: task.status_message,
+          error: task.error,
+          result_count: task.result?.length || 0,
+          path: task.path
+        });
         return null;
       }
       
@@ -347,7 +378,13 @@ class DataForSEOService {
       
       const task = response.tasks[0];
       if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
-        console.log(`⚠️ DataForSEO keyword analysis failed for ${domain}: ${task.status_message || 'Unknown error'}`);
+        console.log(`⚠️ DataForSEO keyword analysis failed for ${domain}:`, {
+          status_code: task.status_code,
+          status_message: task.status_message,
+          error: task.error,
+          result_count: task.result?.length || 0,
+          path: task.path
+        });
         return null;
       }
       
