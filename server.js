@@ -511,9 +511,18 @@ app.get('/auth/callback', async (req, res) => {
       try {
         planData = JSON.parse(decodeURIComponent(state));
         console.log('📋 Plan data from state:', planData);
+        console.log('📋 Plan data details:', {
+          signup: planData.signup,
+          plan: planData.plan,
+          priceId: planData.priceId,
+          billing: planData.billing
+        });
       } catch (e) {
         console.error('Error parsing state parameter:', e);
+        console.error('State value:', state);
       }
+    } else {
+      console.log('⚠️ No state parameter received in callback');
     }
     
     // Handle Auth0 errors (like rate limiting)
@@ -675,18 +684,28 @@ app.get('/auth/callback', async (req, res) => {
     console.log('🔍 Plan selection check:', { customerId: currentUser.customer_id, hasSelectedPlan });
     
     // ROUTING LOGIC: Consider subscription status, domain analysis, AND plan selection
+    console.log('🔍 Routing decision logic:', {
+      hasActiveSubscription,
+      planDataSignup: planData.signup,
+      planDataPriceId: planData.priceId,
+      hasSelectedPlan,
+      hasAnalyzedDomains
+    });
+    
     if (hasActiveSubscription) {
       // Has active subscription - always go to dashboard regardless of domain status
       console.log('✅ Active subscription - redirecting to dashboard');
       return res.redirect('/dashboard');
     } else if (planData.signup && planData.priceId) {
       // User is coming from plan selection with plan data - create Stripe checkout
-      console.log('💳 User selected plan - creating Stripe checkout session');
+      console.log('💳 User selected plan during signup - creating Stripe checkout session');
+      console.log('💳 Plan data:', { plan: planData.plan, priceId: planData.priceId, billing: planData.billing });
       shouldGoToStripe = true;
       reason = 'plan_selection';
     } else if (!hasSelectedPlan) {
       // New user who hasn't selected a plan yet - go to plans page
-      console.log('🆕 New user - redirecting to plans page to select subscription');
+      console.log('🆕 New user without plan - redirecting to plans page to select subscription');
+      console.log('🆕 Reason: hasSelectedPlan =', hasSelectedPlan);
       return res.redirect('/plans');
     } else if (!hasAnalyzedDomains) {
       // Has selected plan but no analyzed domains - go to onboarding
