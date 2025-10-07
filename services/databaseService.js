@@ -80,10 +80,22 @@ class DatabaseService {
         }
       }
 
+      // Normalize domain for storage (remove protocol, www, etc.)
+      const URLNormalizer = require('./urlNormalizer');
+      let normalizedDomain;
+      try {
+        normalizedDomain = URLNormalizer.normalizeDomainForStorage(userData.domain);
+        console.log(`✅ Normalized domain for storage: ${normalizedDomain} (from: ${userData.domain})`);
+      } catch (error) {
+        console.error(`⚠️ Domain normalization failed: ${error.message}`);
+        // Fallback to original domain
+        normalizedDomain = userData.domain.replace(/^https?:\/\//, '').replace(/^www\./, '').toLowerCase();
+      }
+
       // Use SupabaseService to create/get website with customer_id
       const supabaseService = require('./supabaseService');
       const website = await supabaseService.createOrGetWebsite(
-        userData.domain, 
+        normalizedDomain, 
         userData.businessDescription, 
         customerId
       );

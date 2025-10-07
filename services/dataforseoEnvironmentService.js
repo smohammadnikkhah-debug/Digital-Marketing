@@ -5,6 +5,7 @@
 
 const axios = require('axios');
 const EnvironmentConfig = require('./environmentConfig');
+const URLNormalizer = require('./urlNormalizer');
 
 class DataForSEOService {
   constructor() {
@@ -89,11 +90,19 @@ class DataForSEOService {
     try {
       console.log(`🔍 Starting comprehensive SEO analysis for: ${url} (${this.environment} mode)`);
 
-      // Ensure URL has protocol
-      let processedUrl = url;
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        processedUrl = `https://${url}`;
-        console.log(`🔧 Added protocol to URL: ${processedUrl}`);
+      // Normalize URL to handle all possible formats (www, http, https, etc.)
+      let processedUrl;
+      try {
+        processedUrl = URLNormalizer.normalizeForDataForSEO(url);
+        console.log(`✅ Normalized URL for DataForSEO: ${processedUrl}`);
+      } catch (error) {
+        console.error(`❌ URL normalization failed: ${error.message}`);
+        // Fallback to simple protocol addition
+        processedUrl = url;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          processedUrl = `https://${url}`;
+          console.log(`🔧 Added protocol to URL: ${processedUrl}`);
+        }
       }
 
       // Check if DataForSEO is properly configured

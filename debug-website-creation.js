@@ -20,6 +20,8 @@ async function debugWebsiteCreation() {
         
         if (!supabase.isConfigured) {
             console.log('❌ Supabase not configured. Check environment variables.');
+            console.log('   This is expected when running locally.');
+            console.log('   The issue is likely in DigitalOcean deployment.');
             return;
         }
 
