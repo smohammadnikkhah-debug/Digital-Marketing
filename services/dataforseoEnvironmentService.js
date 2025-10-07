@@ -251,7 +251,7 @@ class DataForSEOService {
       console.log(`📊 Getting basic on-page SEO analysis for: ${url} (${this.environment} mode)`);
       
       // Make real DataForSEO API call for on-page analysis
-      // Include parameters to handle robots.txt, JavaScript, and popups
+      // Note: OnPage Instant Pages API has specific parameters, removed invalid ones
       const onPageData = [{
         url: url,
         enable_javascript: true,
@@ -260,8 +260,8 @@ class DataForSEOService {
         load_resources: true,
         enable_xhr: true,
         custom_js: "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
-        custom_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        accept_language: 'en-US,en;q=0.9'
+        custom_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        // Removed accept_language - not supported by OnPage Instant Pages API
       }];
       
       const response = await this.makeRequest('/on_page/instant_pages', onPageData);
