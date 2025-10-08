@@ -1144,67 +1144,64 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         async function reanalyzeWebsite(domain) {
             try {
-                console.log('Dashboard: Starting comprehensive subpage analysis for domain:', domain);
+                console.log('Dashboard: Starting analysis for domain:', domain);
                 
                 // Show progress bar
                 showReanalysisProgress(domain);
                 
-                // Connect to Socket.IO for real-time updates
-                const socket = io();
+                // Call the analyze-website API endpoint directly (no Socket.IO needed)
+                const url = domain.startsWith('http') ? domain : `https://${domain}`;
                 
-                // Set up event listeners
-                socket.on('analysis_progress', (data) => {
-                    updateReanalysisProgress(data.message, data.progress);
-                });
+                console.log('📊 Calling /api/dataforseo/environment/analyze-website for:', url);
                 
-                socket.on('analysis_complete', async (data) => {
-                    socket.disconnect(); // Disconnect after analysis is complete
-                    
-                    if (data.success) {
-                        console.log('Dashboard: Comprehensive analysis completed successfully');
-                        
-                        // Update user data with fresh aggregated analysis
-                        if (!userData) {
-                            userData = {
-                                domain: domain,
-                                businessDescription: 'Website Analysis',
-                                integrations: {},
-                                analysisData: data.analysis
-                            };
-                        } else {
-                            userData.analysisData = data.analysis;
+                const response = await fetch('/api/dataforseo/environment/analyze-website', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        options: {
+                            location: 'United States',
+                            language: 'en'
                         }
-                        
-                        // Store analysis data in localStorage for the mantis dashboard
-                        localStorage.setItem('analysisData', JSON.stringify(data.analysis));
-                        localStorage.setItem('lastAnalyzedDomain', domain);
-                        
-                        // Save updated data to database
-                        await fetch('/api/user/save-onboarding', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(userData)
-                        });
-                        
-                        // Hide progress bar and refresh display
-                        hideReanalysisProgress();
-                        displayAllWebsites();
-                        
-                        console.log('Dashboard: Website reanalyzed with subpage analysis successfully');
-                    } else {
-                        console.error('Dashboard: Analysis failed:', data.error);
-                        hideReanalysisProgress();
-                        showError('Analysis failed: ' + data.error);
-                    }
+                    })
                 });
                 
-                // Start the comprehensive analysis
-                socket.emit('analyze_website', { url: domain });
+                const result = await response.json();
+                console.log('📊 Analysis result:', {
+                    success: result.success,
+                    hasData: !!result.data || !!result.analysis,
+                    cached: result.cached
+                });
+                
+                if (result.success) {
+                    console.log('✅ Dashboard: Analysis completed successfully');
+                    
+                    // Store analysis data in localStorage for the mantis dashboard
+                    const analysisData = result.analysis || result.data;
+                    if (analysisData) {
+                        localStorage.setItem('analysisData', JSON.stringify(analysisData));
+                        localStorage.setItem('lastAnalyzedDomain', domain);
+                        console.log('✅ Stored analysis in localStorage');
+                    }
+                    
+                    // Hide progress bar
+                    hideReanalysisProgress();
+                    
+                    // IMPORTANT: Reload customer websites from server to get fresh analysis data
+                    console.log('📊 Reloading customer websites after analysis...');
+                    await loadCustomerWebsites();
+                    
+                    console.log('✅ Dashboard: Website analyzed successfully');
+                } else {
+                    console.error('❌ Dashboard: Analysis failed:', result.error);
+                    hideReanalysisProgress();
+                    showError('Analysis failed: ' + (result.error || 'Unknown error'));
+                }
                 
             } catch (error) {
-                console.error('Dashboard: Reanalysis error:', error);
+                console.error('❌ Dashboard: Analysis error:', error);
                 hideReanalysisProgress();
                 showError('Analysis failed: ' + error.message);
             }
