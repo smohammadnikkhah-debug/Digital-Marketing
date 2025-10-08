@@ -4533,9 +4533,6 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
         }
       }
     });
-  } catch (error) {
-    console.error('❌ Error in handleHistoricalDataRequest:', error);
-    res.json({ success: false, error: error.message });
   }
 }
 
