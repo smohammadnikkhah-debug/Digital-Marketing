@@ -212,7 +212,7 @@ app.use((req, res, next) => {
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
     "img-src 'self' data: https:; " +
-    "connect-src 'self' https://*.auth0.com https://*.supabase.co https://sandbox.dataforseo.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://region1.google-analytics.com https://region1.analytics.google.com; " +
+    "connect-src 'self' https://*.auth0.com https://*.supabase.co https://sandbox.dataforseo.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://region1.google-analytics.com https://region1.analytics.google.com https://*.google.com https://*.google.com.au https://*.google.co.uk https://*.google.ca; " +
     "frame-src 'self' https://*.auth0.com https://js.stripe.com https://hooks.stripe.com https://www.googletagmanager.com https://td.doubleclick.net;"
   );
   next();
