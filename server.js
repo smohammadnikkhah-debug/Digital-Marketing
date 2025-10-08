@@ -4533,8 +4533,11 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
         }
       }
     });
+  } catch (error) {
+    console.error('❌ Error in handleHistoricalDataRequest:', error);
+    res.json({ success: false, error: error.message });
   }
-});
+}
 
 // Helper function to calculate average position
 function calculateAveragePosition(keywords) {
