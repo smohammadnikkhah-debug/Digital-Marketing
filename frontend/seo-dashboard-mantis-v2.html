@@ -1728,7 +1728,61 @@
 
         // Update charts with historical DataForSEO data
         function updateChartsWithHistoricalData(chartData) {
-            updateChartData();
+            console.log('📊 Updating charts with historical data:', chartData);
+            
+            if (!chartData || (!chartData.traffic && !chartData.positions)) {
+                console.warn('⚠️ No chart data available, using default empty charts');
+                // Create empty charts
+                createEmptyCharts();
+                return;
+            }
+            
+            // Update charts with real data if available
+            if (chartData.traffic && chartData.traffic.months && chartData.traffic.values) {
+                updateTrafficChartWithData(chartData.traffic.months, chartData.traffic.values);
+            } else {
+                createEmptyCharts();
+            }
+            
+            if (chartData.positions && chartData.positions.months && chartData.positions.values) {
+                updatePositionChartWithData(chartData.positions.months, chartData.positions.values);
+            }
+        }
+        
+        function createEmptyCharts() {
+            console.log('📊 Creating empty charts with placeholder message');
+            
+            const trafficCtx = document.getElementById('trafficChart');
+            const positionCtx = document.getElementById('positionChart');
+            
+            // Show message that historical data requires DataForSEO Labs
+            const message = 'Historical trend data requires DataForSEO Labs subscription';
+            
+            if (trafficCtx) {
+                const parent = trafficCtx.parentElement;
+                if (parent) {
+                    parent.innerHTML = `<div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">${message}</div>`;
+                }
+            }
+            
+            if (positionCtx) {
+                const parent = positionCtx.parentElement;
+                if (parent) {
+                    parent.innerHTML = `<div class="empty-state" style="padding: 40px; text-align: center; color: #94a3b8;">${message}</div>`;
+                }
+            }
+        }
+        
+        function updateTrafficChartWithData(months, values) {
+            // Implementation for traffic chart with real data
+            console.log('📈 Updating traffic chart with real data:', { months, values });
+            // Chart update code here
+        }
+        
+        function updatePositionChartWithData(months, values) {
+            // Implementation for position chart with real data
+            console.log('📉 Updating position chart with real data:', { months, values });
+            // Chart update code here
         }
 
         // Update chart data based on selected filters and date range
@@ -1994,19 +2048,30 @@
 
         // Update keyword opportunities with real DataForSEO data
         function updateKeywordOpportunitiesWithRealData(rankedKeywords) {
+            console.log('🔑 Updating keyword opportunities with data:', rankedKeywords);
+            
             const keywordsList = document.querySelector('.keywords-list');
-            if (!keywordsList) return;
+            if (!keywordsList) {
+                console.warn('⚠️ Keywords list container not found');
+                return;
+            }
             
             // Clear existing keywords
             keywordsList.innerHTML = '';
             
+            if (!rankedKeywords || rankedKeywords.length === 0) {
+                keywordsList.innerHTML = '<div class="empty-state">No keyword data available. Add credits to your DataForSEO account to unlock keyword analysis.</div>';
+                return;
+            }
+            
             // Take top 4 keywords from DataForSEO data
             const topKeywords = rankedKeywords.slice(0, 4);
+            console.log(`📋 Displaying ${topKeywords.length} keywords`);
             
             topKeywords.forEach((keywordData, index) => {
                 const keyword = keywordData.keyword_data?.keyword_info?.keyword || `Keyword ${index + 1}`;
                 const volume = keywordData.keyword_data?.keyword_info?.search_volume || 0;
-                const difficulty = keywordData.keyword_data?.keyword_info?.competition_level || 'MEDIUM';
+                const difficulty = keywordData.keyword_data?.keyword_info?.competition_level || 'UNKNOWN';
                 const position = keywordData.ranked_serp_element?.serp_item?.rank_group || 0;
                 
                 const keywordItem = document.createElement('div');
@@ -2041,22 +2106,26 @@
 
         // Update competitors with real DataForSEO data
         function updateCompetitorsWithRealData(competitors) {
+            console.log('🏆 Updating competitors with data:', competitors);
+            
             const competitorsList = document.querySelector('.competitors-list');
-            if (!competitorsList) return;
+            if (!competitorsList) {
+                console.warn('⚠️ Competitors list container not found');
+                return;
+            }
             
             // Clear existing competitors
             competitorsList.innerHTML = '';
             
-            // Generate sample competitors if none provided
-            const sampleCompetitors = competitors.length > 0 ? competitors : [
-                { domain: 'competitor1.com', rank: 1, traffic: 45000, keywords: 1250 },
-                { domain: 'competitor2.com', rank: 2, traffic: 38000, keywords: 980 },
-                { domain: 'competitor3.com', rank: 3, traffic: 32000, keywords: 850 },
-                { domain: 'competitor4.com', rank: 4, traffic: 28000, keywords: 720 }
-            ];
+            // Check if we have real competitor data
+            if (!competitors || competitors.length === 0) {
+                competitorsList.innerHTML = '<div class="empty-state">No competitor data available. Competitor analysis requires DataForSEO Labs subscription.</div>';
+                return;
+            }
             
-            // Take top 4 competitors
-            const topCompetitors = sampleCompetitors.slice(0, 4);
+            // Use ONLY real competitor data - NO dummy fallback
+            const topCompetitors = competitors.slice(0, 4);
+            console.log(`📋 Displaying ${topCompetitors.length} competitors`);
             
             topCompetitors.forEach((competitor, index) => {
                 const competitorItem = document.createElement('div');
