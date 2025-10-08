@@ -395,15 +395,30 @@ class DataForSEOService {
       
       const domain = new URL(url).hostname.replace('www.', '');
       
-      // Make real DataForSEO API call for keyword suggestions
-      const keywordData = [{
-        keyword: domain,
+      // Try Keywords For Site API first (better for domain analysis)
+      console.log(`🔑 Trying Keywords For Site API for domain: ${domain}`);
+      const keywordsForSiteData = [{
+        target: domain,
         location_name: 'United States',
         language_code: 'en',
-        limit: 10
+        limit: 20
       }];
       
-      const response = await this.makeRequest('/dataforseo_labs/google/keyword_suggestions', keywordData);
+      let response = await this.makeRequest('dataforseo_labs/google/keywords_for_site/live', keywordsForSiteData);
+      
+      // If Keywords For Site fails, try Keyword Suggestions as fallback
+      if (!response || !response.tasks || response.tasks[0]?.status_code !== 20000) {
+        console.log(`🔑 Keywords For Site not available, trying Keyword Suggestions...`);
+        
+        const keywordSuggestionsData = [{
+          keyword: domain,
+          location_name: 'United States',
+          language_code: 'en',
+          limit: 20
+        }];
+        
+        response = await this.makeRequest('dataforseo_labs/google/keyword_suggestions/live', keywordSuggestionsData);
+      }
       
       if (!response || !response.tasks || response.tasks.length === 0) {
         console.log(`⚠️ No keyword data available from DataForSEO for ${domain}`);
@@ -512,7 +527,7 @@ class DataForSEOService {
         filters: [["metrics.organic.count", ">", 10]]  // Only competitors with 10+ keywords
       }];
       
-      const response = await this.makeRequest('/dataforseo_labs/google/competitors_domain', competitorData);
+      const response = await this.makeRequest('dataforseo_labs/google/competitors_domain/live', competitorData);
       
       if (!response || !response.tasks || response.tasks.length === 0) {
         console.log(`ℹ️ Competitor analysis requires DataForSEO Labs subscription (${this.environment} mode)`);
