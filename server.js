@@ -208,12 +208,12 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://js.stripe.com https://www.googletagmanager.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com; " +
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
     "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
     "img-src 'self' data: https:; " +
-    "connect-src 'self' https://*.auth0.com https://*.supabase.co https://sandbox.dataforseo.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; " +
-    "frame-src 'self' https://*.auth0.com https://js.stripe.com https://hooks.stripe.com https://www.googletagmanager.com;"
+    "connect-src 'self' https://*.auth0.com https://*.supabase.co https://sandbox.dataforseo.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://region1.google-analytics.com https://region1.analytics.google.com; " +
+    "frame-src 'self' https://*.auth0.com https://js.stripe.com https://hooks.stripe.com https://www.googletagmanager.com https://td.doubleclick.net;"
   );
   next();
 });
