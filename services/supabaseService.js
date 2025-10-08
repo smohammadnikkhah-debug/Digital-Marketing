@@ -160,13 +160,22 @@ class SupabaseService {
         return null;
       }
 
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+      
+      console.log('💾 Storing analysis in Supabase:', {
+        websiteId,
+        analysisType,
+        expiresAt: expiresAt.toISOString(),
+        hasData: !!analysisData
+      });
+
       const { data, error } = await this.supabase
         .from('seo_analyses')
         .insert({
           website_id: websiteId,
           analysis_data: analysisData,
           analysis_type: analysisType,
-          expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days from now
+          expires_at: expiresAt
         })
         .select()
         .single();
@@ -176,7 +185,7 @@ class SupabaseService {
         return null;
       }
 
-      console.log('✅ SEO analysis stored in Supabase');
+      console.log('✅ SEO analysis stored in Supabase (expires in 7 days)');
       return data;
     } catch (error) {
       console.error('Supabase analysis storage error:', error);
@@ -189,6 +198,12 @@ class SupabaseService {
     if (!this.isConfigured) return null;
 
     try {
+      console.log('🔍 Checking Supabase cache for analysis:', {
+        websiteId,
+        analysisType,
+        currentTime: new Date().toISOString()
+      });
+      
       const { data, error } = await this.supabase
         .from('seo_analyses')
         .select('*')
@@ -200,11 +215,16 @@ class SupabaseService {
         .single();
 
       if (error) {
-        // No cached analysis found
+        console.log('ℹ️ No valid cached analysis found (either expired or doesn\'t exist)');
         return null;
       }
 
-      console.log('✅ Retrieved cached SEO analysis from Supabase');
+      const daysUntilExpiry = Math.ceil((new Date(data.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+      console.log('✅ Retrieved cached SEO analysis from Supabase:', {
+        createdAt: data.created_at,
+        expiresAt: data.expires_at,
+        daysUntilExpiry: daysUntilExpiry
+      });
       return data;
     } catch (error) {
       console.error('Supabase analysis retrieval error:', error);
