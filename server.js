@@ -810,7 +810,49 @@ const sessionService = require('./services/sessionService');
 
 // Authentication middleware using JWT sessions
 function requireAuth(req, res, next) {
-  sessionService.authenticate(req, res, next);
+  // Check if user has a valid token
+  const token = sessionService.extractToken(req);
+  
+  if (!token) {
+    // Check if this is an API request or page request
+    if (req.path.startsWith('/api/')) {
+      // API request - return JSON error
+      return res.status(401).json({ 
+        authenticated: false, 
+        error: 'No authentication token provided' 
+      });
+    } else {
+      // Page request - redirect to login
+      return res.redirect('/signup?redirect=' + encodeURIComponent(req.originalUrl));
+    }
+  }
+
+  const decoded = sessionService.verifyToken(token);
+  
+  if (!decoded) {
+    // Check if this is an API request or page request
+    if (req.path.startsWith('/api/')) {
+      // API request - return JSON error
+      return res.status(401).json({ 
+        authenticated: false, 
+        error: 'Invalid or expired token' 
+      });
+    } else {
+      // Page request - redirect to login
+      return res.redirect('/signup?redirect=' + encodeURIComponent(req.originalUrl));
+    }
+  }
+
+  // Add user info to request object
+  req.user = {
+    id: decoded.userId,
+    email: decoded.email,
+    name: decoded.name,
+    domain: decoded.domain,
+    auth0Id: decoded.auth0Id
+  };
+
+  next();
 }
 
 // Serve the main page - redirect to login or dashboard
