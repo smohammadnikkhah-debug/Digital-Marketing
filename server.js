@@ -2926,12 +2926,23 @@ app.post('/api/user/save-onboarding', async (req, res) => {
       if (decoded && decoded.userId) {
         console.log('🔍 Save onboarding: User ID:', decoded.userId);
         // Update the authenticated user's domain
+        // Normalize domain for user record (consistent with website table)
+        const URLNormalizer = require('./services/urlNormalizer');
+        let normalizedUserDomain;
+        try {
+          normalizedUserDomain = URLNormalizer.normalizeDomainForStorage(userData.domain);
+          console.log(`✅ Normalized user domain: ${normalizedUserDomain} (from: ${userData.domain})`);
+        } catch (error) {
+          console.error(`⚠️ User domain normalization failed: ${error.message}`);
+          normalizedUserDomain = userData.domain.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/^www\./, '').toLowerCase();
+        }
+        
         const Auth0Service = require('./services/auth0Service');
         const auth0Service = new Auth0Service();
-        const updateResult = await auth0Service.updateUserDomain(decoded.userId, userData.domain);
+        const updateResult = await auth0Service.updateUserDomain(decoded.userId, normalizedUserDomain);
         
         if (updateResult) {
-          console.log(`✅ Save onboarding: Updated user domain to: ${userData.domain}`);
+          console.log(`✅ Save onboarding: Updated user domain to: ${normalizedUserDomain}`);
         } else {
           console.log(`⚠️ Save onboarding: Failed to update user domain`);
         }
