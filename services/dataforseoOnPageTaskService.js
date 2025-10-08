@@ -83,9 +83,12 @@ class DataForSEOOnPageTaskService {
       
       const task = response.tasks[0];
       
-      if (task.status_code === 20000) {
+      // Status codes: 20000 = Ok (instant), 20100 = Task Created (background)
+      if (task.status_code === 20000 || task.status_code === 20100) {
         console.log('✅ OnPage crawl task created successfully:', {
           taskId: task.id,
+          statusCode: task.status_code,
+          statusMessage: task.status_message,
           target: targetUrl,
           maxPages: options.maxPages || 100
         });
