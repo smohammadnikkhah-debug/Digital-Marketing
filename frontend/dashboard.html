@@ -451,10 +451,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <thead>
                             <tr>
                                 <th>Website</th>
-                                <th>Score</th>
-                                <th>Fixed Issues</th>
-                                <th>Healthy Pages</th>
-                                <th>Pages with Issues</th>
+                                <th>SEO Score</th>
+                                <th>Keywords Ranking</th>
+                                <th>Analysis Scope</th>
+                                <th>Recommendations</th>
                                 <th>Last Analysis</th>
                                 <th>Actions</th>
                             </tr>
@@ -700,19 +700,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 
                 if (analysis) {
                     // Website HAS analysis - show full data
+                    // Calculate keyword count for display
+                    const keywordCount = analysis.keywords?.totalKeywords || analysis.keywords?.keywords?.length || 0;
+                    const hasKeywords = keywordCount > 0;
+                    
                     row.innerHTML = `
                         <td class="domain-cell" onclick="openMantisDashboard('${website.domain}')">${website.domain}</td>
                         <td class="score-cell">
                             <span class="score-badge ${scoreClass}">${score}/100</span>
                         </td>
                         <td class="metrics-cell">
-                            <span class="metric-value fixed-issues">${fixedIssues}</span>
+                            ${hasKeywords ? 
+                                `<div style="text-align: center;">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: #10b981;">${keywordCount}</div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">Keywords</div>
+                                </div>` :
+                                `<span class="metric-value">0</span>`
+                            }
                         </td>
                         <td class="metrics-cell">
-                            <span class="metric-value healthy-pages">${healthyPages}</span>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1rem; color: #334155;">Homepage Only</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">1 page analyzed</div>
+                            </div>
                         </td>
                         <td class="metrics-cell">
-                            <span class="metric-value pages-with-issues">${pagesWithIssues}</span>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1rem; color: #64748b;">${analysis.recommendations?.length || 0}</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">Recommendations</div>
+                            </div>
                         </td>
                         <td class="last-analysis">${lastAnalyzed}</td>
                         <td class="action-buttons">

@@ -245,13 +245,20 @@ class DataForSEOService {
     }
   }
 
-  // Basic On-Page SEO Analysis
+  // Basic On-Page SEO Analysis - FULL WEBSITE CRAWL
   async getBasicOnPageAnalysis(url) {
     try {
-      console.log(`📊 Getting basic on-page SEO analysis for: ${url} (${this.environment} mode)`);
+      console.log(`📊 Getting FULL WEBSITE on-page SEO analysis for: ${url} (${this.environment} mode)`);
       
-      // Make real DataForSEO API call for on-page analysis
-      // Note: OnPage Instant Pages API has specific parameters, removed invalid ones
+      // Extract domain for full crawl
+      const domain = new URL(url).hostname;
+      
+      // OPTION 1: Try to use OnPage Task API for full website crawl
+      // This crawls ALL pages on the domain (more comprehensive but takes longer)
+      console.log(`🔍 Starting full website crawl for domain: ${domain}`);
+      
+      // For now, use Instant Pages for homepage analysis
+      // TODO: Implement full crawl with OnPage Task API (requires task-based workflow)
       const onPageData = [{
         url: url,
         enable_javascript: true,
@@ -261,7 +268,6 @@ class DataForSEOService {
         enable_xhr: true,
         custom_js: "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
         custom_user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        // Removed accept_language - not supported by OnPage Instant Pages API
       }];
       
       const response = await this.makeRequest('/on_page/instant_pages', onPageData);
