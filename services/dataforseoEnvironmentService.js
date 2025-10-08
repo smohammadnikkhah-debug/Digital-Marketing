@@ -406,6 +406,9 @@ class DataForSEOService {
       
       let response = await this.makeRequest('dataforseo_labs/google/keywords_for_site/live', keywordsForSiteData);
       
+      // Log the full response structure for debugging
+      console.log(`🔍 Keywords For Site API Response:`, JSON.stringify(response, null, 2));
+      
       // If Keywords For Site fails, try Keyword Suggestions as fallback
       if (!response || !response.tasks || response.tasks[0]?.status_code !== 20000) {
         console.log(`🔑 Keywords For Site not available, trying Keyword Suggestions...`);
@@ -418,6 +421,7 @@ class DataForSEOService {
         }];
         
         response = await this.makeRequest('dataforseo_labs/google/keyword_suggestions/live', keywordSuggestionsData);
+        console.log(`🔍 Keyword Suggestions API Response:`, JSON.stringify(response, null, 2));
       }
       
       if (!response || !response.tasks || response.tasks.length === 0) {
@@ -426,6 +430,15 @@ class DataForSEOService {
       }
       
       const task = response.tasks[0];
+      console.log(`🔍 Keywords Task Details:`, {
+        status_code: task.status_code,
+        status_message: task.status_message,
+        has_result: !!task.result,
+        result_length: task.result?.length || 0,
+        result_structure: task.result ? Object.keys(task.result[0] || {}) : [],
+        full_result: JSON.stringify(task.result, null, 2)
+      });
+      
       if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
         console.log(`⚠️ DataForSEO keyword analysis failed for ${domain}:`, {
           status_code: task.status_code,
@@ -438,13 +451,35 @@ class DataForSEOService {
       }
       
       const result = task.result[0];
-      const keywords = result.items ? result.items.map(item => ({
-        keyword: item.keyword,
-        searchVolume: item.search_volume || 0,
-        cpc: item.cpc || 0,
-        competition: item.competition_level || 'Unknown',
-        difficulty: item.keyword_difficulty || 0
-      })) : [];
+      console.log(`🔍 Keywords Result Structure:`, JSON.stringify(result, null, 2));
+      
+      // Handle different possible result structures
+      let keywords = [];
+      if (result.items && Array.isArray(result.items)) {
+        keywords = result.items.map(item => ({
+          keyword: item.keyword,
+          searchVolume: item.search_volume || 0,
+          cpc: item.cpc || 0,
+          competition: item.competition_level || 'Unknown',
+          difficulty: item.keyword_difficulty || 0
+        }));
+      } else if (result.keywords && Array.isArray(result.keywords)) {
+        keywords = result.keywords.map(item => ({
+          keyword: item.keyword,
+          searchVolume: item.search_volume || 0,
+          cpc: item.cpc || 0,
+          competition: item.competition_level || 'Unknown',
+          difficulty: item.keyword_difficulty || 0
+        }));
+      } else if (Array.isArray(result)) {
+        keywords = result.map(item => ({
+          keyword: item.keyword,
+          searchVolume: item.search_volume || 0,
+          cpc: item.cpc || 0,
+          competition: item.competition_level || 'Unknown',
+          difficulty: item.keyword_difficulty || 0
+        }));
+      }
       
       console.log(`✅ Generated keyword suggestions successfully (${this.environment})`);
       return {
@@ -529,12 +564,24 @@ class DataForSEOService {
       
       const response = await this.makeRequest('dataforseo_labs/google/competitors_domain/live', competitorData);
       
+      // Log the full response structure for debugging
+      console.log(`🔍 Competitors Domain API Response:`, JSON.stringify(response, null, 2));
+      
       if (!response || !response.tasks || response.tasks.length === 0) {
         console.log(`ℹ️ Competitor analysis requires DataForSEO Labs subscription (${this.environment} mode)`);
         return null;
       }
       
       const task = response.tasks[0];
+      console.log(`🔍 Competitors Task Details:`, {
+        status_code: task.status_code,
+        status_message: task.status_message,
+        has_result: !!task.result,
+        result_length: task.result?.length || 0,
+        result_structure: task.result ? Object.keys(task.result[0] || {}) : [],
+        full_result: JSON.stringify(task.result, null, 2)
+      });
+      
       if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
         console.log(`ℹ️ Competitor analysis not available:`, {
           status_code: task.status_code,
@@ -545,14 +592,38 @@ class DataForSEOService {
       }
       
       const result = task.result[0];
-      const competitors = result.items ? result.items.map(item => ({
-        domain: item.domain,
-        avgPosition: item.avg_position || 0,
-        sumPosition: item.sum_position || 0,
-        intersections: item.intersections || 0,
-        fullDomainMetrics: item.full_domain_metrics || {},
-        metrics: item.metrics || {}
-      })).slice(0, 5) : [];  // Top 5 competitors
+      console.log(`🔍 Competitors Result Structure:`, JSON.stringify(result, null, 2));
+      
+      // Handle different possible result structures
+      let competitors = [];
+      if (result.items && Array.isArray(result.items)) {
+        competitors = result.items.map(item => ({
+          domain: item.domain || item.target,
+          avgPosition: item.avg_position || 0,
+          sumPosition: item.sum_position || 0,
+          intersections: item.intersections || 0,
+          fullDomainMetrics: item.full_domain_metrics || {},
+          metrics: item.metrics || {}
+        })).slice(0, 5);
+      } else if (result.competitors && Array.isArray(result.competitors)) {
+        competitors = result.competitors.map(item => ({
+          domain: item.domain || item.target,
+          avgPosition: item.avg_position || 0,
+          sumPosition: item.sum_position || 0,
+          intersections: item.intersections || 0,
+          fullDomainMetrics: item.full_domain_metrics || {},
+          metrics: item.metrics || {}
+        })).slice(0, 5);
+      } else if (Array.isArray(result)) {
+        competitors = result.map(item => ({
+          domain: item.domain || item.target,
+          avgPosition: item.avg_position || 0,
+          sumPosition: item.sum_position || 0,
+          intersections: item.intersections || 0,
+          fullDomainMetrics: item.full_domain_metrics || {},
+          metrics: item.metrics || {}
+        })).slice(0, 5);
+      }
       
       console.log(`✅ Competitor analysis completed: ${competitors.length} competitors found (${this.environment})`);
       return {
