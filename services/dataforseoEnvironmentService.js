@@ -290,11 +290,11 @@ class DataForSEOService {
       }
       
       const result = task.result[0];
-      const domain = new URL(url).hostname.replace('www.', '');
+      const normalizedDomain = new URL(url).hostname.replace('www.', '');
       
       // Process real DataForSEO data
       const basicAnalysis = {
-        domain: domain,
+        domain: normalizedDomain,
         url: url,
         title: result.title || '',
         metaDescription: result.meta_description || '',
