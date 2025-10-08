@@ -177,9 +177,9 @@ class DataForSEOService {
         trafficData
       ] = await Promise.allSettled([
         this.getBasicOnPageAnalysis(processedUrl),
-        Promise.resolve({ status: 'fulfilled', value: null }), // Disabled backlinks
+        Promise.resolve({ status: 'fulfilled', value: null }), // Disabled backlinks (requires separate subscription)
         this.getKeywordsAnalysis(processedUrl),
-        Promise.resolve({ status: 'fulfilled', value: null }), // Disabled competitors
+        this.getCompetitorAnalysis(processedUrl), // ENABLED: Real competitor analysis
         this.getSERPAnalysis(processedUrl),
         this.getTrafficAnalysis(processedUrl)
       ]);
@@ -492,6 +492,64 @@ class DataForSEOService {
       };
     } catch (error) {
       console.error(`Traffic analysis error (${this.environment}):`, error.message);
+      return null;
+    }
+  }
+
+  // Competitor Analysis using DataForSEO Labs
+  async getCompetitorAnalysis(url) {
+    try {
+      console.log(`🏆 Getting competitor analysis for: ${url} (${this.environment} mode)`);
+      
+      const domain = new URL(url).hostname.replace('www.', '');
+      
+      // Use DataForSEO Labs Competitors Domain API
+      const competitorData = [{
+        target: domain,
+        location_name: 'United States',
+        language_code: 'en',
+        limit: 10,
+        filters: [["metrics.organic.count", ">", 10]]  // Only competitors with 10+ keywords
+      }];
+      
+      const response = await this.makeRequest('/dataforseo_labs/google/competitors_domain', competitorData);
+      
+      if (!response || !response.tasks || response.tasks.length === 0) {
+        console.log(`ℹ️ Competitor analysis requires DataForSEO Labs subscription (${this.environment} mode)`);
+        return null;
+      }
+      
+      const task = response.tasks[0];
+      if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
+        console.log(`ℹ️ Competitor analysis not available:`, {
+          status_code: task.status_code,
+          status_message: task.status_message,
+          note: 'Requires DataForSEO Labs subscription'
+        });
+        return null;
+      }
+      
+      const result = task.result[0];
+      const competitors = result.items ? result.items.map(item => ({
+        domain: item.domain,
+        avgPosition: item.avg_position || 0,
+        sumPosition: item.sum_position || 0,
+        intersections: item.intersections || 0,
+        fullDomainMetrics: item.full_domain_metrics || {},
+        metrics: item.metrics || {}
+      })).slice(0, 5) : [];  // Top 5 competitors
+      
+      console.log(`✅ Competitor analysis completed: ${competitors.length} competitors found (${this.environment})`);
+      return {
+        totalCompetitors: competitors.length,
+        competitors: competitors,
+        status: 'success',
+        source: `dataforseo_competitors_${this.environment}`,
+        environment: this.environment
+      };
+      
+    } catch (error) {
+      console.error(`Competitor analysis error (${this.environment}):`, error.message);
       return null;
     }
   }
