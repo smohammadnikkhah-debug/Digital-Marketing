@@ -4307,6 +4307,77 @@ app.post('/api/environment/force/production', async (req, res) => {
   }
 });
 
+// Start FULL WEBSITE CRAWL (all pages) - Background process
+app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
+  try {
+    const { url, options = {} } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL is required'
+      });
+    }
+
+    // Get customer ID
+    const customerId = await getCustomerIdFromRequest(req);
+    if (!customerId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    // Normalize URL
+    const normalizedDomain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+    
+    // Get or create website record
+    const website = await supabaseService.createOrGetWebsite(normalizedDomain, null, customerId);
+    
+    if (!website || !website.id) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create website record'
+      });
+    }
+
+    console.log(`🚀 Starting FULL website crawl for: ${normalizedDomain}`);
+    console.log(`   Website ID: ${website.id}`);
+    console.log(`   This will analyze ALL pages (estimated 5-30 minutes)`);
+
+    // Start the background crawl task
+    const onPageTaskService = require('./services/dataforseoOnPageTaskService');
+    const taskResult = await onPageTaskService.startFullWebsiteAnalysis(url, website.id, options);
+    
+    if (taskResult.success) {
+      // Start background polling (don't await - let it run in background)
+      setImmediate(async () => {
+        console.log(`🔄 Starting background polling for task: ${taskResult.taskId}`);
+        await onPageTaskService.pollAndStoreResults(taskResult.taskId, website.id);
+        console.log(`✅ Background crawl complete for: ${normalizedDomain}`);
+      });
+      
+      res.json({
+        success: true,
+        message: 'Full website crawl started',
+        taskId: taskResult.taskId,
+        status: 'in_progress',
+        estimatedTime: '5-30 minutes',
+        websiteId: website.id,
+        domain: normalizedDomain
+      });
+    } else {
+      res.json({
+        success: false,
+        error: taskResult.error || 'Failed to start full website crawl'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error starting full website crawl:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Environment-aware DataForSEO analysis endpoint with Supabase caching
 app.post('/api/dataforseo/environment/analyze-website', async (req, res) => {
   try {

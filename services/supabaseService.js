@@ -193,6 +193,71 @@ class SupabaseService {
     }
   }
 
+  // Store OnPage Task Info for background crawling
+  async storeAnalysisTask(websiteId, taskInfo) {
+    if (!this.isConfigured) return null;
+
+    try {
+      console.log('💾 Storing analysis task info:', {
+        websiteId,
+        taskId: taskInfo.taskId,
+        status: taskInfo.status
+      });
+
+      // Note: This requires a new table 'seo_analysis_tasks' in Supabase
+      // For now, store as metadata in the website record
+      const { data, error } = await this.supabase
+        .from('websites')
+        .update({
+          analysis_task_id: taskInfo.taskId,
+          analysis_status: taskInfo.status,
+          analysis_started_at: taskInfo.startedAt
+        })
+        .eq('id', websiteId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error storing analysis task:', error);
+        return null;
+      }
+
+      console.log('✅ Analysis task info stored in website record');
+      return data;
+    } catch (error) {
+      console.error('Supabase task storage error:', error);
+      return null;
+    }
+  }
+
+  // Update Analysis Task Status
+  async updateAnalysisTaskStatus(websiteId, taskId, status) {
+    if (!this.isConfigured) return null;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('websites')
+        .update({
+          analysis_status: status,
+          analysis_completed_at: status === 'completed' ? new Date().toISOString() : null
+        })
+        .eq('id', websiteId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task status:', error);
+        return null;
+      }
+
+      console.log('✅ Task status updated to:', status);
+      return data;
+    } catch (error) {
+      console.error('Supabase task update error:', error);
+      return null;
+    }
+  }
+
   // SEO Analysis Retrieval
   async getAnalysis(websiteId, analysisType = 'comprehensive') {
     if (!this.isConfigured) return null;

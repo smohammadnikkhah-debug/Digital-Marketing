@@ -698,11 +698,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 // Create row for this website
                 const row = document.createElement('tr');
                 
-                if (analysis) {
+                // Check if website is currently being analyzed
+                const isAnalyzing = website.analysis_status === 'in_progress';
+                
+                if (isAnalyzing) {
+                    // Website is being analyzed in background
+                    row.innerHTML = `
+                        <td class="domain-cell">${website.domain}</td>
+                        <td class="score-cell">
+                            <span class="score-badge" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white;">
+                                <i class="fas fa-spinner fa-spin"></i> Analyzing
+                            </span>
+                        </td>
+                        <td class="metrics-cell" colspan="3" style="text-align: center;">
+                            <div style="color: #3b82f6; font-weight: 600;">
+                                <i class="fas fa-clock"></i> Full website crawl in progress...
+                            </div>
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
+                                Analyzing all pages (5-30 minutes)
+                            </div>
+                        </td>
+                        <td class="last-analysis">
+                            <div style="color: #3b82f6;">In Progress</div>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn btn-secondary" onclick="loadCustomerWebsites()" title="Refresh to check status">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </td>
+                    `;
+                } else if (analysis) {
                     // Website HAS analysis - show full data
-                    // Calculate keyword count for display
+                    // Calculate keyword count and page count for display
                     const keywordCount = analysis.keywords?.totalKeywords || analysis.keywords?.keywords?.length || 0;
                     const hasKeywords = keywordCount > 0;
+                    const totalPagesAnalyzed = analysis.totalPages || analysis.onPage?.pages?.length || 1;
+                    const pagesLabel = totalPagesAnalyzed === 1 ? 'Homepage Only' : `${totalPagesAnalyzed} Pages`;
                     
                     row.innerHTML = `
                         <td class="domain-cell" onclick="openMantisDashboard('${website.domain}')">${website.domain}</td>
@@ -720,8 +751,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </td>
                         <td class="metrics-cell">
                             <div style="text-align: center;">
-                                <div style="font-size: 1rem; color: #334155;">Homepage Only</div>
-                                <div style="font-size: 0.75rem; color: #94a3b8;">1 page analyzed</div>
+                                <div style="font-size: 1rem; color: #334155;">${pagesLabel}</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">${totalPagesAnalyzed} analyzed</div>
                             </div>
                         </td>
                         <td class="metrics-cell">
@@ -733,7 +764,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <td class="last-analysis">${lastAnalyzed}</td>
                         <td class="action-buttons">
                             <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')">View Details</button>
-                            <button class="btn btn-secondary" onclick="reanalyzeWebsite('${website.domain}')">Re-analyze</button>
+                            <button class="btn btn-secondary" onclick="reanalyzeWebsite('${website.domain}')">Full Crawl</button>
                         </td>
                     `;
                 } else {
@@ -1160,17 +1191,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         async function reanalyzeWebsite(domain) {
             try {
-                console.log('Dashboard: Starting analysis for domain:', domain);
+                console.log('Dashboard: Starting FULL WEBSITE analysis for domain:', domain);
                 
-                // Show progress bar
-                showReanalysisProgress(domain);
+                // Show progress bar with different message
+                showFullCrawlProgress(domain);
                 
-                // Call the analyze-website API endpoint directly (no Socket.IO needed)
+                // Call the FULL website crawl API endpoint
                 const url = domain.startsWith('http') ? domain : `https://${domain}`;
                 
-                console.log('📊 Calling /api/dataforseo/environment/analyze-website for:', url);
+                console.log('🚀 Starting full website crawl for:', url);
+                console.log('   This will analyze ALL pages on the domain');
+                console.log('   Estimated time: 5-30 minutes');
                 
-                const response = await fetch('/api/dataforseo/environment/analyze-website', {
+                const response = await fetch('/api/dataforseo/full-website-crawl', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1178,48 +1211,109 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     body: JSON.stringify({
                         url: url,
                         options: {
-                            location: 'United States',
-                            language: 'en'
+                            maxPages: 100,  // Analyze up to 100 pages
+                            checksThreshold: 90  // Run 90%+ of available checks
                         }
                     })
                 });
                 
                 const result = await response.json();
-                console.log('📊 Analysis result:', {
+                console.log('📊 Full crawl task result:', {
                     success: result.success,
-                    hasData: !!result.data || !!result.analysis,
-                    cached: result.cached
+                    taskId: result.taskId,
+                    status: result.status,
+                    estimatedTime: result.estimatedTime
                 });
                 
                 if (result.success) {
-                    console.log('✅ Dashboard: Analysis completed successfully');
+                    console.log('✅ Dashboard: Full website crawl started');
+                    console.log(`   Task ID: ${result.taskId}`);
+                    console.log(`   Status: ${result.status}`);
+                    console.log(`   Estimated time: ${result.estimatedTime}`);
                     
-                    // Store analysis data in localStorage for the mantis dashboard
-                    const analysisData = result.analysis || result.data;
-                    if (analysisData) {
-                        localStorage.setItem('analysisData', JSON.stringify(analysisData));
-                        localStorage.setItem('lastAnalyzedDomain', domain);
-                        console.log('✅ Stored analysis in localStorage');
-                    }
+                    // Update progress message
+                    updateFullCrawlProgress(`
+                        <div style="text-align: center;">
+                            <h3 style="color: #10b981; margin-bottom: 1rem;">
+                                ✅ Full Website Crawl Started!
+                            </h3>
+                            <p style="margin-bottom: 1rem;">
+                                Analyzing ALL pages on ${domain}...
+                            </p>
+                            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">
+                                This will take approximately 5-30 minutes.
+                            </p>
+                            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
+                                You can close this window and come back later.<br>
+                                Your analysis will continue in the background.
+                            </p>
+                            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                                <div style="font-size: 0.875rem; color: #475569;">Task ID: ${result.taskId}</div>
+                                <div style="font-size: 0.875rem; color: #475569;">Status: In Progress</div>
+                            </div>
+                            <button onclick="hideFullCrawlProgress()" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                OK, I'll Check Back Later
+                            </button>
+                        </div>
+                    `);
                     
-                    // Hide progress bar
-                    hideReanalysisProgress();
-                    
-                    // IMPORTANT: Reload customer websites from server to get fresh analysis data
-                    console.log('📊 Reloading customer websites after analysis...');
+                    // Mark website as "analyzing" in the dashboard
                     await loadCustomerWebsites();
                     
-                    console.log('✅ Dashboard: Website analyzed successfully');
                 } else {
-                    console.error('❌ Dashboard: Analysis failed:', result.error);
-                    hideReanalysisProgress();
-                    showError('Analysis failed: ' + (result.error || 'Unknown error'));
+                    console.error('❌ Dashboard: Full crawl failed to start:', result.error);
+                    hideFullCrawlProgress();
+                    showError('Failed to start full website crawl: ' + (result.error || 'Unknown error'));
                 }
                 
             } catch (error) {
-                console.error('❌ Dashboard: Analysis error:', error);
-                hideReanalysisProgress();
+                console.error('❌ Dashboard: Full crawl error:', error);
+                hideFullCrawlProgress();
                 showError('Analysis failed: ' + error.message);
+            }
+        }
+
+        function showFullCrawlProgress(domain) {
+            const progressOverlay = document.createElement('div');
+            progressOverlay.id = 'full-crawl-progress';
+            progressOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            progressOverlay.innerHTML = `
+                <div id="full-crawl-container" style="background: white; padding: 3rem; border-radius: 16px; max-width: 500px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                    <h2 style="color: #1e293b; margin-bottom: 1rem;">Starting Full Website Crawl</h2>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">
+                        Preparing to analyze ALL pages on <strong>${domain}</strong>
+                    </p>
+                    <div class="loading-spinner" style="margin: 2rem auto;"></div>
+                </div>
+            `;
+            
+            document.body.appendChild(progressOverlay);
+        }
+
+        function updateFullCrawlProgress(html) {
+            const container = document.getElementById('full-crawl-container');
+            if (container) {
+                container.innerHTML = html;
+            }
+        }
+
+        function hideFullCrawlProgress() {
+            const overlay = document.getElementById('full-crawl-progress');
+            if (overlay) {
+                overlay.remove();
             }
         }
 
