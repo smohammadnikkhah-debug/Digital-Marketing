@@ -1112,6 +1112,50 @@
             font-size: 1rem;
             color: #f1f5f9;
         }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #5856eb, #7c3aed);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .refresh-btn i {
+            font-size: 0.875rem;
+        }
+
+        .refresh-btn.loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -1191,6 +1235,11 @@
                 </div>
                 
                 <div class="header-right">
+                    <button class="refresh-btn" onclick="forceFreshAnalysis()" title="Force Fresh DataForSEO Analysis">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh Data</span>
+                    </button>
+                    
                     <div class="user-menu" onmouseenter="showUserDropdown()" onmouseleave="delayedHideDropdown()">
                         <div class="user-avatar">M</div>
                         <div class="user-info">
@@ -1395,6 +1444,130 @@
     <script src="components/top-navbar.js"></script>
     <script src="components/navigation-utils.js"></script>
     <script>
+        // Force fresh DataForSEO analysis by bypassing cache
+        async function forceFreshAnalysis() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalText = refreshBtn.innerHTML;
+            
+            // Show loading state
+            refreshBtn.classList.add('loading');
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Analyzing...</span>';
+            refreshBtn.disabled = true;
+            
+            try {
+                console.log('🔄 Force refreshing analysis...');
+                
+                // Get current domain from localStorage
+                const domain = localStorage.getItem('lastAnalyzedDomain');
+                if (!domain) {
+                    throw new Error('No domain found. Please add a website first.');
+                }
+                
+                // Call the server endpoint to force fresh analysis
+                const response = await fetch('/api/supabase/historical-data/' + domain, {
+                    method: 'POST', // Use POST to force fresh analysis
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        forceRefresh: true,
+                        bypassCache: true
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ Fresh analysis completed:', result);
+                
+                // Reload dashboard with fresh data
+                await loadDashboardData();
+                
+                // Show success message
+                showNotification('✅ Fresh analysis completed! Data updated with latest DataForSEO results.', 'success');
+                
+            } catch (error) {
+                console.error('❌ Error forcing fresh analysis:', error);
+                showNotification('❌ Failed to refresh analysis: ' + error.message, 'error');
+            } finally {
+                // Reset button state
+                refreshBtn.classList.remove('loading');
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // Show notification function
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()">&times;</button>
+                </div>
+            `;
+            
+            // Add styles if not already added
+            if (!document.querySelector('#notification-styles')) {
+                const styles = document.createElement('style');
+                styles.id = 'notification-styles';
+                styles.innerHTML = `
+                    .notification {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 1rem 1.5rem;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: 500;
+                        z-index: 10000;
+                        max-width: 400px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        animation: slideIn 0.3s ease;
+                    }
+                    .notification-success { background: linear-gradient(135deg, #10b981, #059669); }
+                    .notification-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+                    .notification-info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+                    .notification-content {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 1rem;
+                    }
+                    .notification-content button {
+                        background: none;
+                        border: none;
+                        color: white;
+                        font-size: 1.2rem;
+                        cursor: pointer;
+                        padding: 0;
+                        width: 20px;
+                        height: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+            
+            // Add to page and auto-remove after 5 seconds
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
         // Update speedometer arc color based on score
         function updateSpeedometerArc(score) {
             const speedometerArc = document.querySelector('.speedometer-arc');

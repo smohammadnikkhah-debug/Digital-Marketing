@@ -4424,10 +4424,23 @@ app.get('/api/supabase/analysis/:domain', async (req, res) => {
 });
 
 // Get historical DataForSEO data for dashboard
+// Handle both GET (normal) and POST (force refresh) requests
 app.get('/api/supabase/historical-data/:domain', async (req, res) => {
+  await handleHistoricalDataRequest(req, res, false);
+});
+
+app.post('/api/supabase/historical-data/:domain', async (req, res) => {
+  await handleHistoricalDataRequest(req, res, true);
+});
+
+async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
   try {
     const { domain } = req.params;
-    console.log('📊 Getting historical DataForSEO data for:', domain);
+    const { forceRefresh: bodyForceRefresh, bypassCache } = req.body || {};
+    
+    const shouldForceRefresh = forceRefresh || bodyForceRefresh || bypassCache;
+    
+    console.log('📊 Getting historical DataForSEO data for:', domain, shouldForceRefresh ? '(FORCE REFRESH)' : '(normal)');
     
     // Use the existing DataForSEO environment service to get real data
     let analysisData = null;
@@ -4438,7 +4451,7 @@ app.get('/api/supabase/historical-data/:domain', async (req, res) => {
       
       if (analysisResult.success && analysisResult.analysis) {
         analysisData = analysisResult.analysis;
-        console.log('✅ Got real DataForSEO analysis data');
+        console.log('✅ Got real DataForSEO analysis data', shouldForceRefresh ? '(fresh from API)' : '');
       }
     } catch (analysisError) {
       console.log('⚠️ Could not get real analysis data:', analysisError.message);
