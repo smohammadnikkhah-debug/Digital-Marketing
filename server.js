@@ -5259,14 +5259,27 @@ function generateChartData(historicalData) {
 // Get all customer websites and analysis data
 app.get('/api/supabase/customer-websites', async (req, res) => {
   try {
+    console.log('📊 /api/supabase/customer-websites called');
+    
     // Get customer ID from authenticated user
     const customerId = await getCustomerIdFromRequest(req);
+    console.log('📊 Customer ID:', customerId);
 
     if (!customerId) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
     const analysisData = await supabaseService.getCustomerAnalysisData(customerId);
+    console.log('📊 Analysis data retrieved:', {
+      isNull: analysisData === null,
+      isArray: Array.isArray(analysisData),
+      length: analysisData?.length,
+      firstItem: analysisData?.[0] ? {
+        domain: analysisData[0].website?.domain,
+        hasAnalysis: !!analysisData[0].analysis,
+        analysisKeys: analysisData[0].analysis ? Object.keys(analysisData[0].analysis) : []
+      } : null
+    });
     
     if (analysisData) {
       res.json({ success: true, data: analysisData });
