@@ -1558,14 +1558,29 @@
         
         // Generate strategic recommendations based on DataForSEO analysis
         function generateStrategicRecommendations(data) {
+            console.log('🤖 Generating strategic recommendations from data:', data);
+            
             const keywords = data.rankedKeywords || [];
-            const competitors = data.competitors || [];
+            const competitors = Array.isArray(data.competitors) ? data.competitors : [];
             const metrics = data.metrics || {};
+            const analysis = data.analysis || {};
+            
+            console.log('🤖 Data for recommendations:', {
+                keywordCount: keywords.length,
+                competitorCount: competitors.length,
+                hasAnalysis: !!analysis
+            });
             
             // Analyze competitor gaps and opportunities
             const topCompetitors = competitors.slice(0, 3);
-            const highVolumeKeywords = keywords.filter(k => k.search_volume > 1000);
-            const lowCompetitionKeywords = keywords.filter(k => k.competition_level === 'LOW');
+            const highVolumeKeywords = keywords.filter(k => {
+                const searchVolume = k.keyword_data?.keyword_info?.search_volume || 0;
+                return searchVolume > 1000;
+            });
+            const lowCompetitionKeywords = keywords.filter(k => {
+                const competition = k.keyword_data?.keyword_info?.competition_level || '';
+                return competition === 'LOW';
+            });
             
             const recommendations = {
                 primary: '',
@@ -1574,63 +1589,91 @@
                 additional: []
             };
             
-            // Primary recommendation based on data analysis
-            if (topCompetitors.length > 0 && highVolumeKeywords.length > 0) {
-                const competitor = topCompetitors[0];
+            // Primary recommendation based on REAL data analysis
+            if (highVolumeKeywords.length > 0) {
                 const keyword = highVolumeKeywords[0];
+                const searchVolume = keyword.keyword_data?.keyword_info?.search_volume || 0;
+                const keywordText = keyword.keyword_data?.keyword_info?.keyword || 'target keyword';
                 
                 recommendations.primary = `
-                    <strong>🎯 Target "${keyword.keyword}" Gap</strong><br>
-                    Competitor "${competitor.domain}" ranks #${competitor.avgPosition || 'N/A'} for this high-volume keyword (${keyword.search_volume.toLocaleString()} monthly searches). 
-                    You can capture this traffic by creating comprehensive content targeting this keyword.
+                    <strong>💡 High-Volume Keyword Opportunity</strong><br>
+                    Target "${keywordText}" with ${searchVolume.toLocaleString()} monthly searches. 
+                    Create comprehensive, high-quality content to capture this search traffic.
                 `;
                 recommendations.primaryImpact = 'High Impact';
                 recommendations.primaryEffort = 'Medium Effort';
             } else if (lowCompetitionKeywords.length > 0) {
                 const keyword = lowCompetitionKeywords[0];
+                const searchVolume = keyword.keyword_data?.keyword_info?.search_volume || 0;
+                const keywordText = keyword.keyword_data?.keyword_info?.keyword || 'target keyword';
+                
                 recommendations.primary = `
-                    <strong>💡 Quick Win Opportunity</strong><br>
-                    Target "${keyword.keyword}" (${keyword.search_volume.toLocaleString()} monthly searches, Low competition). 
+                    <strong>🎯 Quick Win Opportunity</strong><br>
+                    Target "${keywordText}" (${searchVolume.toLocaleString()} monthly searches, Low competition). 
                     This is a perfect opportunity to rank quickly with targeted content.
                 `;
                 recommendations.primaryImpact = 'Medium Impact';
                 recommendations.primaryEffort = 'Low Effort';
-            } else {
+            } else if (analysis.issues && analysis.issues.length > 0) {
+                const topIssue = analysis.issues[0];
                 recommendations.primary = `
-                    <strong>📈 Content Strategy Focus</strong><br>
-                    Based on your current keyword profile, focus on creating comprehensive, long-form content that targets your core services. 
-                    This will help establish topical authority and improve overall rankings.
+                    <strong>⚠️ Critical Issue Found</strong><br>
+                    ${topIssue}. Fix this issue to improve your SEO score and search rankings.
                 `;
                 recommendations.primaryImpact = 'High Impact';
-                recommendations.primaryEffort = 'High Effort';
+                recommendations.primaryEffort = 'Low Effort';
+            } else if (metrics.seoScore && metrics.seoScore < 80) {
+                recommendations.primary = `
+                    <strong>📈 Improve SEO Score</strong><br>
+                    Your current SEO score is ${metrics.seoScore}/100. Focus on improving on-page elements like title tags, 
+                    meta descriptions, and content quality to boost your rankings.
+                `;
+                recommendations.primaryImpact = 'High Impact';
+                recommendations.primaryEffort = 'Medium Effort';
+            } else {
+                recommendations.primary = `
+                    <strong>🚀 Get Real DataForSEO Analysis</strong><br>
+                    Add credits to your DataForSEO account to unlock comprehensive keyword research, 
+                    competitor analysis, and data-driven recommendations.
+                `;
+                recommendations.primaryImpact = 'High Impact';
+                recommendations.primaryEffort = 'Low Effort';
             }
             
-            // Additional recommendations
-            if (topCompetitors.length > 1) {
+            // Additional recommendations based on real data
+            if (analysis.onPage && analysis.onPage.title) {
+                const titleLength = analysis.onPage.title.length;
+                if (titleLength > 60 || titleLength < 30) {
+                    recommendations.additional.push({
+                        text: `<strong>📝 Optimize Title Tag</strong><br>Your title tag is ${titleLength} characters. Optimize to 50-60 characters for better click-through rates.`,
+                        impact: 'High Impact',
+                        effort: 'Low Effort'
+                    });
+                }
+            }
+            
+            if (analysis.onPage && analysis.onPage.images && analysis.onPage.images.missingAlt > 0) {
                 recommendations.additional.push({
-                    text: `<strong>🔍 Competitive Analysis</strong><br>Analyze "${topCompetitors[1].domain}" content strategy - they're ranking for ${topCompetitors[1].totalKeywords || 0} keywords you're missing.`,
+                    text: `<strong>🖼️ Image Optimization</strong><br>${analysis.onPage.images.missingAlt} images are missing alt text. Add descriptive alt text to improve accessibility and SEO.`,
                     impact: 'Medium Impact',
                     effort: 'Low Effort'
                 });
             }
             
-            if (metrics.seoIssues > 0) {
+            if (metrics.issuesCount && metrics.issuesCount > 0) {
                 recommendations.additional.push({
-                    text: `<strong>🚨 Technical SEO Priority</strong><br>Fix ${metrics.seoIssues} technical SEO issues found. These are blocking your organic growth potential.`,
+                    text: `<strong>🔧 Fix Technical Issues</strong><br>${metrics.issuesCount} technical SEO issues found. Addressing these will improve your search visibility.`,
                     impact: 'High Impact',
-                    effort: 'Low Effort'
+                    effort: 'Medium Effort'
                 });
             }
             
-            if (keywords.length > 0) {
-                const avgPosition = keywords.reduce((sum, k) => sum + (k.rank_absolute || 50), 0) / keywords.length;
-                if (avgPosition > 20) {
-                    recommendations.additional.push({
-                        text: `<strong>📊 Ranking Improvement</strong><br>Your average keyword position is ${avgPosition.toFixed(1)}. Focus on optimizing existing content to improve rankings.`,
-                        impact: 'High Impact',
-                        effort: 'Medium Effort'
-                    });
-                }
+            if (keywords.length > 0 && metrics.totalKeywords < 10) {
+                recommendations.additional.push({
+                    text: `<strong>📈 Expand Keyword Strategy</strong><br>Currently tracking ${metrics.totalKeywords} keywords. Expand your content to target more relevant keywords and increase organic reach.`,
+                    impact: 'High Impact',
+                    effort: 'High Effort'
+                });
             }
             
             return recommendations;
