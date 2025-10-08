@@ -1132,6 +1132,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     currentAnalysis = data.data;
                     currentDomain = domain;
                     console.log('Analysis data loaded:', currentAnalysis);
+                    
+                    // Check if we have any real data
+                    const hasOnPageData = data.data.onPage && data.data.onPage.pages && data.data.onPage.pages.length > 0;
+                    const hasKeywordData = data.data.keywords && data.data.keywords.keywords && data.data.keywords.keywords.length > 0;
+                    const hasCompetitorData = data.data.competitors && data.data.competitors.competitors && data.data.competitors.competitors.length > 0;
+                    const hasAnyData = hasOnPageData || hasKeywordData || hasCompetitorData;
+                    
+                    console.log('Data availability check:', {
+                        hasOnPageData,
+                        hasKeywordData,
+                        hasCompetitorData,
+                        hasAnyData
+                    });
+                    
+                    if (!hasAnyData) {
+                        // No real data available - show helpful message
+                        showNoDataMessage(domain);
+                        return;
+                    }
+                    
                     displayAnalysisResults();
                     
                     // Update AI chat component with analysis data - DISABLED
@@ -1171,6 +1191,94 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
             `;
             document.getElementById('analysisResults').style.display = 'block';
+        }
+
+        // Show "No Data Available" message with helpful guidance
+        function showNoDataMessage(domain) {
+            document.getElementById('currentDomain').textContent = domain;
+            document.getElementById('analysisResults').innerHTML = `
+                <div class="no-data-message" style="max-width: 800px; margin: 0 auto; padding: 3rem; text-align: center;">
+                    <!-- Icon -->
+                    <div style="font-size: 4rem; margin-bottom: 1.5rem;">
+                        📊
+                    </div>
+                    
+                    <!-- Main Title -->
+                    <h2 style="color: #1e293b; font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem;">
+                        No Technical SEO Data Available for ${domain}
+                    </h2>
+                    
+                    <!-- Subtitle -->
+                    <p style="color: #64748b; font-size: 1.125rem; margin-bottom: 2rem;">
+                        This domain doesn't have ranking data in DataForSEO yet.
+                    </p>
+                    
+                    <!-- Why Box -->
+                    <div style="background: #f8fafc; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; text-align: left; border: 1px solid #e2e8f0;">
+                        <h3 style="color: #334155; font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                            Why is this happening?
+                        </h3>
+                        <ul style="color: #475569; line-height: 1.8; margin-left: 1.5rem;">
+                            <li><strong>New domain</strong> - Not ranking in Google's top 100 yet</li>
+                            <li><strong>Takes time</strong> - 1-4 weeks after ranking to appear in DataForSEO</li>
+                            <li><strong>Limited visibility</strong> - DataForSEO only tracks domains with search presence</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Action Box -->
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; color: white; text-align: left;">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-lightbulb"></i>
+                            What you can do:
+                        </h3>
+                        <div style="display: grid; gap: 1rem;">
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <strong style="display: block; margin-bottom: 0.5rem;">1. Build SEO for your domain</strong>
+                                <span style="opacity: 0.9; font-size: 0.875rem;">Create quality content, build backlinks, and improve rankings to appear in DataForSEO</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <strong style="display: block; margin-bottom: 0.5rem;">2. Test with an established domain</strong>
+                                <span style="opacity: 0.9; font-size: 0.875rem;">Try with semrush.com, ahrefs.com, or hubspot.com to see how the tool works</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <strong style="display: block; margin-bottom: 0.5rem;">3. Check back later</strong>
+                                <span style="opacity: 0.9; font-size: 0.875rem;">Once your domain ranks and is indexed by DataForSEO, data will appear automatically</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <button onclick="window.location.href='/dashboard-main'" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-arrow-left" style="margin-right: 0.5rem;"></i>
+                            Back to Dashboard
+                        </button>
+                        <button onclick="testWithEstablishedDomain()" style="background: white; color: #334155; border: 2px solid #e2e8f0; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-flask" style="margin-right: 0.5rem;"></i>
+                            Try with Test Domain
+                        </button>
+                    </div>
+                    
+                    <!-- Data Source Info -->
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 0.875rem;">
+                        <i class="fas fa-shield-alt"></i> 
+                        <strong>100% Real Data Only</strong> - We never show dummy or fake data. All metrics come from DataForSEO API.
+                    </div>
+                </div>
+            `;
+            document.getElementById('analysisResults').style.display = 'block';
+        }
+
+        // Test with an established domain
+        function testWithEstablishedDomain() {
+            const testDomain = 'semrush.com';
+            if (confirm(`Would you like to test the Technical SEO analysis with ${testDomain}?\n\nThis domain has real ranking data and will show you how the tool works.`)) {
+                // Store the test domain
+                localStorage.setItem('lastAnalyzedDomain', testDomain);
+                // Reload the page
+                window.location.reload();
+            }
         }
 
         function displayAnalysisResults() {
@@ -1254,7 +1362,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             console.log('Pages data:', analysis.pages);
 
             if (!analysis.pages || analysis.pages.length === 0) {
-                issuesList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">No analysis data available. Please run an analysis first.</p>';
+                issuesList.innerHTML = `
+                    <div style="text-align: center; color: #64748b; padding: 3rem; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <i class="fas fa-info-circle" style="font-size: 2rem; color: #3b82f6; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #334155; margin-bottom: 0.5rem;">No Technical SEO Data Available</h3>
+                        <p style="margin-bottom: 1.5rem;">This domain doesn't have ranking or crawl data in DataForSEO yet.</p>
+                        <button onclick="testWithEstablishedDomain()" style="background: #3b82f6; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Try with Test Domain (semrush.com)
+                        </button>
+                    </div>
+                `;
                 return;
             }
 
