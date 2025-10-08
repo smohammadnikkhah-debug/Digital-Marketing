@@ -4444,7 +4444,13 @@ app.get('/api/supabase/historical-data/:domain', async (req, res) => {
       console.log('⚠️ Could not get real analysis data:', analysisError.message);
     }
     
-    // Process the data - only use real data, no fallback to sample data
+    // Process the data - use real DataForSEO data only
+    console.log('🔍 Processing analysis data for Mantis dashboard:', {
+      hasAnalysisData: !!analysisData,
+      hasKeywords: !!analysisData?.keywords,
+      keywordCount: analysisData?.keywords?.keywords?.length || 0
+    });
+    
     const processedData = {
       success: true,
       data: {
@@ -4454,93 +4460,40 @@ app.get('/api/supabase/historical-data/:domain', async (req, res) => {
           keyword_data: {
             keyword_info: {
               keyword: keyword.keyword,
-              search_volume: keyword.searchVolume === 'High' ? 12000 : keyword.searchVolume === 'Medium' ? 6000 : 2000,
-              competition_level: keyword.competition?.toUpperCase() || 'MEDIUM'
+              search_volume: keyword.searchVolume || 0, // Use actual search volume from DataForSEO
+              competition_level: keyword.competition?.toUpperCase() || 'UNKNOWN',
+              cpc: keyword.cpc || 0
             }
           },
           ranked_serp_element: {
             serp_item: {
-              rank_group: Math.floor(Math.random() * 50) + 1 // Simulate ranking position
+              rank_group: keyword.rank || keyword.position || 0 // Use actual ranking from DataForSEO
             }
           }
-        })) || [
-          {
-            keyword_data: {
-              keyword_info: {
-                keyword: 'professional services',
-                search_volume: 12000,
-                competition_level: 'MEDIUM'
-              }
-            },
-            ranked_serp_element: {
-              serp_item: {
-                rank_group: 15
-              }
-            }
-          },
-          {
-            keyword_data: {
-              keyword_info: {
-                keyword: 'business solutions',
-                search_volume: 8500,
-                competition_level: 'LOW'
-              }
-            },
-            ranked_serp_element: {
-              serp_item: {
-                rank_group: 8
-              }
-            }
-          },
-          {
-            keyword_data: {
-              keyword_info: {
-                keyword: 'quality service',
-                search_volume: 6200,
-                competition_level: 'MEDIUM'
-              }
-            },
-            ranked_serp_element: {
-              serp_item: {
-                rank_group: 22
-              }
-            }
-          },
-          {
-            keyword_data: {
-              keyword_info: {
-                keyword: 'customer satisfaction',
-                search_volume: 4800,
-                competition_level: 'HIGH'
-              }
-            },
-            ranked_serp_element: {
-              serp_item: {
-                rank_group: 35
-              }
-            }
-          }
-        ],
+        })) || [],  // Return empty array if no keyword data, don't use dummy fallback
         trafficEstimation: {
           organic: {
-            etv: generateTrafficHistory(analysisData).values[5] // Use the latest month's calculated traffic
+            etv: analysisData?.traffic?.organic?.etv || 0  // Use real traffic data from DataForSEO
           }
         },
-        // Calculate metrics for dashboard using real data
+        // Use REAL metrics from DataForSEO - NO simulations
         metrics: {
-          totalKeywords: analysisData?.keywords?.totalKeywords || 4,
+          totalKeywords: analysisData?.keywords?.totalKeywords || 0,
           topKeywords: analysisData?.keywords?.keywords || [],
-          estimatedTraffic: generateTrafficHistory(analysisData).values[5], // Use calculated traffic
-          averagePosition: generatePositionHistory(analysisData).values[5], // Use calculated average position
-          seoIssues: calculateSEOIssues(analysisData?.keywords?.keywords || [])
+          estimatedTraffic: analysisData?.traffic?.organic?.etv || 0,  // Real traffic from DataForSEO
+          averagePosition: analysisData?.serp?.averagePosition || 0,  // Real position from DataForSEO
+          seoScore: analysisData?.score || 0,  // Real score from analysis
+          issuesCount: analysisData?.issues?.length || 0  // Count of real issues found
         },
-        // Generate realistic historical data based on real DataForSEO analysis
-        chartData: {
-          traffic: generateTrafficHistory(analysisData),
-          positions: generatePositionHistory(analysisData)
+        // Only provide chart data if we have real historical data
+        chartData: analysisData?.chartData || {
+          traffic: { months: [], values: [] },
+          positions: { months: [], values: [] }
         },
-        // Generate competitor data based on domain analysis
-        competitors: generateCompetitorData(domain, analysisData)
+        // Only provide competitor data if available from DataForSEO
+        competitors: analysisData?.competitors || [],
+        // Pass the complete analysis data for AI insights
+        analysis: analysisData
       }
     };
     
