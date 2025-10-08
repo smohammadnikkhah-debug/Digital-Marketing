@@ -304,24 +304,37 @@ class SupabaseService {
     if (!this.isConfigured) return null;
 
     try {
+      console.log('📊 Getting customer analysis data for:', customerId);
+      
       // Get all websites for this customer
       const websites = await this.getCustomerWebsites(customerId);
+      console.log('📊 Found websites:', websites?.length || 0);
+      
       if (!websites || websites.length === 0) {
+        console.log('📊 No websites found for customer');
         return [];
       }
 
       // Get analysis data for each website
+      // CHANGED: Return ALL websites, even without analysis
       const analysisData = [];
       for (const website of websites) {
+        console.log('📊 Processing website:', website.domain);
         const analysis = await this.getAnalysisData(website.domain, customerId);
-        if (analysis) {
-          analysisData.push({
-            website: website,
-            analysis: analysis
-          });
-        }
+        
+        // Include website even if no analysis yet
+        analysisData.push({
+          website: website,
+          analysis: analysis || null  // Changed: Include even if analysis is null
+        });
+        
+        console.log('📊 Website included:', {
+          domain: website.domain,
+          hasAnalysis: !!analysis
+        });
       }
 
+      console.log('📊 Returning analysis data for', analysisData.length, 'websites');
       return analysisData;
     } catch (error) {
       console.error('Error getting customer analysis data:', error);
