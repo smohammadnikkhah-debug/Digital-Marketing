@@ -2059,20 +2059,60 @@
             // Clear existing keywords
             keywordsList.innerHTML = '';
             
-            if (!rankedKeywords || rankedKeywords.length === 0) {
+            // Handle different data structures from DataForSEO
+            let keywordsArray = [];
+            if (Array.isArray(rankedKeywords)) {
+                keywordsArray = rankedKeywords;
+            } else if (rankedKeywords && typeof rankedKeywords === 'object') {
+                // Handle DataForSEO response structure
+                if (rankedKeywords.tasks && rankedKeywords.tasks[0] && rankedKeywords.tasks[0].result) {
+                    keywordsArray = rankedKeywords.tasks[0].result;
+                } else if (rankedKeywords.result) {
+                    keywordsArray = rankedKeywords.result;
+                } else if (rankedKeywords.data) {
+                    keywordsArray = rankedKeywords.data;
+                } else {
+                    keywordsArray = Object.values(rankedKeywords);
+                }
+            }
+            
+            console.log('🔑 Processed keywords array:', keywordsArray);
+            
+            if (!keywordsArray || keywordsArray.length === 0) {
                 keywordsList.innerHTML = '<div class="empty-state">No keyword data available. Add credits to your DataForSEO account to unlock keyword analysis.</div>';
                 return;
             }
             
             // Take top 4 keywords from DataForSEO data
-            const topKeywords = rankedKeywords.slice(0, 4);
+            const topKeywords = keywordsArray.slice(0, 4);
             console.log(`📋 Displaying ${topKeywords.length} keywords`);
             
             topKeywords.forEach((keywordData, index) => {
-                const keyword = keywordData.keyword_data?.keyword_info?.keyword || `Keyword ${index + 1}`;
-                const volume = keywordData.keyword_data?.keyword_info?.search_volume || 0;
-                const difficulty = keywordData.keyword_data?.keyword_info?.competition_level || 'UNKNOWN';
-                const position = keywordData.ranked_serp_element?.serp_item?.rank_group || 0;
+                // Handle different keyword data structures
+                const keyword = keywordData.keyword_data?.keyword_info?.keyword || 
+                              keywordData.keyword || 
+                              keywordData.keyword_info?.keyword || 
+                              `Keyword ${index + 1}`;
+                const volume = keywordData.keyword_data?.keyword_info?.search_volume || 
+                             keywordData.search_volume || 
+                             keywordData.keyword_info?.search_volume || 
+                             0;
+                const difficulty = keywordData.keyword_data?.keyword_info?.competition_level || 
+                                 keywordData.competition_level || 
+                                 keywordData.keyword_info?.competition_level || 
+                                 'UNKNOWN';
+                const position = keywordData.ranked_serp_element?.serp_item?.rank_group || 
+                               keywordData.rank_group || 
+                               keywordData.position || 
+                               0;
+                
+                console.log(`🔑 Keyword ${index + 1}:`, {
+                    keyword,
+                    volume,
+                    difficulty,
+                    position,
+                    rawData: keywordData
+                });
                 
                 const keywordItem = document.createElement('div');
                 keywordItem.className = 'keyword-item';
@@ -2117,32 +2157,66 @@
             // Clear existing competitors
             competitorsList.innerHTML = '';
             
+            // Ensure competitors is an array
+            let competitorsArray = [];
+            if (Array.isArray(competitors)) {
+                competitorsArray = competitors;
+            } else if (competitors && typeof competitors === 'object') {
+                // If it's an object, try to extract array from common DataForSEO response structures
+                if (competitors.tasks && competitors.tasks[0] && competitors.tasks[0].result) {
+                    competitorsArray = competitors.tasks[0].result;
+                } else if (competitors.result) {
+                    competitorsArray = competitors.result;
+                } else if (competitors.data) {
+                    competitorsArray = competitors.data;
+                } else {
+                    // Convert object to array if it has numeric keys
+                    competitorsArray = Object.values(competitors);
+                }
+            }
+            
+            console.log('🏆 Processed competitors array:', competitorsArray);
+            
             // Check if we have real competitor data
-            if (!competitors || competitors.length === 0) {
+            if (!competitorsArray || competitorsArray.length === 0) {
                 competitorsList.innerHTML = '<div class="empty-state">No competitor data available. Competitor analysis requires DataForSEO Labs subscription.</div>';
                 return;
             }
             
             // Use ONLY real competitor data - NO dummy fallback
-            const topCompetitors = competitors.slice(0, 4);
+            const topCompetitors = competitorsArray.slice(0, 4);
             console.log(`📋 Displaying ${topCompetitors.length} competitors`);
             
             topCompetitors.forEach((competitor, index) => {
+                // Extract competitor data from DataForSEO response structure
+                const domain = competitor.target || competitor.domain || 'Unknown';
+                const rank = competitor.rank || competitor.relevance || index + 1;
+                const traffic = competitor.metrics?.organic?.etv || competitor.etv || competitor.traffic || 0;
+                const keywords = competitor.metrics?.organic?.count || competitor.keywords || competitor.count || 0;
+                
+                console.log(`🏆 Competitor ${index + 1}:`, {
+                    domain,
+                    rank,
+                    traffic,
+                    keywords,
+                    rawData: competitor
+                });
+                
                 const competitorItem = document.createElement('div');
                 competitorItem.className = 'competitor-item';
                 competitorItem.innerHTML = `
                     <div class="competitor-header">
-                        <div class="competitor-domain">${competitor.domain}</div>
-                        <div class="competitor-rank">Rank #${competitor.rank}</div>
+                        <div class="competitor-domain">${domain}</div>
+                        <div class="competitor-rank">Rank #${rank}</div>
                             </div>
                     <div class="competitor-metrics">
                         <div class="competitor-metric">
                             <div class="competitor-metric-title">Monthly Traffic</div>
-                            <div class="competitor-metric-value">${formatNumber(competitor.traffic)}</div>
+                            <div class="competitor-metric-value">${formatNumber(traffic)}</div>
                     </div>
                         <div class="competitor-metric">
                             <div class="competitor-metric-title">Keywords</div>
-                            <div class="competitor-metric-value">${formatNumber(competitor.keywords)}</div>
+                            <div class="competitor-metric-value">${formatNumber(keywords)}</div>
                     </div>
                 </div>
                     <div class="competitor-traffic">Analyze Competitor</div>
