@@ -71,7 +71,6 @@ class DataForSEOOnPageTaskService {
         store_raw_html: false,  // Don't store full HTML (saves space)
         custom_js: "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
         validate_micromarkup: true,
-        checks_threshold: options.checksThreshold || 90,  // Run 90%+ of available checks
         disable_cookie_popup: true
       }];
       
