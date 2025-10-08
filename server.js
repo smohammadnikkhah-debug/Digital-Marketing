@@ -4360,26 +4360,55 @@ app.post('/api/dataforseo/environment/analyze-website', async (req, res) => {
     const result = await dataforseoEnvironmentService.analyzeWebsite(url);
     
     // Store analysis in Supabase if successful
-    if (result.success && supabaseService.isReady() && website) {
+    console.log('🔍 Checking if analysis should be stored:', {
+      resultSuccess: result.success,
+      supabaseReady: supabaseService.isReady(),
+      hasWebsite: !!website,
+      websiteId: website?.id
+    });
+    
+    if (result.success && supabaseService.isReady() && website && website.id) {
       try {
         // Ensure we have analysis data to store
         const analysisData = result.analysis || result.data || result;
+        console.log('💾 Attempting to store analysis for website ID:', website.id);
+        console.log('   Analysis data keys:', Object.keys(analysisData));
+        
         if (analysisData) {
-          await supabaseService.storeAnalysis(website.id, analysisData);
+          const storeResult = await supabaseService.storeAnalysis(website.id, analysisData);
           
-          // Store keywords if available
-          if (analysisData.keywords?.keywords) {
-            await supabaseService.storeKeywords(website.id, analysisData.keywords.keywords);
+          if (storeResult) {
+            console.log('✅ Analysis successfully stored in Supabase');
+            
+            // Store keywords if available
+            if (analysisData.keywords?.keywords && analysisData.keywords.keywords.length > 0) {
+              console.log(`💾 Storing ${analysisData.keywords.keywords.length} keywords...`);
+              const keywordResult = await supabaseService.storeKeywords(website.id, analysisData.keywords.keywords);
+              console.log('✅ Keywords stored:', keywordResult ? 'Success' : 'Failed');
+            } else {
+              console.log('ℹ️ No keywords to store');
+            }
+          } else {
+            console.error('❌ Failed to store analysis in Supabase (storeAnalysis returned null)');
           }
-          
-          console.log('✅ Analysis stored in Supabase for future use');
         } else {
           console.log('⚠️ No analysis data to store in Supabase');
         }
       } catch (error) {
-        console.error('Error storing analysis in Supabase:', error);
+        console.error('❌ Error storing analysis in Supabase:', error);
+        console.error('   Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
         // Don't fail the request if storage fails
       }
+    } else {
+      console.log('⚠️ Skipping Supabase storage:', {
+        reason: !result.success ? 'Analysis failed' :
+                !supabaseService.isReady() ? 'Supabase not ready' :
+                !website ? 'No website record' :
+                !website.id ? 'Website has no ID' : 'Unknown'
+      });
     }
     
     res.json({

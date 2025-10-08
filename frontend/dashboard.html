@@ -665,46 +665,79 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const website = websiteData.website;
                 const analysis = websiteData.analysis;
                 
-                if (!analysis) {
-                    console.log('Dashboard: No analysis data for website:', website.domain);
-                    return;
-                }
+                console.log('Dashboard: Processing website:', {
+                    domain: website.domain,
+                    hasAnalysis: !!analysis,
+                    analysisKeys: analysis ? Object.keys(analysis) : []
+                });
                 
-                const score = calculateOverallScore(analysis);
-                const scoreClass = getScoreClass(score);
+                // Show website even if no analysis - display with "Analyze" button
+                const score = analysis ? calculateOverallScore(analysis) : 0;
+                const scoreClass = analysis ? getScoreClass(score) : 'poor';
                 
                 console.log('Dashboard: Website', website.domain, 'score:', score, 'Class:', scoreClass);
                 
-                // Calculate page health metrics
-                const pageHealthMetrics = calculatePageHealthMetrics(analysis);
-                const healthyPages = pageHealthMetrics.healthyPages;
-                const pagesWithIssues = pageHealthMetrics.pagesWithIssues;
-                const fixedIssues = pageHealthMetrics.fixedIssues;
-
-                console.log('Dashboard: Page health metrics for', website.domain, ':', pageHealthMetrics);
+                // Calculate page health metrics (or use defaults if no analysis)
+                let healthyPages = 0;
+                let pagesWithIssues = 0;
+                let fixedIssues = 0;
+                let lastAnalyzed = 'Never';
+                
+                if (analysis) {
+                    const pageHealthMetrics = calculatePageHealthMetrics(analysis);
+                    healthyPages = pageHealthMetrics.healthyPages;
+                    pagesWithIssues = pageHealthMetrics.pagesWithIssues;
+                    fixedIssues = pageHealthMetrics.fixedIssues;
+                    lastAnalyzed = website.updated_at ? new Date(website.updated_at).toLocaleDateString() : new Date().toLocaleDateString();
+                    
+                    console.log('Dashboard: Page health metrics for', website.domain, ':', pageHealthMetrics);
+                } else {
+                    console.log('Dashboard: No analysis for', website.domain, '- showing with Analyze button');
+                }
 
                 // Create row for this website
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="domain-cell" onclick="openMantisDashboard('${website.domain}')">${website.domain}</td>
-                    <td class="score-cell">
-                        <span class="score-badge ${scoreClass}">${score}/100</span>
-                    </td>
-                    <td class="metrics-cell">
-                        <span class="metric-value fixed-issues">${fixedIssues}</span>
-                    </td>
-                    <td class="metrics-cell">
-                        <span class="metric-value healthy-pages">${healthyPages}</span>
-                    </td>
-                    <td class="metrics-cell">
-                        <span class="metric-value pages-with-issues">${pagesWithIssues}</span>
-                    </td>
-                    <td class="last-analysis">${new Date().toLocaleDateString()}</td>
-                    <td class="action-buttons">
-                        <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')">View Details</button>
-                        <button class="btn btn-secondary" onclick="reanalyzeWebsite('${website.domain}')">Re-analyze</button>
-                    </td>
-                `;
+                
+                if (analysis) {
+                    // Website HAS analysis - show full data
+                    row.innerHTML = `
+                        <td class="domain-cell" onclick="openMantisDashboard('${website.domain}')">${website.domain}</td>
+                        <td class="score-cell">
+                            <span class="score-badge ${scoreClass}">${score}/100</span>
+                        </td>
+                        <td class="metrics-cell">
+                            <span class="metric-value fixed-issues">${fixedIssues}</span>
+                        </td>
+                        <td class="metrics-cell">
+                            <span class="metric-value healthy-pages">${healthyPages}</span>
+                        </td>
+                        <td class="metrics-cell">
+                            <span class="metric-value pages-with-issues">${pagesWithIssues}</span>
+                        </td>
+                        <td class="last-analysis">${lastAnalyzed}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')">View Details</button>
+                            <button class="btn btn-secondary" onclick="reanalyzeWebsite('${website.domain}')">Re-analyze</button>
+                        </td>
+                    `;
+                } else {
+                    // Website WITHOUT analysis - show with Analyze button
+                    row.innerHTML = `
+                        <td class="domain-cell">${website.domain}</td>
+                        <td class="score-cell">
+                            <span class="score-badge poor">Not Analyzed</span>
+                        </td>
+                        <td class="metrics-cell" colspan="3" style="text-align: center; color: #94a3b8;">
+                            <em>No analysis data available</em>
+                        </td>
+                        <td class="last-analysis">Never</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-primary" onclick="analyzeWebsite('${website.domain}')">
+                                <i class="fas fa-play"></i> Analyze Now
+                            </button>
+                        </td>
+                    `;
+                }
                 
                 tbody.appendChild(row);
             });
@@ -1102,6 +1135,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
                console.log('Dashboard: Navigating to /dashboard-mantis-v2');
                window.location.href = '/dashboard-mantis-v2';
+        }
+
+        async function analyzeWebsite(domain) {
+            // Same as reanalyzeWebsite - triggers first analysis
+            return reanalyzeWebsite(domain);
         }
 
         async function reanalyzeWebsite(domain) {
