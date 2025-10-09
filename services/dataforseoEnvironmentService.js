@@ -459,33 +459,33 @@ class DataForSEOService {
       const result = task.result[0];
       console.log(`🔍 Keywords Result Structure:`, JSON.stringify(result, null, 2));
       
-      // Handle different possible result structures
-      let keywords = [];
-      if (result.items && Array.isArray(result.items)) {
-        keywords = result.items.map(item => ({
-          keyword: item.keyword,
-          searchVolume: item.search_volume || 0,
-          cpc: item.cpc || 0,
-          competition: item.competition_level || 'Unknown',
-          difficulty: item.keyword_difficulty || 0
-        }));
-      } else if (result.keywords && Array.isArray(result.keywords)) {
-        keywords = result.keywords.map(item => ({
-          keyword: item.keyword,
-          searchVolume: item.search_volume || 0,
-          cpc: item.cpc || 0,
-          competition: item.competition_level || 'Unknown',
-          difficulty: item.keyword_difficulty || 0
-        }));
-      } else if (Array.isArray(result)) {
-        keywords = result.map(item => ({
-          keyword: item.keyword,
-          searchVolume: item.search_volume || 0,
-          cpc: item.cpc || 0,
-          competition: item.competition_level || 'Unknown',
-          difficulty: item.keyword_difficulty || 0
-        }));
-      }
+        // Handle different possible result structures
+        let keywords = [];
+        if (result.items && Array.isArray(result.items)) {
+          keywords = result.items.map(item => ({
+            keyword: item.keyword || item.keyword_data?.keyword_info?.keyword || 'N/A',
+            searchVolume: item.keyword_info?.search_volume || item.keyword_data?.keyword_info?.search_volume || 0,
+            cpc: item.keyword_info?.cpc || item.keyword_data?.keyword_info?.cpc || 0,
+            competition: item.keyword_info?.competition_level || item.keyword_data?.keyword_info?.competition_level || 'Unknown',
+            difficulty: item.keyword_properties?.keyword_difficulty || item.keyword_data?.keyword_info?.keyword_difficulty || 0
+          }));
+        } else if (result.keywords && Array.isArray(result.keywords)) {
+          keywords = result.keywords.map(item => ({
+            keyword: item.keyword || item.keyword_data?.keyword_info?.keyword || 'N/A',
+            searchVolume: item.keyword_info?.search_volume || item.keyword_data?.keyword_info?.search_volume || 0,
+            cpc: item.keyword_info?.cpc || item.keyword_data?.keyword_info?.cpc || 0,
+            competition: item.keyword_info?.competition_level || item.keyword_data?.keyword_info?.competition_level || 'Unknown',
+            difficulty: item.keyword_properties?.keyword_difficulty || item.keyword_data?.keyword_info?.keyword_difficulty || 0
+          }));
+        } else if (Array.isArray(result)) {
+          keywords = result.map(item => ({
+            keyword: item.keyword || item.keyword_data?.keyword_info?.keyword || 'N/A',
+            searchVolume: item.keyword_info?.search_volume || item.keyword_data?.keyword_info?.search_volume || 0,
+            cpc: item.keyword_info?.cpc || item.keyword_data?.keyword_info?.cpc || 0,
+            competition: item.keyword_info?.competition_level || item.keyword_data?.keyword_info?.competition_level || 'Unknown',
+            difficulty: item.keyword_properties?.keyword_difficulty || item.keyword_data?.keyword_info?.keyword_difficulty || 0
+          }));
+        }
       
       console.log(`✅ Generated keyword suggestions successfully (${this.environment})`);
       return {

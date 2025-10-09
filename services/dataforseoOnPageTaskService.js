@@ -117,27 +117,33 @@ class DataForSEOOnPageTaskService {
    */
   async checkTaskStatus(taskId) {
     try {
-      const response = await this.makeRequest('/on_page/tasks_ready', []);
+      console.log(`📊 Checking status for task: ${taskId}`);
+      
+      // Get specific task status using task_get endpoint
+      const response = await this.makeRequest('/on_page/task_get/' + taskId, []);
       
       if (!response || !response.tasks) {
+        console.log('⚠️ No response from task_get endpoint');
         return null;
       }
       
-      // Find our specific task
-      const tasks = response.tasks[0]?.result || [];
-      const task = tasks.find(t => t.id === taskId);
+      const task = response.tasks[0];
       
       if (task) {
-        console.log(`📊 OnPage task ${taskId} status:`, {
-          status: task.status_message,
-          pagesFound: task.result_count
+        const isComplete = task.status_code === 20000;
+        console.log(`📊 OnPage task ${taskId}:`, {
+          statusCode: task.status_code,
+          statusMessage: task.status_message,
+          resultCount: task.result_count,
+          isComplete: isComplete
         });
         
         return {
           id: taskId,
-          status: task.status_message,
-          pagesFound: task.result_count,
-          isComplete: task.status_message === 'Ok.'
+          statusCode: task.status_code,
+          statusMessage: task.status_message,
+          pagesFound: task.result_count || 0,
+          isComplete: isComplete
         };
       }
       
