@@ -1420,11 +1420,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             
                             <div class="combined-chart-container">
                                 <div class="combined-chart-item chart-left">
-                                    <h4 class="sub-chart-title">Traffic Trends</h4>
+                                    <h4 class="sub-chart-title">Traffic Trends (Last 3 Months)</h4>
                                     <canvas id="trafficChart"></canvas>
                                 </div>
                                 <div class="combined-chart-item chart-right">
-                                    <h4 class="sub-chart-title">Referring Domains & Keyword Position</h4>
+                                    <h4 class="sub-chart-title">Traffic by Country (Top 5)</h4>
                                     <canvas id="positionChart"></canvas>
                                 </div>
                             </div>
@@ -1955,25 +1955,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         // Update charts with historical DataForSEO data
-        function updateChartsWithHistoricalData(chartData) {
-            console.log('📊 Updating charts with historical data:', chartData);
+        function updateChartsWithHistoricalData(data) {
+            console.log('📊 Updating charts with historical data:', data);
             
-            if (!chartData || (!chartData.traffic && !chartData.positions)) {
-                console.warn('⚠️ No chart data available, using default empty charts');
-                // Create empty charts
-                createEmptyCharts();
-                return;
-            }
-            
-            // Update charts with real data if available
-            if (chartData.traffic && chartData.traffic.months && chartData.traffic.values) {
-                updateTrafficChartWithData(chartData.traffic.months, chartData.traffic.values);
+            // Update Traffic Performance Trends Chart
+            if (data.trafficTrends) {
+                console.log('📈 Traffic trends data available:', data.trafficTrends);
+                updateTrafficPerformanceChart(data.trafficTrends);
             } else {
-                createEmptyCharts();
+                console.warn('⚠️ No traffic trends data, showing empty state');
+                showEmptyTrafficChart();
             }
             
-            if (chartData.positions && chartData.positions.months && chartData.positions.values) {
-                updatePositionChartWithData(chartData.positions.months, chartData.positions.values);
+            // Update Traffic by Country Chart (replaces position chart)
+            if (data.trafficByCountry && data.trafficByCountry.length > 0) {
+                console.log('🌍 Country traffic data available:', data.trafficByCountry);
+                updateCountryTrafficChart(data.trafficByCountry);
+            } else {
+                console.warn('⚠️ No country traffic data, showing empty state');
+                showEmptyCountryChart();
             }
         }
         
@@ -2001,16 +2001,297 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
         
-        function updateTrafficChartWithData(months, values) {
-            // Implementation for traffic chart with real data
-            console.log('📈 Updating traffic chart with real data:', { months, values });
-            // Chart update code here
+        // Update Traffic Performance Trends Chart (Line Chart)
+        function updateTrafficPerformanceChart(trafficTrends) {
+            console.log('📈 Creating Traffic Performance Trends chart:', trafficTrends);
+            
+            const ctx = document.getElementById('trafficChart');
+            if (!ctx) {
+                console.error('❌ Traffic chart canvas not found');
+                return;
+            }
+            
+            // Destroy existing chart if any
+            if (window.trafficChartInstance) {
+                window.trafficChartInstance.destroy();
+            }
+            
+            // Create new line chart
+            window.trafficChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trafficTrends.months || [],
+                    datasets: [
+                        {
+                            label: 'Organic Traffic',
+                            data: trafficTrends.organic || [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Paid Ads',
+                            data: trafficTrends.paid || [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Social',
+                            data: trafficTrends.social || [],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#8b5cf6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toLocaleString() + ' visits';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) {
+                                        return (value / 1000).toFixed(1) + 'K';
+                                    }
+                                    return value;
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+            
+            console.log('✅ Traffic Performance chart created successfully');
         }
         
-        function updatePositionChartWithData(months, values) {
-            // Implementation for position chart with real data
-            console.log('📉 Updating position chart with real data:', { months, values });
-            // Chart update code here
+        // Update Traffic by Country Chart (Horizontal Bar Chart)
+        function updateCountryTrafficChart(trafficByCountry) {
+            console.log('🌍 Creating Traffic by Country chart:', trafficByCountry);
+            
+            const ctx = document.getElementById('positionChart');  // Reuse existing canvas
+            if (!ctx) {
+                console.error('❌ Country chart canvas not found');
+                return;
+            }
+            
+            // Destroy existing chart
+            if (window.positionChartInstance) {
+                window.positionChartInstance.destroy();
+            }
+            
+            // Sort by traffic (descending)
+            const sortedCountries = [...trafficByCountry].sort((a, b) => b.traffic - a.traffic);
+            
+            // Create horizontal bar chart
+            window.positionChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCountries.map(c => c.name),
+                    datasets: [{
+                        label: 'Estimated Traffic',
+                        data: sortedCountries.map(c => c.traffic),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',   // Blue
+                            'rgba(16, 185, 129, 0.8)',   // Green
+                            'rgba(245, 158, 11, 0.8)',   // Orange
+                            'rgba(139, 92, 246, 0.8)',   // Purple
+                            'rgba(239, 68, 68, 0.8)'     // Red
+                        ],
+                        borderColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#ef4444'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',  // Horizontal bars
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                title: function(context) {
+                                    const country = sortedCountries[context[0].dataIndex];
+                                    return country.name;
+                                },
+                                label: function(context) {
+                                    const country = sortedCountries[context.dataIndex];
+                                    return country.code + ': ' + context.parsed.x.toLocaleString() + ' visits/month';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) {
+                                        return (value / 1000).toFixed(1) + 'K';
+                                    }
+                                    return value;
+                                },
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ Country Traffic chart created successfully');
+        }
+        
+        // Empty state for traffic chart
+        function showEmptyTrafficChart() {
+            const ctx = document.getElementById('trafficChart');
+            if (!ctx) return;
+            
+            const parent = ctx.parentElement;
+            if (parent) {
+                parent.innerHTML = `
+                    <div class="empty-state" style="padding: 60px 20px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <i class="fas fa-chart-line" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #64748b; font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">No Traffic Trends Available</h3>
+                        <p style="color: #94a3b8; font-size: 0.875rem;">Click "Full Crawl" to fetch traffic trend data</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Empty state for country chart
+        function showEmptyCountryChart() {
+            const ctx = document.getElementById('positionChart');
+            if (!ctx) return;
+            
+            const parent = ctx.parentElement;
+            if (parent) {
+                parent.innerHTML = `
+                    <div class="empty-state" style="padding: 60px 20px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <i class="fas fa-globe" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #64748b; font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">No Country Data Available</h3>
+                        <p style="color: #94a3b8; font-size: 0.875rem;">Click "Full Crawl" to fetch traffic by country</p>
+                    </div>
+                `;
+            }
         }
 
         // Update chart data based on selected filters and date range
