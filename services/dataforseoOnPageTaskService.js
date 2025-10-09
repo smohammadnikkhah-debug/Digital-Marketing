@@ -114,46 +114,59 @@ class DataForSEOOnPageTaskService {
 
   /**
    * Check the status of a crawl task
+   * Uses tasks_ready endpoint to see if task is complete
    */
   async checkTaskStatus(taskId) {
     try {
       console.log(`📊 Checking status for task: ${taskId}`);
       
-      // Get specific task status using task_get endpoint with POST body
-      const response = await this.makeRequest('/on_page/task_get/advanced', [{
-        id: taskId
-      }]);
+      // Check if task is in the ready list
+      const response = await this.makeRequest('/on_page/tasks_ready', []);
       
-      if (!response || !response.tasks) {
-        console.log('⚠️ No response from task_get endpoint');
-        return null;
+      if (!response || !response.tasks || response.tasks.length === 0) {
+        console.log('ℹ️ No ready tasks found (task may still be processing)');
+        return {
+          id: taskId,
+          statusCode: 20100,
+          statusMessage: 'Task in progress',
+          pagesFound: 0,
+          isComplete: false,
+          inProgress: true
+        };
       }
       
       const task = response.tasks[0];
       
-      if (task && task.result && task.result.length > 0) {
-        const taskData = task.result[0];
-        const isComplete = taskData.status_code === 20000;
+      // Check if our task is in the ready list
+      if (task.result && Array.isArray(task.result)) {
+        const readyTask = task.result.find(t => t.id === taskId);
         
-        console.log(`📊 OnPage task ${taskId}:`, {
-          statusCode: taskData.status_code,
-          statusMessage: taskData.status_message,
-          resultCount: taskData.result_count,
-          isComplete: isComplete,
-          crawlProgress: taskData.crawl_progress
-        });
-        
-        return {
-          id: taskId,
-          statusCode: taskData.status_code,
-          statusMessage: taskData.status_message,
-          pagesFound: taskData.result_count || 0,
-          crawlProgress: taskData.crawl_progress,
-          isComplete: isComplete
-        };
+        if (readyTask) {
+          console.log(`✅ OnPage task ${taskId} is READY:`, {
+            resultCount: readyTask.result_count
+          });
+          
+          return {
+            id: taskId,
+            statusCode: 20000,
+            statusMessage: 'Task complete',
+            pagesFound: readyTask.result_count || 0,
+            isComplete: true,
+            inProgress: false
+          };
+        }
       }
       
-      return null;
+      // Task not in ready list, still processing
+      console.log(`⏳ Task ${taskId} still processing (not in ready list yet)`);
+      return {
+        id: taskId,
+        statusCode: 20100,
+        statusMessage: 'Task in progress',
+        pagesFound: 0,
+        isComplete: false,
+        inProgress: true
+      };
     } catch (error) {
       console.error('❌ Error checking task status:', error);
       return null;
