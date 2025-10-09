@@ -1732,12 +1732,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             updateChartsWithHistoricalData(chartData);
             
             // Update keyword opportunities with real DataForSEO data
-            const keywords = data.keywords?.keywords || data.rankedKeywords || [];
-            const competitors = data.competitors?.competitors || data.competitors || [];
+            // Handle multiple possible data structures
+            let keywords = [];
+            if (data.keywords) {
+                if (Array.isArray(data.keywords.keywords)) {
+                    keywords = data.keywords.keywords;
+                } else if (Array.isArray(data.keywords)) {
+                    keywords = data.keywords;
+                } else if (data.keywords.tasks && Array.isArray(data.keywords.tasks[0]?.result)) {
+                    keywords = data.keywords.tasks[0].result;
+                }
+            } else if (Array.isArray(data.rankedKeywords)) {
+                keywords = data.rankedKeywords;
+            }
             
-            console.log('📊 Keywords and competitors:', {
+            let competitors = [];
+            if (data.competitors) {
+                if (Array.isArray(data.competitors.competitors)) {
+                    competitors = data.competitors.competitors;
+                } else if (Array.isArray(data.competitors)) {
+                    competitors = data.competitors;
+                } else if (data.competitors.tasks && Array.isArray(data.competitors.tasks[0]?.result)) {
+                    competitors = data.competitors.tasks[0].result;
+                }
+            }
+            
+            console.log('📊 Keywords and competitors extracted:', {
                 keywordsCount: keywords.length,
-                competitorsCount: Array.isArray(competitors) ? competitors.length : 0
+                competitorsCount: competitors.length,
+                keywordsData: keywords.length > 0 ? keywords[0] : 'none',
+                competitorsData: competitors.length > 0 ? competitors[0] : 'none'
             });
             
             updateKeywordOpportunitiesWithRealData(keywords);
@@ -1843,8 +1867,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
             
             // Additional recommendations based on real data
-            if (analysis.onPage && analysis.onPage.title) {
-                const titleLength = analysis.onPage.title.length;
+            if (data.onPage && data.onPage.title) {
+                const titleLength = data.onPage.title.length;
                 if (titleLength > 60 || titleLength < 30) {
                     recommendations.additional.push({
                         text: `<strong>📝 Optimize Title Tag</strong><br>Your title tag is ${titleLength} characters. Optimize to 50-60 characters for better click-through rates.`,
@@ -1854,25 +1878,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }
             }
             
-            if (analysis.onPage && analysis.onPage.images && analysis.onPage.images.missingAlt > 0) {
+            if (data.onPage && data.onPage.images && data.onPage.images.missingAlt > 0) {
                 recommendations.additional.push({
-                    text: `<strong>🖼️ Image Optimization</strong><br>${analysis.onPage.images.missingAlt} images are missing alt text. Add descriptive alt text to improve accessibility and SEO.`,
+                    text: `<strong>🖼️ Image Optimization</strong><br>${data.onPage.images.missingAlt} images are missing alt text. Add descriptive alt text to improve accessibility and SEO.`,
                     impact: 'Medium Impact',
                     effort: 'Low Effort'
                 });
             }
             
-            if (metrics.issuesCount && metrics.issuesCount > 0) {
+            if (totalIssues && totalIssues > 0) {
                 recommendations.additional.push({
-                    text: `<strong>🔧 Fix Technical Issues</strong><br>${metrics.issuesCount} technical SEO issues found. Addressing these will improve your search visibility.`,
+                    text: `<strong>🔧 Fix Technical Issues</strong><br>${totalIssues} technical SEO issues found. Addressing these will improve your search visibility.`,
                     impact: 'High Impact',
                     effort: 'Medium Effort'
                 });
             }
             
-            if (keywords.length > 0 && metrics.totalKeywords < 10) {
+            // Check keywords from data
+            const keywordCount = data.keywords?.totalKeywords || data.keywords?.keywords?.length || 0;
+            if (keywordCount > 0 && keywordCount < 10) {
                 recommendations.additional.push({
-                    text: `<strong>📈 Expand Keyword Strategy</strong><br>Currently tracking ${metrics.totalKeywords} keywords. Expand your content to target more relevant keywords and increase organic reach.`,
+                    text: `<strong>📈 Expand Keyword Strategy</strong><br>Currently tracking ${keywordCount} keywords. Expand your content to target more relevant keywords and increase organic reach.`,
                     impact: 'High Impact',
                     effort: 'High Effort'
                 });
