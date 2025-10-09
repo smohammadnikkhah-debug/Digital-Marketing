@@ -1652,8 +1652,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             try {
                 console.log('📊 Loading dashboard data...');
                 
-                // Get current domain from URL or use default
-                const currentDomain = window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname;
+                // Get domain from localStorage (set by main dashboard)
+                const storedDomain = localStorage.getItem('lastAnalyzedDomain');
+                const currentDomain = storedDomain || window.location.hostname;
+                
+                console.log('📊 Loading data for domain:', currentDomain);
+                console.log('   (from localStorage:', storedDomain, ')');
                 
                 // Fetch historical DataForSEO data
                 const response = await fetch(`/api/supabase/historical-data/${currentDomain}`);
