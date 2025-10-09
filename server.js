@@ -4389,11 +4389,77 @@ app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
       });
     }
 
-    console.log(`🚀 Starting FULL website crawl for: ${normalizedDomain}`);
-    console.log(`   Website ID: ${website.id}`);
+    // SMART INCREMENTAL FETCHING: Check what data we already have
+    const existingAnalysis = await supabaseService.getAnalysis(website.id);
+    
+    const hasPageData = existingAnalysis && existingAnalysis.analysis_data?.totalPages > 1;
+    const hasKeywords = existingAnalysis && existingAnalysis.analysis_data?.keywords?.totalKeywords > 0;
+    const hasCompetitors = existingAnalysis && existingAnalysis.analysis_data?.competitors?.totalCompetitors > 0;
+    
+    console.log(`📊 Existing data check (within 7-day cache):`, {
+      hasPageData: hasPageData,
+      hasKeywords: hasKeywords,
+      hasCompetitors: hasCompetitors,
+      cacheValid: !!existingAnalysis
+    });
+    
+    // OPTION 1: Only fetch keywords & competitors (fast - 10-30 seconds)
+    if (hasPageData && (!hasKeywords || !hasCompetitors)) {
+      console.log(`⚡ SMART FETCH: Pages exist, fetching ONLY missing data`);
+      console.log(`   Missing: ${!hasKeywords ? 'Keywords' : ''} ${!hasCompetitors ? 'Competitors' : ''}`);
+      
+      setImmediate(async () => {
+        try {
+          const dataforseoService = require('./services/dataforseoEnvironmentService');
+          
+          const fetchPromises = [];
+          if (!hasKeywords) fetchPromises.push(dataforseoService.getKeywordsAnalysis(`https://${normalizedDomain}`));
+          if (!hasCompetitors) fetchPromises.push(dataforseoService.getCompetitorAnalysis(`https://${normalizedDomain}`));
+          
+          const results = await Promise.allSettled(fetchPromises);
+          
+          // Update existing analysis
+          const updatedAnalysis = {
+            ...existingAnalysis.analysis_data,
+            timestamp: new Date().toISOString()
+          };
+          
+          let resultIndex = 0;
+          if (!hasKeywords && results[resultIndex]) {
+            updatedAnalysis.keywords = results[resultIndex].status === 'fulfilled' ? results[resultIndex].value : null;
+            resultIndex++;
+          }
+          if (!hasCompetitors && results[resultIndex]) {
+            updatedAnalysis.competitors = results[resultIndex].status === 'fulfilled' ? results[resultIndex].value : null;
+          }
+          
+          await supabaseService.storeAnalysis(website.id, updatedAnalysis);
+          console.log(`✅ Missing data added to existing analysis`);
+          console.log(`   Keywords: ${updatedAnalysis.keywords?.totalKeywords || 0}`);
+          console.log(`   Competitors: ${updatedAnalysis.competitors?.totalCompetitors || 0}`);
+        } catch (error) {
+          console.error('❌ Error fetching missing data:', error);
+        }
+      });
+      
+      return res.json({
+        success: true,
+        message: 'Fetching missing keywords and competitors',
+        status: 'fetching_incremental',
+        estimatedTime: '10-30 seconds',
+        websiteId: website.id,
+        domain: normalizedDomain,
+        fetching: {
+          keywords: !hasKeywords,
+          competitors: !hasCompetitors
+        }
+      });
+    }
+    
+    // OPTION 2: Full crawl needed (no existing data or needs refresh)
+    console.log(`🔄 FULL CRAWL: Starting complete website analysis`);
     console.log(`   This will analyze ALL pages (estimated 5-30 minutes)`);
 
-    // Start the background crawl task
     const onPageTaskService = require('./services/dataforseoOnPageTaskService');
     const taskResult = await onPageTaskService.startFullWebsiteAnalysis(url, website.id, options);
     
