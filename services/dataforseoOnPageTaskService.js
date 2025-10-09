@@ -120,51 +120,84 @@ class DataForSEOOnPageTaskService {
 
   /**
    * Check the status of a crawl task
-   * Uses tasks_ready endpoint to see if task is complete
+   * First checks tasks_ready, then checks summary directly
    */
   async checkTaskStatus(taskId) {
     try {
       console.log(`📊 Checking status for task: ${taskId}`);
       
-      // Check if task is in the ready list
-      const response = await this.makeRequest('/on_page/tasks_ready', []);
+      // Method 1: Check if task is in the ready list
+      const readyResponse = await this.makeRequest('/on_page/tasks_ready', []);
       
-      if (!response || !response.tasks || response.tasks.length === 0) {
-        console.log('ℹ️ No ready tasks found (task may still be processing)');
-        return {
-          id: taskId,
-          statusCode: 20100,
-          statusMessage: 'Task in progress',
-          pagesFound: 0,
-          isComplete: false,
-          inProgress: true
-        };
-      }
-      
-      const task = response.tasks[0];
-      
-      // Check if our task is in the ready list
-      if (task.result && Array.isArray(task.result)) {
-        const readyTask = task.result.find(t => t.id === taskId);
+      if (readyResponse && readyResponse.tasks && readyResponse.tasks.length > 0) {
+        const task = readyResponse.tasks[0];
         
-        if (readyTask) {
-          console.log(`✅ OnPage task ${taskId} is READY:`, {
-            resultCount: readyTask.result_count
-          });
+        // Check if our task is in the ready list
+        if (task.result && Array.isArray(task.result)) {
+          const readyTask = task.result.find(t => t.id === taskId);
           
-          return {
-            id: taskId,
-            statusCode: 20000,
-            statusMessage: 'Task complete',
-            pagesFound: readyTask.result_count || 0,
-            isComplete: true,
-            inProgress: false
-          };
+          if (readyTask) {
+            console.log(`✅ OnPage task ${taskId} is READY (via tasks_ready):`, {
+              resultCount: readyTask.result_count
+            });
+            
+            return {
+              id: taskId,
+              statusCode: 20000,
+              statusMessage: 'Task complete',
+              pagesFound: readyTask.result_count || 0,
+              isComplete: true,
+              inProgress: false
+            };
+          }
         }
       }
       
-      // Task not in ready list, still processing
-      console.log(`⏳ Task ${taskId} still processing (not in ready list yet)`);
+      // Method 2: Check summary endpoint directly (more reliable)
+      console.log(`📊 Checking summary endpoint directly for task: ${taskId}`);
+      const summaryResponse = await this.makeRequest('/on_page/summary', [{
+        id: taskId
+      }]);
+      
+      if (summaryResponse && summaryResponse.tasks && summaryResponse.tasks.length > 0) {
+        const task = summaryResponse.tasks[0];
+        
+        if (task.result && task.result.length > 0) {
+          const summary = task.result[0];
+          const isFinished = summary.crawl_progress === 'finished';
+          const pagesCrawled = summary.crawl_status?.pages_crawled || 0;
+          
+          console.log(`📊 Task summary:`, {
+            crawlProgress: summary.crawl_progress,
+            pagesCrawled: pagesCrawled,
+            pagesInQueue: summary.crawl_status?.pages_in_queue || 0,
+            isFinished: isFinished
+          });
+          
+          if (isFinished) {
+            return {
+              id: taskId,
+              statusCode: 20000,
+              statusMessage: 'Task complete',
+              pagesFound: pagesCrawled,
+              isComplete: true,
+              inProgress: false
+            };
+          } else {
+            return {
+              id: taskId,
+              statusCode: 20100,
+              statusMessage: 'Task in progress',
+              pagesFound: pagesCrawled,
+              isComplete: false,
+              inProgress: true
+            };
+          }
+        }
+      }
+      
+      // If we can't determine status, assume still processing
+      console.log(`⏳ Task ${taskId} status unknown, assuming in progress`);
       return {
         id: taskId,
         statusCode: 20100,
@@ -188,11 +221,7 @@ class DataForSEOOnPageTaskService {
       
       const requestData = [{
         id: taskId,
-        limit: limit,
-        filters: [
-          ["status_code", "=", 200]  // Only successful pages
-        ],
-        order_by: ["checks.sitemap,desc"]  // Prioritize important pages
+        limit: limit
       }];
       
       const response = await this.makeRequest('/on_page/pages', requestData);
@@ -212,9 +241,17 @@ class DataForSEOOnPageTaskService {
         return null;
       }
       
-      const pages = task.result;
+      // Extract actual pages from result wrapper
+      const resultWrapper = task.result[0];
+      const pages = resultWrapper.items || [];
       
       console.log(`✅ Retrieved ${pages.length} pages from OnPage crawl`);
+      console.log(`📊 Crawl summary: Total items: ${resultWrapper.total_items_count}, Items in this batch: ${resultWrapper.items_count}`);
+      
+      if (pages.length === 0) {
+        console.warn('⚠️ No pages found in result - might need pagination or crawl was blocked');
+        return null;
+      }
       
       return this.processOnPageResults(pages);
     } catch (error) {
