@@ -69,9 +69,17 @@ class DataForSEOOnPageTaskService {
         enable_javascript: true,
         enable_browser_rendering: true,
         store_raw_html: false,  // Don't store full HTML (saves space)
+        // Mimic real browser to avoid bot detection
         custom_js: "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})",
+        custom_user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        // Handle authentication/protection
         validate_micromarkup: true,
-        disable_cookie_popup: true
+        disable_cookie_popup: true,
+        // Allow subdomains and respect sitemap
+        allow_subdomains: true,
+        respect_sitemap: true,
+        // Crawl configuration
+        crawl_delay: 0
       }];
       
       const response = await this.makeRequest('/on_page/task_post', taskData);
