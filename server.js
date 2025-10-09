@@ -4646,71 +4646,99 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
     
     console.log('📊 Getting historical DataForSEO data for:', domain, shouldForceRefresh ? '(FORCE REFRESH)' : '(normal)');
     
-    // Use the existing DataForSEO environment service to get real data
+    // Get analysis data from Supabase first (should have full crawl data)
     let analysisData = null;
     
     try {
-      // Get analysis data using the environment service
-      const analysisResult = await dataforseoEnvironmentService.analyzeWebsite(domain);
+      // First, try to get existing analysis from Supabase
+      if (!shouldForceRefresh) {
+        console.log('📊 Checking Supabase for existing analysis...');
+        analysisData = await supabaseService.getAnalysisData(domain, null);
+        
+        if (analysisData) {
+          console.log('✅ Got analysis from Supabase:', {
+            score: analysisData.score,
+            totalPages: analysisData.totalPages,
+            hasKeywords: !!analysisData.keywords,
+            hasRecommendations: !!analysisData.recommendations
+          });
+        }
+      }
       
-      if (analysisResult.success && analysisResult.analysis) {
-        analysisData = analysisResult.analysis;
-        console.log('✅ Got real DataForSEO analysis data', shouldForceRefresh ? '(fresh from API)' : '');
+      // If no cached data or force refresh, get fresh analysis
+      if (!analysisData || shouldForceRefresh) {
+        console.log('🔄 Getting fresh analysis from DataForSEO...');
+        const analysisResult = await dataforseoEnvironmentService.analyzeWebsite(domain, shouldForceRefresh);
+        
+        if (analysisResult.success && analysisResult.analysis) {
+          analysisData = analysisResult.analysis;
+          console.log('✅ Got real DataForSEO analysis data', shouldForceRefresh ? '(fresh from API)' : '');
+        }
       }
     } catch (analysisError) {
-      console.log('⚠️ Could not get real analysis data:', analysisError.message);
+      console.log('⚠️ Could not get analysis data:', analysisError.message);
     }
     
     // Process the data - use real DataForSEO data only
     console.log('🔍 Processing analysis data for Mantis dashboard:', {
       hasAnalysisData: !!analysisData,
+      score: analysisData?.score,
+      totalPages: analysisData?.totalPages,
       hasKeywords: !!analysisData?.keywords,
+      hasRecommendations: !!analysisData?.recommendations,
       keywordCount: analysisData?.keywords?.keywords?.length || 0
     });
     
+    // Pass through the analysis data directly with proper structure for Mantis v2
     const processedData = {
       success: true,
       data: {
+        // Pass through all existing fields from full crawl
+        ...analysisData,
+        
+        // Ensure domain and timestamp
         domain: domain,
-        timestamp: new Date().toISOString(),
+        timestamp: analysisData?.timestamp || new Date().toISOString(),
+        
+        // Format keywords for Mantis v2 compatibility
         rankedKeywords: analysisData?.keywords?.keywords?.map((keyword, index) => ({
           keyword_data: {
             keyword_info: {
               keyword: keyword.keyword,
-              search_volume: keyword.searchVolume || 0, // Use actual search volume from DataForSEO
+              search_volume: keyword.searchVolume || 0,
               competition_level: keyword.competition?.toUpperCase() || 'UNKNOWN',
               cpc: keyword.cpc || 0
             }
           },
           ranked_serp_element: {
             serp_item: {
-              rank_group: keyword.rank || keyword.position || 0 // Use actual ranking from DataForSEO
+              rank_group: keyword.rank || keyword.position || 0
             }
           }
-        })) || [],  // Return empty array if no keyword data, don't use dummy fallback
+        })) || [],
+        
+        // Traffic estimation
         trafficEstimation: {
           organic: {
-            etv: analysisData?.traffic?.organic?.etv || 0  // Use real traffic data from DataForSEO
+            etv: analysisData?.traffic?.organic?.etv || 0
           }
         },
-        // Use REAL metrics from DataForSEO - NO simulations
+        
+        // Metrics for legacy compatibility
         metrics: {
           totalKeywords: analysisData?.keywords?.totalKeywords || 0,
           topKeywords: analysisData?.keywords?.keywords || [],
-          estimatedTraffic: analysisData?.traffic?.organic?.etv || 0,  // Real traffic from DataForSEO
-          averagePosition: analysisData?.serp?.averagePosition || 0,  // Real position from DataForSEO
-          seoScore: analysisData?.score || 0,  // Real score from analysis
-          issuesCount: analysisData?.issues?.length || 0  // Count of real issues found
+          estimatedTraffic: analysisData?.traffic?.organic?.etv || 0,
+          averagePosition: analysisData?.serp?.averagePosition || 0,
+          seoScore: analysisData?.score || analysisData?.averageScore || 0,
+          seoIssues: analysisData?.totalIssues || 0
         },
-        // Only provide chart data if we have real historical data
+        
+        // Chart data
         chartData: analysisData?.chartData || {
           traffic: { months: [], values: [] },
           positions: { months: [], values: [] }
-        },
-        // Only provide competitor data if available from DataForSEO
-        competitors: analysisData?.competitors || [],
-        // Pass the complete analysis data for AI insights
-        analysis: analysisData
+        }
       }
     };
     

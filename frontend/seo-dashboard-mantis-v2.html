@@ -1775,26 +1775,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         function generateStrategicRecommendations(data) {
             console.log('🤖 Generating strategic recommendations from data:', data);
             
-            const keywords = data.rankedKeywords || [];
-            const competitors = Array.isArray(data.competitors) ? data.competitors : [];
-            const metrics = data.metrics || {};
-            const analysis = data.analysis || {};
+            const storedRecommendations = data.recommendations || [];
+            const totalPages = data.totalPages || 0;
+            const totalIssues = data.totalIssues || 0;
+            const score = data.score || data.averageScore || 0;
             
-            console.log('🤖 Data for recommendations:', {
-                keywordCount: keywords.length,
-                competitorCount: competitors.length,
-                hasAnalysis: !!analysis
-            });
-            
-            // Analyze competitor gaps and opportunities
-            const topCompetitors = competitors.slice(0, 3);
-            const highVolumeKeywords = keywords.filter(k => {
-                const searchVolume = k.keyword_data?.keyword_info?.search_volume || 0;
-                return searchVolume > 1000;
-            });
-            const lowCompetitionKeywords = keywords.filter(k => {
-                const competition = k.keyword_data?.keyword_info?.competition_level || '';
-                return competition === 'LOW';
+            console.log('🤖 Recommendations data:', {
+                storedRecommendations: storedRecommendations.length,
+                totalPages,
+                totalIssues,
+                score
             });
             
             const recommendations = {
@@ -1804,52 +1794,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 additional: []
             };
             
-            // Primary recommendation based on REAL data analysis
-            if (highVolumeKeywords.length > 0) {
-                const keyword = highVolumeKeywords[0];
-                const searchVolume = keyword.keyword_data?.keyword_info?.search_volume || 0;
-                const keywordText = keyword.keyword_data?.keyword_info?.keyword || 'target keyword';
-                
+            // Use actual recommendations from full crawl
+            if (storedRecommendations.length > 0) {
+                const topRec = storedRecommendations[0];
                 recommendations.primary = `
-                    <strong>💡 High-Volume Keyword Opportunity</strong><br>
-                    Target "${keywordText}" with ${searchVolume.toLocaleString()} monthly searches. 
-                    Create comprehensive, high-quality content to capture this search traffic.
+                    <strong>🎯 ${topRec.category}: ${topRec.issue}</strong><br>
+                    ${topRec.solution}. ${topRec.impact}.
+                `;
+                recommendations.primaryImpact = topRec.priority === 'High' ? 'High Impact' : topRec.priority === 'Medium' ? 'Medium Impact' : 'Low Impact';
+                recommendations.primaryEffort = 'Medium Effort';
+                
+                // Add additional recommendations
+                for (let i = 1; i < Math.min(storedRecommendations.length, 3); i++) {
+                    const rec = storedRecommendations[i];
+                    recommendations.additional.push({
+                        text: `<strong>${rec.category}: ${rec.issue}</strong><br>${rec.solution}`,
+                        impact: rec.priority === 'High' ? 'High Impact' : rec.priority === 'Medium' ? 'Medium Impact' : 'Low Impact',
+                        effort: 'Medium Effort'
+                    });
+                }
+            } else if (totalPages > 0 && totalIssues > 0) {
+                // Generate from analyzed data
+                recommendations.primary = `
+                    <strong>📊 ${totalIssues} SEO Issues Found Across ${totalPages} Pages</strong><br>
+                    Your website has been fully analyzed. Focus on fixing the most critical issues first 
+                    to improve your overall SEO score of ${score}/100.
                 `;
                 recommendations.primaryImpact = 'High Impact';
                 recommendations.primaryEffort = 'Medium Effort';
-            } else if (lowCompetitionKeywords.length > 0) {
-                const keyword = lowCompetitionKeywords[0];
-                const searchVolume = keyword.keyword_data?.keyword_info?.search_volume || 0;
-                const keywordText = keyword.keyword_data?.keyword_info?.keyword || 'target keyword';
-                
+            } else if (score > 0 && score < 80) {
                 recommendations.primary = `
-                    <strong>🎯 Quick Win Opportunity</strong><br>
-                    Target "${keywordText}" (${searchVolume.toLocaleString()} monthly searches, Low competition). 
-                    This is a perfect opportunity to rank quickly with targeted content.
-                `;
-                recommendations.primaryImpact = 'Medium Impact';
-                recommendations.primaryEffort = 'Low Effort';
-            } else if (analysis.issues && analysis.issues.length > 0) {
-                const topIssue = analysis.issues[0];
-                recommendations.primary = `
-                    <strong>⚠️ Critical Issue Found</strong><br>
-                    ${topIssue}. Fix this issue to improve your SEO score and search rankings.
-                `;
-                recommendations.primaryImpact = 'High Impact';
-                recommendations.primaryEffort = 'Low Effort';
-            } else if (metrics.seoScore && metrics.seoScore < 80) {
-                recommendations.primary = `
-                    <strong>📈 Improve SEO Score</strong><br>
-                    Your current SEO score is ${metrics.seoScore}/100. Focus on improving on-page elements like title tags, 
-                    meta descriptions, and content quality to boost your rankings.
+                    <strong>📈 Improve Your SEO Score</strong><br>
+                    Your current SEO score is ${score}/100. ${totalPages} pages analyzed. 
+                    Focus on improving on-page elements to boost your rankings.
                 `;
                 recommendations.primaryImpact = 'High Impact';
                 recommendations.primaryEffort = 'Medium Effort';
             } else {
                 recommendations.primary = `
-                    <strong>🚀 Get Real DataForSEO Analysis</strong><br>
-                    Add credits to your DataForSEO account to unlock comprehensive keyword research, 
-                    competitor analysis, and data-driven recommendations.
+                    <strong>🚀 Complete Website Analysis</strong><br>
+                    Run a full website crawl to get comprehensive SEO insights, 
+                    identify all issues, and receive actionable recommendations.
                 `;
                 recommendations.primaryImpact = 'High Impact';
                 recommendations.primaryEffort = 'Low Effort';
