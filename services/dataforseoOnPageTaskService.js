@@ -77,9 +77,7 @@ class DataForSEOOnPageTaskService {
         disable_cookie_popup: true,
         // Allow subdomains and respect sitemap
         allow_subdomains: true,
-        respect_sitemap: true,
-        // Crawl configuration
-        crawl_delay: 0
+        respect_sitemap: true
       }];
       
       const response = await this.makeRequest('/on_page/task_post', taskData);
