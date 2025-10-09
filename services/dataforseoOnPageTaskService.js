@@ -296,18 +296,39 @@ class DataForSEOOnPageTaskService {
     const averageScore = processedPages.reduce((sum, p) => sum + p.onPageScore, 0) / totalPages;
     const totalErrors = processedPages.reduce((sum, p) => sum + p.errors.length, 0);
 
+    const calculatedScore = Math.round(averageScore);
+    const allIssues = this.categorizeIssues(processedPages);
+    const recommendations = this.generateRecommendationsFromIssues(allIssues, processedPages);
+    
     return {
+      // Dashboard expects these exact keys
+      score: calculatedScore,
       totalPages: totalPages,
       healthyPages: healthyPages,
       pagesWithIssues: pagesWithIssues,
-      averageScore: Math.round(averageScore),
-      totalErrors: totalErrors,
+      averageScore: calculatedScore,
+      totalIssues: totalErrors,
+      recommendations: recommendations,
+      
+      // Full crawl data
       pages: processedPages,
-      summary: {
-        crawlDate: new Date().toISOString(),
-        pagesAnalyzed: totalPages,
-        issues: this.categorizeIssues(processedPages)
-      }
+      onPage: {
+        pages: processedPages,
+        score: calculatedScore,
+        pageMetrics: {
+          totalPages: totalPages,
+          healthyPages: healthyPages,
+          pagesWithIssues: pagesWithIssues,
+          averageScore: calculatedScore,
+          totalFixedIssues: 0,
+          issuesByType: allIssues
+        }
+      },
+      
+      // Metadata
+      timestamp: new Date().toISOString(),
+      environment: 'prod',
+      source: 'dataforseo_onpage_full_crawl'
     };
   }
 
@@ -372,6 +393,75 @@ class DataForSEOOnPageTaskService {
     });
 
     return categories;
+  }
+
+  /**
+   * Generate actionable recommendations from issues
+   */
+  generateRecommendationsFromIssues(issues, pages) {
+    const recommendations = [];
+    
+    // Count issue types
+    const seoIssueCount = issues.seo?.length || 0;
+    const performanceIssueCount = issues.performance?.length || 0;
+    const contentIssueCount = issues.content?.length || 0;
+    
+    // Generate top recommendations based on most common issues
+    if (seoIssueCount > 0) {
+      recommendations.push({
+        category: 'SEO',
+        priority: 'High',
+        issue: `${seoIssueCount} pages have SEO issues`,
+        solution: 'Fix missing H1 tags, meta descriptions, and image alt text',
+        impact: 'Improves search engine rankings and visibility'
+      });
+    }
+    
+    if (performanceIssueCount > 0) {
+      recommendations.push({
+        category: 'Performance',
+        priority: 'Medium',
+        issue: `${performanceIssueCount} pages have performance issues`,
+        solution: 'Optimize images, enable compression, reduce page load times',
+        impact: 'Faster loading improves user experience and SEO'
+      });
+    }
+    
+    if (contentIssueCount > 0) {
+      recommendations.push({
+        category: 'Content',
+        priority: 'Medium',
+        issue: `${contentIssueCount} pages have content issues`,
+        solution: 'Add more content, remove Lorem Ipsum, improve readability',
+        impact: 'Better content increases engagement and rankings'
+      });
+    }
+    
+    // Check for broken links across all pages
+    const brokenLinksCount = pages.reduce((sum, p) => sum + (p.links?.broken || 0), 0);
+    if (brokenLinksCount > 0) {
+      recommendations.push({
+        category: 'Technical',
+        priority: 'High',
+        issue: `${brokenLinksCount} broken links found`,
+        solution: 'Fix or remove all broken links (404 errors)',
+        impact: 'Broken links hurt SEO and user experience'
+      });
+    }
+    
+    // Check for duplicate content
+    const duplicatePages = pages.filter(p => p.checks?.duplicate_content).length;
+    if (duplicatePages > 5) {
+      recommendations.push({
+        category: 'SEO',
+        priority: 'High',
+        issue: `${duplicatePages} pages have duplicate content`,
+        solution: 'Add unique content or use canonical tags',
+        impact: 'Duplicate content dilutes SEO value'
+      });
+    }
+    
+    return recommendations.slice(0, 5); // Top 5 recommendations
   }
 
   /**
