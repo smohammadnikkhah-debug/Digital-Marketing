@@ -718,7 +718,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 <i class="fas fa-clock"></i> Full website crawl in progress...
                             </div>
                             <div id="crawl-progress-${website.id}" style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
-                                Analyzing all pages (5-30 minutes)
+                                Analyzing all pages • This may take up to 30 minutes
+                            </div>
+                            <div style="font-size: 0.7rem; color: #3b82f6; margin-top: 0.25rem;">
+                                <i class="fas fa-info-circle"></i> You can leave this page - analysis runs in the background
                             </div>
                         </td>
                         <td class="last-analysis">
@@ -771,22 +774,83 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </td>
                     `;
                 } else {
-                    // Website WITHOUT analysis - show with Analyze button
-                    row.innerHTML = `
-                        <td class="domain-cell">${website.domain}</td>
-                        <td class="score-cell">
-                            <span class="score-badge poor">Not Analyzed</span>
-                        </td>
-                        <td class="metrics-cell" colspan="3" style="text-align: center; color: #94a3b8;">
-                            <em>No analysis data available</em>
-                        </td>
-                        <td class="last-analysis">Never</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-primary" onclick="analyzeWebsite('${website.domain}')">
-                                <i class="fas fa-play"></i> Analyze Now
-                            </button>
-                        </td>
-                    `;
+                    // Check if website crawl is blocked
+                    const isBlocked = website.analysis_status === 'blocked';
+                    const blockedMessage = website.analysis_error || '';
+                    
+                    if (isBlocked) {
+                        // Website is BLOCKED - show helpful error message with IP whitelist
+                        row.innerHTML = `
+                            <td class="domain-cell">${website.domain}</td>
+                            <td class="score-cell">
+                                <span class="score-badge" style="background: #ef4444; color: white;">
+                                    <i class="fas fa-shield-alt"></i> Blocked
+                                </span>
+                            </td>
+                            <td class="metrics-cell" colspan="3" style="text-align: left; padding: 1rem;">
+                                <div style="color: #dc2626; font-weight: 600; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-exclamation-triangle"></i> Crawler Blocked
+                                </div>
+                                <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.75rem;">
+                                    Your website's firewall is blocking DataForSEO's crawler.
+                                </div>
+                                <details style="font-size: 0.8rem; color: #475569; cursor: pointer;">
+                                    <summary style="font-weight: 600; color: #3b82f6; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-info-circle"></i> Click to view IP whitelist instructions
+                                    </summary>
+                                    <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                                        <p style="margin-bottom: 0.5rem; font-weight: 600;">Whitelist these DataForSEO IPs in your hosting control panel:</p>
+                                        <code style="display: block; background: white; padding: 0.75rem; border-radius: 6px; font-size: 0.7rem; line-height: 1.6; font-family: monospace;">
+                                            94.130.93.30<br>
+                                            168.119.141.170<br>
+                                            168.119.99.190<br>
+                                            168.119.99.191<br>
+                                            168.119.99.192<br>
+                                            168.119.99.193<br>
+                                            168.119.99.194<br>
+                                            68.183.60.34<br>
+                                            134.209.42.109<br>
+                                            68.183.60.80<br>
+                                            68.183.54.131<br>
+                                            68.183.49.222<br>
+                                            68.183.149.30<br>
+                                            68.183.157.22<br>
+                                            68.183.149.129
+                                        </code>
+                                        <p style="margin-top: 0.75rem; font-size: 0.75rem; color: #64748b;">
+                                            <strong>How to whitelist:</strong> Contact your hosting provider (cPanel, Cloudflare, etc.) and add these IPs to your firewall whitelist.
+                                        </p>
+                                        <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                                            After whitelisting, click "Retry Full Crawl" below.
+                                        </p>
+                                    </div>
+                                </details>
+                            </td>
+                            <td class="last-analysis">${lastAnalyzed}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-primary" onclick="reanalyzeWebsite('${website.domain}')" title="Retry crawl after whitelisting IPs">
+                                    <i class="fas fa-redo"></i> Retry Full Crawl
+                                </button>
+                            </td>
+                        `;
+                    } else {
+                        // Website WITHOUT analysis - show with Analyze button
+                        row.innerHTML = `
+                            <td class="domain-cell">${website.domain}</td>
+                            <td class="score-cell">
+                                <span class="score-badge poor">Not Analyzed</span>
+                            </td>
+                            <td class="metrics-cell" colspan="3" style="text-align: center; color: #94a3b8;">
+                                <em>No analysis data available</em>
+                            </td>
+                            <td class="last-analysis">Never</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-primary" onclick="analyzeWebsite('${website.domain}')">
+                                    <i class="fas fa-play"></i> Analyze Now
+                                </button>
+                            </td>
+                        `;
+                    }
                 }
                 
                 tbody.appendChild(row);
@@ -1292,7 +1356,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 Analyzing ALL pages on ${domain}...
                             </p>
                             <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">
-                                This will take approximately 5-30 minutes.
+                                This may take up to 30 minutes to complete.
                             </p>
                             <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">
                                 You can close this window and come back later.<br>

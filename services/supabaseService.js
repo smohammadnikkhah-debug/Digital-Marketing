@@ -231,16 +231,25 @@ class SupabaseService {
   }
 
   // Update Analysis Task Status
-  async updateAnalysisTaskStatus(websiteId, taskId, status) {
+  async updateAnalysisTaskStatus(websiteId, taskId, status, errorMessage = null) {
     if (!this.isConfigured) return null;
 
     try {
+      const updateData = {
+        analysis_status: status,
+        analysis_completed_at: (status === 'completed' || status === 'blocked' || status === 'failed') 
+          ? new Date().toISOString() 
+          : null
+      };
+      
+      // Add error message if provided
+      if (errorMessage) {
+        updateData.analysis_error = errorMessage;
+      }
+      
       const { data, error } = await this.supabase
         .from('websites')
-        .update({
-          analysis_status: status,
-          analysis_completed_at: status === 'completed' ? new Date().toISOString() : null
-        })
+        .update(updateData)
         .eq('id', websiteId)
         .select()
         .single();
@@ -250,7 +259,7 @@ class SupabaseService {
         return null;
       }
 
-      console.log('✅ Task status updated to:', status);
+      console.log('✅ Task status updated to:', status, errorMessage ? `(${errorMessage.substring(0, 50)}...)` : '');
       return data;
     } catch (error) {
       console.error('Supabase task update error:', error);

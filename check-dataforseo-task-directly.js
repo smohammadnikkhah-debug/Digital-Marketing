@@ -9,7 +9,8 @@ const axios = require('axios');
 async function checkTaskDirectly() {
   const username = process.env.DATAFORSEO_USERNAME;
   const password = process.env.DATAFORSEO_PASSWORD;
-  const taskId = '10090558-1147-0216-0000-33b819001faa';
+  // Get the latest task ID from command line or use default
+  const taskId = process.argv[2] || '10090711-1147-0216-0000-c2505d86c6af';
   
   if (!username || !password) {
     console.error('❌ DataForSEO credentials not found');

@@ -408,7 +408,25 @@ class DataForSEOOnPageTaskService {
         const results = await this.getTaskResults(taskId, 100);
         
         if (results) {
-          // Store in Supabase
+          // Check if crawl was blocked (0 pages found)
+          if (results.totalPages === 0 || (results.pagesWithIssues === 0 && results.healthyPages === 0)) {
+            console.warn(`⚠️ Crawl completed but found 0 pages - website is blocking the crawler`);
+            
+            // Store blocked status with helpful message
+            const supabaseService = require('./supabaseService');
+            const blockedMessage = 'Website is blocking DataForSEO crawler. Please whitelist the following IPs in your firewall or hosting control panel: 94.130.93.30, 168.119.141.170, 168.119.99.190-194, 68.183.60.34, 134.209.42.109, 68.183.60.80, 68.183.54.131, 68.183.49.222, 68.183.149.30, 68.183.157.22, 68.183.149.129';
+            
+            await supabaseService.updateAnalysisTaskStatus(websiteId, taskId, 'blocked', blockedMessage);
+            
+            console.log(`⚠️ Task marked as 'blocked' - user needs to whitelist DataForSEO IPs`);
+            return { 
+              success: false, 
+              error: 'crawler_blocked',
+              message: blockedMessage
+            };
+          }
+          
+          // Store successful results in Supabase
           const supabaseService = require('./supabaseService');
           await supabaseService.storeAnalysis(websiteId, results, 'full_crawl');
           
@@ -419,6 +437,7 @@ class DataForSEOOnPageTaskService {
           console.log(`   Total pages analyzed: ${results.totalPages}`);
           console.log(`   Healthy pages: ${results.healthyPages}`);
           console.log(`   Pages with issues: ${results.pagesWithIssues}`);
+          console.log(`   Average score: ${results.averageScore}`);
           
           return {
             success: true,
