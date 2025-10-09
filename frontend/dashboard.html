@@ -452,7 +452,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <tr>
                                 <th>Website</th>
                                 <th>SEO Score</th>
-                                <th>Keywords Ranking</th>
                                 <th>Analysis Scope</th>
                                 <th>Recommendations</th>
                                 <th>Last Analysis</th>
@@ -461,7 +460,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </thead>
                         <tbody id="websites-tbody">
                             <tr>
-                                <td colspan="7" class="loading">
+                                <td colspan="6" class="loading">
                                     <div class="spinner"></div>
                                     Loading your websites...
                                 </td>
@@ -632,7 +631,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="empty-state">
+                    <td colspan="6" class="empty-state">
                         <div class="empty-state-icon">🌐</div>
                         <h3>No Websites Analyzed Yet</h3>
                         <p>Add your first website to get started with SEO analysis and unlock your site's organic potential</p>
@@ -713,7 +712,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 <i class="fas fa-spinner fa-spin"></i> Analyzing
                             </span>
                         </td>
-                        <td class="metrics-cell" colspan="3" style="text-align: center;">
+                        <td class="metrics-cell" colspan="2" style="text-align: center;">
                             <div style="color: #3b82f6; font-weight: 600;">
                                 <i class="fas fa-clock"></i> Full website crawl in progress...
                             </div>
@@ -747,15 +746,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <span class="score-badge ${scoreClass}">${score}/100</span>
                         </td>
                         <td class="metrics-cell">
-                            ${hasKeywords ? 
-                                `<div style="text-align: center;">
-                                    <div style="font-size: 1.25rem; font-weight: 700; color: #10b981;">${keywordCount}</div>
-                                    <div style="font-size: 0.75rem; color: #64748b;">Keywords</div>
-                                </div>` :
-                                `<span class="metric-value">0</span>`
-                            }
-                        </td>
-                        <td class="metrics-cell">
                             <div style="text-align: center;">
                                 <div style="font-size: 1rem; color: #334155;">${pagesLabel}</div>
                                 <div style="font-size: 0.75rem; color: #94a3b8;">${totalPagesAnalyzed} analyzed</div>
@@ -787,7 +777,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                     <i class="fas fa-shield-alt"></i> Blocked
                                 </span>
                             </td>
-                            <td class="metrics-cell" colspan="3" style="text-align: left; padding: 1rem;">
+                            <td class="metrics-cell" colspan="2" style="text-align: left; padding: 1rem;">
                                 <div style="color: #dc2626; font-weight: 600; margin-bottom: 0.5rem;">
                                     <i class="fas fa-exclamation-triangle"></i> Crawler Blocked
                                 </div>
@@ -840,7 +830,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <td class="score-cell">
                                 <span class="score-badge poor">Not Analyzed</span>
                             </td>
-                            <td class="metrics-cell" colspan="3" style="text-align: center; color: #94a3b8;">
+                            <td class="metrics-cell" colspan="2" style="text-align: center; color: #94a3b8;">
                                 <em>No analysis data available</em>
                             </td>
                             <td class="last-analysis">Never</td>

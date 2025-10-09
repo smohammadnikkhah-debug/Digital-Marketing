@@ -553,6 +553,39 @@ class DataForSEOOnPageTaskService {
             };
           }
           
+          // Get domain from first page URL
+          const domain = results.pages && results.pages[0] ? 
+            new URL(results.pages[0].url).hostname.replace('www.', '') : 
+            null;
+          
+          // Also fetch keywords and competitors for complete analysis
+          if (domain) {
+            console.log(`🔑 Fetching keywords and competitors for: ${domain}`);
+            
+            try {
+              const dataforseoService = require('./dataforseoEnvironmentService');
+              
+              // Fetch keywords and competitors in parallel
+              const [keywordsData, competitorsData] = await Promise.allSettled([
+                dataforseoService.getKeywordsAnalysis(`https://${domain}`),
+                dataforseoService.getCompetitorAnalysis(`https://${domain}`)
+              ]);
+              
+              // Add to results
+              if (keywordsData.status === 'fulfilled' && keywordsData.value) {
+                results.keywords = keywordsData.value;
+                console.log(`✅ Added ${keywordsData.value.totalKeywords || 0} keywords to analysis`);
+              }
+              
+              if (competitorsData.status === 'fulfilled' && competitorsData.value) {
+                results.competitors = competitorsData.value;
+                console.log(`✅ Added ${competitorsData.value.totalCompetitors || 0} competitors to analysis`);
+              }
+            } catch (keywordError) {
+              console.warn(`⚠️ Could not fetch keywords/competitors:`, keywordError.message);
+            }
+          }
+          
           // Store successful results in Supabase
           const supabaseService = require('./supabaseService');
           await supabaseService.storeAnalysis(websiteId, results, 'full_crawl');
@@ -565,6 +598,8 @@ class DataForSEOOnPageTaskService {
           console.log(`   Healthy pages: ${results.healthyPages}`);
           console.log(`   Pages with issues: ${results.pagesWithIssues}`);
           console.log(`   Average score: ${results.averageScore}`);
+          console.log(`   Keywords: ${results.keywords?.totalKeywords || 0}`);
+          console.log(`   Competitors: ${results.competitors?.totalCompetitors || 0}`);
           
           return {
             success: true,
