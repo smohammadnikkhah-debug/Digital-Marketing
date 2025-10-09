@@ -119,8 +119,10 @@ class DataForSEOOnPageTaskService {
     try {
       console.log(`📊 Checking status for task: ${taskId}`);
       
-      // Get specific task status using task_get endpoint
-      const response = await this.makeRequest('/on_page/task_get/' + taskId, []);
+      // Get specific task status using task_get endpoint with POST body
+      const response = await this.makeRequest('/on_page/task_get/advanced', [{
+        id: taskId
+      }]);
       
       if (!response || !response.tasks) {
         console.log('⚠️ No response from task_get endpoint');
@@ -129,20 +131,24 @@ class DataForSEOOnPageTaskService {
       
       const task = response.tasks[0];
       
-      if (task) {
-        const isComplete = task.status_code === 20000;
+      if (task && task.result && task.result.length > 0) {
+        const taskData = task.result[0];
+        const isComplete = taskData.status_code === 20000;
+        
         console.log(`📊 OnPage task ${taskId}:`, {
-          statusCode: task.status_code,
-          statusMessage: task.status_message,
-          resultCount: task.result_count,
-          isComplete: isComplete
+          statusCode: taskData.status_code,
+          statusMessage: taskData.status_message,
+          resultCount: taskData.result_count,
+          isComplete: isComplete,
+          crawlProgress: taskData.crawl_progress
         });
         
         return {
           id: taskId,
-          statusCode: task.status_code,
-          statusMessage: task.status_message,
-          pagesFound: task.result_count || 0,
+          statusCode: taskData.status_code,
+          statusMessage: taskData.status_message,
+          pagesFound: taskData.result_count || 0,
+          crawlProgress: taskData.crawl_progress,
           isComplete: isComplete
         };
       }

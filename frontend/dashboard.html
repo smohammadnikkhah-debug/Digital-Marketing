@@ -702,6 +702,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const isAnalyzing = website.analysis_status === 'in_progress';
                 
                 if (isAnalyzing) {
+                    // Website is being analyzed in background - start auto-refresh
+                    startCrawlStatusCheck(website.id, website.domain);
+                    
                     // Website is being analyzed in background
                     row.innerHTML = `
                         <td class="domain-cell">${website.domain}</td>
@@ -714,7 +717,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <div style="color: #3b82f6; font-weight: 600;">
                                 <i class="fas fa-clock"></i> Full website crawl in progress...
                             </div>
-                            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
+                            <div id="crawl-progress-${website.id}" style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
                                 Analyzing all pages (5-30 minutes)
                             </div>
                         </td>
@@ -1182,6 +1185,55 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
                console.log('Dashboard: Navigating to /dashboard-mantis-v2');
                window.location.href = '/dashboard-mantis-v2';
+        }
+
+        // Auto-check crawl status every 30 seconds
+        const crawlStatusCheckers = {};
+        
+        function startCrawlStatusCheck(websiteId, domain) {
+            // Don't start multiple checkers for same website
+            if (crawlStatusCheckers[websiteId]) {
+                return;
+            }
+            
+            console.log(`🔄 Starting auto-refresh for crawl status: ${domain}`);
+            
+            const checkStatus = async () => {
+                try {
+                    const response = await fetch(`/api/dataforseo/crawl-status/${websiteId}`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.isComplete) {
+                        console.log(`✅ Crawl complete for ${domain}! Refreshing dashboard...`);
+                        clearInterval(crawlStatusCheckers[websiteId]);
+                        delete crawlStatusCheckers[websiteId];
+                        
+                        // Reload dashboard to show results
+                        await loadCustomerWebsites();
+                    } else if (result.pagesFound !== undefined) {
+                        // Update progress display
+                        const progressEl = document.getElementById(`crawl-progress-${websiteId}`);
+                        if (progressEl) {
+                            progressEl.textContent = `Found ${result.pagesFound} pages... ${result.crawlProgress || 'In progress'}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking crawl status:', error);
+                }
+            };
+            
+            // Check immediately
+            checkStatus();
+            
+            // Then check every 30 seconds
+            crawlStatusCheckers[websiteId] = setInterval(checkStatus, 30000);
+        }
+        
+        function stopCrawlStatusCheck(websiteId) {
+            if (crawlStatusCheckers[websiteId]) {
+                clearInterval(crawlStatusCheckers[websiteId]);
+                delete crawlStatusCheckers[websiteId];
+            }
         }
 
         async function analyzeWebsite(domain) {

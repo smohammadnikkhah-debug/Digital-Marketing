@@ -4307,6 +4307,57 @@ app.post('/api/environment/force/production', async (req, res) => {
   }
 });
 
+// Check OnPage crawl task status
+app.get('/api/dataforseo/crawl-status/:websiteId', async (req, res) => {
+  try {
+    const { websiteId } = req.params;
+    
+    // Get website record to find task ID
+    const { data: website, error } = await supabaseService.supabase
+      .from('websites')
+      .select('*')
+      .eq('id', websiteId)
+      .single();
+    
+    if (error || !website) {
+      return res.json({ success: false, error: 'Website not found' });
+    }
+    
+    if (!website.analysis_task_id) {
+      return res.json({ 
+        success: true, 
+        status: 'no_task',
+        message: 'No crawl task found'
+      });
+    }
+    
+    // Check task status with DataForSEO
+    const onPageTaskService = require('./services/dataforseoOnPageTaskService');
+    const taskStatus = await onPageTaskService.checkTaskStatus(website.analysis_task_id);
+    
+    if (taskStatus) {
+      res.json({
+        success: true,
+        taskId: website.analysis_task_id,
+        status: website.analysis_status,
+        isComplete: taskStatus.isComplete,
+        pagesFound: taskStatus.pagesFound,
+        crawlProgress: taskStatus.crawlProgress,
+        message: taskStatus.isComplete ? 'Crawl complete!' : 'Crawl in progress...'
+      });
+    } else {
+      res.json({
+        success: true,
+        status: website.analysis_status || 'unknown',
+        message: 'Could not retrieve task status'
+      });
+    }
+  } catch (error) {
+    console.error('Error checking crawl status:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Start FULL WEBSITE CRAWL (all pages) - Background process
 app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
   try {
