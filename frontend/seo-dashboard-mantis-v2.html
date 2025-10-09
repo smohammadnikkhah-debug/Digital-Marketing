@@ -1692,8 +1692,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const metrics = data.metrics || {};
             const chartData = data.chartData || {};
             
-        // Update overall score based on real metrics
-        const overallScore = calculateOverallScoreFromMetrics(metrics);
+        // Use actual score from analysis if available, otherwise calculate
+        const overallScore = data.score || data.averageScore || calculateOverallScoreFromMetrics(metrics);
+        
+        console.log('📊 Using score:', {
+            dataScore: data.score,
+            dataAverageScore: data.averageScore,
+            calculatedScore: calculateOverallScoreFromMetrics(metrics),
+            finalScore: overallScore
+        });
+        
         document.getElementById('overallScore').textContent = overallScore;
         
         // Update score label based on score range
@@ -1703,16 +1711,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         updateSpeedometerArc(overallScore);
             
             // Update metrics with real DataForSEO data
-            document.getElementById('organicTraffic').textContent = formatNumber(metrics.estimatedTraffic || 0);
-            document.getElementById('topKeywords').textContent = metrics.totalKeywords || 0;
-            document.getElementById('seoIssues').textContent = metrics.seoIssues || 0;
+            const totalKeywords = data.keywords?.totalKeywords || data.keywords?.keywords?.length || metrics.totalKeywords || 0;
+            const totalIssues = data.totalIssues || data.onPage?.pageMetrics?.totalIssues || metrics.seoIssues || 0;
+            const estimatedTraffic = data.traffic?.estimated_traffic || metrics.estimatedTraffic || 0;
+            
+            console.log('📊 Dashboard metrics:', {
+                keywords: totalKeywords,
+                issues: totalIssues,
+                traffic: estimatedTraffic,
+                totalPages: data.totalPages
+            });
+            
+            document.getElementById('organicTraffic').textContent = formatNumber(estimatedTraffic);
+            document.getElementById('topKeywords').textContent = totalKeywords;
+            document.getElementById('seoIssues').textContent = totalIssues;
             
             // Update charts with real historical data
             updateChartsWithHistoricalData(chartData);
             
             // Update keyword opportunities with real DataForSEO data
-            updateKeywordOpportunitiesWithRealData(data.rankedKeywords || []);
-            updateCompetitorsWithRealData(data.competitors || []);
+            const keywords = data.keywords?.keywords || data.rankedKeywords || [];
+            const competitors = data.competitors?.competitors || data.competitors || [];
+            
+            console.log('📊 Keywords and competitors:', {
+                keywordsCount: keywords.length,
+                competitorsCount: Array.isArray(competitors) ? competitors.length : 0
+            });
+            
+            updateKeywordOpportunitiesWithRealData(keywords);
+            updateCompetitorsWithRealData(competitors);
             
             // Update AI insights with strategic recommendations
             updateAIInsightsWithStrategicRecommendations(data);
