@@ -1089,7 +1089,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </div>
                     </div>
                     <div class="domain-input-container">
-                        <input type="text" id="domainInput" class="domain-input" placeholder="Enter your domain (e.g., example.com)" value="mozarex.com">
+                        <input type="text" id="domainInput" class="domain-input" placeholder="Enter your domain (e.g., example.com)" value="">
                         <button class="btn btn-primary" onclick="analyzeWebsite()">
                             <i class="fas fa-search"></i> Analyze
                         </button>
@@ -1359,8 +1359,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-analyze if domain is already provided
-            if (document.getElementById('domainInput').value) {
+            // Auto-populate domain from localStorage
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            const domainInput = document.getElementById('domainInput');
+            
+            if (lastAnalyzedDomain && domainInput) {
+                domainInput.value = lastAnalyzedDomain;
+                console.log('📊 Blog page auto-populated domain:', lastAnalyzedDomain);
+                // Auto-analyze with the stored domain
                 analyzeWebsite();
             }
             

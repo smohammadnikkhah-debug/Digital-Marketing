@@ -1101,9 +1101,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 Math.round(keywords.reduce((sum, kw) => sum + (kw.searchVolume || 0), 0) / keywords.length) : 0;
             document.getElementById('avgSearchVolume').textContent = avgSearchVolume.toLocaleString();
 
-            // Average CPC
+            // Average CPC (cpc is already a number, not a string)
             const avgCPC = keywords.length > 0 ? 
-                (keywords.reduce((sum, kw) => sum + (parseFloat(kw.cpc?.replace('$', '') || 0)), 0) / keywords.length).toFixed(2) : '0.00';
+                (keywords.reduce((sum, kw) => {
+                    const cpcValue = typeof kw.cpc === 'string' ? parseFloat(kw.cpc.replace('$', '')) : (kw.cpc || 0);
+                    return sum + cpcValue;
+                }, 0) / keywords.length).toFixed(2) : '0.00';
             document.getElementById('avgCPC').textContent = `$${avgCPC}`;
 
             // Average Difficulty
