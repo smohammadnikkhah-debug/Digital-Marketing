@@ -933,23 +933,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let currentDomain = null;
         let chatHistory = [];
 
-        // Load data from localStorage if available
-        document.addEventListener('DOMContentLoaded', function() {
+        // Load data from Supabase (real data source)
+        document.addEventListener('DOMContentLoaded', async function() {
             const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
-            const analysisData = localStorage.getItem('analysisData');
+            const domain = lastAnalyzedDomain || 'mozarex.com';
             
-            if (lastAnalyzedDomain && analysisData) {
-                try {
-                    currentAnalysis = JSON.parse(analysisData);
+            console.log('📊 Keywords page loading data for domain:', domain);
+            
+            try {
+                // Fetch from Supabase (7-day cache)
+                const response = await fetch(`/api/supabase/historical-data/${domain}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    console.log('✅ Loaded keywords data from Supabase:', result.data);
+                    currentAnalysis = result.data;
                     displayAnalysisResults();
-                } catch (error) {
-                    console.error('Error parsing analysis data:', error);
-                    // Load real DataForSEO data for default domain
-                    loadDataForSEOData('mozarex.com');
+                } else {
+                    console.warn('⚠️ No data in Supabase, showing empty state');
+                    showNoDataState(domain);
                 }
-            } else {
-                // Load real DataForSEO data for default domain
-                loadDataForSEOData('mozarex.com');
+            } catch (error) {
+                console.error('❌ Error loading keywords data:', error);
+                showNoDataState(domain);
             }
 
             // Load chat history with error handling
@@ -1025,6 +1031,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <h1 class="page-title">🔑 Keywords Analysis</h1>
                     <p class="page-subtitle">No keyword data available. Please analyze a website first.</p>
                 `;
+            }
+        }
+
+        function showNoDataState(domain) {
+            const resultsContainer = document.getElementById('analysisResults');
+            if (resultsContainer) {
+                resultsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 4rem; background: rgba(30, 41, 59, 0.5); border-radius: 16px; margin: 2rem;">
+                        <i class="fas fa-key" style="font-size: 4rem; color: #64748b; margin-bottom: 1.5rem;"></i>
+                        <h2 style="color: #e2e8f0; font-size: 1.5rem; margin-bottom: 1rem;">No Keywords Data Available</h2>
+                        <p style="color: #94a3b8; font-size: 1rem; margin-bottom: 2rem;">
+                            No keyword analysis found for <strong>${domain}</strong>
+                        </p>
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 2rem;">
+                            <p style="color: #94a3b8; font-size: 0.875rem; margin-bottom: 1rem;">
+                                To get keyword data:
+                            </p>
+                            <ol style="color: #cbd5e1; text-align: left; display: inline-block; font-size: 0.875rem;">
+                                <li style="margin-bottom: 0.5rem;">Go back to Dashboard</li>
+                                <li style="margin-bottom: 0.5rem;">Click "Full Crawl" on your domain</li>
+                                <li style="margin-bottom: 0.5rem;">Wait 15-30 seconds for smart fetch</li>
+                                <li>Return here to see keyword data</li>
+                            </ol>
+                        </div>
+                        <a href="/dashboard" class="btn" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                            <i class="fas fa-arrow-left"></i> Go to Dashboard
+                        </a>
+                    </div>
+                `;
+                resultsContainer.style.display = 'block';
             }
         }
 
