@@ -407,12 +407,15 @@ class DataForSEOService {
       
       const domain = new URL(url).hostname.replace('www.', '');
       
+      // Auto-detect location based on domain TLD
+      const location = this.getLocationFromDomain(domain);
+      
       // Try Keywords For Site API first (better for domain analysis)
-      console.log(`🔑 Trying Keywords For Site API for domain: ${domain}`);
+      console.log(`🔑 Trying Keywords For Site API for domain: ${domain} (${location.name})`);
       const keywordsForSiteData = [{
         target: domain,
-        location_name: 'United States',
-        language_code: 'en',
+        location_name: location.name,
+        language_code: location.language,
         limit: 20
       }];
       
@@ -543,11 +546,14 @@ class DataForSEOService {
       
       const domain = new URL(url).hostname.replace('www.', '');
       
+      // Auto-detect location based on domain TLD
+      const location = this.getLocationFromDomain(domain);
+      
       // Use DataForSEO Labs Domain Rank Overview API for traffic data
       const requestData = [{
         target: domain,
-        location_name: 'United States',
-        language_code: 'en'
+        location_name: location.name,
+        language_code: location.language
       }];
       
       const response = await this.makeRequest('dataforseo_labs/google/domain_rank_overview/live', requestData);
@@ -607,11 +613,14 @@ class DataForSEOService {
       
       const domain = new URL(url).hostname.replace('www.', '');
       
+      // Auto-detect location based on domain TLD
+      const location = this.getLocationFromDomain(domain);
+      
       // Use Historical Rank Overview for trends
       const requestData = [{
         target: domain,
-        location_name: 'United States',
-        language_code: 'en'
+        location_name: location.name,
+        language_code: location.language
       }];
       
       const response = await this.makeRequest('dataforseo_labs/google/historical_rank_overview/live', requestData);
@@ -674,11 +683,14 @@ class DataForSEOService {
       
       const domain = new URL(url).hostname.replace('www.', '');
       
+      // Auto-detect location based on domain TLD
+      const location = this.getLocationFromDomain(domain);
+      
       // Use Ranked Keywords with location data
       const requestData = [{
         target: domain,
-        location_name: 'United States',
-        language_code: 'en',
+        location_name: location.name,
+        language_code: location.language,
         limit: 100
       }];
       
@@ -729,6 +741,55 @@ class DataForSEOService {
     ];
   }
 
+  // Auto-detect location based on domain TLD
+  getLocationFromDomain(domain) {
+    const tld = domain.split('.').pop().toLowerCase();
+    
+    const locationMap = {
+      // Australian domains
+      'au': { name: 'Australia', language: 'en' },
+      
+      // UK domains
+      'uk': { name: 'United Kingdom', language: 'en' },
+      'co.uk': { name: 'United Kingdom', language: 'en' },
+      
+      // Canadian domains
+      'ca': { name: 'Canada', language: 'en' },
+      
+      // German domains
+      'de': { name: 'Germany', language: 'de' },
+      
+      // French domains
+      'fr': { name: 'France', language: 'fr' },
+      
+      // Indian domains
+      'in': { name: 'India', language: 'en' },
+      
+      // New Zealand
+      'nz': { name: 'New Zealand', language: 'en' },
+      
+      // Default to United States for .com, .io, etc.
+      'com': { name: 'United States', language: 'en' },
+      'io': { name: 'United States', language: 'en' },
+      'net': { name: 'United States', language: 'en' },
+      'org': { name: 'United States', language: 'en' }
+    };
+    
+    // Check for compound TLDs (like .com.au, .co.uk)
+    const domainParts = domain.split('.');
+    if (domainParts.length >= 3) {
+      const compoundTld = domainParts.slice(-2).join('.');
+      if (locationMap[compoundTld]) {
+        console.log(`🌍 Detected location from TLD: ${compoundTld} → ${locationMap[compoundTld].name}`);
+        return locationMap[compoundTld];
+      }
+    }
+    
+    const location = locationMap[tld] || locationMap['com']; // Default to US
+    console.log(`🌍 Detected location from TLD: ${tld} → ${location.name}`);
+    return location;
+  }
+
   // Competitor Analysis using DataForSEO Labs
   async getCompetitorAnalysis(url) {
     try {
@@ -736,11 +797,14 @@ class DataForSEOService {
       
       const domain = new URL(url).hostname.replace('www.', '');
       
+      // Auto-detect location based on domain TLD
+      const location = this.getLocationFromDomain(domain);
+      
       // Use DataForSEO Labs Competitors Domain API
       const competitorData = [{
         target: domain,
-        location_name: 'United States',
-        language_code: 'en',
+        location_name: location.name,
+        language_code: location.language,
         limit: 10,
         filters: [["metrics.organic.count", ">", 10]]  // Only competitors with 10+ keywords
       }];

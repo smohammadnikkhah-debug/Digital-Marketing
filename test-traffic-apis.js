@@ -1,9 +1,9 @@
-const DataForSEOService = require('./services/dataforseoEnvironmentService');
+const dataforseoService = require('./services/dataforseoEnvironmentService');
 
 async function testTrafficAPIs() {
     console.log('🧪 Testing DataForSEO Traffic APIs\n');
     
-    const service = new DataForSEOService();
+    const service = dataforseoService;
     const domain = 'shineline.com.au';
     
     if (!service.username || !service.password) {
