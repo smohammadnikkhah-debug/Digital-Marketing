@@ -1,12 +1,10 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-const SupabaseService = require('./services/supabaseService');
+const supabaseService = require('./services/supabaseService');
 
 async function checkSupabaseTrafficData() {
     console.log('🔍 Checking Supabase for traffic data...\n');
-    
-    const supabaseService = new SupabaseService();
     
     if (!supabaseService.isConfigured) {
         console.error('❌ Supabase not configured');

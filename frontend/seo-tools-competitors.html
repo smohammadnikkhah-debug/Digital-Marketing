@@ -769,18 +769,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- Page Header -->
                 <div class="page-header">
                     <h1 class="page-title">👥 Competitors Analysis</h1>
-                    <p class="page-subtitle">Analyze your competitors and discover opportunities to outperform them</p>
+                    <p class="page-subtitle" id="domainSubtitle">Analyze your competitors and discover opportunities to outperform them</p>
                 </div>
 
-                <!-- Analysis Input -->
-                <div class="input-section">
-                    <div class="input-group">
-                        <input type="text" id="urlInput" placeholder="Enter website URL (e.g., example.com)" />
-                        <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeWebsite()">
-                            <i class="fas fa-search"></i>
-                            Analyze Competitors
-                        </button>
-                    </div>
+                <!-- Domain Display (Read-only) -->
+                <div class="input-section" style="display: none;">
+                    <!-- Hidden - data loads automatically from selected domain -->
                 </div>
 
                 <!-- Analysis Results -->
@@ -859,12 +853,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Load data from localStorage if available
         document.addEventListener('DOMContentLoaded', async function() {
             const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
-            const domain = lastAnalyzedDomain || 'mozarex.com';
             
+            if (!lastAnalyzedDomain) {
+                console.warn('⚠️ No domain selected, showing empty state');
+                showNoDataState('Please select a domain from dashboard');
+                return;
+            }
+            
+            const domain = lastAnalyzedDomain;
             console.log('📊 Competitors page loading data for domain:', domain);
             
-            if (document.getElementById('urlInput')) {
-                document.getElementById('urlInput').value = domain;
+            // Update page subtitle to show current domain
+            const subtitle = document.getElementById('domainSubtitle');
+            if (subtitle) {
+                subtitle.textContent = `Competitors for ${domain} • Data from Supabase Cache`;
             }
             
             try {
@@ -874,6 +876,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 
                 if (result.success && result.data) {
                     console.log('✅ Loaded competitors data from Supabase:', result.data);
+                    console.log('   Competitors:', result.data.competitors);
                     currentAnalysis = result.data;
                     displayAnalysisResults();
                 } else {

@@ -838,7 +838,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- Page Header -->
                 <div class="page-header">
                     <h1 class="page-title">🔑 Keywords Analysis</h1>
-                    <p class="page-subtitle">Discover high-value keywords and optimize your content strategy</p>
+                    <p class="page-subtitle" id="domainSubtitle">Discover high-value keywords and optimize your content strategy</p>
                 </div>
 
                 <!-- Analysis Results -->
@@ -936,9 +936,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Load data from Supabase (real data source)
         document.addEventListener('DOMContentLoaded', async function() {
             const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
-            const domain = lastAnalyzedDomain || 'mozarex.com';
             
+            if (!lastAnalyzedDomain) {
+                console.warn('⚠️ No domain selected, redirecting to dashboard');
+                showNoDataState('Please select a domain from dashboard');
+                return;
+            }
+            
+            const domain = lastAnalyzedDomain;
             console.log('📊 Keywords page loading data for domain:', domain);
+            
+            // Update page subtitle to show current domain
+            const subtitle = document.getElementById('domainSubtitle');
+            if (subtitle) {
+                subtitle.textContent = `Keywords for ${domain} • Data from Supabase Cache`;
+            }
             
             try {
                 // Fetch from Supabase (7-day cache)
@@ -947,6 +959,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 
                 if (result.success && result.data) {
                     console.log('✅ Loaded keywords data from Supabase:', result.data);
+                    console.log('   Keywords:', result.data.keywords);
                     currentAnalysis = result.data;
                     displayAnalysisResults();
                 } else {
