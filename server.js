@@ -4395,26 +4395,54 @@ app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
     const hasPageData = existingAnalysis && existingAnalysis.analysis_data?.totalPages > 1;
     const hasKeywords = existingAnalysis && existingAnalysis.analysis_data?.keywords?.totalKeywords > 0;
     const hasCompetitors = existingAnalysis && existingAnalysis.analysis_data?.competitors?.totalCompetitors > 0;
+    const hasTrafficTrends = existingAnalysis && existingAnalysis.analysis_data?.trafficTrends?.months?.length > 0;
+    const hasTrafficByCountry = existingAnalysis && existingAnalysis.analysis_data?.trafficByCountry?.length > 0;
     
     console.log(`📊 Existing data check (within 7-day cache):`, {
       hasPageData: hasPageData,
       hasKeywords: hasKeywords,
       hasCompetitors: hasCompetitors,
+      hasTrafficTrends: hasTrafficTrends,
+      hasTrafficByCountry: hasTrafficByCountry,
       cacheValid: !!existingAnalysis
     });
     
-    // OPTION 1: Only fetch keywords & competitors (fast - 10-30 seconds)
-    if (hasPageData && (!hasKeywords || !hasCompetitors)) {
+    // OPTION 1: Only fetch missing data (fast - 10-30 seconds)
+    const needsFetch = !hasKeywords || !hasCompetitors || !hasTrafficTrends || !hasTrafficByCountry;
+    
+    if (hasPageData && needsFetch) {
+      const missingItems = [];
+      if (!hasKeywords) missingItems.push('Keywords');
+      if (!hasCompetitors) missingItems.push('Competitors');
+      if (!hasTrafficTrends) missingItems.push('Traffic Trends');
+      if (!hasTrafficByCountry) missingItems.push('Country Data');
+      
       console.log(`⚡ SMART FETCH: Pages exist, fetching ONLY missing data`);
-      console.log(`   Missing: ${!hasKeywords ? 'Keywords' : ''} ${!hasCompetitors ? 'Competitors' : ''}`);
+      console.log(`   Missing: ${missingItems.join(', ')}`);
       
       setImmediate(async () => {
         try {
           const dataforseoService = require('./services/dataforseoEnvironmentService');
           
           const fetchPromises = [];
-          if (!hasKeywords) fetchPromises.push(dataforseoService.getKeywordsAnalysis(`https://${normalizedDomain}`));
-          if (!hasCompetitors) fetchPromises.push(dataforseoService.getCompetitorAnalysis(`https://${normalizedDomain}`));
+          const fetchTypes = [];
+          
+          if (!hasKeywords) {
+            fetchPromises.push(dataforseoService.getKeywordsAnalysis(`https://${normalizedDomain}`));
+            fetchTypes.push('keywords');
+          }
+          if (!hasCompetitors) {
+            fetchPromises.push(dataforseoService.getCompetitorAnalysis(`https://${normalizedDomain}`));
+            fetchTypes.push('competitors');
+          }
+          if (!hasTrafficTrends) {
+            fetchPromises.push(dataforseoService.getTrafficTrends(`https://${normalizedDomain}`, 3));
+            fetchTypes.push('trafficTrends');
+          }
+          if (!hasTrafficByCountry) {
+            fetchPromises.push(dataforseoService.getTrafficByCountry(`https://${normalizedDomain}`));
+            fetchTypes.push('trafficByCountry');
+          }
           
           const results = await Promise.allSettled(fetchPromises);
           
@@ -4424,19 +4452,20 @@ app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
             timestamp: new Date().toISOString()
           };
           
-          let resultIndex = 0;
-          if (!hasKeywords && results[resultIndex]) {
-            updatedAnalysis.keywords = results[resultIndex].status === 'fulfilled' ? results[resultIndex].value : null;
-            resultIndex++;
-          }
-          if (!hasCompetitors && results[resultIndex]) {
-            updatedAnalysis.competitors = results[resultIndex].status === 'fulfilled' ? results[resultIndex].value : null;
-          }
+          // Map results to correct fields
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value) {
+              updatedAnalysis[fetchTypes[index]] = result.value;
+              console.log(`✅ Added ${fetchTypes[index]} to analysis`);
+            }
+          });
           
           await supabaseService.storeAnalysis(website.id, updatedAnalysis);
           console.log(`✅ Missing data added to existing analysis`);
           console.log(`   Keywords: ${updatedAnalysis.keywords?.totalKeywords || 0}`);
           console.log(`   Competitors: ${updatedAnalysis.competitors?.totalCompetitors || 0}`);
+          console.log(`   Traffic Trends: ${updatedAnalysis.trafficTrends?.months?.length || 0} months`);
+          console.log(`   Country Data: ${updatedAnalysis.trafficByCountry?.length || 0} countries`);
         } catch (error) {
           console.error('❌ Error fetching missing data:', error);
         }
@@ -4444,14 +4473,16 @@ app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
       
       return res.json({
         success: true,
-        message: 'Fetching missing keywords and competitors',
+        message: `Fetching missing ${missingItems.join(', ')}`,
         status: 'fetching_incremental',
         estimatedTime: '10-30 seconds',
         websiteId: website.id,
         domain: normalizedDomain,
         fetching: {
           keywords: !hasKeywords,
-          competitors: !hasCompetitors
+          competitors: !hasCompetitors,
+          trafficTrends: !hasTrafficTrends,
+          trafficByCountry: !hasTrafficByCountry
         }
       });
     }

@@ -1703,13 +1703,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 finalScore: overallScore
             });
             
-            document.getElementById('overallScore').textContent = overallScore;
-            
-            // Update score label based on score range
-            updateScoreLabel(overallScore);
-            
-            // Update speedometer arc color based on score
-            updateSpeedometerArc(overallScore);
+        document.getElementById('overallScore').textContent = overallScore;
+        
+        // Update score label based on score range
+        updateScoreLabel(overallScore);
+        
+        // Update speedometer arc color based on score
+        updateSpeedometerArc(overallScore);
             
             // Update metrics with real DataForSEO data
             const totalKeywords = data.keywords?.totalKeywords || data.keywords?.keywords?.length || metrics.totalKeywords || 0;
@@ -1871,11 +1871,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             if (data.onPage && data.onPage.title) {
                 const titleLength = data.onPage.title.length;
                 if (titleLength > 60 || titleLength < 30) {
-                    recommendations.additional.push({
+                recommendations.additional.push({
                         text: `<strong>📝 Optimize Title Tag</strong><br>Your title tag is ${titleLength} characters. Optimize to 50-60 characters for better click-through rates.`,
                         impact: 'High Impact',
-                        effort: 'Low Effort'
-                    });
+                    effort: 'Low Effort'
+                });
                 }
             }
             
@@ -1888,12 +1888,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
             
             if (totalIssues && totalIssues > 0) {
-                recommendations.additional.push({
+                    recommendations.additional.push({
                     text: `<strong>🔧 Fix Technical Issues</strong><br>${totalIssues} technical SEO issues found. Addressing these will improve your search visibility.`,
-                    impact: 'High Impact',
-                    effort: 'Medium Effort'
-                });
-            }
+                        impact: 'High Impact',
+                        effort: 'Medium Effort'
+                    });
+                }
             
             // Check keywords from data
             const keywordCount = data.keywords?.totalKeywords || data.keywords?.keywords?.length || 0;
@@ -1962,6 +1962,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Update Traffic Performance Trends Chart
             if (data.trafficTrends) {
                 console.log('📈 Traffic trends data available:', data.trafficTrends);
+                console.log('   Months:', data.trafficTrends.months);
+                console.log('   Organic:', data.trafficTrends.organic);
+                console.log('   Paid:', data.trafficTrends.paid);
+                console.log('   Social:', data.trafficTrends.social);
                 updateTrafficPerformanceChart(data.trafficTrends);
             } else {
                 console.warn('⚠️ No traffic trends data, showing empty state');
@@ -1971,9 +1975,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Update Traffic by Country Chart (replaces position chart)
             if (data.trafficByCountry && data.trafficByCountry.length > 0) {
                 console.log('🌍 Country traffic data available:', data.trafficByCountry);
+                console.log('   Countries:', data.trafficByCountry.map(c => `${c.name}: ${c.traffic}`).join(', '));
                 updateCountryTrafficChart(data.trafficByCountry);
             } else {
                 console.warn('⚠️ No country traffic data, showing empty state');
+                console.log('   trafficByCountry value:', data.trafficByCountry);
                 showEmptyCountryChart();
             }
         }
@@ -2424,12 +2430,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // Update traffic chart with multiple datasets
         function updateTrafficChart(months, trafficData, selectedTypes) {
-            if (window.trafficChart && typeof window.trafficChart.destroy === 'function') {
-                window.trafficChart.destroy();
-            }
-            
             const trafficCtx = document.getElementById('trafficChart');
             if (!trafficCtx) return;
+            
+            // Properly destroy existing chart using Chart.js registry
+            const existingChart = Chart.getChart(trafficCtx);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            if (window.trafficChart && typeof window.trafficChart.destroy === 'function') {
+                try {
+                window.trafficChart.destroy();
+                } catch (e) {}
+                window.trafficChart = null;
+            }
+            
+            // Also clear the performance chart instance
+            if (window.trafficChartInstance) {
+                try {
+                    window.trafficChartInstance.destroy();
+                } catch (e) {}
+                window.trafficChartInstance = null;
+            }
             
             const datasets = [];
             
@@ -2528,12 +2551,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // Update position chart
         function updatePositionChart(months, trafficData) {
-            if (window.positionChart && typeof window.positionChart.destroy === 'function') {
-                window.positionChart.destroy();
-            }
-            
             const positionCtx = document.getElementById('positionChart');
             if (!positionCtx) return;
+            
+            // Properly destroy existing chart using Chart.js registry
+            const existingChart = Chart.getChart(positionCtx);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            if (window.positionChart && typeof window.positionChart.destroy === 'function') {
+                try {
+                window.positionChart.destroy();
+                } catch (e) {}
+                window.positionChart = null;
+            }
+            
+            // Also clear the country chart instance
+            if (window.positionChartInstance) {
+                try {
+                    window.positionChartInstance.destroy();
+                } catch (e) {}
+                window.positionChartInstance = null;
+            }
             
             window.positionChart = new Chart(positionCtx, {
                 type: 'line',
