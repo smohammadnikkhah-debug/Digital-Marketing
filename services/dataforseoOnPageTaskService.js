@@ -565,10 +565,12 @@ class DataForSEOOnPageTaskService {
             try {
               const dataforseoService = require('./dataforseoEnvironmentService');
               
-              // Fetch keywords and competitors in parallel
-              const [keywordsData, competitorsData] = await Promise.allSettled([
+              // Fetch keywords, competitors, and traffic data in parallel
+              const [keywordsData, competitorsData, trafficTrendsData, trafficByCountryData] = await Promise.allSettled([
                 dataforseoService.getKeywordsAnalysis(`https://${domain}`),
-                dataforseoService.getCompetitorAnalysis(`https://${domain}`)
+                dataforseoService.getCompetitorAnalysis(`https://${domain}`),
+                dataforseoService.getTrafficTrends(`https://${domain}`, 3),
+                dataforseoService.getTrafficByCountry(`https://${domain}`)
               ]);
               
               // Add to results
@@ -581,8 +583,18 @@ class DataForSEOOnPageTaskService {
                 results.competitors = competitorsData.value;
                 console.log(`✅ Added ${competitorsData.value.totalCompetitors || 0} competitors to analysis`);
               }
+              
+              if (trafficTrendsData.status === 'fulfilled' && trafficTrendsData.value) {
+                results.trafficTrends = trafficTrendsData.value;
+                console.log(`✅ Added traffic trends data (${trafficTrendsData.value.months?.length || 0} months)`);
+              }
+              
+              if (trafficByCountryData.status === 'fulfilled' && trafficByCountryData.value) {
+                results.trafficByCountry = trafficByCountryData.value;
+                console.log(`✅ Added traffic by country data (${trafficByCountryData.value.length || 0} countries)`);
+              }
             } catch (keywordError) {
-              console.warn(`⚠️ Could not fetch keywords/competitors:`, keywordError.message);
+              console.warn(`⚠️ Could not fetch additional data:`, keywordError.message);
             }
           }
           

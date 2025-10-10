@@ -1692,44 +1692,45 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             console.log('📈 Updating dashboard with historical DataForSEO data:', data);
             
             const metrics = data.metrics || {};
-            const chartData = data.chartData || {};
             
         // Use actual score from analysis if available, otherwise calculate
         const overallScore = data.score || data.averageScore || calculateOverallScoreFromMetrics(metrics);
-        
-        console.log('📊 Using score:', {
-            dataScore: data.score,
-            dataAverageScore: data.averageScore,
-            calculatedScore: calculateOverallScoreFromMetrics(metrics),
-            finalScore: overallScore
-        });
-        
-        document.getElementById('overallScore').textContent = overallScore;
-        
-        // Update score label based on score range
-        updateScoreLabel(overallScore);
-        
-        // Update speedometer arc color based on score
-        updateSpeedometerArc(overallScore);
+            
+            console.log('📊 Using score:', {
+                dataScore: data.score,
+                dataAverageScore: data.averageScore,
+                calculatedScore: calculateOverallScoreFromMetrics(metrics),
+                finalScore: overallScore
+            });
+            
+            document.getElementById('overallScore').textContent = overallScore;
+            
+            // Update score label based on score range
+            updateScoreLabel(overallScore);
+            
+            // Update speedometer arc color based on score
+            updateSpeedometerArc(overallScore);
             
             // Update metrics with real DataForSEO data
             const totalKeywords = data.keywords?.totalKeywords || data.keywords?.keywords?.length || metrics.totalKeywords || 0;
             const totalIssues = data.totalIssues || data.onPage?.pageMetrics?.totalIssues || metrics.seoIssues || 0;
-            const estimatedTraffic = data.traffic?.estimated_traffic || metrics.estimatedTraffic || 0;
+            const estimatedTraffic = data.traffic?.estimatedTraffic || data.traffic?.estimated_traffic || metrics.estimatedTraffic || 0;
             
             console.log('📊 Dashboard metrics:', {
                 keywords: totalKeywords,
                 issues: totalIssues,
                 traffic: estimatedTraffic,
-                totalPages: data.totalPages
+                totalPages: data.totalPages,
+                hasTrafficTrends: !!data.trafficTrends,
+                hasTrafficByCountry: !!data.trafficByCountry
             });
             
             document.getElementById('organicTraffic').textContent = formatNumber(estimatedTraffic);
             document.getElementById('topKeywords').textContent = totalKeywords;
             document.getElementById('seoIssues').textContent = totalIssues;
             
-            // Update charts with real historical data
-            updateChartsWithHistoricalData(chartData);
+            // Update charts with real traffic data from DataForSEO
+            updateChartsWithHistoricalData(data);
             
             // Update keyword opportunities with real DataForSEO data
             // Handle multiple possible data structures
