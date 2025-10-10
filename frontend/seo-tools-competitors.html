@@ -866,7 +866,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Update page subtitle to show current domain
             const subtitle = document.getElementById('domainSubtitle');
             if (subtitle) {
-                subtitle.textContent = `Competitors for ${domain} • Data from Supabase Cache`;
+                subtitle.textContent = `Competitors for ${domain}`;
             }
             
             try {
@@ -1043,7 +1043,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const competitors = currentAnalysis.competitors?.value || [];
 
             if (competitors.length === 0) {
-                competitorsList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">No competitors found. This might be due to sandbox mode limitations.</p>';
+                competitorsList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">No competitors found.</p>';
                 return;
             }
 
