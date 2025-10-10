@@ -1656,10 +1656,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 
                 // Get domain from localStorage (set by main dashboard)
                 const storedDomain = localStorage.getItem('lastAnalyzedDomain');
-                const currentDomain = storedDomain || window.location.hostname;
+                const currentDomain = storedDomain;
+                
+                if (!currentDomain) {
+                    console.warn('⚠️ No domain selected - redirecting to dashboard');
+                    window.location.href = '/dashboard';
+                    return;
+                }
                 
                 console.log('📊 Loading data for domain:', currentDomain);
                 console.log('   (from localStorage:', storedDomain, ')');
+                
+                // Update domain in localStorage to ensure it's current (for Keywords/Competitors pages)
+                localStorage.setItem('lastAnalyzedDomain', currentDomain);
                 
                 // Fetch historical DataForSEO data
                 const response = await fetch(`/api/supabase/historical-data/${currentDomain}`);
