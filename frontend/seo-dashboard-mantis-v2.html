@@ -2012,9 +2012,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
             
-            // Destroy existing chart if any
+            // Destroy ALL existing charts on this canvas using Chart.js registry
+            const existingChart = Chart.getChart(ctx);
+            if (existingChart) {
+                console.log('🗑️ Destroying existing traffic chart instance');
+                existingChart.destroy();
+            }
+            
+            // Also destroy our stored instance
             if (window.trafficChartInstance) {
-                window.trafficChartInstance.destroy();
+                try {
+                    window.trafficChartInstance.destroy();
+                } catch (e) {
+                    console.log('Chart already destroyed');
+                }
+                window.trafficChartInstance = null;
             }
             
             // Create new line chart
@@ -2158,9 +2170,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
             
-            // Destroy existing chart
+            // Destroy ALL existing charts on this canvas using Chart.js registry
+            const existingChart = Chart.getChart(ctx);
+            if (existingChart) {
+                console.log('🗑️ Destroying existing country chart instance');
+                existingChart.destroy();
+            }
+            
+            // Also destroy our stored instance
             if (window.positionChartInstance) {
-                window.positionChartInstance.destroy();
+                try {
+                    window.positionChartInstance.destroy();
+                } catch (e) {
+                    console.log('Chart already destroyed');
+                }
+                window.positionChartInstance = null;
             }
             
             // Sort by traffic (descending)
