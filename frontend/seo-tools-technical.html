@@ -1054,6 +1054,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- AI Chat Component -->
     <script src="components/ai-chat-component.js"></script>
     <script>
+        // SCRIPT VERSION: 2025-10-13-v2 - Domain Fix Applied
+        console.log('📋 Technical SEO Script Version: 2025-10-13-v2 (Domain Fix)');
+        
         let chatHistory = [];
         let currentAnalysis = null;
         let currentDomain = null;
@@ -1061,6 +1064,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // Load chat history and initialize AI chat
         document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🔧 Technical SEO Dashboard initialized - Version 2025-10-13-v2');
+            console.log('🔧 Checking localStorage for domain...');
+            
+            // DEBUG: Check all localStorage keys related to domain
+            console.log('🔍 localStorage.lastAnalyzedDomain:', localStorage.getItem('lastAnalyzedDomain'));
+            console.log('🔍 localStorage.selectedDomain:', localStorage.getItem('selectedDomain'));
+            console.log('🔍 localStorage.currentDomain:', localStorage.getItem('currentDomain'));
+            
             // Get domain from localStorage (must be set from dashboard)
             const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
             
@@ -1074,8 +1085,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
             
             const domain = lastAnalyzedDomain;
-            console.log('📊 Technical SEO page loading data for domain:', domain);
-            console.log('📊 localStorage.lastAnalyzedDomain value:', lastAnalyzedDomain);
+            console.log('✅ Loading Technical SEO data for domain:', domain);
+            console.log('✅ Domain confirmed:', domain);
             
             // FORCE: Ensure we're using the correct domain from localStorage
             currentDomain = domain;
@@ -1084,10 +1095,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const subtitle = document.getElementById('domainSubtitle');
             if (subtitle) {
                 subtitle.textContent = `Technical SEO for ${domain}`;
+                console.log('✅ Updated subtitle to show domain:', domain);
             }
             
             // Update current domain display
             document.getElementById('currentDomain').textContent = domain;
+            console.log('✅ Updated current domain display to:', domain);
             
             // Load chat history
             const savedChatHistory = localStorage.getItem('technicalChatHistory');
@@ -1097,7 +1110,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
             // Load analysis data
             try {
-                console.log('📊 About to call loadAnalysisData with domain:', domain);
+                console.log('🔧 Calling loadAnalysisData with domain:', domain);
                 await loadAnalysisData(domain);
             } catch (error) {
                 console.error('❌ Error loading technical analysis:', error);
