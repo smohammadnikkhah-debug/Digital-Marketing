@@ -964,7 +964,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- Page Header -->
                 <div class="page-header">
                     <h1 class="page-title">🔧 Technical SEO Analysis</h1>
-                    <p class="page-subtitle">Comprehensive technical analysis of your website's SEO foundation</p>
+                    <p class="page-subtitle" id="domainSubtitle">Comprehensive technical analysis of your website's SEO foundation</p>
                 </div>
 
                 <!-- Analysis Input -->
@@ -1060,30 +1060,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let currentFilter = 'all'; // Track current filter
 
         // Load chat history and initialize AI chat
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get domain from localStorage (must be set from dashboard)
+            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+            
+            if (!lastAnalyzedDomain) {
+                console.warn('⚠️ No domain selected, redirecting to dashboard');
+                showError('Please select a domain from the dashboard first by clicking "View Details"');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 2000);
+                return;
+            }
+            
+            const domain = lastAnalyzedDomain;
+            console.log('📊 Technical SEO page loading data for domain:', domain);
+            
+            // Update page subtitle to show current domain
+            const subtitle = document.getElementById('domainSubtitle');
+            if (subtitle) {
+                subtitle.textContent = `Technical SEO for ${domain} • Data from Supabase Cache`;
+            }
+            
+            // Update current domain display
+            document.getElementById('currentDomain').textContent = domain;
+            
             // Load chat history
             const savedChatHistory = localStorage.getItem('technicalChatHistory');
             if (savedChatHistory) {
                 chatHistory = JSON.parse(savedChatHistory);
-                // displayChatHistory(); // Removed - using AI chat component instead
             }
             
-            // Initialize AI chat component - DISABLED to prevent storage quota issues
-            // aiChatComponent = initAIChat('aiChatContainer', {
-            //     context: 'technical',
-            //     chatHistoryKey: 'technicalChatHistory',
-            //     placeholder: 'Ask me about technical SEO issues...'
-            // });
-            
-            // Load domain and analysis data
-            const domain = getDomainFromCache();
-            if (domain) {
-                console.log('🔍 Loading technical analysis for domain:', domain);
-                document.getElementById('currentDomain').textContent = domain;
-                loadAnalysisData(domain);
-            } else {
-                console.log('❌ No domain found in cache');
-                showError('No domain found. Please analyze a website first from the dashboard.');
+            // Load analysis data
+            try {
+                await loadAnalysisData(domain);
+            } catch (error) {
+                console.error('❌ Error loading technical analysis:', error);
+                showError('Failed to load technical analysis data for this domain');
             }
         });
         
@@ -1095,38 +1108,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
-        // Get domain from localStorage cache
-        function getDomainFromCache() {
-            // First priority: get the selected domain from dashboard
-            const selectedDomain = localStorage.getItem('selectedDomain');
-            if (selectedDomain) {
-                // Clear it after use to prevent it from persisting
-                localStorage.removeItem('selectedDomain');
-                return selectedDomain;
-            }
-            
-            // Second priority: get the last analyzed domain from cache
-            const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
-            if (lastAnalyzedDomain) {
-                return lastAnalyzedDomain;
-            }
-            
-            // Fallback: get from analyzed domains list
-            const analyzedDomains = JSON.parse(localStorage.getItem('analyzedDomains') || '[]');
-            if (analyzedDomains.length > 0) {
-                return analyzedDomains[0].domain; // Get the most recent domain
-            }
-            
-            return null;
-        }
 
         // Load analysis data for the domain
         async function loadAnalysisData(domain) {
             try {
-                console.log('Loading analysis data for domain:', domain);
-                const response = await fetch(`/api/supabase/analysis/${encodeURIComponent(domain)}`);
+                console.log('📊 Loading technical analysis data for domain:', domain);
+                const response = await fetch(`/api/supabase/historical-data/${encodeURIComponent(domain)}`);
                 const data = await response.json();
-                console.log('API response:', data);
+                console.log('✅ API response:', data);
                 
                 if (data.success && data.data) {
                     currentAnalysis = data.data;
