@@ -13,6 +13,8 @@ async function debugDataForSEOResponse() {
     // Test credentials (from environment)
     const username = process.env.DATAFORSEO_USERNAME;
     const password = process.env.DATAFORSEO_PASSWORD;
+    const domain = localStorage.getItem('lastAnalyzedDomain') || 'mozarex.com';
+    console.log('🌐 Testing API endpoints for domain:', domain);
     
     if (!username || !password) {
         console.error('❌ DataForSEO credentials not found in environment variables');
@@ -26,7 +28,7 @@ async function debugDataForSEOResponse() {
     console.log('📊 Testing Keywords For Site API...');
     try {
         const keywordsData = [{
-            target: 'mozarex.com',
+            target: domain,
             location_name: 'United States',
             language_code: 'en',
             limit: 5
@@ -63,7 +65,7 @@ async function debugDataForSEOResponse() {
     console.log('🏆 Testing Competitors Domain API...');
     try {
         const competitorData = [{
-            target: 'mozarex.com',
+            target: domain,
             location_name: 'United States',
             language_code: 'en',
             limit: 5,
@@ -101,7 +103,7 @@ async function debugDataForSEOResponse() {
     console.log('📄 Testing On-Page Instant Pages API...');
     try {
         const onPageData = [{
-            url: 'https://mozarex.com',
+            url: domain,
             enable_javascript: true,
             enable_browser_rendering: true,
             disable_cookie_popup: true,
