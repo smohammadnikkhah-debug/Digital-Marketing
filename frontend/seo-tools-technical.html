@@ -1075,6 +1075,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
             const domain = lastAnalyzedDomain;
             console.log('📊 Technical SEO page loading data for domain:', domain);
+            console.log('📊 localStorage.lastAnalyzedDomain value:', lastAnalyzedDomain);
+            
+            // FORCE: Ensure we're using the correct domain from localStorage
+            currentDomain = domain;
             
             // Update page subtitle to show current domain
             const subtitle = document.getElementById('domainSubtitle');
@@ -1093,6 +1097,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
             // Load analysis data
             try {
+                console.log('📊 About to call loadAnalysisData with domain:', domain);
                 await loadAnalysisData(domain);
             } catch (error) {
                 console.error('❌ Error loading technical analysis:', error);
@@ -1113,9 +1118,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         async function loadAnalysisData(domain) {
             try {
                 console.log('📊 Loading technical analysis data for domain:', domain);
+                console.log('📊 Request URL:', `/api/supabase/historical-data/${encodeURIComponent(domain)}`);
                 const response = await fetch(`/api/supabase/historical-data/${encodeURIComponent(domain)}`);
                 const data = await response.json();
                 console.log('✅ API response:', data);
+                console.log('✅ Response domain:', data.data?.domain);
                 
                 if (data.success && data.data) {
                     currentAnalysis = data.data;

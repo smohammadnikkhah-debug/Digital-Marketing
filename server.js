@@ -4742,6 +4742,8 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
     const shouldForceRefresh = forceRefresh || bodyForceRefresh || bypassCache;
     
     console.log('📊 Getting historical DataForSEO data for:', domain, shouldForceRefresh ? '(FORCE REFRESH)' : '(normal)');
+    console.log('📊 Request params domain:', req.params.domain);
+    console.log('📊 Request URL:', req.url);
     
     // Get analysis data from Supabase first (should have full crawl data)
     let analysisData = null;
@@ -4779,12 +4781,21 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
     // Process the data - use real DataForSEO data only
     console.log('🔍 Processing analysis data for Mantis dashboard:', {
       hasAnalysisData: !!analysisData,
+      requestedDomain: domain,
+      analysisDataDomain: analysisData?.domain,
       score: analysisData?.score,
       totalPages: analysisData?.totalPages,
       hasKeywords: !!analysisData?.keywords,
       hasRecommendations: !!analysisData?.recommendations,
       keywordCount: analysisData?.keywords?.keywords?.length || 0
     });
+    
+    // CRITICAL: Ensure the domain in the response ALWAYS matches the requested domain
+    // This prevents cross-domain data contamination
+    if (analysisData && analysisData.domain !== domain) {
+      console.warn(`⚠️ WARNING: Analysis data domain mismatch! Requested: ${domain}, Got: ${analysisData.domain}`);
+      console.warn(`⚠️ Forcing domain to match request: ${domain}`);
+    }
     
     // Pass through the analysis data directly with proper structure for Mantis v2
     const processedData = {
@@ -4793,8 +4804,8 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
         // Pass through all existing fields from full crawl
         ...analysisData,
         
-        // Ensure domain and timestamp
-        domain: domain,
+        // FORCE: Ensure domain and timestamp match the request
+        domain: domain, // This MUST be the requested domain, not the cached one
         timestamp: analysisData?.timestamp || new Date().toISOString(),
         
         // Format keywords for Mantis v2 compatibility

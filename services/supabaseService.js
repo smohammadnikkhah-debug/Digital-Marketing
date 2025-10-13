@@ -343,7 +343,15 @@ class SupabaseService {
       }
 
       console.log('✅ Retrieved analysis data for domain:', domain);
-      return data.analysis_data;
+      
+      // IMPORTANT: Always ensure the returned data has the CORRECT domain
+      // This prevents cross-domain data contamination
+      const analysisData = data.analysis_data;
+      if (analysisData && typeof analysisData === 'object') {
+        analysisData.domain = domain; // Force correct domain
+      }
+      
+      return analysisData;
     } catch (error) {
       console.error('Error getting analysis data by domain:', error);
       return null;
