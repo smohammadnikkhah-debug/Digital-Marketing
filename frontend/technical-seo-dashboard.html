@@ -1112,27 +1112,138 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         function updateTechnicalSEODashboard(data) {
             console.log('🔧 Updating technical SEO dashboard with data:', data);
             
-            const metrics = data.metrics || {};
-            const technicalData = data.technicalData || {};
+            // Extract real data from full crawl (data.onPage.pages)
+            const pages = data.onPage?.pages || [];
+            console.log('📊 Pages from full crawl:', pages.length);
             
-            // Update overall technical score
-            const overallScore = calculateTechnicalScore(metrics);
+            // Update overall technical score from real data
+            const overallScore = data.score || data.averageScore || 75;
             updateTechScoreCircle(overallScore);
             
-            // Update heading optimization
-            updateHeadingAnalysis(technicalData.headings || []);
+            // Extract technical data from pages
+            const headings = extractHeadingsFromPages(pages);
+            const titleTags = extractTitlesFromPages(pages);
+            const metaTags = extractMetaFromPages(pages);
+            const images = extractImagesFromPages(pages);
+            const links = extractLinksFromPages(pages);
             
-            // Update title tags analysis
-            updateTitleAnalysis(technicalData.titleTags || []);
+            console.log('📊 Extracted data:', {
+                headings: headings.length,
+                titleTags: titleTags.length,
+                metaTags: metaTags.length,
+                images: images.length,
+                links: links.length
+            });
             
-            // Update meta tags analysis
-            updateMetaAnalysis(technicalData.metaTags || []);
-            
-            // Update image alt text analysis
-            updateImageAnalysis(technicalData.images || []);
-            
-            // Update link analysis
-            updateLinkAnalysis(technicalData.links || []);
+            // Update each section with real data
+            updateHeadingAnalysis(headings);
+            updateTitleAnalysis(titleTags);
+            updateMetaAnalysis(metaTags);
+            updateImageAnalysis(images);
+            updateLinkAnalysis(links);
+        }
+        
+        // Extract headings from pages
+        function extractHeadingsFromPages(pages) {
+            const headings = [];
+            pages.forEach(page => {
+                const url = page.url || '';
+                const h1Tags = page.h1 || [];
+                const h2Tags = page.h2 || [];
+                
+                h1Tags.forEach(h1 => {
+                    headings.push({
+                        tag: 'H1',
+                        text: h1,
+                        status: 'good',
+                        page: url,
+                        issue: null,
+                        recommendation: 'H1 tag found on page.'
+                    });
+                });
+                
+                h2Tags.slice(0, 3).forEach(h2 => {
+                    headings.push({
+                        tag: 'H2',
+                        text: h2,
+                        status: 'good',
+                        page: url,
+                        issue: null,
+                        recommendation: 'H2 tag helps structure content.'
+                    });
+                });
+            });
+            return headings.slice(0, 10); // Limit to 10 items
+        }
+        
+        // Extract title tags from pages
+        function extractTitlesFromPages(pages) {
+            return pages.slice(0, 10).map(page => ({
+                url: page.url || '',
+                title: page.title || 'No title',
+                length: (page.title || '').length,
+                status: (page.title || '').length > 30 && (page.title || '').length < 60 ? 'good' : 'warning',
+                issue: (page.title || '').length < 30 ? 'Too short' : (page.title || '').length > 60 ? 'Too long' : null,
+                recommendation: 'Optimize title length between 30-60 characters.'
+            }));
+        }
+        
+        // Extract meta descriptions from pages
+        function extractMetaFromPages(pages) {
+            const metaTags = [];
+            if (pages.length > 0) {
+                const firstPage = pages[0];
+                if (firstPage.metaDescription) {
+                    metaTags.push({
+                        type: 'description',
+                        content: firstPage.metaDescription,
+                        status: 'good'
+                    });
+                }
+            }
+            return metaTags;
+        }
+        
+        // Extract images from pages
+        function extractImagesFromPages(pages) {
+            const images = [];
+            pages.forEach(page => {
+                const pageImages = page.images || {};
+                const total = pageImages.total || 0;
+                const withoutAlt = pageImages.imagesWithoutAlt || 0;
+                
+                if (total > 0) {
+                    images.push({
+                        src: page.url || '',
+                        alt: withoutAlt === 0 ? 'All images have alt text' : `${withoutAlt} images missing alt text`,
+                        status: withoutAlt === 0 ? 'good' : 'warning'
+                    });
+                }
+            });
+            return images.slice(0, 10);
+        }
+        
+        // Extract links from pages
+        function extractLinksFromPages(pages) {
+            const links = [];
+            pages.forEach(page => {
+                const pageLinks = page.links || {};
+                const internal = pageLinks.internal || 0;
+                const external = pageLinks.external || 0;
+                const broken = pageLinks.broken || 0;
+                
+                if (internal + external > 0) {
+                    links.push({
+                        url: page.url || '',
+                        text: `${internal} internal, ${external} external links`,
+                        type: 'internal',
+                        status: broken === 0 ? 'good' : 'error',
+                        issue: broken > 0 ? `${broken} broken links` : null,
+                        recommendation: broken === 0 ? 'Good link structure' : 'Fix broken links'
+                    });
+                }
+            });
+            return links.slice(0, 10);
         }
 
         // Calculate overall technical score
@@ -1170,57 +1281,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Clear existing content
             headingContainer.innerHTML = '';
             
-            // Sample headings with detailed analysis if none provided
-            const sampleHeadings = headings.length > 0 ? headings : [
-                { 
-                    tag: 'H1', 
-                    text: 'Welcome to Mozarex AI - Digital Marketing Solutions', 
-                    status: 'good',
-                    page: '/',
-                    issue: null,
-                    recommendation: 'Excellent H1 tag with primary keyword and brand name. Maintains proper hierarchy.'
-                },
-                { 
-                    tag: 'H2', 
-                    text: 'Our Services', 
-                    status: 'warning',
-                    page: '/services',
-                    issue: 'Missing keyword optimization',
-                    recommendation: 'Consider adding "Digital Marketing Services" to improve keyword targeting.'
-                },
-                { 
-                    tag: 'H2', 
-                    text: 'About Us', 
-                    status: 'warning',
-                    page: '/about',
-                    issue: 'Too short and generic',
-                    recommendation: 'Expand to "About Mozarex AI - Leading Digital Marketing Agency" for better SEO.'
-                },
-                { 
-                    tag: 'H3', 
-                    text: 'SEO Services', 
-                    status: 'good',
-                    page: '/seo-services',
-                    issue: null,
-                    recommendation: 'Well-optimized H3 tag with clear service description.'
-                },
-                { 
-                    tag: 'H3', 
-                    text: 'Content Marketing', 
-                    status: 'good',
-                    page: '/content-marketing',
-                    issue: null,
-                    recommendation: 'Good H3 structure. Consider adding location-based keywords if targeting local market.'
-                },
-                { 
-                    tag: 'H4', 
-                    text: 'Local SEO', 
-                    status: 'error',
-                    page: '/services',
-                    issue: 'Missing from main page structure',
-                    recommendation: 'Add H4 tags to main service page to improve content hierarchy and keyword targeting.'
-                }
-            ];
+            // Use real data only - no fallback to sample data
+            if (headings.length === 0) {
+                headingContainer.innerHTML = '<p style="text-align: center; color: #94a3b8;">No heading data available for this domain.</p>';
+                return;
+            }
+            
+            const sampleHeadings = headings;
             
             // Update stats
             const headingPages = document.getElementById('headingPages');
