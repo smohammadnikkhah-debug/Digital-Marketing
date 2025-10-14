@@ -1138,9 +1138,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 console.log('✅ Response domain:', data.data?.domain);
                 
                 if (data.success && data.data) {
+                    // CRITICAL FIX: Force the domain to match what was requested
+                    // The backend should already do this, but we double-check here
+                    data.data.domain = domain;
+                    
                     currentAnalysis = data.data;
                     currentDomain = domain;
-                    console.log('Analysis data loaded:', currentAnalysis);
+                    console.log('✅ Analysis data loaded for domain:', domain);
+                    console.log('✅ Verified currentAnalysis.domain:', currentAnalysis.domain);
                     
                     // Check if we have any real data
                     const hasOnPageData = data.data.onPage && data.data.onPage.pages && data.data.onPage.pages.length > 0;
@@ -1166,20 +1171,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     // Update AI chat component with analysis data - DISABLED
                     // updateAIChatAnalysis(currentAnalysis, currentDomain);
                 } else {
-                    // Fallback to localStorage
-                    const analysisData = localStorage.getItem('analysisData');
-                    if (analysisData) {
-                        const analysis = JSON.parse(analysisData);
-                        if (analysis.domain === domain || analysis.url === domain) {
-                            currentAnalysis = analysis;
-                            currentDomain = domain;
-                            displayAnalysisResults();
-                            
-                            // Update AI chat component with analysis data
-                            updateAIChatAnalysis(currentAnalysis, currentDomain);
-                            return;
-                        }
-                    }
+                    // NO FALLBACK TO LOCALSTORAGE - it causes cross-domain contamination
+                    console.error('❌ No analysis data found from API for domain:', domain);
                     throw new Error('No analysis data found for this domain');
                 }
             } catch (error) {
