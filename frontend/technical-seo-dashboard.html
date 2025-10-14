@@ -1072,17 +1072,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             try {
                 console.log('🔧 Loading technical SEO data...');
                 
-                // Get current domain from URL or use default
-                const currentDomain = window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname;
+                // Get domain from localStorage (selected from dashboard)
+                const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+                
+                if (!lastAnalyzedDomain) {
+                    console.error('❌ No domain selected');
+                    showErrorState('Please select a domain from the dashboard first');
+                    return;
+                }
+                
+                const currentDomain = lastAnalyzedDomain;
+                console.log('✅ Loading technical SEO for domain:', currentDomain);
                 
                 // Fetch technical SEO analysis data
-                const response = await fetch(`/api/technical-seo/${currentDomain}`);
+                const response = await fetch(`/api/supabase/historical-data/${currentDomain}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch technical SEO data');
                 }
                 
                 const techData = await response.json();
                 console.log('✅ Technical SEO data loaded:', techData);
+                console.log('✅ Data domain:', techData.data?.domain);
                 
                 // Check if the response was successful
                 if (!techData.success) {
