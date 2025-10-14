@@ -231,8 +231,17 @@ app.use(session({
 
 // Auth0 SDK configuration - no passport needed
 
-// Serve static files from frontend
-app.use(express.static(path.join(__dirname, 'frontend')));
+// Serve static files from frontend with NO CACHE for HTML files (force fresh load)
+app.use(express.static(path.join(__dirname, 'frontend'), {
+  setHeaders: (res, filePath) => {
+    // Force no-cache for HTML files to prevent stale content
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Serve static images
 app.use('/images', express.static(path.join(__dirname, 'images')));
