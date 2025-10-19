@@ -14,6 +14,7 @@ const boostrampService = require('./services/boostrampService');
 const ChatServer = require('./services/chatServer');
 const dataforseoService = require('./services/dataforseoEnvironmentService');
 const dataforseoAIRecommendations = require('./services/dataforseoAIRecommendations');
+const technicalSEOAIService = require('./services/technicalSEOAIService');
 const dataforseoMCPService = require('./services/dataforseoMCPService');
 const dataforseoMCPIntegration = require('./services/dataforseoMCPIntegration');
 const dataforseoMCPDirectService = require('./services/dataforseoMCPDirectService');
@@ -4741,6 +4742,84 @@ app.get('/api/supabase/historical-data/:domain', async (req, res) => {
 
 app.post('/api/supabase/historical-data/:domain', async (req, res) => {
   await handleHistoricalDataRequest(req, res, true);
+});
+
+// Technical SEO AI Recommendations API
+app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
+  try {
+    const { domain, category } = req.body;
+    
+    if (!domain) {
+      return res.status(400).json({
+        success: false,
+        error: 'Domain is required'
+      });
+    }
+    
+    console.log(`🤖 Generating AI recommendations for ${domain}, category: ${category || 'all'}`);
+    
+    // Get crawl data from Supabase
+    const crawlData = await supabaseService.getAnalysisData(domain, null);
+    
+    if (!crawlData) {
+      return res.status(404).json({
+        success: false,
+        error: 'No crawl data found for this domain'
+      });
+    }
+    
+    let recommendations;
+    
+    // Generate recommendations based on category
+    switch (category) {
+      case 'meta-optimization':
+        recommendations = await technicalSEOAIService.generateMetaOptimizationRecommendations(crawlData);
+        break;
+      case 'content-improvements':
+        recommendations = await technicalSEOAIService.generateContentImprovementsRecommendations(crawlData);
+        break;
+      case 'technical-fixes':
+        recommendations = await technicalSEOAIService.generateTechnicalFixesRecommendations(crawlData);
+        break;
+      case 'images':
+        recommendations = await technicalSEOAIService.generateImagesRecommendations(crawlData);
+        break;
+      case 'performance':
+        recommendations = await technicalSEOAIService.generatePerformanceRecommendations(crawlData);
+        break;
+      default:
+        // Generate all recommendations
+        const [meta, content, technical, images, performance] = await Promise.all([
+          technicalSEOAIService.generateMetaOptimizationRecommendations(crawlData),
+          technicalSEOAIService.generateContentImprovementsRecommendations(crawlData),
+          technicalSEOAIService.generateTechnicalFixesRecommendations(crawlData),
+          technicalSEOAIService.generateImagesRecommendations(crawlData),
+          technicalSEOAIService.generatePerformanceRecommendations(crawlData)
+        ]);
+        
+        recommendations = {
+          success: true,
+          categories: {
+            metaOptimization: meta,
+            contentImprovements: content,
+            technicalFixes: technical,
+            images: images,
+            performance: performance
+          },
+          timestamp: new Date().toISOString()
+        };
+    }
+    
+    res.json(recommendations);
+    
+  } catch (error) {
+    console.error('Technical SEO AI recommendations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate AI recommendations',
+      details: error.message
+    });
+  }
 });
 
 async function handleHistoricalDataRequest(req, res, forceRefresh = false) {

@@ -165,3 +165,4 @@ Run the SQL above in Supabase Dashboard
 **After adding the database column, test it at `http://localhost:3000/login`**
 
 
+

@@ -83,3 +83,4 @@ The signup page is now accessible at `http://localhost:3000/signup` with:
 Your signup experience now combines the best of both worlds: your custom design with Auth0's enterprise security! 🚀
 
 
+

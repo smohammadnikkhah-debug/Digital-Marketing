@@ -165,3 +165,4 @@ The `users` table currently has these columns:
 - ❌ `company` - **Missing** (needs to be added manually)
 
 
+

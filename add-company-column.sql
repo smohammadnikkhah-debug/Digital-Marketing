@@ -6,3 +6,4 @@ ADD COLUMN company TEXT;
 COMMENT ON COLUMN public.users.company IS 'User company name';
 
 
+

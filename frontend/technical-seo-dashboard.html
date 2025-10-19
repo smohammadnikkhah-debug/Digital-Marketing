@@ -160,6 +160,51 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             opacity: 0.8;
         }
 
+        /* Submenu Tabs */
+        .submenu-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .submenu-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            color: #cbd5e1;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 150px;
+        }
+
+        .submenu-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+
+        .submenu-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: #ffffff;
+        }
+
+        .submenu-tab-icon {
+            font-size: 1.5rem;
+        }
+
+        .submenu-tab-label {
+            font-size: 0.9rem;
+        }
+
         /* Filter Section */
         .filter-section {
             background: rgba(255, 255, 255, 0.05);
@@ -168,6 +213,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             margin-bottom: 2rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
+            display: none;
         }
 
         .filter-header {
@@ -338,6 +384,296 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         .tech-seo-section.filtered-out {
             display: none;
+        }
+
+        /* AI Recommendations Section */
+        .ai-recommendations {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-score-summary {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(168, 85, 247, 0.1);
+            border-radius: 15px;
+            border-left: 4px solid #a855f7;
+        }
+
+        .ai-score-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #22c55e 0deg,
+                #16a34a 90deg,
+                rgba(255, 255, 255, 0.1) 90deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .ai-score-circle::before {
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .ai-score-number {
+            position: relative;
+            z-index: 10;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .ai-summary-content {
+            flex: 1;
+        }
+
+        .ai-summary-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-summary-text {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .ai-issues-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .ai-issue-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .ai-issue-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .ai-issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .ai-issue-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-severity-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .severity-medium {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .severity-low {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .ai-issue-description {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .ai-issue-recommendation {
+            background: rgba(168, 85, 247, 0.1);
+            border-left: 3px solid #a855f7;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .ai-recommendation-title {
+            font-weight: 600;
+            color: #a855f7;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-recommendation-text {
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .ai-affected-pages {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .ai-page-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .ai-quick-wins {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .ai-quick-wins-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-quick-wins-list {
+            list-style: none;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .ai-quick-win-item {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .ai-quick-win-item::before {
+            content: '✓';
+            color: #22c55e;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .ai-best-practices {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .ai-best-practices-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-best-practices-list {
+            list-style: none;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .ai-best-practice-item {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .ai-best-practice-item::before {
+            content: '💡';
+            font-size: 1.2rem;
+        }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: #cbd5e1;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         /* Technical SEO Analysis Styles */
@@ -834,11 +1170,56 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <!-- Header -->
             <div class="dashboard-header">
                 <h1 class="dashboard-title">Technical SEO Analysis</h1>
-                <p class="dashboard-subtitle">Comprehensive technical SEO audit and optimization recommendations</p>
+                <p class="dashboard-subtitle">AI-Powered SEO recommendations based on your website crawl data</p>
             </div>
 
-            <!-- Filter Section -->
-            <div class="filter-section">
+            <!-- Submenu Tabs -->
+            <div class="submenu-tabs">
+                <div class="submenu-tab active" data-category="meta-optimization" onclick="switchCategory('meta-optimization')">
+                    <div class="submenu-tab-icon">🏷️</div>
+                    <div class="submenu-tab-label">Meta Optimization</div>
+                </div>
+                <div class="submenu-tab" data-category="content-improvements" onclick="switchCategory('content-improvements')">
+                    <div class="submenu-tab-icon">📝</div>
+                    <div class="submenu-tab-label">Content Improvements</div>
+                </div>
+                <div class="submenu-tab" data-category="technical-fixes" onclick="switchCategory('technical-fixes')">
+                    <div class="submenu-tab-icon">⚙️</div>
+                    <div class="submenu-tab-label">Technical Fixes</div>
+                </div>
+                <div class="submenu-tab" data-category="images" onclick="switchCategory('images')">
+                    <div class="submenu-tab-icon">🖼️</div>
+                    <div class="submenu-tab-label">Images</div>
+                </div>
+                <div class="submenu-tab" data-category="performance" onclick="switchCategory('performance')">
+                    <div class="submenu-tab-icon">⚡</div>
+                    <div class="submenu-tab-label">Performance</div>
+                </div>
+            </div>
+
+            <!-- Tab Content Containers -->
+            <div id="tab-content-meta-optimization" class="tab-content active">
+                <!-- AI recommendations will be loaded here -->
+            </div>
+            
+            <div id="tab-content-content-improvements" class="tab-content">
+                <!-- AI recommendations will be loaded here -->
+            </div>
+            
+            <div id="tab-content-technical-fixes" class="tab-content">
+                <!-- AI recommendations will be loaded here -->
+            </div>
+            
+            <div id="tab-content-images" class="tab-content">
+                <!-- AI recommendations will be loaded here -->
+            </div>
+            
+            <div id="tab-content-performance" class="tab-content">
+                <!-- AI recommendations will be loaded here -->
+            </div>
+
+            <!-- Filter Section (Hidden - Old UI) -->
+            <div class="filter-section" style="display: none;">
                 <div class="filter-header">
                     <h3 class="filter-title">Filter & Search</h3>
                     <div class="filter-status" id="filterStatus" style="font-size: 0.9rem; color: #94a3b8; margin-left: auto; margin-right: 1rem;">All items visible</div>
@@ -871,8 +1252,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
             </div>
 
-            <!-- Technical SEO Overview -->
-            <div class="tech-seo-overview">
+            <!-- Technical SEO Overview (Hidden - Old UI) -->
+            <div class="tech-seo-overview" style="display: none;">
                 <div class="tech-score-gauge">
                     <div class="tech-score-circle" id="techScoreCircle">
                         <div class="tech-score-content">
@@ -888,8 +1269,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
             </div>
 
-            <!-- Technical SEO Sections -->
-            <div class="tech-seo-sections">
+            <!-- Technical SEO Sections (Hidden - Old UI) -->
+            <div class="tech-seo-sections" style="display: none;">
                 <!-- Left Column -->
                 <div class="left-column">
                     <!-- Heading Optimization -->
@@ -1067,6 +1448,190 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
+        // Global state
+        let currentDomain = null;
+        let currentCategory = 'meta-optimization';
+        
+        // Switch between categories
+        async function switchCategory(category) {
+            currentCategory = category;
+            
+            // Update active tab
+            document.querySelectorAll('.submenu-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.submenu-tab[data-category="${category}"]`).classList.add('active');
+            
+            // Update content visibility
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-content-${category}`).classList.add('active');
+            
+            // Load AI recommendations for this category
+            await loadAIRecommendations(category);
+        }
+        
+        // Load AI recommendations for a specific category
+        async function loadAIRecommendations(category) {
+            try {
+                const container = document.getElementById(`tab-content-${category}`);
+                
+                // Show loading state
+                container.innerHTML = `
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <div class="loading-text">🤖 Generating AI-powered recommendations...</div>
+                    </div>
+                `;
+                
+                console.log(`🤖 Loading AI recommendations for ${category} on domain:`, currentDomain);
+                
+                // Fetch AI recommendations
+                const response = await fetch('/api/technical-seo/ai-recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        domain: currentDomain,
+                        category: category
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch AI recommendations');
+                }
+                
+                const recommendations = await response.json();
+                console.log('✅ AI recommendations loaded:', recommendations);
+                
+                // Display recommendations
+                displayAIRecommendations(container, recommendations);
+                
+            } catch (error) {
+                console.error('❌ Error loading AI recommendations:', error);
+                const container = document.getElementById(`tab-content-${category}`);
+                container.innerHTML = `
+                    <div class="error-state">
+                        <h2>❌ Error Loading AI Recommendations</h2>
+                        <p>Unable to generate recommendations. Please try again later.</p>
+                        <button onclick="loadAIRecommendations('${category}')" style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 0.75rem 1.5rem;
+                            border-radius: 10px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            margin-top: 1rem;
+                        ">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Display AI recommendations in the UI
+        function displayAIRecommendations(container, data) {
+            const score = data.score || 75;
+            const summary = data.summary || 'AI analysis complete';
+            const issues = data.issues || [];
+            const quickWins = data.quickWins || [];
+            const bestPractices = data.bestPractices || [];
+            
+            // Calculate score color
+            const scoreColor = score >= 80 ? '#22c55e' : score >= 60 ? '#3b82f6' : score >= 40 ? '#f59e0b' : '#ef4444';
+            const scoreDegrees = (score / 100) * 360;
+            
+            let html = `
+                <div class="ai-recommendations">
+                    <!-- Score Summary -->
+                    <div class="ai-score-summary">
+                        <div class="ai-score-circle" style="background: conic-gradient(
+                            from 0deg,
+                            ${scoreColor} 0deg,
+                            ${scoreColor} ${scoreDegrees}deg,
+                            rgba(255, 255, 255, 0.1) ${scoreDegrees}deg
+                        );">
+                            <div class="ai-score-number">${score}</div>
+                        </div>
+                        <div class="ai-summary-content">
+                            <div class="ai-summary-title">${data.category || 'Technical SEO'}</div>
+                            <div class="ai-summary-text">${summary}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Issues -->
+                    ${issues.length > 0 ? `
+                        <h3 style="color: #ffffff; font-size: 1.2rem; margin-bottom: 1rem;">🚨 Issues Found</h3>
+                        <div class="ai-issues-grid">
+                            ${issues.map(issue => `
+                                <div class="ai-issue-card">
+                                    <div class="ai-issue-header">
+                                        <div class="ai-issue-title">
+                                            ${issue.title}
+                                        </div>
+                                        <div class="ai-severity-badge severity-${issue.severity}">
+                                            ${issue.severity}
+                                        </div>
+                                    </div>
+                                    <div class="ai-issue-description">
+                                        ${issue.description}
+                                    </div>
+                                    <div class="ai-issue-recommendation">
+                                        <div class="ai-recommendation-title">
+                                            🤖 AI Recommendation
+                                        </div>
+                                        <div class="ai-recommendation-text">
+                                            ${issue.recommendation}
+                                        </div>
+                                    </div>
+                                    ${issue.affectedPages && issue.affectedPages.length > 0 ? `
+                                        <div class="ai-affected-pages">
+                                            ${issue.affectedPages.slice(0, 3).map(page => `
+                                                <div class="ai-page-badge">${page}</div>
+                                            `).join('')}
+                                            ${issue.affectedPages.length > 3 ? `<div class="ai-page-badge">+${issue.affectedPages.length - 3} more</div>` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Quick Wins -->
+                    ${quickWins.length > 0 ? `
+                        <div class="ai-quick-wins">
+                            <div class="ai-quick-wins-title">
+                                ⚡ Quick Wins
+                            </div>
+                            <ul class="ai-quick-wins-list">
+                                ${quickWins.map(win => `
+                                    <li class="ai-quick-win-item">${win}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Best Practices -->
+                    ${bestPractices.length > 0 ? `
+                        <div class="ai-best-practices">
+                            <div class="ai-best-practices-title">
+                                💡 Best Practices
+                            </div>
+                            <ul class="ai-best-practices-list">
+                                ${bestPractices.map(practice => `
+                                    <li class="ai-best-practice-item">${practice}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
         // Load technical SEO data
         async function loadTechnicalSEOData() {
             try {
@@ -1081,26 +1646,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     return;
                 }
                 
-                const currentDomain = lastAnalyzedDomain;
+                currentDomain = lastAnalyzedDomain;
                 console.log('✅ Loading technical SEO for domain:', currentDomain);
                 
-                // Fetch technical SEO analysis data
-                const response = await fetch(`/api/supabase/historical-data/${currentDomain}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch technical SEO data');
-                }
-                
-                const techData = await response.json();
-                console.log('✅ Technical SEO data loaded:', techData);
-                console.log('✅ Data domain:', techData.data?.domain);
-                
-                // Check if the response was successful
-                if (!techData.success) {
-                    throw new Error(techData.error || 'Failed to fetch technical SEO data');
-                }
-                
-                // Update dashboard with real technical SEO data
-                updateTechnicalSEODashboard(techData.data);
+                // Load initial category (meta-optimization)
+                await loadAIRecommendations('meta-optimization');
                 
             } catch (error) {
                 console.error('❌ Error loading technical SEO data:', error);

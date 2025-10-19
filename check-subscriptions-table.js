@@ -78,3 +78,4 @@ ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 createSubscriptionsTable();
 
 
+

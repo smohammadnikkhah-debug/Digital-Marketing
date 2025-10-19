@@ -136,3 +136,4 @@ The `users` table now includes:
 **The user settings page now provides a complete profile management experience!** 🎉
 
 
+

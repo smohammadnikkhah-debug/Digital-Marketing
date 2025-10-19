@@ -167,3 +167,4 @@ AUTH0_CALLBACK_URL=http://localhost:3000/auth/callback
 **Your users now have a seamless login experience that stays within your beautiful custom design while maintaining Auth0's security!** 🎉
 
 
+

@@ -88,3 +88,4 @@ The top navbar is now **100% functional and consistent** across all pages! 🎉
 All pages now show the **actual user name** with full dropdown functionality! ✨
 
 
+

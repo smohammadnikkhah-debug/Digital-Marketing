@@ -29,3 +29,4 @@ The Analytics option has been completely removed from the left sidebar menu acro
 The dashboard navigation is now streamlined without the Analytics option! 🚀
 
 
+

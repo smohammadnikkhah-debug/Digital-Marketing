@@ -132,3 +132,4 @@ Store bcrypt-hashed passwords in your Supabase database and validate locally.
 **Try it now - you should stay on your custom page and see "Login successful! Redirecting..." before going to the dashboard!**
 
 
+

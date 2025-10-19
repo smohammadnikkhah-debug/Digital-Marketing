@@ -53,3 +53,4 @@ CREATE TRIGGER update_subscriptions_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 
+

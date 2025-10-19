@@ -56,3 +56,4 @@ Execute the `remove-password-hash-column.sql` script in your Supabase dashboard 
 The authentication system is now secure, professional, and ready for production! 🚀
 
 
+
