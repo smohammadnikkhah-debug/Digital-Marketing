@@ -4749,7 +4749,10 @@ app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
   try {
     const { domain, category } = req.body;
     
+    console.log('🤖 Technical SEO AI Recommendations Request:', { domain, category });
+    
     if (!domain) {
+      console.error('❌ Domain is required but not provided');
       return res.status(400).json({
         success: false,
         error: 'Domain is required'
@@ -4759,14 +4762,23 @@ app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
     console.log(`🤖 Generating AI recommendations for ${domain}, category: ${category || 'all'}`);
     
     // Get crawl data from Supabase
+    console.log('📊 Fetching crawl data from Supabase...');
     const crawlData = await supabaseService.getAnalysisData(domain, null);
     
     if (!crawlData) {
+      console.error('❌ No crawl data found for domain:', domain);
       return res.status(404).json({
         success: false,
-        error: 'No crawl data found for this domain'
+        error: 'No crawl data found for this domain',
+        hint: 'Please analyze the website from the main dashboard first'
       });
     }
+    
+    console.log('✅ Crawl data retrieved:', {
+      domain: crawlData.domain,
+      hasOnPage: !!crawlData.onPage,
+      pagesCount: crawlData.onPage?.pages?.length || 0
+    });
     
     let recommendations;
     
@@ -4813,11 +4825,13 @@ app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
     res.json(recommendations);
     
   } catch (error) {
-    console.error('Technical SEO AI recommendations error:', error);
+    console.error('❌ Technical SEO AI recommendations error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       error: 'Failed to generate AI recommendations',
-      details: error.message
+      details: error.message,
+      errorType: error.name
     });
   }
 });

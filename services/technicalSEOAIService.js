@@ -20,7 +20,20 @@ class TechnicalSEOAIService {
   // Generate Meta Optimization recommendations
   async generateMetaOptimizationRecommendations(crawlData) {
     try {
+      console.log('🏷️ Generating Meta Optimization recommendations...');
+      
+      if (!crawlData) {
+        console.error('❌ No crawl data provided');
+        throw new Error('No crawl data provided');
+      }
+      
       const pages = crawlData.onPage?.pages || [];
+      console.log('📊 Pages available for meta analysis:', pages.length);
+      
+      if (pages.length === 0) {
+        console.warn('⚠️ No pages found in crawl data, using fallback');
+        return this.getFallbackMetaRecommendations([], crawlData.domain);
+      }
       
       // Extract meta data from pages
       const metaData = pages.slice(0, 10).map(page => ({
@@ -32,6 +45,8 @@ class TechnicalSEOAIService {
         h1: page.meta?.htags?.h1,
         canonical: page.meta?.canonical
       }));
+      
+      console.log('📊 Meta data extracted:', { pages: metaData.length });
 
       const prompt = `As an expert SEO consultant, analyze the following meta optimization data and provide specific, actionable recommendations:
 
@@ -97,8 +112,9 @@ Return ONLY valid JSON, no markdown or additional text.`;
       };
 
     } catch (error) {
-      console.error('Meta Optimization AI Error:', error);
-      return this.getFallbackMetaRecommendations(crawlData.onPage?.pages || [], crawlData.domain);
+      console.error('❌ Meta Optimization AI Error:', error.message);
+      console.error('Error stack:', error.stack);
+      return this.getFallbackMetaRecommendations(crawlData?.onPage?.pages || [], crawlData?.domain || 'unknown');
     }
   }
 

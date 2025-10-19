@@ -1512,20 +1512,50 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             } catch (error) {
                 console.error('❌ Error loading AI recommendations:', error);
                 const container = document.getElementById(`tab-content-${category}`);
+                
+                let errorMessage = 'Unable to generate recommendations. Please try again later.';
+                let errorDetails = '';
+                
+                // Try to extract more information from the error
+                if (error.message.includes('404')) {
+                    errorMessage = 'No crawl data found for this domain.';
+                    errorDetails = 'Please analyze your website from the main dashboard first.';
+                } else if (error.message.includes('400')) {
+                    errorMessage = 'Invalid request.';
+                    errorDetails = 'Please ensure a domain is selected.';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Server error while generating recommendations.';
+                    errorDetails = 'The server encountered an error. Please try again or contact support.';
+                }
+                
                 container.innerHTML = `
                     <div class="error-state">
                         <h2>❌ Error Loading AI Recommendations</h2>
-                        <p>Unable to generate recommendations. Please try again later.</p>
-                        <button onclick="loadAIRecommendations('${category}')" style="
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            color: white;
-                            border: none;
-                            padding: 0.75rem 1.5rem;
-                            border-radius: 10px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            margin-top: 1rem;
-                        ">Retry</button>
+                        <p>${errorMessage}</p>
+                        ${errorDetails ? `<p style="color: #94a3b8; margin-top: 0.5rem;">${errorDetails}</p>` : ''}
+                        <p style="color: #94a3b8; margin-top: 1rem; font-size: 0.9rem;">
+                            Current domain: <strong>${currentDomain || 'None selected'}</strong>
+                        </p>
+                        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                            <button onclick="loadAIRecommendations('${category}')" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border: none;
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 10px;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">Retry</button>
+                            <button onclick="window.location.href='/dashboard-mantis-v2'" style="
+                                background: rgba(255, 255, 255, 0.1);
+                                color: white;
+                                border: 1px solid rgba(255, 255, 255, 0.2);
+                                padding: 0.75rem 1.5rem;
+                                border-radius: 10px;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">Go to Dashboard</button>
+                        </div>
                     </div>
                 `;
             }
