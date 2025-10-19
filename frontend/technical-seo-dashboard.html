@@ -674,6 +674,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Technical SEO Analysis Styles */
@@ -1169,7 +1181,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="main-container">
             <!-- Header -->
             <div class="dashboard-header">
-                <h1 class="dashboard-title">Technical SEO Analysis</h1>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h1 class="dashboard-title" style="margin-bottom: 0;">Technical SEO Analysis</h1>
+                    <button onclick="clearAllAICache(); location.reload();" style="
+                        background: rgba(239, 68, 68, 0.2);
+                        border: 1px solid rgba(239, 68, 68, 0.3);
+                        color: #ef4444;
+                        padding: 0.5rem 1rem;
+                        border-radius: 8px;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='rgba(239,68,68,0.3)'" onmouseout="this.style.background='rgba(239,68,68,0.2)'">
+                        <i class="fas fa-trash"></i> Clear All Cache
+                    </button>
+                </div>
                 <p class="dashboard-subtitle">AI-Powered SEO recommendations based on your website crawl data</p>
             </div>
 
@@ -1453,6 +1480,162 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let currentWebsiteId = null;
         let currentCategory = 'meta-optimization';
         
+        // Cache settings
+        const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        const CACHE_KEY_PREFIX = 'techSeoAI_';
+        
+        // Cache management functions
+        function getCacheKey(domain, websiteId, category) {
+            // Use websiteId if available, otherwise use domain
+            const identifier = websiteId || domain;
+            return `${CACHE_KEY_PREFIX}${identifier}_${category}`;
+        }
+        
+        function getCachedRecommendations(domain, websiteId, category) {
+            try {
+                const cacheKey = getCacheKey(domain, websiteId, category);
+                const cached = localStorage.getItem(cacheKey);
+                
+                if (!cached) {
+                    console.log('📦 No cache found for:', category);
+                    return null;
+                }
+                
+                const data = JSON.parse(cached);
+                const cacheAge = Date.now() - data.cachedAt;
+                
+                // Check if cache is still valid
+                if (cacheAge > CACHE_DURATION) {
+                    console.log('⏰ Cache expired for:', category, `(${Math.round(cacheAge / 1000 / 60 / 60)}h old)`);
+                    localStorage.removeItem(cacheKey);
+                    return null;
+                }
+                
+                console.log('✅ Using cached recommendations for:', category, `(${Math.round(cacheAge / 1000 / 60)}min old)`);
+                return data.recommendations;
+                
+            } catch (error) {
+                console.error('❌ Error reading cache:', error);
+                return null;
+            }
+        }
+        
+        function setCachedRecommendations(domain, websiteId, category, recommendations) {
+            try {
+                const cacheKey = getCacheKey(domain, websiteId, category);
+                const cacheData = {
+                    recommendations: recommendations,
+                    cachedAt: Date.now(),
+                    domain: domain,
+                    websiteId: websiteId,
+                    category: category
+                };
+                
+                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                console.log('💾 Cached recommendations for:', category);
+                
+            } catch (error) {
+                console.error('❌ Error saving to cache:', error);
+                // If quota exceeded, clear old caches
+                if (error.name === 'QuotaExceededError') {
+                    clearOldCaches();
+                    // Try again
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                    } catch (retryError) {
+                        console.error('❌ Still cannot save to cache after cleanup');
+                    }
+                }
+            }
+        }
+        
+        function clearOldCaches() {
+            console.log('🧹 Clearing old Technical SEO AI caches...');
+            const keys = Object.keys(localStorage);
+            const techSeoCaches = keys.filter(key => key.startsWith(CACHE_KEY_PREFIX));
+            
+            // Sort by age and remove oldest
+            const cacheData = techSeoCaches.map(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    return { key, cachedAt: data.cachedAt || 0 };
+                } catch {
+                    return { key, cachedAt: 0 };
+                }
+            }).sort((a, b) => a.cachedAt - b.cachedAt);
+            
+            // Remove oldest 50% of caches
+            const toRemove = Math.ceil(cacheData.length / 2);
+            for (let i = 0; i < toRemove; i++) {
+                localStorage.removeItem(cacheData[i].key);
+                console.log('🗑️ Removed old cache:', cacheData[i].key);
+            }
+        }
+        
+        function clearAllAICache() {
+            console.log('🧹 Clearing all Technical SEO AI caches...');
+            const keys = Object.keys(localStorage);
+            const techSeoCaches = keys.filter(key => key.startsWith(CACHE_KEY_PREFIX));
+            
+            techSeoCaches.forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            console.log(`✅ Cleared ${techSeoCaches.length} cached recommendations`);
+        }
+        
+        function showCacheIndicator(container, category) {
+            // Add a small indicator that this is cached data
+            const aiRecommendations = container.querySelector('.ai-recommendations');
+            if (aiRecommendations) {
+                const indicator = document.createElement('div');
+                indicator.style.cssText = `
+                    background: rgba(59, 130, 246, 0.1);
+                    border-left: 4px solid #3b82f6;
+                    border-radius: 8px;
+                    padding: 0.75rem 1rem;
+                    margin-bottom: 1.5rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                `;
+                indicator.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem;">📦</span>
+                        <span style="color: #3b82f6; font-weight: 600; font-size: 0.9rem;">
+                            Cached Recommendations (Loaded instantly)
+                        </span>
+                    </div>
+                    <button onclick="refreshAIRecommendations('${category}')" style="
+                        background: rgba(255, 255, 255, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        color: #ffffff;
+                        padding: 0.5rem 1rem;
+                        border-radius: 6px;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                `;
+                aiRecommendations.insertBefore(indicator, aiRecommendations.firstChild);
+            }
+        }
+        
+        async function refreshAIRecommendations(category) {
+            console.log('🔄 Force refreshing AI recommendations for:', category);
+            
+            // Clear cache for this category
+            const cacheKey = getCacheKey(currentDomain, currentWebsiteId, category);
+            localStorage.removeItem(cacheKey);
+            console.log('🗑️ Cleared cache for:', category);
+            
+            // Reload recommendations (will fetch fresh from AI)
+            await loadAIRecommendations(category);
+        }
+        
         // Switch between categories
         async function switchCategory(category) {
             currentCategory = category;
@@ -1478,15 +1661,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             try {
                 const container = document.getElementById(`tab-content-${category}`);
                 
+                // Step 1: Check cache first
+                const cachedRecommendations = getCachedRecommendations(currentDomain, currentWebsiteId, category);
+                
+                if (cachedRecommendations) {
+                    console.log('📦 Loading from cache:', category);
+                    
+                    // Show cached data immediately
+                    displayAIRecommendations(container, cachedRecommendations);
+                    
+                    // Show cache indicator
+                    showCacheIndicator(container, category);
+                    return;
+                }
+                
+                // Step 2: No cache - show loading and fetch from AI
+                console.log('🤖 No cache - fetching fresh AI recommendations for:', category);
+                
                 // Show loading state
                 container.innerHTML = `
                     <div class="loading-spinner">
                         <div class="spinner"></div>
                         <div class="loading-text">🤖 Generating AI-powered recommendations...</div>
+                        <div class="loading-text" style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+                            This may take 5-10 seconds...
+                        </div>
                     </div>
                 `;
                 
-                console.log(`🤖 Loading AI recommendations for ${category}`, { 
+                console.log(`🤖 Fetching AI recommendations for ${category}`, { 
                     domain: currentDomain, 
                     websiteId: currentWebsiteId 
                 });
@@ -1511,7 +1714,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const recommendations = await response.json();
                 console.log('✅ AI recommendations loaded:', recommendations);
                 
-                // Display recommendations
+                // Step 3: Cache the recommendations
+                setCachedRecommendations(currentDomain, currentWebsiteId, category, recommendations);
+                
+                // Step 4: Display recommendations
                 displayAIRecommendations(container, recommendations);
                 
             } catch (error) {
