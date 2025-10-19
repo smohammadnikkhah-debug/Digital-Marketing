@@ -1450,6 +1450,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // Global state
         let currentDomain = null;
+        let currentWebsiteId = null;
         let currentCategory = 'meta-optimization';
         
         // Switch between categories
@@ -1485,7 +1486,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                 `;
                 
-                console.log(`🤖 Loading AI recommendations for ${category} on domain:`, currentDomain);
+                console.log(`🤖 Loading AI recommendations for ${category}`, { 
+                    domain: currentDomain, 
+                    websiteId: currentWebsiteId 
+                });
                 
                 // Fetch AI recommendations
                 const response = await fetch('/api/technical-seo/ai-recommendations', {
@@ -1495,6 +1499,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     },
                     body: JSON.stringify({
                         domain: currentDomain,
+                        websiteId: currentWebsiteId,
                         category: category
                     })
                 });
@@ -1667,8 +1672,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             try {
                 console.log('🔧 Loading technical SEO data...');
                 
-                // Get domain from localStorage (selected from dashboard)
+                // Get domain and website_id from localStorage (set when clicking "View Details" on dashboard)
                 const lastAnalyzedDomain = localStorage.getItem('lastAnalyzedDomain');
+                const lastAnalyzedWebsiteId = localStorage.getItem('lastAnalyzedWebsiteId');
                 
                 if (!lastAnalyzedDomain) {
                     console.error('❌ No domain selected');
@@ -1677,7 +1683,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }
                 
                 currentDomain = lastAnalyzedDomain;
-                console.log('✅ Loading technical SEO for domain:', currentDomain);
+                currentWebsiteId = lastAnalyzedWebsiteId;  // Can be null for legacy compatibility
+                
+                console.log('✅ Loading technical SEO:', { 
+                    domain: currentDomain, 
+                    websiteId: currentWebsiteId || 'Not available (legacy)' 
+                });
                 
                 // Load initial category (meta-optimization)
                 await loadAIRecommendations('meta-optimization');

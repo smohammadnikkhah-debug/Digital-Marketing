@@ -311,6 +311,8 @@ class SupabaseService {
     if (!this.isConfigured) return null;
 
     try {
+      console.log('🔍 Getting analysis data for:', { domain, customerId });
+      
       // First get the website ID for this domain and customer
       let query = this.supabase
         .from('websites')
@@ -321,12 +323,23 @@ class SupabaseService {
         query = query.eq('customer_id', customerId);
       }
       
-      const { data: website, error: websiteError } = await query.single();
+      // Use .maybeSingle() instead of .single() to handle multiple or no results
+      const { data: website, error: websiteError } = await query
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (websiteError || !website) {
-        console.log('No website found for domain:', domain, 'customer:', customerId);
+      if (websiteError) {
+        console.error('❌ Error fetching website:', websiteError);
         return null;
       }
+
+      if (!website) {
+        console.log('❌ No website found for domain:', domain, 'customer:', customerId);
+        return null;
+      }
+
+      console.log('✅ Website found:', { id: website.id, domain });
 
       // Get the latest analysis for this website
       const { data, error } = await this.supabase
@@ -335,10 +348,15 @@ class SupabaseService {
         .eq('website_id', website.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.log('No analysis data found for domain:', domain);
+        console.error('❌ Error fetching analysis data:', error);
+        return null;
+      }
+
+      if (!data) {
+        console.log('❌ No analysis data found for domain:', domain);
         return null;
       }
 
@@ -353,7 +371,8 @@ class SupabaseService {
       
       return analysisData;
     } catch (error) {
-      console.error('Error getting analysis data by domain:', error);
+      console.error('❌ Error getting analysis data by domain:', error);
+      console.error('Error stack:', error.stack);
       return null;
     }
   }

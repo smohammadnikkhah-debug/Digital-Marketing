@@ -1684,6 +1684,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     throw new Error(historicalData.error || 'Failed to fetch historical DataForSEO data');
                 }
                 
+                // Store website_id if available (needed for Technical SEO page)
+                if (historicalData.data && historicalData.data.websiteId) {
+                    localStorage.setItem('lastAnalyzedWebsiteId', historicalData.data.websiteId);
+                    console.log('✅ Website ID stored:', historicalData.data.websiteId);
+                } else {
+                    console.warn('⚠️ No website_id in response data');
+                }
+                
                 // Wait a bit for Chart.js to be fully loaded
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
@@ -3256,9 +3264,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         function viewDetails() {
-            alert('VIEW DETAILS FUNCTION CALLED!');
-            console.log('📊 Viewing detailed analysis...');
-            showDetailsModal();
+            console.log('📊 Viewing detailed Technical SEO analysis...');
+            
+            // Get domain and websiteId from localStorage (already set by loadDashboardData)
+            const domain = localStorage.getItem('lastAnalyzedDomain');
+            const websiteId = localStorage.getItem('lastAnalyzedWebsiteId');
+            
+            console.log('🔍 Navigating to Technical SEO with:', { domain, websiteId });
+            
+            if (!domain) {
+                alert('Please analyze a website first');
+                return;
+            }
+            
+            // Navigate to Technical SEO page
+            // The Technical SEO page will automatically load data using domain and websiteId from localStorage
+            window.location.href = '/technical-seo';
         }
 
         function fixLinks() {

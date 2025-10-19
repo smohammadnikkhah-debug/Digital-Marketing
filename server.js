@@ -4747,35 +4747,71 @@ app.post('/api/supabase/historical-data/:domain', async (req, res) => {
 // Technical SEO AI Recommendations API
 app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
   try {
-    const { domain, category } = req.body;
+    const { domain, websiteId, category } = req.body;
     
-    console.log('🤖 Technical SEO AI Recommendations Request:', { domain, category });
+    console.log('🤖 Technical SEO AI Recommendations Request:', { domain, websiteId, category });
     
-    if (!domain) {
-      console.error('❌ Domain is required but not provided');
-      return res.status(400).json({
+    // Extract customer_id from authenticated session
+    const customerId = await getCustomerIdFromRequest(req);
+    console.log('👤 Customer ID from session:', customerId);
+    
+    if (!customerId) {
+      console.error('❌ Authentication required - no customer_id');
+      return res.status(401).json({
         success: false,
-        error: 'Domain is required'
+        error: 'Authentication required'
       });
     }
     
-    console.log(`🤖 Generating AI recommendations for ${domain}, category: ${category || 'all'}`);
+    // Prefer websiteId over domain for more accurate data retrieval
+    let crawlData;
+    
+    if (websiteId) {
+      console.log(`🔍 Fetching crawl data using website_id: ${websiteId}`);
+      // Get analysis data directly by website_id
+      const { data, error } = await supabaseService.supabase
+        .from('seo_analyses')
+        .select('analysis_data')
+        .eq('website_id', websiteId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (data) {
+        crawlData = data.analysis_data;
+        console.log('✅ Crawl data retrieved by website_id');
+      }
+    } else if (domain) {
+      console.log(`🔍 Fetching crawl data using domain: ${domain} and customer_id: ${customerId}`);
+      crawlData = await supabaseService.getAnalysisData(domain, customerId);
+    } else {
+      console.error('❌ Neither websiteId nor domain provided');
+      return res.status(400).json({
+        success: false,
+        error: 'Either websiteId or domain is required'
+      });
+    }
+    
+    console.log(`🤖 Generating AI recommendations, category: ${category || 'all'}`);
     
     // Get crawl data from Supabase
-    console.log('📊 Fetching crawl data from Supabase...');
-    const crawlData = await supabaseService.getAnalysisData(domain, null);
+    console.log('📊 Crawl data status:', crawlData ? '✅ Found' : '❌ Not found');
     
     if (!crawlData) {
-      console.error('❌ No crawl data found for domain:', domain);
+      console.error('❌ No crawl data found');
       return res.status(404).json({
         success: false,
-        error: 'No crawl data found for this domain',
-        hint: 'Please analyze the website from the main dashboard first'
+        error: 'No crawl data found for this website',
+        hint: 'Please analyze the website from the main dashboard first',
+        websiteId: websiteId,
+        domain: domain,
+        customerId: customerId
       });
     }
     
     console.log('✅ Crawl data retrieved:', {
-      domain: crawlData.domain,
+      websiteId: websiteId || 'N/A',
+      domain: crawlData.domain || domain,
       hasOnPage: !!crawlData.onPage,
       pagesCount: crawlData.onPage?.pages?.length || 0
     });
@@ -4847,6 +4883,28 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
     console.log('📊 Request params domain:', req.params.domain);
     console.log('📊 Request URL:', req.url);
     
+    // Get customer_id from authenticated session
+    const customerId = await getCustomerIdFromRequest(req);
+    console.log('👤 Customer ID from session:', customerId);
+    
+    // Get website record to obtain website_id
+    let websiteId = null;
+    try {
+      const { data: website } = await supabaseService.supabase
+        .from('websites')
+        .select('id')
+        .eq('domain', domain)
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      
+      if (website) {
+        websiteId = website.id;
+        console.log('✅ Website ID found:', websiteId);
+      }
+    } catch (error) {
+      console.log('⚠️ Could not get website_id:', error.message);
+    }
+    
     // Get analysis data from Supabase first (should have full crawl data)
     let analysisData = null;
     
@@ -4854,7 +4912,7 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
       // First, try to get existing analysis from Supabase
       if (!shouldForceRefresh) {
         console.log('📊 Checking Supabase for existing analysis...');
-        analysisData = await supabaseService.getAnalysisData(domain, null);
+        analysisData = await supabaseService.getAnalysisData(domain, customerId);
         
         if (analysisData) {
           console.log('✅ Got analysis from Supabase:', {
@@ -4908,6 +4966,7 @@ async function handleHistoricalDataRequest(req, res, forceRefresh = false) {
         
         // FORCE: Ensure domain and timestamp match the request
         domain: domain, // This MUST be the requested domain, not the cached one
+        websiteId: websiteId, // Add website_id for Technical SEO page
         timestamp: analysisData?.timestamp || new Date().toISOString(),
         
         // Format keywords for Mantis v2 compatibility
