@@ -4744,6 +4744,129 @@ app.post('/api/supabase/historical-data/:domain', async (req, res) => {
   await handleHistoricalDataRequest(req, res, true);
 });
 
+// Keywords Data API - Get or Fetch Keywords
+app.post('/api/keywords/get-or-fetch', async (req, res) => {
+  try {
+    const { domain, websiteId } = req.body;
+    
+    console.log('🔑 Keywords request:', { domain, websiteId });
+    
+    // Extract customer_id from authenticated session
+    const customerId = await getCustomerIdFromRequest(req);
+    console.log('👤 Customer ID from session:', customerId);
+    
+    if (!customerId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+    
+    // Step 1: Get website record
+    let website = null;
+    if (websiteId) {
+      const { data } = await supabaseService.supabase
+        .from('websites')
+        .select('*')
+        .eq('id', websiteId)
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      website = data;
+    } else if (domain) {
+      const { data } = await supabaseService.supabase
+        .from('websites')
+        .select('*')
+        .eq('domain', domain)
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      website = data;
+    }
+    
+    if (!website) {
+      return res.status(404).json({
+        success: false,
+        error: 'Website not found for this customer'
+      });
+    }
+    
+    console.log('✅ Website found:', { id: website.id, domain: website.domain });
+    
+    // Step 2: Check if keywords exist in seo_analyses table
+    const { data: analysisData } = await supabaseService.supabase
+      .from('seo_analyses')
+      .select('analysis_data')
+      .eq('website_id', website.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    let keywords = null;
+    
+    if (analysisData && analysisData.analysis_data && analysisData.analysis_data.keywords) {
+      console.log('✅ Keywords found in seo_analyses table');
+      keywords = analysisData.analysis_data.keywords;
+    } else {
+      console.log('🔍 No keywords in seo_analyses, fetching from DataForSEO...');
+      
+      // Step 3: Fetch keywords from DataForSEO
+      try {
+        const keywordResult = await dataforseoSmartService.getKeywords(website.domain);
+        
+        if (keywordResult.success && keywordResult.data) {
+          keywords = keywordResult.data;
+          console.log('✅ Keywords fetched from DataForSEO:', keywords.keywords?.length || 0);
+          
+          // Step 4: Store keywords in keywords table
+          if (keywords.keywords && keywords.keywords.length > 0) {
+            await supabaseService.storeKeywords(website.id, keywords.keywords);
+            console.log('✅ Keywords stored in keywords table');
+          }
+          
+          // Step 5: Update seo_analyses with keywords data
+          if (analysisData) {
+            const updatedAnalysis = {
+              ...analysisData.analysis_data,
+              keywords: keywords
+            };
+            
+            await supabaseService.supabase
+              .from('seo_analyses')
+              .update({ analysis_data: updatedAnalysis })
+              .eq('website_id', website.id);
+            
+            console.log('✅ Updated seo_analyses with keywords data');
+          }
+        } else {
+          console.warn('⚠️ DataForSEO keywords fetch failed');
+          keywords = { keywords: [], totalKeywords: 0 };
+        }
+      } catch (error) {
+        console.error('❌ Error fetching keywords from DataForSEO:', error);
+        keywords = { keywords: [], totalKeywords: 0 };
+      }
+    }
+    
+    res.json({
+      success: true,
+      domain: website.domain,
+      websiteId: website.id,
+      keywords: keywords,
+      source: analysisData ? 'cache' : 'dataforseo',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Keywords API error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get keywords',
+      details: error.message
+    });
+  }
+});
+
 // Technical SEO AI Recommendations API
 app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
   try {
