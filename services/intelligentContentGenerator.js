@@ -436,7 +436,29 @@ Return ONLY valid JSON.`;
    */
   async storeContentMemory(supabase, websiteId, contentType, content, keyword, targetDate = null) {
     try {
-      const contentHash = this.generateHash(content.title || content.caption || content.content);
+      // Extract text for hashing based on content type
+      let hashText = '';
+      let topic = keyword || 'Untitled';
+      
+      if (contentType === 'blog' && content.title) {
+        hashText = content.title;
+        topic = content.title;
+      } else if (contentType === 'twitter' && content.content) {
+        hashText = content.content;
+        topic = content.content.substring(0, 100);
+      } else if (contentType === 'instagram' && content.caption) {
+        hashText = content.caption;
+        topic = content.caption.substring(0, 100);
+      } else if (contentType === 'tiktok') {
+        hashText = content.hook || content.script || '';
+        topic = content.hook || 'TikTok Script';
+      } else {
+        // Fallback: use any available text
+        hashText = content.title || content.caption || content.content || content.hook || keyword || 'empty';
+        topic = hashText.substring(0, 100) || keyword || 'Untitled';
+      }
+      
+      const contentHash = this.generateHash(hashText);
       
       const { data, error } = await supabase
         .from('content_memory')
@@ -444,7 +466,7 @@ Return ONLY valid JSON.`;
           website_id: websiteId,
           content_type: contentType,
           keyword: keyword,
-          topic: content.title || content.caption || keyword,
+          topic: topic,
           content_hash: contentHash,
           full_content: JSON.stringify(content),
           metadata: {
@@ -468,7 +490,7 @@ Return ONLY valid JSON.`;
         return { success: false, error: error.message };
       }
 
-      console.log('✅ Content stored in memory:', contentType, '-', content.title || keyword);
+      console.log('✅ Content stored in memory:', contentType, '-', topic);
       return { success: true, data: data };
 
     } catch (error) {
@@ -481,6 +503,11 @@ Return ONLY valid JSON.`;
    * Generate content hash for duplicate detection
    */
   generateHash(text) {
+    // Handle undefined, null, or empty text
+    if (!text || typeof text !== 'string') {
+      console.warn('⚠️ generateHash received invalid text:', text);
+      return crypto.createHash('sha256').update(String(text || 'empty').toLowerCase().trim()).digest('hex');
+    }
     return crypto.createHash('sha256').update(text.toLowerCase().trim()).digest('hex');
   }
 
