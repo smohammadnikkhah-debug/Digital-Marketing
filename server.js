@@ -28,6 +28,7 @@ const domainAnalysisService = require('./services/domainAnalysisService');
 const GoogleServices = require('./services/googleServices');
 const supabaseService = require('./services/supabaseService');
 const IntelligentContentService = require('./services/intelligentContentService');
+const intelligentContentGenerator = require('./services/intelligentContentGenerator');
 const Auth0Service = require('./services/auth0Service');
 const subscriptionService = require('./services/subscriptionService');
 
@@ -4867,6 +4868,138 @@ app.post('/api/keywords/get-or-fetch', async (req, res) => {
   }
 });
 
+// Generate AI Content Calendar
+app.post('/api/content-calendar/generate', async (req, res) => {
+  try {
+    const { domain, websiteId, month, year } = req.body;
+    
+    console.log('📅 Content calendar generation request:', { domain, websiteId, month, year });
+    
+    // Extract customer_id from authenticated session
+    const customerId = await getCustomerIdFromRequest(req);
+    console.log('👤 Customer ID from session:', customerId);
+    
+    if (!customerId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+    
+    // Get website record
+    let website = null;
+    if (websiteId) {
+      const { data } = await supabaseService.supabase
+        .from('websites')
+        .select('*')
+        .eq('id', websiteId)
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      website = data;
+    } else if (domain) {
+      const { data } = await supabaseService.supabase
+        .from('websites')
+        .select('*')
+        .eq('domain', domain)
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      website = data;
+    }
+    
+    if (!website) {
+      return res.status(404).json({
+        success: false,
+        error: 'Website not found for this customer'
+      });
+    }
+    
+    console.log('✅ Website found:', { id: website.id, domain: website.domain });
+    
+    // Get user's plan (from users table or subscription)
+    let userPlan = 'starter'; // Default
+    try {
+      const { data: user } = await supabaseService.supabase
+        .from('users')
+        .select('plan')
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      
+      if (user && user.plan) {
+        userPlan = user.plan;
+      }
+    } catch (error) {
+      console.log('⚠️ Could not get user plan, using default:', error.message);
+    }
+    
+    console.log('📊 User plan:', userPlan);
+    
+    // Check plan limits
+    const limitsCheck = await intelligentContentGenerator.checkPlanLimits(
+      supabaseService.supabase,
+      website.id,
+      userPlan,
+      month,
+      year
+    );
+    
+    console.log('📊 Plan limits check:', limitsCheck);
+    
+    if (!limitsCheck.canGenerate.blogs && !limitsCheck.canGenerate.socialPosts) {
+      return res.status(403).json({
+        success: false,
+        error: 'Content limit reached for this month',
+        limits: limitsCheck
+      });
+    }
+    
+    // Get crawl data for context
+    const crawlData = await supabaseService.getAnalysisData(website.domain, customerId);
+    
+    if (!crawlData) {
+      console.warn('⚠️ No crawl data found, will use domain analysis');
+    }
+    
+    // Generate monthly content
+    const result = await intelligentContentGenerator.generateMonthlyContent(
+      supabaseService.supabase,
+      website.id,
+      crawlData || { domain: website.domain },
+      website.domain,
+      userPlan,
+      month,
+      year
+    );
+    
+    if (result.success) {
+      console.log('✅ Content calendar generated:', result.metadata);
+      
+      res.json({
+        success: true,
+        calendar: result.calendar,
+        metadata: result.metadata,
+        limits: limitsCheck,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate content calendar',
+        details: result.error
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Content calendar generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate content calendar',
+      details: error.message
+    });
+  }
+});
+
 // Technical SEO AI Recommendations API
 app.post('/api/technical-seo/ai-recommendations', async (req, res) => {
   try {
@@ -6805,41 +6938,151 @@ app.post('/api/content-calendar/check-needs', async (req, res) => {
     }
 });
 
-// Generate SEO-optimized content for social media platforms
+// Generate SEO-optimized content for social media platforms (LEGACY ENDPOINT - Uses new AI system)
 app.post('/api/content-calendar/generate-seo-content', async (req, res) => {
     try {
-        console.log('📨 Received request to /api/content-calendar/generate-seo-content');
+        console.log('📨 Received request to LEGACY endpoint /api/content-calendar/generate-seo-content');
+        console.log('🔄 Using new AI-powered generation system...');
         console.log('📨 Request body:', req.body);
         
-        const { domain, services, keywords, days = 30, forceCurrentMonth = false, startDate, immediate = false, background = false } = req.body;
-        console.log(`🎯 Generating SEO content for ${domain} with ${services?.length || 0} services and ${keywords?.length || 0} keywords`);
-        console.log(`🔍 Mode: immediate=${immediate}, background=${background}, forceCurrentMonth=${forceCurrentMonth}`);
+        const { domain, days = 30, startDate, immediate = false, background = false } = req.body;
         
-        if (forceCurrentMonth && startDate) {
-            console.log(`📅 Force current month mode: Starting from ${startDate}`);
+        // Extract customer_id from authenticated session
+        const customerId = await getCustomerIdFromRequest(req);
+        console.log('👤 Customer ID from session:', customerId);
+        
+        if (!customerId) {
+            return res.status(401).json({
+                success: false,
+                error: 'Authentication required',
+                data: []
+            });
         }
         
-        // Skip content check for immediate/background generation
-        if (!immediate && !background) {
-            // Check if content needs to be generated
-            const needsGeneration = await contentCalendarService.needsContentGeneration(domain);
-            if (!needsGeneration) {
-                console.log('✅ Content already exists for next 7 days');
-                return res.json({ success: true, message: 'Content already exists for next 7 days', data: [] });
+        // Get website record for this customer
+        let website = null;
+        const { data: websiteData } = await supabaseService.supabase
+            .from('websites')
+            .select('*')
+            .eq('domain', domain)
+            .eq('customer_id', customerId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        
+        website = websiteData;
+        
+        if (!website) {
+            console.error('❌ Website not found for domain:', domain, 'customer:', customerId);
+            return res.status(404).json({
+                success: false,
+                error: 'Website not found for this customer',
+                data: []
+            });
+        }
+        
+        console.log('✅ Website found for customer:', { id: website.id, domain: website.domain });
+        
+        // Calculate month and year from startDate
+        const date = startDate ? new Date(startDate) : new Date();
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        
+        console.log(`🔄 Generating content with new AI system:`, { 
+            domain: website.domain, 
+            websiteId: website.id, 
+            month, 
+            year, 
+            customerId 
+        });
+        
+        // Get user's plan
+        let userPlan = 'starter'; // Default
+        try {
+            const { data: user } = await supabaseService.supabase
+                .from('users')
+                .select('plan')
+                .eq('customer_id', customerId)
+                .maybeSingle();
+            
+            if (user && user.plan) {
+                userPlan = user.plan;
             }
+        } catch (error) {
+            console.log('⚠️ Could not get user plan, using default:', error.message);
         }
         
-        // Generate SEO content using the service
-        const generatedContent = await contentCalendarService.generateSEOContent(domain, services, keywords, days, forceCurrentMonth, startDate, immediate, background);
+        // Get crawl data
+        const crawlData = await supabaseService.getAnalysisData(website.domain, customerId);
         
-        console.log(`✅ Generated ${generatedContent.length} SEO-optimized posts`);
-        console.log(`📤 Sending response to frontend with ${generatedContent.length} posts`);
+        // Generate content using new AI system
+        const result = await intelligentContentGenerator.generateMonthlyContent(
+            supabaseService.supabase,
+            website.id,
+            crawlData || { domain: website.domain },
+            website.domain,
+            userPlan,
+            month,
+            year
+        );
         
-        res.json({ success: true, data: generatedContent });
+        if (result.success) {
+            // Convert new format to legacy format for compatibility
+            const legacyData = result.calendar.flatMap(item => {
+                const items = [];
+                const dateStr = item.date.toISOString().split('T')[0];
+                
+                if (item.content.blog) {
+                    items.push({
+                        target_date: dateStr,
+                        platform: 'blog',
+                        content: item.content.blog.title,
+                        hashtags: item.content.blog.keywords || [],
+                        seo_keywords: item.content.blog.keywords || [],
+                        call_to_action: 'Read full article'
+                    });
+                }
+                if (item.content.twitter) {
+                    items.push({
+                        target_date: dateStr,
+                        platform: 'twitter',
+                        content: item.content.twitter.content,
+                        hashtags: item.content.twitter.hashtags || [],
+                        call_to_action: item.content.twitter.callToAction || ''
+                    });
+                }
+                if (item.content.instagram) {
+                    items.push({
+                        target_date: dateStr,
+                        platform: 'instagram',
+                        content: item.content.instagram.caption,
+                        hashtags: item.content.instagram.hashtags || [],
+                        call_to_action: item.content.instagram.callToAction || ''
+                    });
+                }
+                if (item.content.tiktok) {
+                    items.push({
+                        target_date: dateStr,
+                        platform: 'tiktok',
+                        content: item.content.tiktok.hook,
+                        hashtags: item.content.tiktok.hashtags || [],
+                        call_to_action: item.content.tiktok.callToAction || ''
+                    });
+                }
+                
+                return items;
+            });
+            
+            console.log(`✅ Generated ${legacyData.length} items via new AI system (customer-specific)`);
+            res.json({ success: true, data: legacyData });
+        } else {
+            console.error('❌ AI generation failed:', result.error);
+            res.status(500).json({ success: false, error: result.error || 'Generation failed', data: [] });
+        }
         
     } catch (error) {
-        console.error('❌ Error generating SEO content:', error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error('❌ Error in legacy endpoint:', error);
+        res.status(500).json({ success: false, error: error.message, data: [] });
     }
 });
 
