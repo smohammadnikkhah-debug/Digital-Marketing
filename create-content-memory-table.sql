@@ -2,7 +2,7 @@
 -- Tracks all generated content to prevent duplication
 CREATE TABLE IF NOT EXISTS content_memory (
     id SERIAL PRIMARY KEY,
-    website_id INTEGER REFERENCES websites(id) ON DELETE CASCADE,
+    website_id UUID REFERENCES websites(id) ON DELETE CASCADE,
     content_type VARCHAR(50) NOT NULL, -- 'blog', 'twitter', 'instagram', 'tiktok'
     keyword VARCHAR(255), -- Primary keyword used
     topic VARCHAR(500) NOT NULL, -- Main topic/title
