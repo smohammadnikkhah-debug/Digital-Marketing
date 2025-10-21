@@ -229,10 +229,30 @@ router.get('/logout', (req, res) => {
   // Clear the session cookie
   res.clearCookie('authToken');
   
-  // Redirect to Auth0 logout
-  const logoutURL = `https://${process.env.AUTH0_DOMAIN}/v2/logout?` +
-    `returnTo=${encodeURIComponent(process.env.AUTH0_LOGOUT_URL)}&` +
+  // Clear session data
+  if (req.session) {
+    req.session.destroy();
+  }
+  
+  // Prepare Auth0 domain (handle both with and without https://)
+  let auth0Domain = process.env.AUTH0_DOMAIN || 'login.mozarex.com';
+  if (auth0Domain.startsWith('https://')) {
+    auth0Domain = auth0Domain.replace('https://', '');
+  }
+  if (auth0Domain.startsWith('http://')) {
+    auth0Domain = auth0Domain.replace('http://', '');
+  }
+  
+  // Set return URL (where user goes after logout)
+  // This should be your app's homepage, not the Auth0 logout endpoint
+  const returnToURL = process.env.AUTH0_LOGOUT_REDIRECT || 'https://mozarex.com';
+  
+  // Build Auth0 logout URL
+  const logoutURL = `https://${auth0Domain}/v2/logout?` +
+    `returnTo=${encodeURIComponent(returnToURL)}&` +
     `client_id=${process.env.AUTH0_CLIENT_ID}`;
+  
+  console.log('🚪 Logging out, redirecting to:', logoutURL);
   
   res.redirect(logoutURL);
 });
