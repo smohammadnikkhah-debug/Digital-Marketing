@@ -432,6 +432,42 @@ Return ONLY valid JSON.`;
   }
 
   /**
+   * Get existing content from memory for a specific month
+   */
+  async getExistingMonthlyContent(supabase, websiteId, month, year) {
+    try {
+      const startDate = new Date(year, month, 1);
+      const endDate = new Date(year, month + 1, 0);
+      
+      console.log(`🔍 Checking for existing content in month ${month + 1}/${year} for website ${websiteId}`);
+      
+      const { data, error } = await supabase
+        .from('content_memory')
+        .select('*')
+        .eq('website_id', websiteId)
+        .gte('target_date', startDate.toISOString().split('T')[0])
+        .lte('target_date', endDate.toISOString().split('T')[0])
+        .order('target_date', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching existing content:', error);
+        return [];
+      }
+      
+      if (data && data.length > 0) {
+        console.log(`✅ Found ${data.length} existing content items in content_memory`);
+      } else {
+        console.log(`📝 No existing content found for this month`);
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error getting existing monthly content:', error);
+      return [];
+    }
+  }
+
+  /**
    * Store generated content in memory
    */
   async storeContentMemory(supabase, websiteId, contentType, content, keyword, targetDate = null) {
@@ -518,14 +554,81 @@ Return ONLY valid JSON.`;
     try {
       console.log(`📅 Generating monthly content for ${domain} (${plan} plan)`);
 
-      // Step 1: Extract keywords and services from crawl data
+      // Step 1: Check if content already exists for this month
+      const existingContent = await this.getExistingMonthlyContent(supabase, websiteId, month, year);
+      
+      if (existingContent && existingContent.length > 0) {
+        console.log(`🎯 Using ${existingContent.length} existing content items from Supabase (no ChatGPT calls needed!)`);
+        
+        // Group existing content by date
+        const contentByDate = {};
+        existingContent.forEach(item => {
+          const date = item.target_date;
+          if (!contentByDate[date]) {
+            contentByDate[date] = {};
+          }
+          
+          // Parse stored content
+          let parsedContent = item.full_content;
+          if (typeof parsedContent === 'string') {
+            try {
+              parsedContent = JSON.parse(parsedContent);
+            } catch (e) {
+              console.warn('Could not parse content for', item.content_type);
+            }
+          }
+          
+          contentByDate[date][item.content_type] = parsedContent;
+        });
+        
+        // Convert to calendar format
+        const calendar = Object.keys(contentByDate).map(dateStr => {
+          const date = new Date(dateStr);
+          return {
+            date: date,
+            day: date.getDate(),
+            content: {
+              blog: contentByDate[dateStr].blog || null,
+              twitter: contentByDate[dateStr].twitter || null,
+              instagram: contentByDate[dateStr].instagram || null,
+              tiktok: contentByDate[dateStr].tiktok || null
+            }
+          };
+        }).sort((a, b) => a.date - b.date);
+        
+        const blogsCount = existingContent.filter(i => i.content_type === 'blog').length;
+        const socialCount = existingContent.filter(i => ['twitter', 'instagram', 'tiktok'].includes(i.content_type)).length;
+        
+        console.log(`✅ Returning cached calendar: ${blogsCount} blogs, ${socialCount} social posts`);
+        
+        return {
+          success: true,
+          calendar: calendar,
+          metadata: {
+            domain,
+            plan,
+            month,
+            year,
+            blogsGenerated: blogsCount,
+            socialPostsGenerated: socialCount,
+            cached: true,
+            message: 'Content loaded from cache (no AI calls made)'
+          },
+          limits: this.getContentLimits(plan)
+        };
+      }
+
+      // Step 2: No existing content - Generate new content with ChatGPT
+      console.log('🤖 No existing content found - generating fresh content with ChatGPT');
+
+      // Step 3: Extract keywords and services from crawl data
       const extracted = await this.extractKeywordsAndServices(crawlData, domain);
       
-      // Step 2: Get already used topics to avoid duplication
+      // Step 4: Get already used topics to avoid duplication
       const usedBlogTopics = await this.getUsedTopics(supabase, websiteId, 'blog');
       const usedSocialTopics = await this.getUsedTopics(supabase, websiteId, null, 100);
 
-      // Step 3: Determine content limits based on plan from plan-limits-config.js
+      // Step 5: Determine content limits based on plan from plan-limits-config.js
       const limits = this.getContentLimits(plan);
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       
@@ -629,7 +732,10 @@ Return ONLY valid JSON.`;
         }
       }
 
-      console.log(`✅ Generated ${calendar.length} content items for the month`);
+      console.log(`✅ Generated ${calendar.length} content items for the month with ChatGPT`);
+
+      const blogsGenerated = blogDays.length;
+      const socialPostsGenerated = calendar.filter(c => c.content.twitter || c.content.instagram || c.content.tiktok).length;
 
       return {
         success: true,
@@ -640,9 +746,12 @@ Return ONLY valid JSON.`;
           month: month,
           year: year,
           totalItems: calendar.length,
-          blogsGenerated: blogDays.length,
-          socialPostsGenerated: calendar.filter(c => c.content.twitter || c.content.instagram).length
-        }
+          blogsGenerated: blogsGenerated,
+          socialPostsGenerated: socialPostsGenerated,
+          cached: false,
+          message: 'Fresh content generated with ChatGPT and stored in Supabase'
+        },
+        limits: this.getContentLimits(plan)
       };
 
     } catch (error) {
