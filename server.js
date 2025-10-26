@@ -32,6 +32,18 @@ const intelligentContentGenerator = require('./services/intelligentContentGenera
 const Auth0Service = require('./services/auth0Service');
 const subscriptionService = require('./services/subscriptionService');
 
+// Helper function to clean Auth0 domain (strip https:// if present)
+function getCleanAuth0Domain() {
+  let domain = process.env.AUTH0_DOMAIN || 'login.mozarex.com';
+  if (domain.startsWith('https://')) {
+    domain = domain.replace('https://', '');
+  }
+  if (domain.startsWith('http://')) {
+    domain = domain.replace('http://', '');
+  }
+  return domain;
+}
+
 // Helper function to check if user has active subscription
 async function checkUserSubscription(email) {
   try {
@@ -554,7 +566,8 @@ app.get('/auth/callback', async (req, res) => {
     console.log('Auth0 callback received with code:', code);
     
     // Exchange code for tokens
-    const tokenResponse = await fetch(`${process.env.AUTH0_DOMAIN}/oauth/token`, {
+    const auth0Domain = getCleanAuth0Domain();
+    const tokenResponse = await fetch(`https://${auth0Domain}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -585,7 +598,7 @@ app.get('/auth/callback', async (req, res) => {
     console.log('Tokens received successfully');
     
     // Get user info
-    const userResponse = await fetch(`${process.env.AUTH0_DOMAIN}/userinfo`, {
+    const userResponse = await fetch(`https://${auth0Domain}/userinfo`, {
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
       },
@@ -930,11 +943,12 @@ app.get('/signup', async (req, res) => {
                     };
                     
                     // Redirect to Auth0 callback with plan data
-                    console.log('🔍 AUTH0_DOMAIN:', process.env.AUTH0_DOMAIN);
+                    const auth0Domain = getCleanAuth0Domain();
+                    console.log('🔍 AUTH0_DOMAIN (cleaned):', auth0Domain);
                     console.log('🔍 AUTH0_CLIENT_ID:', process.env.AUTH0_CLIENT_ID);
                     console.log('🔍 AUTH0_CALLBACK_URL:', process.env.AUTH0_CALLBACK_URL);
                     
-                    const auth0Url = `${process.env.AUTH0_DOMAIN}/authorize?` +
+                    const auth0Url = `https://${auth0Domain}/authorize?` +
                         `response_type=code&` +
                         `client_id=${process.env.AUTH0_CLIENT_ID}&` +
                         `redirect_uri=${encodeURIComponent(process.env.AUTH0_CALLBACK_URL)}&` +
@@ -972,7 +986,8 @@ app.get('/stripe-test', (req, res) => {
 
 // Login page - redirect directly to Auth0 Universal Login
 app.get('/login', (req, res) => {
-  const auth0Domain = process.env.AUTH0_DOMAIN;
+  // Get cleaned Auth0 domain (without protocol)
+  const auth0Domain = getCleanAuth0Domain();
   const clientId = process.env.AUTH0_CLIENT_ID;
   const redirectUri = encodeURIComponent(process.env.AUTH0_CALLBACK_URL);
   const scope = encodeURIComponent('openid email profile');
@@ -981,6 +996,7 @@ app.get('/login', (req, res) => {
   const { plan, priceId, billing, signup } = req.query;
   
   console.log('🔐 /login route called:', { signup, plan, priceId, billing });
+  console.log('🔗 Auth0 domain (cleaned):', auth0Domain);
   
   // Store plan info in session for callback
   if (req.session) {
@@ -1016,7 +1032,7 @@ app.get('/login', (req, res) => {
     }
   } else {
     // Login mode - use authorize endpoint
-    auth0Url = `${auth0Domain}/authorize?` +
+    auth0Url = `https://${auth0Domain}/authorize?` +
       `response_type=code&` +
       `client_id=${clientId}&` +
       `redirect_uri=${redirectUri}&` +
