@@ -17,11 +17,12 @@ router.get('/login', (req, res, next) => {
     req.session.signupMode = true;
   }
   
+  // IMPORTANT: tell Auth0 to show the Signup screen when signup=true
   const authOptions = {
-    scope: 'openid email profile'
+    scope: 'openid email profile',
+    ...(isSignup ? { screen_hint: 'signup' } : {})
   };
   
-  // Add connection parameter if specified (e.g., google-oauth2)
   if (connection) {
     authOptions.connection = connection;
   }

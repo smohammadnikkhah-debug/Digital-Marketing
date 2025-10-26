@@ -527,7 +527,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const billing = urlParams.get('billing');
         
         // Build redirect URL with all plan parameters
-        let redirectUrl = '/login?signup=true';
+        let redirectUrl = '/auth/login?signup=true';
         if (plan) {
             redirectUrl += `&plan=${encodeURIComponent(plan)}`;
         }
