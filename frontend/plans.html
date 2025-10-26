@@ -692,7 +692,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <ul class="plan-features">
                     ${features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
                 </ul>
-                <button class="plan-button" onclick="selectPlan('${product.id}', '${priceInfo.priceId}', ${isYearly})">
+                <button class="plan-button" onclick="selectPlan('${product.id}', '${encodeURIComponent(product.name)}', '${priceInfo.priceId}', ${isYearly})">
                     Start Free Trial
                 </button>
             `;
@@ -703,19 +703,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         // Handle plan selection
-        function selectPlan(productId, priceId, isYearly) {
-            // Find the product name from the products array
-            const product = window.currentProducts?.find(p => p.id === productId);
-            const planName = product ? product.name : productId;
-            
+        function selectPlan(productId, planName, priceId, isYearly) {
             console.log('🎯 Plan selection:', { productId, planName, priceId, isYearly });
+            
+            // Validate planName is not undefined
+            if (!planName || planName === 'undefined') {
+                console.error('❌ Plan name is undefined!');
+                // Fallback to productId if planName is missing
+                planName = productId || 'Starter';
+            }
             
             // Store selected plan in sessionStorage
             sessionStorage.setItem('selectedPlan', planName);
             sessionStorage.setItem('selectedPriceId', priceId);
             sessionStorage.setItem('isYearly', isYearly);
             
-            // Redirect to signup (which will redirect to Stripe Checkout)
+            // Redirect to signup (which will redirect to Auth0 for signup)
             window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
         }
 

@@ -11,17 +11,30 @@ const auth0Service = new Auth0Service();
 router.get('/login', (req, res, next) => {
   const isSignup = req.query.signup === 'true';
   const connection = req.query.connection;
+  const plan = req.query.plan;
+  const priceId = req.query.priceId;
+  const billing = req.query.billing;
+  
+  console.log('🔐 Login route called:', { isSignup, connection, plan, priceId, billing });
   
   // Store signup mode in session
   if (isSignup) {
     req.session.signupMode = true;
+    console.log('✅ Signup mode enabled');
   }
+  
+  // Store plan info in session for use in callback
+  if (plan) req.session.selectedPlan = plan;
+  if (priceId) req.session.selectedPriceId = priceId;
+  if (billing) req.session.billing = billing;
   
   // IMPORTANT: tell Auth0 to show the Signup screen when signup=true
   const authOptions = {
     scope: 'openid email profile',
     ...(isSignup ? { screen_hint: 'signup' } : {})
   };
+  
+  console.log('🎯 Auth options:', authOptions);
   
   if (connection) {
     authOptions.connection = connection;

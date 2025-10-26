@@ -526,9 +526,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const priceId = urlParams.get('priceId');
         const billing = urlParams.get('billing');
         
-        // Build redirect URL with all plan parameters
-        let redirectUrl = '/auth/login?signup=true';
-        if (plan) {
+        console.log('📝 Signup page params:', { plan, priceId, billing });
+        
+        // Build redirect URL to /login with signup=true
+        // This will make Auth0 show the signup screen
+        let redirectUrl = '/login?signup=true';
+        if (plan && plan !== 'undefined') {
             redirectUrl += `&plan=${encodeURIComponent(plan)}`;
         }
         if (priceId) {
@@ -538,6 +541,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             redirectUrl += `&billing=${encodeURIComponent(billing)}`;
         }
         
+        console.log('🔗 Redirecting to:', redirectUrl);
         window.location.href = redirectUrl;
     </script>
 </body>
