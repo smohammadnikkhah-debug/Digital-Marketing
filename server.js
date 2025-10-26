@@ -980,6 +980,16 @@ app.get('/login', (req, res) => {
   // Get plan parameters from query string
   const { plan, priceId, billing, signup } = req.query;
   
+  console.log('🔐 /login route called:', { signup, plan, priceId, billing });
+  
+  // Store plan info in session for callback
+  if (req.session) {
+    if (plan) req.session.selectedPlan = plan;
+    if (priceId) req.session.selectedPriceId = priceId;
+    if (billing) req.session.billing = billing;
+    if (signup) req.session.signupMode = true;
+  }
+  
   // Build state parameter to pass plan data through Auth0
   let state = '';
   if (plan || priceId || billing || signup) {
@@ -991,16 +1001,34 @@ app.get('/login', (req, res) => {
     state = encodeURIComponent(JSON.stringify(stateData));
   }
   
-  let auth0Url = `${auth0Domain}/authorize?` +
-    `response_type=code&` +
-    `client_id=${clientId}&` +
-    `redirect_uri=${redirectUri}&` +
-    `scope=${scope}&` +
-    `prompt=login`;
-  
-  if (state) {
-    auth0Url += `&state=${state}`;
+  // Determine the Auth0 URL based on signup mode
+  let auth0Url;
+  if (signup === 'true') {
+    // Signup mode - redirect to Auth0's signup page
+    console.log('✅ Signup mode: Redirecting to Auth0 signup page');
+    auth0Url = `https://${auth0Domain}/u/signup?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${redirectUri}`;
+    
+    // Add state if provided
+    if (state) {
+      auth0Url += `&state=${state}`;
+    }
+  } else {
+    // Login mode - use authorize endpoint
+    auth0Url = `${auth0Domain}/authorize?` +
+      `response_type=code&` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${redirectUri}&` +
+      `scope=${scope}&` +
+      `prompt=login`;
+    
+    if (state) {
+      auth0Url += `&state=${state}`;
+    }
   }
+  
+  console.log('🔗 Redirecting to Auth0:', auth0Url);
   
   res.redirect(auth0Url);
 });
