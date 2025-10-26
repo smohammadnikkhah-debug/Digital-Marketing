@@ -1020,18 +1020,21 @@ app.get('/login', (req, res) => {
   // Determine the Auth0 URL based on signup mode
   let auth0Url;
   if (signup === 'true') {
-    // Signup mode - redirect to Auth0's signup page
-    console.log('✅ Signup mode: Redirecting to Auth0 signup page');
-    auth0Url = `https://${auth0Domain}/u/signup?` +
+    // Signup mode - use authorize endpoint with screen_hint for signup
+    console.log('✅ Signup mode: Redirecting to Auth0 authorize page with signup hint');
+    auth0Url = `https://${auth0Domain}/authorize?` +
+      `response_type=code&` +
       `client_id=${clientId}&` +
-      `redirect_uri=${redirectUri}`;
+      `redirect_uri=${redirectUri}&` +
+      `scope=${scope}&` +
+      `screen_hint=signup`;
     
     // Add state if provided
     if (state) {
       auth0Url += `&state=${state}`;
     }
   } else {
-    // Login mode - use authorize endpoint
+    // Login mode - use authorize endpoint with login prompt
     auth0Url = `https://${auth0Domain}/authorize?` +
       `response_type=code&` +
       `client_id=${clientId}&` +
