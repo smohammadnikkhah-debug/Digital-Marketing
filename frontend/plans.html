@@ -709,14 +709,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Validate planName is not undefined
             if (!planName || planName === 'undefined') {
                 console.error('❌ Plan name is undefined!');
-                // Fallback to productId if planName is missing
-                planName = productId || 'Starter';
+                // Fallback: extract plan name from priceId
+                if (priceId.includes('S9k6k') || priceId.includes('SD8Iy')) {
+                    planName = 'Starter';
+                } else if (priceId.includes('S9kCw') || priceId.includes('SB8gW')) {
+                    planName = 'Professional';
+                } else {
+                    planName = 'Starter'; // Default fallback
+                }
+                console.log('✅ Fixed plan name:', planName);
+            }
+            
+            // Validate priceId is not undefined
+            if (!priceId || priceId === 'undefined') {
+                console.error('❌ Price ID is undefined!');
+                return; // Don't proceed without priceId
             }
             
             // Store selected plan in sessionStorage
             sessionStorage.setItem('selectedPlan', planName);
             sessionStorage.setItem('selectedPriceId', priceId);
             sessionStorage.setItem('isYearly', isYearly);
+            
+            console.log('✅ Stored plan data:', { plan: planName, priceId, billing: isYearly ? 'yearly' : 'monthly' });
             
             // Redirect to signup (which will redirect to Auth0 for signup)
             window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
