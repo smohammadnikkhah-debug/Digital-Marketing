@@ -548,6 +548,23 @@ app.get('/auth/callback', async (req, res) => {
       console.log('⚠️ No state parameter received in callback');
     }
     
+    // DEBUG: Check session for plan data
+    console.log('🔍 Session data:', {
+      selectedPlan: req.session?.selectedPlan,
+      selectedPriceId: req.session?.selectedPriceId,
+      billing: req.session?.billing,
+      signupMode: req.session?.signupMode
+    });
+    
+    // If no plan data in state, try to get from session
+    if (!planData.plan && req.session?.selectedPlan) {
+      planData.plan = req.session.selectedPlan;
+      planData.priceId = req.session.selectedPriceId;
+      planData.billing = req.session.billing;
+      planData.signup = req.session.signupMode ? true : false;
+      console.log('📋 Using plan data from session:', planData);
+    }
+    
     // Handle Auth0 errors (like rate limiting)
     if (error) {
       console.error('Auth0 error in callback:', error);
