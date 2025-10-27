@@ -997,6 +997,8 @@ app.get('/login', (req, res) => {
   
   console.log('🔐 /login route called:', { signup, plan, priceId, billing });
   console.log('🔗 Auth0 domain (cleaned):', auth0Domain);
+  console.log('🔗 Callback URL:', process.env.AUTH0_CALLBACK_URL);
+  console.log('🔗 Client ID:', clientId);
   
   // Store plan info in session for callback
   if (req.session) {
@@ -1020,14 +1022,14 @@ app.get('/login', (req, res) => {
   // Determine the Auth0 URL based on signup mode
   let auth0Url;
   if (signup === 'true') {
-    // Signup mode - use authorize endpoint with screen_hint for signup
-    console.log('✅ Signup mode: Redirecting to Auth0 authorize page with signup hint');
+    // Signup mode - use authorize endpoint without prompt=login
+    // This will show signup form by default
+    console.log('✅ Signup mode: Redirecting to Auth0 authorize page (no prompt, shows signup)');
     auth0Url = `https://${auth0Domain}/authorize?` +
       `response_type=code&` +
       `client_id=${clientId}&` +
       `redirect_uri=${redirectUri}&` +
-      `scope=${scope}&` +
-      `screen_hint=signup`;
+      `scope=${scope}`;
     
     // Add state if provided
     if (state) {
