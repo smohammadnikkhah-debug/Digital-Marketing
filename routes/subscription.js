@@ -748,6 +748,17 @@ router.post('/upgrade', async (req, res) => {
 
         console.log('📋 Mapping price ID to plan:', { newPriceId, planName });
 
+        // Get the user's customer_id to update customers table as well
+        const { data: userData, error: userFetchError } = await supabase
+            .from('users')
+            .select('customer_id, plan')
+            .eq('id', userId)
+            .single();
+
+        if (userFetchError) {
+            console.error('❌ Error fetching user:', userFetchError);
+        }
+
         // Update user's plan in database
         const { error: updateError } = await supabase
             .from('users')
@@ -760,16 +771,24 @@ router.post('/upgrade', async (req, res) => {
             console.log('✅ Updated user plan to:', planName);
         }
 
-        // Calculate new website limit based on plan
-        const planLimits = {
-            'free': { websites: 1 },
-            'starter': { websites: 1 },
-            'professional': { websites: 3 },
-            'business': { websites: -1 } // unlimited
-        };
+        // Also update the customers table if customer_id exists
+        if (userData && userData.customer_id) {
+            const { error: customerUpdateError } = await supabase
+                .from('customers')
+                .update({ plan_id: newPriceId })
+                .eq('id', userData.customer_id);
 
-        const newLimit = planLimits[planName]?.websites || 1;
-        console.log('✅ New website limit:', newLimit);
+            if (customerUpdateError) {
+                console.error('❌ Error updating customer plan:', customerUpdateError);
+            } else {
+                console.log('✅ Updated customer plan_id to:', newPriceId);
+            }
+        }
+
+        // Calculate new website limit based on plan using plan-limits-config
+        const planLimitsConfig = require('../plan-limits-config');
+        const newLimit = planLimitsConfig.getWebsiteLimit(newPriceId);
+        console.log('✅ New website limit from config:', newLimit);
 
         res.json({
             success: true,
