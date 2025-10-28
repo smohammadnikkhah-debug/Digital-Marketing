@@ -615,6 +615,182 @@ router.post('/cancel', async (req, res) => {
     }
 });
 
+// Upgrade subscription plan (for existing users)
+router.post('/upgrade', async (req, res) => {
+    try {
+        // Get user from JWT token
+        const sessionService = require('../services/sessionService');
+        const token = sessionService.extractToken(req);
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authentication required'
+            });
+        }
+
+        const decoded = sessionService.verifyToken(token);
+        const userId = decoded.userId;
+        const { newPriceId, billingCycle } = req.body;
+        
+        if (!newPriceId || !billingCycle) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: newPriceId and billingCycle'
+            });
+        }
+
+        console.log('🔍 Upgrading subscription for user:', userId);
+
+        // Get user to get Stripe customer ID
+        const user = await auth0Service.getUserById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        let stripeCustomerId = user.stripe_customer_id;
+        
+        // If no stripe_customer_id, try to find customer by email
+        if (!stripeCustomerId) {
+            try {
+                const customers = await stripe.customers.list({
+                    email: user.email,
+                    limit: 1
+                });
+                
+                if (customers.data.length > 0) {
+                    stripeCustomerId = customers.data[0].id;
+                }
+            } catch (stripeError) {
+                console.error('Error searching Stripe customers:', stripeError);
+            }
+        }
+
+        if (!stripeCustomerId) {
+            return res.status(404).json({
+                success: false,
+                message: 'No Stripe customer found'
+            });
+        }
+
+        // Get current subscription
+        const customerSubscriptions = await stripe.subscriptions.list({
+            customer: stripeCustomerId,
+            status: 'all',
+            limit: 10
+        });
+
+        const currentSubscription = customerSubscriptions.data.find(sub => 
+            sub.status === 'active' || sub.status === 'trialing'
+        );
+
+        if (!currentSubscription) {
+            return res.status(404).json({
+                success: false,
+                message: 'No active subscription found'
+            });
+        }
+
+        console.log('💳 Found subscription:', currentSubscription.id);
+
+        // Get the current price ID from subscription
+        const currentPriceId = currentSubscription.items.data[0].price.id;
+        
+        // Update subscription with new price
+        const updatedSubscription = await stripe.subscriptions.update(
+            currentSubscription.id,
+            {
+                items: [{
+                    id: currentSubscription.items.data[0].id,
+                    price: newPriceId
+                }],
+                proration_behavior: 'always_invoice', // Charge for upgrade immediately
+                cancel_at_period_end: false // Clear any cancellation
+            }
+        );
+
+        console.log('✅ Subscription upgraded:', updatedSubscription.id);
+
+        // Update user's plan in database based on price ID
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
+        // Determine plan name from price ID
+        // Map price IDs to internal plan names
+        // Note: Supabase users table uses lowercase plan names: 'free', 'starter', 'professional', 'business'
+        let planName = 'free'; // Default to free
+        
+        // Get all price IDs from environment
+        const priceIdMapping = {
+            [process.env.STRIPE_STARTER_MONTHLY_PRICE_ID]: 'starter',
+            [process.env.STRIPE_STARTER_YEARLY_PRICE_ID]: 'starter',
+            [process.env.STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID]: 'professional',
+            [process.env.STRIPE_PROFESSIONAL_YEARLY_PRICE_ID]: 'professional'
+        };
+
+        // Check if newPriceId is in our mapping
+        if (priceIdMapping[newPriceId]) {
+            planName = priceIdMapping[newPriceId];
+        } else {
+            // Fallback: try to determine from priceId string
+            if (newPriceId.toLowerCase().includes('starter')) {
+                planName = 'starter';
+            } else if (newPriceId.toLowerCase().includes('professional') || newPriceId.toLowerCase().includes('pro')) {
+                planName = 'professional';
+            }
+        }
+
+        console.log('📋 Mapping price ID to plan:', { newPriceId, planName });
+
+        // Update user's plan in database
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ plan: planName })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error('❌ Error updating user plan:', updateError);
+        } else {
+            console.log('✅ Updated user plan to:', planName);
+        }
+
+        // Calculate new website limit based on plan
+        const planLimits = {
+            'free': { websites: 1 },
+            'starter': { websites: 1 },
+            'professional': { websites: 3 },
+            'business': { websites: -1 } // unlimited
+        };
+
+        const newLimit = planLimits[planName]?.websites || 1;
+        console.log('✅ New website limit:', newLimit);
+
+        res.json({
+            success: true,
+            message: 'Subscription upgraded successfully',
+            subscription: {
+                id: updatedSubscription.id,
+                status: updatedSubscription.status,
+                current_period_end: updatedSubscription.current_period_end
+            },
+            plan: planName,
+            websiteLimit: newLimit
+        });
+    } catch (error) {
+        console.error('❌ Error upgrading subscription:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to upgrade subscription'
+        });
+    }
+});
+
 // Update subscription plan
 router.post('/update', async (req, res) => {
     try {

@@ -306,6 +306,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             background: linear-gradient(135deg, #8b5cf6, #ec4899);
         }
 
+        .plan-button.current-plan-btn {
+            background: rgba(16, 185, 129, 0.2) !important;
+            color: #10b981;
+            border: 2px solid #10b981;
+            cursor: not-allowed;
+        }
+
+        .plan-button.current-plan-btn:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
         .comparison-section {
             background: rgba(30, 41, 59, 0.5);
             border-radius: 20px;
@@ -618,7 +630,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         // Display products from Stripe
-        function displayProducts(products) {
+        async function displayProducts(products) {
             console.log('🎨 Displaying products:', products);
             const plansGrid = document.querySelector('.plans-grid');
             if (!plansGrid) {
@@ -633,9 +645,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             console.log(`📅 Displaying ${isYearly ? 'yearly' : 'monthly'} plans`);
 
             let cardsAdded = 0;
-            products.forEach((product, index) => {
+            
+            // Create cards asynchronously
+            for (let index = 0; index < products.length; index++) {
+                const product = products[index];
                 console.log(`Creating card for product ${index + 1}: ${product.name}`);
-                const planCard = createPlanCard(product, index);
+                const planCard = await createPlanCard(product, index);
                 if (planCard) {
                     plansGrid.appendChild(planCard);
                     cardsAdded++;
@@ -643,7 +658,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 } else {
                     console.log(`❌ Failed to create card for ${product.name}`);
                 }
-            });
+            }
 
             // If no cards were added, show a message
             if (cardsAdded === 0) {
@@ -660,7 +675,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         // Create plan card element
-        function createPlanCard(product, index) {
+        async function createPlanCard(product, index) {
             console.log(`Creating card for: ${product.name}`, product);
             
             const card = document.createElement('div');
@@ -682,6 +697,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const features = product.features || [];
             console.log(`📋 Features for ${product.name}:`, features);
             
+            // Check if user is logged in and has active subscription
+            const user = await checkUserAuth();
+            let buttonText = 'Start Free Trial';
+            let isCurrentPlan = false;
+            
+            if (user) {
+                const subscription = await checkSubscriptionStatus();
+                if (subscription && (subscription.status === 'active' || subscription.status === 'trialing')) {
+                    const isTrialEnded = subscription.trial_end && subscription.trial_end < Date.now() / 1000;
+                    
+                    // Check if this is their current plan
+                    const currentPriceId = subscription.plan_name; // We'll compare this
+                    
+                    buttonText = isTrialEnded ? 'Upgrade Plan' : 'Start Free Trial';
+                    
+                    // If it's the same price ID as current, show "Current Plan"
+                    if (priceInfo.priceId === currentPriceId) {
+                        buttonText = 'Current Plan';
+                        isCurrentPlan = true;
+                    }
+                }
+            }
+            
             const cardHTML = `
                 ${product.popular ? '<div class="plan-badge">Most Popular</div>' : ''}
                 <div class="plan-name">${product.name}</div>
@@ -692,8 +730,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <ul class="plan-features">
                     ${features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
                 </ul>
-                <button class="plan-button" onclick="selectPlan('${product.id}', '${encodeURIComponent(product.name)}', '${priceInfo.priceId}', ${isYearly})">
-                    Start Free Trial
+                <button class="plan-button ${isCurrentPlan ? 'current-plan-btn' : ''}" onclick="selectPlan('${product.id}', '${encodeURIComponent(product.name)}', '${priceInfo.priceId}', ${isYearly})">
+                    ${buttonText}
                 </button>
             `;
             
@@ -702,8 +740,46 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return card;
         }
 
+        // Check if user is logged in
+        async function checkUserAuth() {
+            try {
+                const response = await fetch('/auth/user', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.authenticated && result.user) {
+                    console.log('✅ User is authenticated:', result.user);
+                    return result.user;
+                }
+                return null;
+            } catch (error) {
+                console.error('❌ Error checking auth:', error);
+                return null;
+            }
+        }
+
+        // Check subscription status
+        async function checkSubscriptionStatus() {
+            try {
+                const response = await fetch('/api/subscription/current', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success && result.subscription) {
+                    console.log('✅ Subscription found:', result.subscription);
+                    return result.subscription;
+                }
+                return null;
+            } catch (error) {
+                console.error('❌ Error checking subscription:', error);
+                return null;
+            }
+        }
+
         // Handle plan selection
-        function selectPlan(productId, planName, priceId, isYearly) {
+        async function selectPlan(productId, planName, priceId, isYearly) {
             console.log('🎯 Plan selection:', { productId, planName, priceId, isYearly });
             
             // Validate planName is not undefined
@@ -726,15 +802,232 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return; // Don't proceed without priceId
             }
             
-            // Store selected plan in sessionStorage
-            sessionStorage.setItem('selectedPlan', planName);
-            sessionStorage.setItem('selectedPriceId', priceId);
-            sessionStorage.setItem('isYearly', isYearly);
+            // Check if user is logged in
+            const user = await checkUserAuth();
             
-            console.log('✅ Stored plan data:', { plan: planName, priceId, billing: isYearly ? 'yearly' : 'monthly' });
+            if (user) {
+                // User is logged in, check if they have an active subscription
+                const subscription = await checkSubscriptionStatus();
+                
+                if (subscription && (subscription.status === 'active' || subscription.status === 'trialing')) {
+                    // User has active subscription, show upgrade confirmation
+                    const isTrialEnded = subscription.trial_end && subscription.trial_end < Date.now() / 1000;
+                    const buttonText = isTrialEnded ? 'Sign Up' : 'Start Free Trial';
+                    
+                    showUpgradeConfirmation(planName, priceId, isYearly, subscription, isTrialEnded);
+                } else {
+                    // User is logged in but no active subscription - redirect to signup
+                    window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+                }
+            } else {
+                // User not logged in - store and redirect to signup
+                sessionStorage.setItem('selectedPlan', planName);
+                sessionStorage.setItem('selectedPriceId', priceId);
+                sessionStorage.setItem('isYearly', isYearly);
+                
+                console.log('✅ Stored plan data:', { plan: planName, priceId, billing: isYearly ? 'yearly' : 'monthly' });
+                
+                window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+            }
+        }
+
+        // Show upgrade confirmation dialog
+        function showUpgradeConfirmation(planName, priceId, isYearly, currentSubscription, isTrialEnded) {
+            const billingCycle = isYearly ? 'yearly' : 'monthly';
+            const modal = document.createElement('div');
+            modal.className = 'upgrade-confirmation-modal';
             
-            // Redirect to signup (which will redirect to Auth0 for signup)
-            window.location.href = `/signup?plan=${encodeURIComponent(planName)}&priceId=${priceId}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+            // Get price info
+            const currentProducts = window.currentProducts || [];
+            const selectedProduct = currentProducts.find(p => {
+                const priceInfo = isYearly ? p.yearly : p.monthly;
+                return priceInfo && priceInfo.priceId === priceId;
+            });
+            
+            const priceDisplay = selectedProduct ? (isYearly ? selectedProduct.yearly.formatted : selectedProduct.monthly.formatted) : 'N/A';
+            
+            modal.innerHTML = `
+                <div class="upgrade-confirmation-content">
+                    <div class="upgrade-confirmation-header">
+                        <h2>Upgrade Your Plan</h2>
+                        <button class="close-upgrade-confirmation" onclick="closeUpgradeConfirmation()">&times;</button>
+                    </div>
+                    <div class="upgrade-confirmation-body">
+                        <p class="upgrade-confirmation-text">
+                            You're about to upgrade your plan to the <strong>${planName} Plan</strong> (${priceDisplay}).
+                        </p>
+                        <p class="upgrade-confirmation-text">
+                            Your payment method will be updated and you'll be charged immediately for the prorated amount.
+                        </p>
+                        <div class="upgrade-confirmation-actions">
+                            <button class="upgrade-confirm-btn" onclick="confirmUpgrade('${priceId}', '${billingCycle}', '${planName}')">
+                                Confirm Upgrade
+                            </button>
+                            <button class="upgrade-cancel-btn" onclick="closeUpgradeConfirmation()">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Add styles for the modal
+            if (!document.querySelector('#upgrade-confirmation-styles')) {
+                const style = document.createElement('style');
+                style.id = 'upgrade-confirmation-styles';
+                style.textContent = `
+                    .upgrade-confirmation-modal {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.8);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 10000;
+                    }
+                    
+                    .upgrade-confirmation-content {
+                        background: rgba(15, 23, 42, 0.95);
+                        border-radius: 16px;
+                        padding: 0;
+                        max-width: 500px;
+                        width: 90%;
+                        border: 2px solid rgba(102, 126, 234, 0.5);
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+                    }
+                    
+                    .upgrade-confirmation-header {
+                        padding: 24px;
+                        border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                    
+                    .upgrade-confirmation-header h2 {
+                        color: #f1f5f9;
+                        font-size: 24px;
+                        margin: 0;
+                    }
+                    
+                    .close-upgrade-confirmation {
+                        background: none;
+                        border: none;
+                        color: #94a3b8;
+                        font-size: 32px;
+                        cursor: pointer;
+                        padding: 0;
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    
+                    .close-upgrade-confirmation:hover {
+                        color: #f1f5f9;
+                    }
+                    
+                    .upgrade-confirmation-body {
+                        padding: 24px;
+                    }
+                    
+                    .upgrade-confirmation-text {
+                        color: #cbd5e1;
+                        font-size: 16px;
+                        line-height: 1.6;
+                        margin-bottom: 16px;
+                    }
+                    
+                    .upgrade-confirmation-text strong {
+                        color: #f1f5f9;
+                    }
+                    
+                    .upgrade-confirmation-actions {
+                        display: flex;
+                        gap: 12px;
+                        margin-top: 24px;
+                    }
+                    
+                    .upgrade-confirm-btn, .upgrade-cancel-btn {
+                        flex: 1;
+                        padding: 12px 24px;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .upgrade-confirm-btn {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                    }
+                    
+                    .upgrade-confirm-btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+                    }
+                    
+                    .upgrade-cancel-btn {
+                        background: rgba(30, 41, 59, 0.8);
+                        color: #cbd5e1;
+                        border: 1px solid rgba(102, 126, 234, 0.3);
+                    }
+                    
+                    .upgrade-cancel-btn:hover {
+                        background: rgba(30, 41, 59, 1);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Close upgrade confirmation dialog
+        function closeUpgradeConfirmation() {
+            const modal = document.querySelector('.upgrade-confirmation-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Confirm upgrade
+        async function confirmUpgrade(priceId, billingCycle, planName) {
+            try {
+                console.log('🔄 Upgrading subscription...');
+                
+                const response = await fetch('/api/subscription/upgrade', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        newPriceId: priceId,
+                        billingCycle: billingCycle
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('✅ Upgrade successful:', result);
+                    alert('Your plan has been upgraded successfully! Redirecting to dashboard...');
+                    window.location.href = '/dashboard';
+                } else {
+                    console.error('❌ Upgrade failed:', result.error);
+                    alert('Failed to upgrade plan: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('❌ Error upgrading:', error);
+                alert('An error occurred while upgrading your plan. Please try again.');
+            }
         }
 
         // Update header text based on billing period

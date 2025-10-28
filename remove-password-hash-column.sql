@@ -38,3 +38,4 @@ CREATE POLICY "Users can read their own data" ON public.users
 
 
 
+
