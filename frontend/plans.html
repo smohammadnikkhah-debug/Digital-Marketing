@@ -644,13 +644,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const isYearly = document.getElementById('yearlyToggle')?.checked || false;
             console.log(`📅 Displaying ${isYearly ? 'yearly' : 'monthly'} plans`);
 
+            // Check user auth and subscription ONCE before rendering cards
+            const user = await checkUserAuth();
+            let subscription = null;
+            if (user) {
+                subscription = await checkSubscriptionStatus();
+            }
+
             let cardsAdded = 0;
             
-            // Create cards asynchronously
+            // Create all cards in parallel (synchronously now since we already have auth info)
             for (let index = 0; index < products.length; index++) {
                 const product = products[index];
                 console.log(`Creating card for product ${index + 1}: ${product.name}`);
-                const planCard = await createPlanCard(product, index);
+                const planCard = createPlanCard(product, index, user, subscription);
                 if (planCard) {
                     plansGrid.appendChild(planCard);
                     cardsAdded++;
@@ -674,8 +681,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
-        // Create plan card element
-        async function createPlanCard(product, index) {
+        // Create plan card element (now synchronous since auth info is passed in)
+        function createPlanCard(product, index, user = null, subscription = null) {
             console.log(`Creating card for: ${product.name}`, product);
             
             const card = document.createElement('div');
@@ -697,26 +704,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const features = product.features || [];
             console.log(`📋 Features for ${product.name}:`, features);
             
-            // Check if user is logged in and has active subscription
-            const user = await checkUserAuth();
+            // Use the auth info passed in (no more async calls)
             let buttonText = 'Start Free Trial';
             let isCurrentPlan = false;
             
-            if (user) {
-                const subscription = await checkSubscriptionStatus();
-                if (subscription && (subscription.status === 'active' || subscription.status === 'trialing')) {
-                    const isTrialEnded = subscription.trial_end && subscription.trial_end < Date.now() / 1000;
-                    
-                    // Check if this is their current plan
-                    const currentPriceId = subscription.plan_name; // We'll compare this
-                    
-                    buttonText = isTrialEnded ? 'Upgrade Plan' : 'Start Free Trial';
-                    
-                    // If it's the same price ID as current, show "Current Plan"
-                    if (priceInfo.priceId === currentPriceId) {
-                        buttonText = 'Current Plan';
-                        isCurrentPlan = true;
-                    }
+            if (user && subscription && (subscription.status === 'active' || subscription.status === 'trialing')) {
+                const isTrialEnded = subscription.trial_end && subscription.trial_end < Date.now() / 1000;
+                
+                // Check if this is their current plan
+                const currentPriceId = subscription.plan_name; // We'll compare this
+                
+                buttonText = isTrialEnded ? 'Upgrade Plan' : 'Start Free Trial';
+                
+                // If it's the same price ID as current, show "Current Plan"
+                if (priceInfo.priceId === currentPriceId) {
+                    buttonText = 'Current Plan';
+                    isCurrentPlan = true;
                 }
             }
             
