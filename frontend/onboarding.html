@@ -439,11 +439,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ 
-                        url: normalizedDomain.startsWith('http') ? normalizedDomain : `https://${normalizedDomain}`,
-                        options: {
-                            location: 'United States',
-                            language: 'en'
-                        }
+                        url: normalizedDomain.startsWith('http') ? normalizedDomain : `https://${normalizedDomain}`
+                        // Location is automatically detected from domain TLD (e.g., .com.au → Australia)
                     })
                 });
                 
@@ -573,7 +570,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ url: userData.domain })
+                        body: JSON.stringify({ 
+                            url: userData.domain
+                            // Location is automatically detected from domain TLD
+                        })
                     });
                     
                     console.log('Analysis response status:', analysisResponse.status);

@@ -547,11 +547,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    url: url,
-                    options: {
-                        location: 'United States',
-                        language: 'en'
-                    }
+                    url: url
+                    // Location is automatically detected from domain TLD (e.g., .com.au → Australia)
                 })
             });
 

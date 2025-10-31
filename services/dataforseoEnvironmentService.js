@@ -428,13 +428,17 @@ class DataForSEOService {
       if (!response || !response.tasks || response.tasks[0]?.status_code !== 20000) {
         console.log(`🔑 Keywords For Site not available, trying Keyword Suggestions...`);
         
+        // Use the same location detection for fallback
+        const location = this.getLocationFromDomain(domain);
+        
         const keywordSuggestionsData = [{
           keyword: domain,
-          location_name: 'United States',
-          language_code: 'en',
+          location_name: location.name,
+          language_code: location.language,
           limit: 20
         }];
         
+        console.log(`🔑 Using location for Keyword Suggestions: ${location.name} (${location.language})`);
         response = await this.makeRequest('dataforseo_labs/google/keyword_suggestions/live', keywordSuggestionsData);
         console.log(`🔍 Keyword Suggestions API Response:`, JSON.stringify(response, null, 2));
       }
@@ -698,60 +702,150 @@ class DataForSEOService {
       
       if (!response || !response.tasks || response.tasks.length === 0) {
         console.log(`ℹ️ Country traffic data not available`);
-        return this.getMockCountryData(); // Fallback to estimated data
+        return this.getMockCountryData(domain); // Fallback to estimated data with domain context
       }
       
       const task = response.tasks[0];
       
       if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
-        return this.getMockCountryData();
+        return this.getMockCountryData(domain); // Fallback with domain context
       }
       
       const result = task.result[0];
       
       // Aggregate traffic by extracting location data from keywords
-      // For now, use estimated distribution based on domain metrics
+      // Use domain-detected location as primary, then distribute remainder
       const totalEtv = result.metrics?.organic?.etv || 0;
+      const detectedLocation = this.getLocationFromDomain(domain);
       
-      const countries = [
-        { name: 'United States', code: 'US', traffic: Math.round(totalEtv * 0.45) },
-        { name: 'United Kingdom', code: 'GB', traffic: Math.round(totalEtv * 0.15) },
-        { name: 'Canada', code: 'CA', traffic: Math.round(totalEtv * 0.12) },
-        { name: 'Australia', code: 'AU', traffic: Math.round(totalEtv * 0.10) },
-        { name: 'Germany', code: 'DE', traffic: Math.round(totalEtv * 0.08) }
-      ].filter(c => c.traffic > 0).slice(0, 5);
+      // Country distribution based on detected location
+      // Primary country gets 50%, then distribute remaining 50% to other regions
+      const countryTraffic = Math.round(totalEtv * 0.50);
+      const remainder = Math.round(totalEtv * 0.50);
       
-      console.log(`✅ Country Traffic Retrieved:`, countries);
+      // Country code mapping
+      const countryCodeMap = {
+        'Australia': 'AU',
+        'United States': 'US',
+        'United Kingdom': 'GB',
+        'Canada': 'CA',
+        'Germany': 'DE',
+        'France': 'FR',
+        'India': 'IN',
+        'New Zealand': 'NZ',
+        'Singapore': 'SG',
+        'Japan': 'JP',
+        'South Korea': 'KR',
+        'China': 'CN',
+        'Brazil': 'BR',
+        'Mexico': 'MX',
+        'Spain': 'ES',
+        'Italy': 'IT',
+        'Netherlands': 'NL',
+        'Sweden': 'SE',
+        'Poland': 'PL'
+      };
+      
+      const primaryCountryCode = countryCodeMap[detectedLocation.name] || 'US';
+      
+      // Create countries array with detected country first
+      const allCountries = [
+        { name: detectedLocation.name, code: primaryCountryCode, traffic: countryTraffic },
+        { name: 'United States', code: 'US', traffic: Math.round(remainder * 0.25) },
+        { name: 'United Kingdom', code: 'GB', traffic: Math.round(remainder * 0.20) },
+        { name: 'Canada', code: 'CA', traffic: Math.round(remainder * 0.15) },
+        { name: 'Germany', code: 'DE', traffic: Math.round(remainder * 0.12) },
+        { name: 'Australia', code: 'AU', traffic: Math.round(remainder * 0.10) },
+        { name: 'France', code: 'FR', traffic: Math.round(remainder * 0.08) },
+        { name: 'India', code: 'IN', traffic: Math.round(remainder * 0.05) },
+        { name: 'New Zealand', code: 'NZ', traffic: Math.round(remainder * 0.05) }
+      ];
+      
+      // Remove duplicates (if detected country is already in list, remove the duplicate)
+      const countriesMap = new Map();
+      allCountries.forEach(country => {
+        if (!countriesMap.has(country.code)) {
+          countriesMap.set(country.code, country);
+        } else if (country.traffic > countriesMap.get(country.code).traffic) {
+          countriesMap.set(country.code, country);
+        }
+      });
+      
+      const countries = Array.from(countriesMap.values())
+        .filter(c => c.traffic > 0)
+        .sort((a, b) => b.traffic - a.traffic)
+        .slice(0, 5);
+      
+      console.log(`✅ Country Traffic Retrieved (detected: ${detectedLocation.name}):`, countries);
       
       return countries;
     } catch (error) {
       console.error(`Country traffic error:`, error.message);
-      return this.getMockCountryData();
+      return this.getMockCountryData(domain); // Use domain for location detection
     }
   }
 
-  getMockCountryData() {
+  getMockCountryData(domain = null) {
     // Fallback when API data not available
-    return [
+    // Use domain-based location if provided
+    let detectedLocation = null;
+    if (domain) {
+      detectedLocation = this.getLocationFromDomain(domain);
+    }
+    
+    const countryCodeMap = {
+      'Australia': 'AU',
+      'United States': 'US',
+      'United Kingdom': 'GB',
+      'Canada': 'CA',
+      'Germany': 'DE',
+      'France': 'FR',
+      'India': 'IN',
+      'New Zealand': 'NZ'
+    };
+    
+    const baseData = [
       { name: 'United States', code: 'US', traffic: 5000 },
       { name: 'United Kingdom', code: 'GB', traffic: 1500 },
       { name: 'Canada', code: 'CA', traffic: 1000 },
       { name: 'Australia', code: 'AU', traffic: 800 },
       { name: 'Germany', code: 'DE', traffic: 500 }
     ];
+    
+    // If we detected a location, put that country first with higher traffic
+    if (detectedLocation && countryCodeMap[detectedLocation.name]) {
+      const detectedCode = countryCodeMap[detectedLocation.name];
+      // Remove the detected country from base data if it exists
+      const filtered = baseData.filter(c => c.code !== detectedCode);
+      // Add detected country first with highest traffic
+      return [
+        { name: detectedLocation.name, code: detectedCode, traffic: 6000 },
+        ...filtered
+      ].slice(0, 5);
+    }
+    
+    return baseData;
   }
 
   // Auto-detect location based on domain TLD
   getLocationFromDomain(domain) {
-    const tld = domain.split('.').pop().toLowerCase();
+    const domainLower = domain.toLowerCase();
+    const domainParts = domainLower.split('.');
     
+    // Comprehensive location map - check compound TLDs first, then single TLDs
     const locationMap = {
-      // Australian domains
+      // Australian domains (check compound first)
+      'com.au': { name: 'Australia', language: 'en' },
+      'net.au': { name: 'Australia', language: 'en' },
+      'org.au': { name: 'Australia', language: 'en' },
+      'edu.au': { name: 'Australia', language: 'en' },
+      'gov.au': { name: 'Australia', language: 'en' },
       'au': { name: 'Australia', language: 'en' },
       
       // UK domains
-      'uk': { name: 'United Kingdom', language: 'en' },
       'co.uk': { name: 'United Kingdom', language: 'en' },
+      'org.uk': { name: 'United Kingdom', language: 'en' },
+      'uk': { name: 'United Kingdom', language: 'en' },
       
       // Canadian domains
       'ca': { name: 'Canada', language: 'en' },
@@ -764,28 +858,70 @@ class DataForSEOService {
       
       // Indian domains
       'in': { name: 'India', language: 'en' },
+      'co.in': { name: 'India', language: 'en' },
       
       // New Zealand
       'nz': { name: 'New Zealand', language: 'en' },
+      'co.nz': { name: 'New Zealand', language: 'en' },
       
-      // Default to United States for .com, .io, etc.
+      // Singapore
+      'sg': { name: 'Singapore', language: 'en' },
+      
+      // Japan
+      'jp': { name: 'Japan', language: 'ja' },
+      'co.jp': { name: 'Japan', language: 'ja' },
+      
+      // South Korea
+      'kr': { name: 'South Korea', language: 'ko' },
+      'co.kr': { name: 'South Korea', language: 'ko' },
+      
+      // China
+      'cn': { name: 'China', language: 'zh' },
+      'com.cn': { name: 'China', language: 'zh' },
+      
+      // Brazil
+      'br': { name: 'Brazil', language: 'pt' },
+      'com.br': { name: 'Brazil', language: 'pt' },
+      
+      // Mexico
+      'mx': { name: 'Mexico', language: 'es' },
+      'com.mx': { name: 'Mexico', language: 'es' },
+      
+      // Spain
+      'es': { name: 'Spain', language: 'es' },
+      
+      // Italy
+      'it': { name: 'Italy', language: 'it' },
+      
+      // Netherlands
+      'nl': { name: 'Netherlands', language: 'nl' },
+      
+      // Sweden
+      'se': { name: 'Sweden', language: 'sv' },
+      
+      // Poland
+      'pl': { name: 'Poland', language: 'pl' },
+      
+      // Default to United States for .com, .io, .net, .org (when no country TLD)
       'com': { name: 'United States', language: 'en' },
       'io': { name: 'United States', language: 'en' },
       'net': { name: 'United States', language: 'en' },
-      'org': { name: 'United States', language: 'en' }
+      'org': { name: 'United States', language: 'en' },
+      'edu': { name: 'United States', language: 'en' }
     };
     
-    // Check for compound TLDs (like .com.au, .co.uk)
-    const domainParts = domain.split('.');
+    // Check for compound TLDs FIRST (like .com.au, .co.uk, .co.nz)
     if (domainParts.length >= 3) {
       const compoundTld = domainParts.slice(-2).join('.');
       if (locationMap[compoundTld]) {
-        console.log(`🌍 Detected location from TLD: ${compoundTld} → ${locationMap[compoundTld].name}`);
+        console.log(`🌍 Detected location from compound TLD: ${compoundTld} → ${locationMap[compoundTld].name}`);
         return locationMap[compoundTld];
       }
     }
     
-    const location = locationMap[tld] || locationMap['com']; // Default to US
+    // Then check single TLD
+    const tld = domainParts[domainParts.length - 1];
+    const location = locationMap[tld] || locationMap['com']; // Default to US if unknown
     console.log(`🌍 Detected location from TLD: ${tld} → ${location.name}`);
     return location;
   }
