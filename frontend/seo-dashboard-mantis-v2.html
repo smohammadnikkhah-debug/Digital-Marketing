@@ -2393,7 +2393,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Fetch traffic data from DataForSEO API
         async function fetchTrafficData(months) {
             try {
-                const currentDomain = window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname;
+                // Get domain from localStorage (set by main dashboard when viewing a website)
+                const storedDomain = localStorage.getItem('lastAnalyzedDomain');
+                const currentDomain = storedDomain || (window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname);
+                
+                if (!currentDomain) {
+                    console.warn('⚠️ No domain available for traffic data, using mock data');
+                    return generateMockTrafficData(months);
+                }
+                
+                console.log(`📊 Fetching traffic data for domain: ${currentDomain}, months: ${months}`);
                 
                 const response = await fetch(`/api/dataforseo/traffic-data/${currentDomain}?months=${months}`);
                 if (!response.ok) {
@@ -2401,6 +2410,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }
                 
                 const data = await response.json();
+                console.log(`✅ Traffic data fetched for ${currentDomain}:`, data);
                 return data;
             } catch (error) {
                 console.error('Error fetching traffic data:', error);
