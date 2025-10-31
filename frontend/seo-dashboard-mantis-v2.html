@@ -2189,10 +2189,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         function updateCountryTrafficChart(trafficByCountry) {
             console.log('🌍 Creating Traffic by Country chart:', trafficByCountry);
             
+            // Validate data
+            if (!trafficByCountry || !Array.isArray(trafficByCountry) || trafficByCountry.length === 0) {
+                console.error('❌ Invalid traffic by country data:', trafficByCountry);
+                showEmptyCountryChart();
+                return;
+            }
+            
+            // Validate Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('❌ Chart.js is not loaded');
+                return;
+            }
+            
             const ctx = document.getElementById('positionChart');  // Reuse existing canvas
             if (!ctx) {
                 console.error('❌ Country chart canvas not found');
                 return;
+            }
+            
+            // Ensure canvas is visible and has proper dimensions
+            const canvasParent = ctx.parentElement;
+            if (canvasParent) {
+                canvasParent.style.display = 'block';
+                canvasParent.style.height = '100%';
+                canvasParent.style.width = '100%';
+            }
+            
+            // Set canvas dimensions if not set
+            if (!ctx.width || ctx.width === 0 || !ctx.height || ctx.height === 0) {
+                ctx.style.width = '100%';
+                ctx.style.height = '300px';
             }
             
             // Destroy ALL existing charts on this canvas using Chart.js registry
@@ -2212,12 +2239,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 window.positionChartInstance = null;
             }
             
-            // Sort by traffic (descending)
-            const sortedCountries = [...trafficByCountry].sort((a, b) => b.traffic - a.traffic);
+            // Sort by traffic (descending) and ensure all have required fields
+            const sortedCountries = [...trafficByCountry]
+                .filter(c => c && typeof c === 'object' && c.name && typeof c.traffic === 'number')
+                .sort((a, b) => b.traffic - a.traffic);
+            
+            if (sortedCountries.length === 0) {
+                console.error('❌ No valid country data after filtering');
+                showEmptyCountryChart();
+                return;
+            }
+            
+            console.log('📊 Sorted countries for chart:', sortedCountries.map(c => `${c.name}: ${c.traffic}`).join(', '));
             
             // Create horizontal bar chart
-            window.positionChartInstance = new Chart(ctx, {
-                type: 'bar',
+            try {
+                window.positionChartInstance = new Chart(ctx, {
+                    type: 'bar',
                 data: {
                     labels: sortedCountries.map(c => c.name),
                     datasets: [{
@@ -2305,9 +2343,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         }
                     }
                 }
-            });
-            
-            console.log('✅ Country Traffic chart created successfully');
+                });
+                
+                console.log('✅ Country Traffic chart created successfully');
+                console.log('   Chart instance:', window.positionChartInstance);
+                console.log('   Canvas dimensions:', ctx.width, 'x', ctx.height);
+                console.log('   Number of data points:', sortedCountries.length);
+            } catch (error) {
+                console.error('❌ Error creating country traffic chart:', error);
+                console.error('   Error stack:', error.stack);
+                showEmptyCountryChart();
+            }
         }
         
         // Empty state for traffic chart
@@ -2363,8 +2409,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Update traffic chart
             updateTrafficChart(months, trafficData, selectedTrafficTypes);
             
-            // Update position chart
-            updatePositionChart(months, trafficData);
+            // DON'T update position chart if we have country data - keep the country chart
+            // The country chart is set by updateChartsWithHistoricalData and shouldn't be overwritten
+            // Only update position chart if there's no country chart instance
+            if (!window.positionChartInstance) {
+                updatePositionChart(months, trafficData);
+            } else {
+                console.log('📊 Keeping existing country traffic chart, skipping position chart update');
+            }
         }
 
         // Get date range labels based on selected months
