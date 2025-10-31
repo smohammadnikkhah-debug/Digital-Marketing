@@ -7,12 +7,13 @@ const PLAN_WEBSITE_LIMITS = {
   'price_1S9k6kBFUEdVmecWiYNLbXia': 1, // Starter Yearly
   
   // Professional plan limits
-  'price_1SB8gWBFUEdVmecWkHXlvki6': 5, // Professional Monthly
-  'price_1S9kCwBFUEdVmecWP4DTGzBy': 5, // Professional Yearly
+  'price_1SB8gWBFUEdVmecWkHXlvki6': 3, // Professional Monthly
+  'price_1S9kCwBFUEdVmecWP4DTGzBy': 3, // Professional Yearly
   
   // Legacy plan support
   'basic': 1,
-  'pro': 5,
+  'pro': 3,
+  'professional': 3,
   'business': 10
 };
 

@@ -109,17 +109,21 @@ class SupabaseService {
   // Validate website limit for a customer
   async validateWebsiteLimit(customerId) {
     try {
-      // Get customer with plan information
+      console.log('🔍 validateWebsiteLimit: Checking limit for customerId:', customerId);
+      
+      // Get customer with plan_limit (directly from customers table)
       const { data: customer, error: customerError } = await this.supabase
         .from('customers')
-        .select('plan_id')
+        .select('plan_limit, plan_id')
         .eq('id', customerId)
         .single();
 
       if (customerError || !customer) {
-        console.error('Error fetching customer:', customerError);
+        console.error('❌ Error fetching customer:', customerError);
         return { allowed: false, limit: 0, current: 0 };
       }
+
+      console.log('📋 Customer plan_limit:', customer.plan_limit, 'plan_id:', customer.plan_id);
 
       // Get current website count for this customer
       const { data: websites, error: websitesError } = await this.supabase
@@ -133,16 +137,26 @@ class SupabaseService {
       }
 
       const currentCount = websites ? websites.length : 0;
+      console.log('📊 Current website count:', currentCount);
 
-      // Get plan limit
-      const planLimits = require('../plan-limits-config');
-      const limit = planLimits.getWebsiteLimit(customer.plan_id);
+      // Use plan_limit directly from customers table (fallback to config if null)
+      let limit = customer.plan_limit;
+      if (!limit || limit === null) {
+        console.log('⚠️ plan_limit is null, falling back to plan-limits-config');
+        const planLimits = require('../plan-limits-config');
+        limit = planLimits.getWebsiteLimit(customer.plan_id) || 1;
+      }
+      
+      console.log('✅ Website limit:', limit);
 
-      return {
+      const result = {
         allowed: currentCount < limit,
         limit: limit,
         current: currentCount
       };
+      
+      console.log('🎯 Final result:', result);
+      return result;
     } catch (error) {
       console.error('Website limit validation error:', error);
       return { allowed: false, limit: 0, current: 0 };

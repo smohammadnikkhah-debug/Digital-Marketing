@@ -773,15 +773,32 @@ router.post('/upgrade', async (req, res) => {
 
         // Also update the customers table if customer_id exists
         if (userData && userData.customer_id) {
+            // Calculate plan_limit based on price ID
+            // Professional plans = 3 websites, Starter/Basic = 1 website
+            let planLimit = 1; // Default
+            const priceIdLower = newPriceId.toLowerCase();
+            if (priceIdLower.includes('professional') || priceIdLower.includes('pro') ||
+                newPriceId.includes('price_1SB8gW') || newPriceId.includes('price_1S9kCw')) {
+                planLimit = 3;
+            } else if (priceIdLower.includes('basic') || priceIdLower.includes('starter') ||
+                       newPriceId.includes('price_1SB8Iy') || newPriceId.includes('price_1S9k6k')) {
+                planLimit = 1;
+            }
+            
+            console.log('📋 Updating customer plan_id to:', newPriceId, 'and plan_limit to:', planLimit);
+            
             const { error: customerUpdateError } = await supabase
                 .from('customers')
-                .update({ plan_id: newPriceId })
+                .update({ 
+                    plan_id: newPriceId,
+                    plan_limit: planLimit
+                })
                 .eq('id', userData.customer_id);
 
             if (customerUpdateError) {
                 console.error('❌ Error updating customer plan:', customerUpdateError);
             } else {
-                console.log('✅ Updated customer plan_id to:', newPriceId);
+                console.log('✅ Updated customer plan_id to:', newPriceId, 'and plan_limit to:', planLimit);
             }
         }
 

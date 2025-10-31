@@ -273,6 +273,23 @@ class Auth0Service {
     try {
       console.log('Creating customer record for:', userData.email, 'with plan:', planId);
       
+      // Calculate plan_limit based on plan_id
+      // basic/starter plans = 1 website, professional = 3 websites
+      let planLimit = 1; // Default to 1
+      
+      if (planId) {
+        const planIdLower = planId.toLowerCase();
+        if (planIdLower.includes('professional') || planIdLower.includes('pro') || 
+            planId.includes('price_1SB8gW') || planId.includes('price_1S9kCw')) {
+          planLimit = 3;
+        } else if (planIdLower.includes('basic') || planIdLower.includes('starter') ||
+                   planId.includes('price_1SB8Iy') || planId.includes('price_1S9k6k')) {
+          planLimit = 1;
+        }
+      }
+      
+      console.log('Setting plan_limit to:', planLimit, 'for plan:', planId);
+      
       const { data: newCustomer, error } = await this.supabase
         .from('customers')
         .insert({
@@ -281,6 +298,7 @@ class Auth0Service {
           business_description: null,
           industry: null,
           plan_id: planId,
+          plan_limit: planLimit,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -292,7 +310,7 @@ class Auth0Service {
         return null;
       }
 
-      console.log('Customer created successfully:', newCustomer.id);
+      console.log('Customer created successfully:', newCustomer.id, 'with plan_limit:', planLimit);
       return newCustomer;
     } catch (error) {
       console.error('Create customer error:', error);
