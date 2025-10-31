@@ -1,20 +1,87 @@
 const express = require('express');
 const router = express.Router();
+const supabaseService = require('../services/supabaseService');
 
-// Mock DataForSEO traffic data endpoint
-// TODO: Replace with real DataForSEO API integration
-// Real implementation would use:
-// - DataForSEO Labs API for historical traffic data
-// - DataForSEO OnPage API for current metrics
-// - DataForSEO Backlinks API for referring domains
+// Get real traffic data from Supabase (traffic trends from DataForSEO)
 router.get('/traffic-data/:domain', async (req, res) => {
     try {
         const { domain } = req.params;
         const { months = '3' } = req.query;
         
-        console.log(`[DataForSEO] Fetching traffic data for domain: ${domain}, months: ${months}`);
+        console.log(`[DataForSEO] Fetching REAL traffic data for domain: ${domain}, months: ${months}`);
         
-        // Generate mock traffic data based on the requested months
+        // Get customer ID from request (if authenticated)
+        let customerId = null;
+        try {
+            // Use the same method as server.js uses
+            const sessionService = require('../services/sessionService');
+            const token = sessionService.extractToken(req);
+            if (token) {
+                const decoded = sessionService.verifyToken(token);
+                const auth0Service = require('../services/auth0Service');
+                const user = await auth0Service.getUserById(decoded.userId);
+                if (user && user.customer_id) {
+                    customerId = user.customer_id;
+                    console.log(`👤 Customer ID found: ${customerId}`);
+                }
+            }
+        } catch (authError) {
+            console.log('⚠️ Could not get customer ID (not authenticated):', authError.message);
+        }
+        
+        if (!customerId) {
+            console.log('⚠️ No customer ID, will try to fetch analysis without customer filter');
+        }
+        
+        // Get analysis data from Supabase (contains traffic trends)
+        const analysisData = await supabaseService.getAnalysisData(domain, customerId);
+        
+        if (analysisData && analysisData.trafficTrends) {
+            const trafficTrends = analysisData.trafficTrends;
+            const requestedMonths = parseInt(months);
+            
+            console.log(`✅ Found traffic trends data:`, {
+                months: trafficTrends.months?.length || 0,
+                hasOrganic: !!trafficTrends.organic,
+                hasPaid: !!trafficTrends.paid,
+                hasSocial: !!trafficTrends.social
+            });
+            
+            // Extract the requested number of months
+            const organic = (trafficTrends.organic || []).slice(-requestedMonths);
+            const paid = (trafficTrends.paid || []).slice(-requestedMonths);
+            const social = (trafficTrends.social || []).slice(-requestedMonths);
+            const monthsLabels = (trafficTrends.months || []).slice(-requestedMonths);
+            
+            // If we have less data than requested, pad with the last value
+            while (organic.length < requestedMonths && organic.length > 0) {
+                organic.unshift(organic[0]);
+                paid.unshift(paid[0] || 0);
+                social.unshift(social[0] || 0);
+            }
+            
+            const trafficData = {
+                organic: organic.length > 0 ? organic : [],
+                social: social.length > 0 ? social : [],
+                ads: paid.length > 0 ? paid : [],
+                referringDomains: [], // Not stored in trafficTrends
+                positions: [] // Not stored in trafficTrends
+            };
+            
+            res.json({
+                success: true,
+                domain: domain,
+                months: months,
+                data: trafficData,
+                monthsLabels: monthsLabels.length > 0 ? monthsLabels : [],
+                source: 'supabase',
+                generated_at: new Date().toISOString()
+            });
+            return;
+        }
+        
+        // Fallback: Generate mock data if no real data available
+        console.log(`⚠️ No traffic trends data found for ${domain}, using mock data`);
         const dataPoints = parseInt(months);
         const trafficData = {
             organic: [],
@@ -57,6 +124,7 @@ router.get('/traffic-data/:domain', async (req, res) => {
             domain: domain,
             months: months,
             data: trafficData,
+            source: 'mock',
             generated_at: new Date().toISOString()
         });
         
