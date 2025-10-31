@@ -4466,22 +4466,71 @@ app.post('/api/dataforseo/full-website-crawl', async (req, res) => {
       });
     }
 
-    // SMART INCREMENTAL FETCHING: Check what data we already have
+    // CRITICAL: Check if website already has a completed crawl within 14 days
+    // This prevents duplicate crawls
     const existingAnalysis = await supabaseService.getAnalysis(website.id);
     
+    // Check website status - if already in progress or recently completed, don't crawl again
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    const { data: websiteRecord, error: websiteError } = await supabase
+      .from('websites')
+      .select('analysis_status, analysis_completed_at')
+      .eq('id', website.id)
+      .single();
+    
+    if (websiteRecord) {
+      // If crawl is already in progress, don't start another one
+      if (websiteRecord.analysis_status === 'in_progress') {
+        console.log(`⏳ Crawl already in progress for ${normalizedDomain}, skipping duplicate crawl`);
+        return res.json({
+          success: false,
+          error: 'Crawl already in progress',
+          status: 'in_progress',
+          message: 'A crawl is already running for this website. Please wait for it to complete.'
+        });
+      }
+      
+      // If we have a valid (non-expired) completed analysis, don't crawl again
+      if (existingAnalysis && websiteRecord.analysis_status === 'completed') {
+        const expiresAt = new Date(existingAnalysis.expires_at);
+        const now = new Date();
+        const isValid = expiresAt > now;
+        
+        if (isValid) {
+          const daysRemaining = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+          console.log(`✅ Valid completed crawl exists for ${normalizedDomain} (expires in ${daysRemaining} days), skipping duplicate crawl`);
+          return res.json({
+            success: false,
+            error: 'Crawl already completed',
+            status: 'completed',
+            message: `A crawl was already completed. Next crawl available in ${daysRemaining} days.`,
+            expires_at: existingAnalysis.expires_at,
+            days_remaining: daysRemaining
+          });
+        }
+      }
+    }
+    
+    // SMART INCREMENTAL FETCHING: Check what data we already have
     const hasPageData = existingAnalysis && existingAnalysis.analysis_data?.totalPages > 1;
     const hasKeywords = existingAnalysis && existingAnalysis.analysis_data?.keywords?.totalKeywords > 0;
     const hasCompetitors = existingAnalysis && existingAnalysis.analysis_data?.competitors?.totalCompetitors > 0;
     const hasTrafficTrends = existingAnalysis && existingAnalysis.analysis_data?.trafficTrends?.months?.length > 0;
     const hasTrafficByCountry = existingAnalysis && existingAnalysis.analysis_data?.trafficByCountry?.length > 0;
     
-    console.log(`📊 Existing data check (within 7-day cache):`, {
+    console.log(`📊 Existing data check (within 14-day cache):`, {
       hasPageData: hasPageData,
       hasKeywords: hasKeywords,
       hasCompetitors: hasCompetitors,
       hasTrafficTrends: hasTrafficTrends,
       hasTrafficByCountry: hasTrafficByCountry,
-      cacheValid: !!existingAnalysis
+      cacheValid: !!existingAnalysis,
+      websiteStatus: websiteRecord?.analysis_status
     });
     
     // OPTION 1: Only fetch missing data (fast - 10-30 seconds)
@@ -4820,7 +4869,9 @@ app.get('/api/supabase/check-crawl-status/:domain', async (req, res) => {
       needsCrawl: false, 
       reason: `Valid full crawl exists (expires in ${daysUntilExpiry} days)`,
       expiresAt: analysis.expires_at,
-      totalPages: totalPages
+      totalPages: totalPages,
+      days_remaining: daysUntilExpiry,
+      status: 'completed'
     });
 
   } catch (error) {

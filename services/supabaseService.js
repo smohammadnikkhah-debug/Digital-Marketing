@@ -174,7 +174,7 @@ class SupabaseService {
         return null;
       }
 
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days from now
       
       console.log('💾 Storing analysis in Supabase:', {
         websiteId,
@@ -199,7 +199,7 @@ class SupabaseService {
         return null;
       }
 
-      console.log('✅ SEO analysis stored in Supabase (expires in 7 days)');
+      console.log('✅ SEO analysis stored in Supabase (expires in 14 days)');
       return data;
     } catch (error) {
       console.error('Supabase analysis storage error:', error);

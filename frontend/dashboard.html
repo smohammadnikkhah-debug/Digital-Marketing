@@ -605,6 +605,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     continue;
                 }
                 
+                // CRITICAL: Skip if crawl is already completed and still valid (within 14 days)
+                if (website.analysis_status === 'completed' && analysis) {
+                    // Check if analysis is still valid (not expired)
+                    try {
+                        const response = await fetch(`/api/supabase/check-crawl-status/${encodeURIComponent(website.domain)}`, {
+                            credentials: 'include'
+                        });
+                        if (response.ok) {
+                            const statusResult = await response.json();
+                            if (!statusResult.needsCrawl) {
+                                console.log(`✅ ${website.domain} has a completed crawl that is still valid (expires in ${statusResult.days_remaining || 'N/A'} days), skipping`);
+                                continue;
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error checking crawl status for ${website.domain}:`, error);
+                        // Continue with checkIfCrawlNeeded if status check fails
+                    }
+                }
+                
                 // Check if crawl is needed
                 const needsCrawl = await checkIfCrawlNeeded(website, analysis);
                 
