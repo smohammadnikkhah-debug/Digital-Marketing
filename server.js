@@ -4742,6 +4742,96 @@ app.get('/api/supabase/status', async (req, res) => {
   }
 });
 
+// Check crawl status for a domain (for auto-crawl logic)
+app.get('/api/supabase/check-crawl-status/:domain', async (req, res) => {
+  try {
+    const { domain } = req.params;
+    const customerId = await getCustomerIdFromRequest(req);
+    
+    if (!customerId) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    // Get website record using supabaseService
+    const normalizedDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+    const website = await supabaseService.createOrGetWebsite(normalizedDomain, null, customerId);
+
+    if (!website || !website.id || website.error) {
+      return res.json({ 
+        success: true, 
+        needsCrawl: true, 
+        reason: 'Website not found' 
+      });
+    }
+
+    // Get the latest analysis with expires_at
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const { data: analysis, error: analysisError } = await supabase
+      .from('seo_analyses')
+      .select('analysis_data, expires_at, created_at')
+      .eq('website_id', website.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (analysisError || !analysis) {
+      return res.json({ 
+        success: true, 
+        needsCrawl: true, 
+        reason: 'No analysis found' 
+      });
+    }
+
+    // Check if expired
+    const expiresAt = new Date(analysis.expires_at);
+    const now = new Date();
+    const isExpired = expiresAt <= now;
+
+    if (isExpired) {
+      return res.json({ 
+        success: true, 
+        needsCrawl: true, 
+        reason: 'Analysis expired', 
+        expiredAt: analysis.expires_at 
+      });
+    }
+
+    // Check if it's a full crawl (multiple pages) or just homepage
+    const totalPages = analysis.analysis_data?.totalPages || analysis.analysis_data?.onPage?.pages?.length || 0;
+    const isFullCrawl = totalPages > 1;
+
+    if (!isFullCrawl) {
+      return res.json({ 
+        success: true, 
+        needsCrawl: true, 
+        reason: 'Only homepage analyzed, full crawl needed' 
+      });
+    }
+
+    // Analysis is valid and is a full crawl
+    const daysUntilExpiry = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+    return res.json({ 
+      success: true, 
+      needsCrawl: false, 
+      reason: `Valid full crawl exists (expires in ${daysUntilExpiry} days)`,
+      expiresAt: analysis.expires_at,
+      totalPages: totalPages
+    });
+
+  } catch (error) {
+    console.error('Error checking crawl status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to check crawl status' 
+    });
+  }
+});
+
 // Get analysis data for a specific domain
 app.get('/api/supabase/analysis/:domain', async (req, res) => {
   try {

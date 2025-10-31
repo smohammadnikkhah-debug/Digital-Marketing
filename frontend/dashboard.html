@@ -566,6 +566,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     // Store all websites data
                     userData.websites = result.data;
                     
+                    // Check and auto-trigger crawls where needed
+                    await checkAndAutoTriggerCrawls();
+                    
                     // Display all websites
                     displayAllWebsites();
                     
@@ -578,6 +581,124 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 console.error('Dashboard: Error loading customer websites:', error);
                 displayEmptyState();
             }
+        }
+
+        // Check crawl status and auto-trigger if needed
+        async function checkAndAutoTriggerCrawls() {
+            if (!userData || !userData.websites) return;
+            
+            console.log('🔍 Checking crawl status for all websites...');
+            
+            for (const websiteData of userData.websites) {
+                const website = websiteData.website;
+                const analysis = websiteData.analysis;
+                
+                // Skip if already analyzing
+                if (website.analysis_status === 'in_progress') {
+                    console.log(`⏳ ${website.domain} is already being analyzed, skipping`);
+                    continue;
+                }
+                
+                // Skip if blocked
+                if (website.analysis_status === 'blocked') {
+                    console.log(`🚫 ${website.domain} is blocked, skipping`);
+                    continue;
+                }
+                
+                // Check if crawl is needed
+                const needsCrawl = await checkIfCrawlNeeded(website, analysis);
+                
+                if (needsCrawl.needsCrawl) {
+                    console.log(`🚀 Auto-triggering crawl for ${website.domain}:`, needsCrawl.reason);
+                    
+                    // Auto-trigger crawl (silently in background)
+                    try {
+                        const url = website.domain.startsWith('http') ? website.domain : `https://${website.domain}`;
+                        const response = await fetch('/api/dataforseo/full-website-crawl', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                url: url,
+                                options: {
+                                    maxPages: 100
+                                }
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            console.log(`✅ Auto-crawl started for ${website.domain}:`, result.taskId);
+                            // Update website status locally to show "analyzing" immediately
+                            website.analysis_status = 'in_progress';
+                        } else {
+                            console.error(`❌ Failed to auto-start crawl for ${website.domain}:`, result.error);
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error auto-triggering crawl for ${website.domain}:`, error);
+                    }
+                } else {
+                    console.log(`✅ ${website.domain} has valid analysis (${needsCrawl.reason})`);
+                }
+            }
+        }
+
+        // Check if crawl is needed for a website
+        async function checkIfCrawlNeeded(website, analysis) {
+            // If no analysis exists, crawl is needed
+            if (!analysis) {
+                return {
+                    needsCrawl: true,
+                    reason: 'No analysis found'
+                };
+            }
+            
+            // Check if analysis has expires_at (from seo_analyses table)
+            // We need to check the actual expires_at from the database
+            // Since the API filters expired analyses, if we have analysis, it's valid
+            // But we should also check if it's a full crawl (has multiple pages)
+            const hasFullCrawl = analysis.totalPages && analysis.totalPages > 1;
+            
+            if (!hasFullCrawl) {
+                return {
+                    needsCrawl: true,
+                    reason: 'Only homepage analyzed, full crawl needed'
+                };
+            }
+            
+            // Analysis exists and has multiple pages - check expiration via API
+            try {
+                const response = await fetch(`/api/supabase/check-crawl-status/${encodeURIComponent(website.domain)}`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const statusResult = await response.json();
+                    
+                    if (statusResult.needsCrawl) {
+                        return {
+                            needsCrawl: true,
+                            reason: statusResult.reason || 'Analysis expired'
+                        };
+                    } else {
+                        return {
+                            needsCrawl: false,
+                            reason: 'Valid analysis exists'
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking crawl status:', error);
+            }
+            
+            // Default: if we have analysis with multiple pages, assume it's valid
+            return {
+                needsCrawl: false,
+                reason: 'Analysis exists'
+            };
         }
 
         async function loadAnalysisData(domain) {
@@ -760,7 +881,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <td class="last-analysis">${lastAnalyzed}</td>
                         <td class="action-buttons">
                             <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')">View Details</button>
-                            <button class="btn btn-secondary" onclick="reanalyzeWebsite('${website.domain}')">Full Crawl</button>
                         </td>
                     `;
                 } else {
@@ -818,8 +938,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </td>
                             <td class="last-analysis">${lastAnalyzed}</td>
                             <td class="action-buttons">
-                                <button class="btn btn-primary" onclick="reanalyzeWebsite('${website.domain}')" title="Retry crawl after whitelisting IPs">
-                                    <i class="fas fa-redo"></i> Retry Full Crawl
+                                <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')" title="View website details">
+                                    View Details
                                 </button>
                             </td>
                         `;
@@ -835,8 +955,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </td>
                             <td class="last-analysis">Never</td>
                             <td class="action-buttons">
-                                <button class="btn btn-primary" onclick="analyzeWebsite('${website.domain}')">
-                                    <i class="fas fa-play"></i> Analyze Now
+                                <button class="btn btn-primary" onclick="openMantisDashboard('${website.domain}')">
+                                    View Details
                                 </button>
                             </td>
                         `;
