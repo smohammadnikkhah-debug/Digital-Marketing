@@ -20,32 +20,32 @@ const PLAN_WEBSITE_LIMITS = {
 // Content generation limits per plan (blogs and social posts per month)
 // ONLY using Stripe Price IDs - no legacy plans
 const PLAN_CONTENT_LIMITS = {
-  // Starter Plans
+  // Starter Plans - 4 content pieces per month (weekly)
   'price_1SB8IyBFUEdVmecWKH5suX6H': { // Starter Monthly
-    blogs: 10,
-    socialPosts: 10
+    blogs: 4,      // 4 blogs per month (once per week)
+    socialPosts: 4 // 4 social posts per month (once per week)
   },
   'price_1S9k6kBFUEdVmecWiYNLbXia': { // Starter Yearly
-    blogs: 10,
-    socialPosts: 10
+    blogs: 4,      // 4 blogs per month (once per week)
+    socialPosts: 4 // 4 social posts per month (once per week)
   },
   
-  // Professional Plans
+  // Professional Plans - 30 content pieces per month (daily)
   'price_1SB8gWBFUEdVmecWkHXlvki6': { // Professional Monthly
-    blogs: 50,
-    socialPosts: 50
+    blogs: 30,      // 30 blogs per month (daily)
+    socialPosts: 30 // 30 social posts per month (daily)
   },
   'price_1S9kCwBFUEdVmecWP4DTGzBy': { // Professional Yearly
-    blogs: 50,
-    socialPosts: 50
+    blogs: 30,      // 30 blogs per month (daily)
+    socialPosts: 30 // 30 social posts per month (daily)
   }
 };
 
 // Default limits for users without a valid plan (free tier)
 const DEFAULT_WEBSITE_LIMIT = 1;
 const DEFAULT_CONTENT_LIMITS = {
-  blogs: 2,
-  socialPosts: 10
+  blogs: 2,        // Free tier: 2 blogs per month
+  socialPosts: 2   // Free tier: 2 social posts per month
 };
 
 /**
