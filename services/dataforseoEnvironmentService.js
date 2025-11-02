@@ -721,14 +721,15 @@ class DataForSEOService {
       const response = await this.makeRequest('dataforseo_labs/google/ranked_keywords/live', requestData);
       
       if (!response || !response.tasks || response.tasks.length === 0) {
-        console.log(`ℹ️ Country traffic data not available`);
-        return this.getMockCountryData(domain); // Fallback to estimated data with domain context
+        console.log(`ℹ️ Country traffic data not available (requires DataForSEO Labs subscription)`);
+        return null; // Return null instead of mock data
       }
       
       const task = response.tasks[0];
       
       if (task.status_code !== 20000 || !task.result || task.result.length === 0) {
-        return this.getMockCountryData(domain); // Fallback with domain context
+        console.log(`ℹ️ No country traffic data in API response`);
+        return null; // Return null instead of mock data
       }
       
       const result = task.result[0];
@@ -800,8 +801,8 @@ class DataForSEOService {
       
       return countries;
     } catch (error) {
-      console.error(`Country traffic error:`, error.message);
-      return this.getMockCountryData(domain); // Use domain for location detection
+      console.error(`Country traffic error (${this.environment}):`, error.message);
+      return null; // Return null instead of mock data
     }
   }
 

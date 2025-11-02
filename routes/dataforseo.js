@@ -99,51 +99,23 @@ router.get('/traffic-data/:domain', async (req, res) => {
             return;
         }
         
-        // Fallback: Generate mock data if no real data available
-        console.log(`⚠️ No traffic trends data found for ${domain}, using mock data`);
-        const dataPoints = parseInt(months);
-        const trafficData = {
-            organic: [],
-            social: [],
-            ads: [],
-            referringDomains: [],
-            positions: []
-        };
-        
-        // Generate deterministic realistic-looking data (no random changes)
-        for (let i = 0; i < dataPoints; i++) {
-            // Organic traffic: trending upward with consistent variation
-            const organicBase = 8000 + (i * 200);
-            const organicVariation = Math.sin(i * 0.5) * 300; // Consistent wave pattern
-            trafficData.organic.push(Math.floor(organicBase + organicVariation));
-            
-            // Social traffic: moderate growth with consistent pattern
-            const socialBase = 500 + (i * 50);
-            const socialVariation = Math.cos(i * 0.3) * 80; // Consistent variation
-            trafficData.social.push(Math.floor(socialBase + socialVariation));
-            
-            // Ads traffic: variable but generally stable
-            const adsBase = 1000 + (i * 30);
-            const adsVariation = Math.sin(i * 0.8) * 150; // Consistent pattern
-            trafficData.ads.push(Math.floor(adsBase + adsVariation));
-            
-            // Referring domains: gradual increase with small variations
-            const domainsBase = 20 + (i * 2);
-            const domainsVariation = Math.cos(i * 0.4) * 3; // Small consistent variation
-            trafficData.referringDomains.push(Math.floor(domainsBase + domainsVariation));
-            
-            // Keyword positions: improving over time with small fluctuations
-            const positionBase = 45 - (i * 2);
-            const positionVariation = Math.sin(i * 0.6) * 4; // Small consistent variation
-            trafficData.positions.push(Math.floor(positionBase + positionVariation));
-        }
+        // No real data available - return empty arrays (NO MOCK DATA)
+        console.log(`⚠️ No traffic trends data found for ${domain} - returning empty data`);
+        console.log('💡 User needs to run fresh analysis to get DataForSEO data');
         
         res.json({
-            success: true,
+            success: false,
             domain: domain,
             months: months,
-            data: trafficData,
-            source: 'mock',
+            data: {
+                organic: [],
+                social: [],
+                ads: [],
+                referringDomains: [],
+                positions: []
+            },
+            source: 'no-data',
+            message: 'No traffic data available. Please run a fresh analysis.',
             generated_at: new Date().toISOString()
         });
         

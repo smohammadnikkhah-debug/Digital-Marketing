@@ -1976,30 +1976,88 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // Update charts with historical DataForSEO data
         function updateChartsWithHistoricalData(data) {
-            console.log('📊 Updating charts with historical data:', data);
+            console.log('📊 Updating charts with REAL DataForSEO data:', data);
+            
+            // Add data source badge to chart section
+            updateDataSourceBadge(data.dataSource || 'DataForSEO Labs API');
+            
+            // Check data source and show indicator
+            if (data.dataSource === 'DataForSEO Labs API') {
+                console.log('✅ Using REAL data from DataForSEO Labs API');
+            }
             
             // Update Traffic Performance Trends Chart
-            if (data.trafficTrends) {
-                console.log('📈 Traffic trends data available:', data.trafficTrends);
+            if (data.trafficTrends && data.trafficTrends.months && data.trafficTrends.months.length > 0) {
+                console.log('📈 REAL traffic trends data available:', data.trafficTrends);
+                console.log('   Source: DataForSEO API');
                 console.log('   Months:', data.trafficTrends.months);
                 console.log('   Organic:', data.trafficTrends.organic);
                 console.log('   Paid:', data.trafficTrends.paid);
-                console.log('   Social:', data.trafficTrends.social);
                 updateTrafficPerformanceChart(data.trafficTrends);
             } else {
-                console.warn('⚠️ No traffic trends data, showing empty state');
+                console.warn('⚠️ No REAL traffic trends data available');
+                console.warn('💡 Click "Force Refresh" to fetch data from DataForSEO API');
                 showEmptyTrafficChart();
+                showNoDataWarning('traffic');
             }
             
             // Update Traffic by Country Chart (replaces position chart)
-            if (data.trafficByCountry && data.trafficByCountry.length > 0) {
-                console.log('🌍 Country traffic data available:', data.trafficByCountry);
+            if (data.trafficByCountry && Array.isArray(data.trafficByCountry) && data.trafficByCountry.length > 0) {
+                console.log('🌍 REAL country traffic data available:', data.trafficByCountry);
+                console.log('   Source: DataForSEO API');
                 console.log('   Countries:', data.trafficByCountry.map(c => `${c.name}: ${c.traffic}`).join(', '));
                 updateCountryTrafficChart(data.trafficByCountry);
             } else {
-                console.warn('⚠️ No country traffic data, showing empty state');
-                console.log('   trafficByCountry value:', data.trafficByCountry);
+                console.warn('⚠️ No REAL country traffic data available');
+                console.warn('💡 Click "Force Refresh" to fetch data from DataForSEO API');
                 showEmptyCountryChart();
+                showNoDataWarning('country');
+            }
+        }
+        
+        // Update data source badge to show where data comes from
+        function updateDataSourceBadge(source) {
+            const chartTitle = document.querySelector('.chart-title');
+            if (!chartTitle) return;
+            
+            // Remove existing badge if any
+            const existingBadge = chartTitle.querySelector('.data-source-badge');
+            if (existingBadge) {
+                existingBadge.remove();
+            }
+            
+            // Add new badge
+            const badge = document.createElement('span');
+            badge.className = 'data-source-badge';
+            badge.style.cssText = `
+                display: inline-block;
+                margin-left: 10px;
+                padding: 4px 10px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                font-size: 11px;
+                font-weight: 600;
+                border-radius: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            `;
+            badge.textContent = '✓ Real Data';
+            badge.title = `Data Source: ${source}`;
+            
+            chartTitle.appendChild(badge);
+            console.log('✅ Data source badge added:', source);
+        }
+        
+        // Show warning when no real data is available
+        function showNoDataWarning(chartType) {
+            const message = chartType === 'traffic' 
+                ? '⚠️ No historical traffic data available. Click "Force Refresh" to fetch real data from DataForSEO.'
+                : '⚠️ No country traffic data available. Click "Force Refresh" to fetch real data from DataForSEO.';
+            
+            // Only show once
+            if (!window.noDataWarningShown) {
+                showNotification(message, 'info');
+                window.noDataWarningShown = true;
             }
         }
         
@@ -2037,6 +2095,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
             
+            // Validate data before proceeding
+            if (!trafficTrends || !trafficTrends.months || trafficTrends.months.length === 0) {
+                console.error('❌ Invalid traffic trends data:', trafficTrends);
+                showEmptyTrafficChart();
+                return;
+            }
+            
+            // Log data for debugging
+            console.log('📊 Traffic data validation:');
+            console.log('   Months:', trafficTrends.months);
+            console.log('   Organic data:', trafficTrends.organic);
+            console.log('   Paid data:', trafficTrends.paid);
+            console.log('   Social data:', trafficTrends.social);
+            
+            // Check if all data arrays are zero or empty
+            const organicData = trafficTrends.organic || [];
+            const paidData = trafficTrends.paid || [];
+            const socialData = trafficTrends.social || [];
+            
+            const hasData = organicData.some(v => v > 0) || paidData.some(v => v > 0) || socialData.some(v => v > 0);
+            
+            if (!hasData) {
+                console.warn('⚠️ All traffic data is zero');
+                showEmptyTrafficChart();
+                return;
+            }
+            
             // Destroy ALL existing charts on this canvas using Chart.js registry
             const existingChart = Chart.getChart(ctx);
             if (existingChart) {
@@ -2054,51 +2139,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 window.trafficChartInstance = null;
             }
             
-            // Create new line chart
+            // Create new line chart with clean styling like the example
             window.trafficChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: trafficTrends.months || [],
+                    labels: trafficTrends.months,
                     datasets: [
                         {
-                            label: 'Organic Traffic',
-                            data: trafficTrends.organic || [],
+                            label: '🍃 Organic Traffic',
+                            data: organicData,
                             borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
                             tension: 0.4,
                             fill: true,
-                            borderWidth: 3,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             pointBackgroundColor: '#10b981',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2
                         },
                         {
-                            label: 'Paid Ads',
-                            data: trafficTrends.paid || [],
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            label: '💲 Paid Ads',
+                            data: paidData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
                             tension: 0.4,
                             fill: true,
-                            borderWidth: 3,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#3b82f6',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2
-                        },
-                        {
-                            label: 'Social',
-                            data: trafficTrends.social || [],
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 3,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#8b5cf6',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#ef4444',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2
                         }
@@ -2110,27 +2181,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     plugins: {
                         legend: {
                             position: 'top',
+                            align: 'start',
                             labels: {
                                 usePointStyle: true,
                                 padding: 15,
                                 font: {
                                     size: 12,
-                                    weight: '600'
-                                }
+                                    weight: '500',
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#64748b'
                             }
                         },
                         title: {
                             display: false
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
                             padding: 12,
+                            cornerRadius: 8,
                             titleFont: {
-                                size: 14,
-                                weight: 'bold'
+                                size: 13,
+                                weight: '600'
                             },
                             bodyFont: {
-                                size: 13
+                                size: 12
                             },
                             callbacks: {
                                 label: function(context) {
@@ -2139,7 +2214,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                         label += ': ';
                                     }
                                     if (context.parsed.y !== null) {
-                                        label += context.parsed.y.toLocaleString() + ' visits';
+                                        label += context.parsed.y.toLocaleString() + ' visits/mo';
                                     }
                                     return label;
                                 }
@@ -2151,17 +2226,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    if (value >= 1000) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
                                         return (value / 1000).toFixed(1) + 'K';
                                     }
                                     return value;
                                 },
                                 font: {
-                                    size: 11
-                                }
+                                    size: 11,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#94a3b8'
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(148, 163, 184, 0.1)',
+                                drawBorder: false
+                            },
+                            border: {
+                                display: false
                             }
                         },
                         x: {
@@ -2170,8 +2253,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             },
                             ticks: {
                                 font: {
-                                    size: 11
-                                }
+                                    size: 11,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#94a3b8'
+                            },
+                            border: {
+                                display: false
                             }
                         }
                     },
@@ -2183,6 +2271,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             });
             
             console.log('✅ Traffic Performance chart created successfully');
+            console.log('   Data points per series:', organicData.length);
         }
         
         // Update Traffic by Country Chart (Horizontal Bar Chart)
@@ -2252,7 +2341,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
             console.log('📊 Sorted countries for chart:', sortedCountries.map(c => `${c.name}: ${c.traffic}`).join(', '));
             
-            // Create horizontal bar chart
+            // Create horizontal bar chart with thin bars like the example
             try {
                 window.positionChartInstance = new Chart(ctx, {
                     type: 'bar',
@@ -2262,27 +2351,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         label: 'Estimated Traffic',
                         data: sortedCountries.map(c => c.traffic),
                         backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',   // Blue
-                            'rgba(16, 185, 129, 0.8)',   // Green
-                            'rgba(245, 158, 11, 0.8)',   // Orange
-                            'rgba(139, 92, 246, 0.8)',   // Purple
-                            'rgba(239, 68, 68, 0.8)'     // Red
+                            'rgba(251, 146, 60, 0.85)',   // Orange gradient
+                            'rgba(251, 146, 60, 0.85)',
+                            'rgba(251, 146, 60, 0.85)',
+                            'rgba(251, 146, 60, 0.85)',
+                            'rgba(251, 146, 60, 0.85)'
                         ],
-                        borderColor: [
-                            '#3b82f6',
-                            '#10b981',
-                            '#f59e0b',
-                            '#8b5cf6',
-                            '#ef4444'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 6
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 3,
+                        maxBarThickness: 24,  // Thin bars like example
+                        barPercentage: 0.6,   // Spacing between bars
+                        categoryPercentage: 0.7
                     }]
                 },
                 options: {
                     indexAxis: 'y',  // Horizontal bars
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 0,
+                            right: 10,
+                            top: 0,
+                            bottom: 0
+                        }
+                    },
                     plugins: {
                         legend: {
                             display: false
@@ -2291,14 +2385,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             display: false
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
                             padding: 12,
+                            cornerRadius: 8,
                             titleFont: {
-                                size: 14,
-                                weight: 'bold'
+                                size: 13,
+                                weight: '600'
                             },
                             bodyFont: {
-                                size: 13
+                                size: 12
                             },
                             callbacks: {
                                 title: function(context) {
@@ -2317,17 +2412,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    if (value >= 1000) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
                                         return (value / 1000).toFixed(1) + 'K';
                                     }
                                     return value;
                                 },
                                 font: {
-                                    size: 11
-                                }
+                                    size: 11,
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#94a3b8'
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(148, 163, 184, 0.1)',
+                                drawBorder: false
+                            },
+                            border: {
+                                display: false
                             }
                         },
                         y: {
@@ -2336,9 +2439,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             },
                             ticks: {
                                 font: {
-                                    size: 12,
-                                    weight: '600'
-                                }
+                                    size: 11,
+                                    weight: '500',
+                                    family: 'Inter, sans-serif'
+                                },
+                                color: '#475569',
+                                padding: 8
+                            },
+                            border: {
+                                display: false
                             }
                         }
                     }
@@ -2450,11 +2559,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const currentDomain = storedDomain || (window.location.hostname === 'localhost' ? 'mozarex.com' : window.location.hostname);
                 
                 if (!currentDomain) {
-                    console.warn('⚠️ No domain available for traffic data, using mock data');
-                    return generateMockTrafficData(months);
+                    console.error('⚠️ No domain available for traffic data');
+                    return { 
+                        success: false, 
+                        data: { organic: [], social: [], ads: [] },
+                        source: 'no-domain',
+                        message: 'No domain selected'
+                    };
                 }
                 
-                console.log(`📊 Fetching traffic data for domain: ${currentDomain}, months: ${months}`);
+                console.log(`📊 Fetching REAL traffic data for domain: ${currentDomain}, months: ${months}`);
                 
                 const response = await fetch(`/api/dataforseo/traffic-data/${currentDomain}?months=${months}`);
                 if (!response.ok) {
@@ -2462,12 +2576,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }
                 
                 const data = await response.json();
-                console.log(`✅ Traffic data fetched for ${currentDomain}:`, data);
+                
+                // Log data source clearly
+                if (data.source === 'supabase-cache') {
+                    console.log(`✅ Real traffic data from Supabase cache:`, data);
+                } else if (data.source === 'dataforseo-fresh') {
+                    console.log(`✅ Fresh traffic data from DataForSEO API:`, data);
+                } else if (data.source === 'no-data') {
+                    console.warn(`⚠️ No traffic data available for ${currentDomain}`);
+                    console.warn('💡 Run "Force Refresh" to fetch data from DataForSEO');
+                }
+                
                 return data;
             } catch (error) {
-                console.error('Error fetching traffic data:', error);
-                // Return mock data for development
-                return generateMockTrafficData(months);
+                console.error('❌ Error fetching traffic data:', error);
+                // Return empty data - NO MOCK DATA
+                return { 
+                    success: false, 
+                    data: { organic: [], social: [], ads: [] },
+                    source: 'error',
+                    message: error.message
+                };
             }
         }
 
