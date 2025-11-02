@@ -8,3 +8,4 @@ COMMENT ON COLUMN public.users.company IS 'User company name';
 
 
 
+

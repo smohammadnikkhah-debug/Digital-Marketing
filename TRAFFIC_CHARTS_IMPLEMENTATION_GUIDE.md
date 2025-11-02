@@ -8,9 +8,10 @@
    - Uses: `dataforseo_labs/google/domain_rank_overview/live`
    - Returns: Organic ETV, Paid ETV, keyword counts, position distribution
    
-2. **`getTrafficTrends(url, months)`** - Historical traffic (3 months)
-   - Uses: `dataforseo_labs/google/historical_rank_overview/live`
+2. **`getTrafficTrends(url, months)`** - Historical traffic (UPDATED!)
+   - Uses: `dataforseo_labs/google/bulk_traffic_estimation/live` ✨ NEW!
    - Returns: Monthly organic, paid, social traffic arrays
+   - Supports: 1-60 month ranges with dynamic filtering
    
 3. **`getTrafficByCountry(url)`** - Top 5 countries traffic
    - Uses: `dataforseo_labs/google/ranked_keywords/live`

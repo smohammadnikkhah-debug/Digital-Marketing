@@ -7,6 +7,7 @@ router.get('/traffic-data/:domain', async (req, res) => {
     try {
         const { domain } = req.params;
         const { months = '3' } = req.query;
+        const requestedMonths = parseInt(months);
         
         console.log(`[DataForSEO] Fetching REAL traffic data for domain: ${domain}, months: ${months}`);
         
@@ -34,31 +35,49 @@ router.get('/traffic-data/:domain', async (req, res) => {
         }
         
         // Get analysis data from Supabase (contains traffic trends)
-        const analysisData = await supabaseService.getAnalysisData(domain, customerId);
+        let analysisData = await supabaseService.getAnalysisData(domain, customerId);
+        
+        // Check if we have cached data and if it has enough months
+        const hasSufficientCachedData = analysisData && 
+                                        analysisData.trafficTrends && 
+                                        analysisData.trafficTrends.months && 
+                                        analysisData.trafficTrends.months.length >= requestedMonths;
+        
+        // If we need more data than cached OR no cached data, fetch fresh data
+        if (!hasSufficientCachedData && requestedMonths > 3) {
+            console.log(`🔄 Cached data insufficient for ${requestedMonths} months, fetching fresh data...`);
+            try {
+                const dataforseoService = require('../services/dataforseoEnvironmentService');
+                const fullUrl = domain.startsWith('http') ? domain : `https://${domain}`;
+                const freshTrends = await dataforseoService.getTrafficTrends(fullUrl, requestedMonths);
+                
+                if (freshTrends) {
+                    console.log(`✅ Fresh traffic data fetched for ${requestedMonths} months`);
+                    // Update analysis data with fresh trends
+                    if (!analysisData) analysisData = {};
+                    analysisData.trafficTrends = freshTrends;
+                }
+            } catch (fetchError) {
+                console.error('⚠️ Error fetching fresh traffic data:', fetchError.message);
+            }
+        }
         
         if (analysisData && analysisData.trafficTrends) {
             const trafficTrends = analysisData.trafficTrends;
-            const requestedMonths = parseInt(months);
             
-            console.log(`✅ Found traffic trends data:`, {
-                months: trafficTrends.months?.length || 0,
+            console.log(`✅ Using traffic trends data:`, {
+                cachedMonths: trafficTrends.months?.length || 0,
+                requestedMonths: requestedMonths,
                 hasOrganic: !!trafficTrends.organic,
                 hasPaid: !!trafficTrends.paid,
                 hasSocial: !!trafficTrends.social
             });
             
-            // Extract the requested number of months
+            // Extract the requested number of months (take the last N months)
             const organic = (trafficTrends.organic || []).slice(-requestedMonths);
             const paid = (trafficTrends.paid || []).slice(-requestedMonths);
             const social = (trafficTrends.social || []).slice(-requestedMonths);
             const monthsLabels = (trafficTrends.months || []).slice(-requestedMonths);
-            
-            // If we have less data than requested, pad with the last value
-            while (organic.length < requestedMonths && organic.length > 0) {
-                organic.unshift(organic[0]);
-                paid.unshift(paid[0] || 0);
-                social.unshift(social[0] || 0);
-            }
             
             const trafficData = {
                 organic: organic.length > 0 ? organic : [],
@@ -74,7 +93,7 @@ router.get('/traffic-data/:domain', async (req, res) => {
                 months: months,
                 data: trafficData,
                 monthsLabels: monthsLabels.length > 0 ? monthsLabels : [],
-                source: 'supabase',
+                source: hasSufficientCachedData ? 'supabase-cache' : 'dataforseo-fresh',
                 generated_at: new Date().toISOString()
             });
             return;

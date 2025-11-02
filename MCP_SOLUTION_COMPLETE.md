@@ -196,3 +196,4 @@ The MCP integration will automatically activate when MCP tools become available 
 
 
 
+
