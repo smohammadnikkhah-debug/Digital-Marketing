@@ -2278,9 +2278,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         function updateCountryTrafficChart(trafficByCountry) {
             console.log('🌍 Creating Traffic by Country chart:', trafficByCountry);
             
+            // Prevent multiple simultaneous updates
+            if (window.countryChartUpdating) {
+                console.log('⏳ Country chart update already in progress, skipping...');
+                return;
+            }
+            window.countryChartUpdating = true;
+            
             // Validate data
             if (!trafficByCountry || !Array.isArray(trafficByCountry) || trafficByCountry.length === 0) {
                 console.error('❌ Invalid traffic by country data:', trafficByCountry);
+                window.countryChartUpdating = false;
                 showEmptyCountryChart();
                 return;
             }
@@ -2288,6 +2296,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // Validate Chart.js is loaded
             if (typeof Chart === 'undefined') {
                 console.error('❌ Chart.js is not loaded');
+                window.countryChartUpdating = false;
                 return;
             }
             
@@ -2297,19 +2306,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
             
-            // Ensure canvas is visible and has proper dimensions
+            // Reset canvas dimensions to prevent infinite growth
             const canvasParent = ctx.parentElement;
             if (canvasParent) {
                 canvasParent.style.display = 'block';
-                canvasParent.style.height = '100%';
+                // Set fixed height to prevent infinite growth
+                canvasParent.style.height = '300px';
                 canvasParent.style.width = '100%';
+                canvasParent.style.position = 'relative';
             }
             
-            // Set canvas dimensions if not set
-            if (!ctx.width || ctx.width === 0 || !ctx.height || ctx.height === 0) {
-                ctx.style.width = '100%';
-                ctx.style.height = '300px';
-            }
+            // Reset canvas inline styles to prevent growth
+            ctx.style.width = '';
+            ctx.style.height = '';
+            ctx.removeAttribute('width');
+            ctx.removeAttribute('height');
             
             // Destroy ALL existing charts on this canvas using Chart.js registry
             const existingChart = Chart.getChart(ctx);
@@ -2369,6 +2380,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     indexAxis: 'y',  // Horizontal bars
                     responsive: true,
                     maintainAspectRatio: false,
+                    aspectRatio: 1.5,  // Prevent infinite height growth
                     layout: {
                         padding: {
                             left: 0,
@@ -2458,9 +2470,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 console.log('   Chart instance:', window.positionChartInstance);
                 console.log('   Canvas dimensions:', ctx.width, 'x', ctx.height);
                 console.log('   Number of data points:', sortedCountries.length);
+                
+                // Release update lock
+                window.countryChartUpdating = false;
             } catch (error) {
                 console.error('❌ Error creating country traffic chart:', error);
                 console.error('   Error stack:', error.stack);
+                window.countryChartUpdating = false;
                 showEmptyCountryChart();
             }
         }
