@@ -62,11 +62,19 @@
         .hero {
             padding: 8rem 5% 6rem;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            text-align: center;
+            justify-content: space-between;
+            text-align: left;
             position: relative;
             overflow: hidden;
+            max-width: 1300px;
+            margin: 0 auto;
+            gap: 4rem;
+        }
+
+        .hero-content {
+            flex: 1;
         }
 
         .hero h1 {
@@ -87,8 +95,21 @@
         .download-buttons {
             display: flex;
             gap: 1rem;
-            justify-content: center;
+            justify-content: flex-start;
             flex-wrap: wrap;
+        }
+
+        .btn-play-video {
+            background: linear-gradient(135deg, #FF0050, #00F2FE);
+            color: white;
+            box-shadow: 0 4px 14px rgba(255, 0, 80, 0.4);
+            border: none;
+        }
+        
+        .btn-play-video:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            color: white;
         }
 
         .btn {
@@ -142,58 +163,69 @@
             color: var(--text-heading);
         }
 
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+        .zigzag-features {
+            display: flex;
+            flex-direction: column;
+            gap: 6rem;
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        .feature-card {
-            background: var(--bg-dark);
-            padding: 2.5rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
+        .feature-row {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
         }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
-            border-color: rgba(16, 185, 129, 0.3);
+        .feature-row.reverse {
+            flex-direction: row-reverse;
         }
 
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .feature-card h3 {
-            color: var(--text-heading);
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .feature-image-wrapper {
-            margin-top: 2rem;
-            border-radius: 12px;
-            overflow: hidden;
+        .feature-image {
+            flex: 1;
             display: flex;
             justify-content: center;
         }
 
-        .feature-image-wrapper img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
+        .feature-image img {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .feature-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .feature-text .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: rgba(16,185,129,0.1);
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+        }
+
+        .feature-text h3 {
+            font-size: 2.5rem;
+            color: var(--text-heading);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-text p {
+            font-size: 1.25rem;
+            color: #8b949e;
         }
 
         .hero-image {
-            margin-top: 4rem;
-            max-width: 350px; /* Dashboard is a mobile screenshot mostly */
+            flex: 1;
+            max-width: 500px;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -291,8 +323,18 @@
         }
 
         @media (max-width: 768px) {
+            .hero { flex-direction: column; text-align: center; gap: 2rem; }
+            .download-buttons { justify-content: center; }
             .hero h1 { font-size: 2.5rem; }
             .routine-planner { flex-direction: column; }
+            .feature-row, .feature-row.reverse {
+                flex-direction: column;
+                text-align: center;
+                gap: 2rem;
+            }
+            .feature-text { text-align: center; }
+            .feature-text .feature-icon { margin: 0 auto 1.5rem; }
+            .feature-text h3 { font-size: 2rem; }
         }
     </style>
 </head>
@@ -304,52 +346,27 @@
     </nav>
 
     <section class="hero">
-        <h1>Transform Your <span style="color: var(--primary)">Daily Flow.</span></h1>
-        <p>Master Your Time, Master Your Life. Plan your day out, stack your habits effortlessly, and build unstoppable routine momentum with StopTimetryx.</p>
-        
-        <div class="download-buttons" id="download">
-            <a href="https://apps.apple.com/us/app/stoptimetryx-routine-planner/id6760876491" target="_blank" class="btn btn-primary">
-                <svg viewBox="0 0 384 512" width="20" height="20" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-                Download for iOS
-            </a>
-            <a href="https://play.google.com/store/apps/details?id=com.stoptimetryx.app" target="_blank" class="btn btn-outline">
-                <svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
-                Download for Android
-            </a>
+        <div class="hero-content">
+            <h1>Transform Your <span style="color: var(--primary)">Daily Flow.</span></h1>
+            <p>Master Your Time, Master Your Life. Plan your day out, stack your habits effortlessly, and build unstoppable routine momentum with StopTimetryx.</p>
+            
+            <div class="download-buttons" id="download">
+                <a href="https://apps.apple.com/us/app/stoptimetryx-routine-planner/id6760876491" target="_blank" class="btn btn-primary">
+                    <svg viewBox="0 0 384 512" width="20" height="20" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                    Download for iOS
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.stoptimetryx.app" target="_blank" class="btn btn-outline">
+                    <svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                    Download for Android
+                </a>
+                <a href="https://www.tiktok.com/@mozarex_stoptimetryx/video/7593190113404931329" target="_blank" class="btn btn-play-video">
+                    <i class="fas fa-play-circle" style="font-size: 1.2rem;"></i> Watch Video
+                </a>
+            </div>
         </div>
         
         <div class="hero-image">
-            <img src="/images/media__1775609444098.png" alt="StopTimetryx Routines Dashboard">
-        </div>
-    </section>
-
-    <section class="features">
-        <h2 class="section-title">Build Momentum. Create Unstoppable Daily Habits.</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">📅</div>
-                <h3>Track Every Segment</h3>
-                <p>Complete your routines step by step. Celebrate small wins as you check off each segment of your curated day effortlessly.</p>
-                <div class="feature-image-wrapper">
-                    <img src="/images/media__1775609444144.png" alt="Routine Segments">
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔗</div>
-                <h3>Build Custom Habits</h3>
-                <p>Link new habits seamlessly using custom routines or pre-made templates like 'The Energizer Morning'. Start small and grow.</p>
-                <div class="feature-image-wrapper">
-                    <img src="/images/media__1775609444150.png" alt="Create Custom Routine">
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🏆</div>
-                <h3>Gamify Your Progress</h3>
-                <p>Build streaks and momentum. Earn trophies and unlock rewards as you consistently complete your morning and evening routines.</p>
-                <div class="feature-image-wrapper">
-                    <img src="/images/media__1775609444112.png" alt="Trophy Snapshot and Streaks">
-                </div>
-            </div>
+            <img src="/images/media__1775610351115.jpg" alt="StopTimetryx Templates">
         </div>
     </section>
 
@@ -367,6 +384,47 @@
         </div>
         <div class="infographic-container">
             <img src="/images/media__1775609447777.png" alt="StopTimetryx Daily Flow Infographic">
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-title">Build Momentum. Create Unstoppable Daily Habits.</h2>
+        <div class="zigzag-features">
+            <!-- Row 1: Image Left, Text Right -->
+            <div class="feature-row">
+                <div class="feature-image">
+                    <img src="/images/media__1775609444144.png" alt="Routine Segments">
+                </div>
+                <div class="feature-text">
+                    <div class="feature-icon">📅</div>
+                    <h3>Track Every Segment</h3>
+                    <p>Complete your routines step by step. Celebrate small wins as you check off each segment of your curated day effortlessly.</p>
+                </div>
+            </div>
+
+            <!-- Row 2: Text Left, Image Right -->
+            <div class="feature-row reverse">
+                <div class="feature-image">
+                    <img src="/images/media__1775609444150.png" alt="Create Custom Routine">
+                </div>
+                <div class="feature-text">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Build Custom Habits</h3>
+                    <p>Link new habits seamlessly using custom routines or pre-made templates like 'The Energizer Morning'. Start small and grow.</p>
+                </div>
+            </div>
+
+            <!-- Row 3: Image Left, Text Right -->
+            <div class="feature-row">
+                <div class="feature-image">
+                    <img src="/images/media__1775609444112.png" alt="Trophy Snapshot and Streaks">
+                </div>
+                <div class="feature-text">
+                    <div class="feature-icon">🏆</div>
+                    <h3>Gamify Your Progress</h3>
+                    <p>Build streaks and momentum. Earn trophies and unlock rewards as you consistently complete your morning and evening routines.</p>
+                </div>
+            </div>
         </div>
     </section>
 
