@@ -175,6 +175,52 @@
             font-size: 1.5rem;
         }
 
+        .feature-image-wrapper {
+            margin-top: 2rem;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .feature-image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .hero-image {
+            margin-top: 4rem;
+            max-width: 350px; /* Dashboard is a mobile screenshot mostly */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .infographic-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .infographic-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
         /* Routine Planner Section */
         .routine-planner {
             padding: 6rem 5%;
@@ -258,8 +304,8 @@
     </nav>
 
     <section class="hero">
-        <h1>Take control of <span style="color: var(--primary)">your time.</span></h1>
-        <p>Master Your Time, Master Your Life. Plan your day, stack your habits, and record accurate laps with StopTimetryx.</p>
+        <h1>Transform Your <span style="color: var(--primary)">Daily Flow.</span></h1>
+        <p>Master Your Time, Master Your Life. Plan your day out, stack your habits effortlessly, and build unstoppable routine momentum with StopTimetryx.</p>
         
         <div class="download-buttons" id="download">
             <a href="https://apps.apple.com/us/app/stoptimetryx-routine-planner/id6760876491" target="_blank" class="btn btn-primary">
@@ -271,30 +317,38 @@
                 Download for Android
             </a>
         </div>
+        
+        <div class="hero-image">
+            <img src="/images/media__1775609444098.png" alt="StopTimetryx Routines Dashboard">
+        </div>
     </section>
 
     <section class="features">
-        <h2 class="section-title">Timing. Perfected.</h2>
+        <h2 class="section-title">Build Momentum. Create Unstoppable Daily Habits.</h2>
         <div class="feature-grid">
             <div class="feature-card">
-                <div class="feature-icon">⏱️</div>
-                <h3>Accurate Laps & Insights</h3>
-                <p>Improve your performance with deep insights. Record lightweight laps, cumulative splits, and set parallel stopwatches easily.</p>
-            </div>
-            <div class="feature-card">
                 <div class="feature-icon">📅</div>
-                <h3>Daily Flow & Calendar</h3>
-                <p>See your routines, track your tasks, and stay consistent. Plan your day with confidence and own your schedule.</p>
+                <h3>Track Every Segment</h3>
+                <p>Complete your routines step by step. Celebrate small wins as you check off each segment of your curated day effortlessly.</p>
+                <div class="feature-image-wrapper">
+                    <img src="/images/media__1775609444144.png" alt="Routine Segments">
+                </div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🔗</div>
-                <h3>Habit Stacking</h3>
-                <p>Link new habits, start small, and celebrate wins. Turn a simple routine into unshakeable consistency.</p>
+                <h3>Build Custom Habits</h3>
+                <p>Link new habits seamlessly using custom routines or pre-made templates like 'The Energizer Morning'. Start small and grow.</p>
+                <div class="feature-image-wrapper">
+                    <img src="/images/media__1775609444150.png" alt="Create Custom Routine">
+                </div>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🏆</div>
                 <h3>Gamify Your Progress</h3>
                 <p>Build streaks and momentum. Earn trophies and unlock rewards as you consistently complete your morning and evening routines.</p>
+                <div class="feature-image-wrapper">
+                    <img src="/images/media__1775609444112.png" alt="Trophy Snapshot and Streaks">
+                </div>
             </div>
         </div>
     </section>
@@ -310,6 +364,9 @@
                 <li>Time-block focus sessions & prepare your workspace seamlessly.</li>
                 <li>Build custom routines entirely manually or use provided templates.</li>
             </ul>
+        </div>
+        <div class="infographic-container">
+            <img src="/images/media__1775609447777.png" alt="StopTimetryx Daily Flow Infographic">
         </div>
     </section>
 
