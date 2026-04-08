@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StopTimetryx | Daily Flow & Habit Builder</title>
+    <meta name="description" content="Master your time and life with StopTimetryx. Accurately track laps, plan routines, stack your habits, and build consistency. Get it on iOS and Android.">
+    <meta name="keywords" content="habit tracker, routine planner, time management, stop watch, lap timer, productivity app, stoptimetryx">
+    
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --text-main: #c9d1d9;
+            --text-heading: #f0f6fc;
+            --gradient: linear-gradient(135deg, #0d1117 0%, #1a2333 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: var(--gradient);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        nav {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 5% 6rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            color: var(--text-heading);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            max-width: 800px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+            color: #8b949e;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-heading);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-heading);
+            transform: translateY(-2px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 5%;
+            background: var(--bg-card);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 4rem;
+            color: var(--text-heading);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--bg-dark);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* Routine Planner Section */
+        .routine-planner {
+            padding: 6rem 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 4rem;
+        }
+
+        .routine-text {
+            flex: 1;
+        }
+
+        .routine-text h2 {
+            font-size: 3rem;
+            color: var(--text-heading);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .routine-list {
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .routine-list li {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .routine-list li::before {
+            content: '✓';
+            color: var(--primary);
+            font-weight: bold;
+            background: rgba(16,185,129,0.1);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        /* Banner CTA */
+        .cta-banner {
+            text-align: center;
+            padding: 6rem 5%;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0c201a 100%);
+        }
+
+        .cta-banner h2 {
+            font-size: 2.5rem;
+            color: var(--text-heading);
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--bg-card);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #8b949e;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .routine-planner { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">StopTime<span>Tryx</span></div>
+        <a href="#download" class="btn btn-outline" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Get App</a>
+    </nav>
+
+    <section class="hero">
+        <h1>Take control of <span style="color: var(--primary)">your time.</span></h1>
+        <p>Master Your Time, Master Your Life. Plan your day, stack your habits, and record accurate laps with StopTimetryx.</p>
+        
+        <div class="download-buttons" id="download">
+            <a href="https://apps.apple.com/us/app/stoptimetryx-routine-planner/id6760876491" target="_blank" class="btn btn-primary">
+                <svg viewBox="0 0 384 512" width="20" height="20" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                Download for iOS
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=com.stoptimetryx.app" target="_blank" class="btn btn-outline">
+                <svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                Download for Android
+            </a>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-title">Timing. Perfected.</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⏱️</div>
+                <h3>Accurate Laps & Insights</h3>
+                <p>Improve your performance with deep insights. Record lightweight laps, cumulative splits, and set parallel stopwatches easily.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <h3>Daily Flow & Calendar</h3>
+                <p>See your routines, track your tasks, and stay consistent. Plan your day with confidence and own your schedule.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>Habit Stacking</h3>
+                <p>Link new habits, start small, and celebrate wins. Turn a simple routine into unshakeable consistency.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Gamify Your Progress</h3>
+                <p>Build streaks and momentum. Earn trophies and unlock rewards as you consistently complete your morning and evening routines.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="routine-planner">
+        <div class="routine-text">
+            <h2>Plan your day. Stack your habits. Track your progress.</h2>
+            <p style="font-size: 1.2rem; color: #8b949e; margin-bottom: 2rem;">Various templates to select from to build your perfect day instantly. From 'Morning Momentum' to 'Evening Reflection', we have you covered.</p>
+            
+            <ul class="routine-list">
+                <li>Morning & evening routines specifically designed for you.</li>
+                <li>Focus on health, focus, and productivity.</li>
+                <li>Time-block focus sessions & prepare your workspace seamlessly.</li>
+                <li>Build custom routines entirely manually or use provided templates.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="cta-banner">
+        <h2>Make every minute count.</h2>
+        <div class="download-buttons">
+            <a href="https://apps.apple.com/us/app/stoptimetryx-routine-planner/id6760876491" target="_blank" class="btn btn-primary">Download iOS App</a>
+            <a href="https://play.google.com/store/apps/details?id=com.stoptimetryx.app" target="_blank" class="btn btn-outline">Download Android App</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>StopTimetryx - Master Your Time, Master Your Life.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">© 2026 Mozarex. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

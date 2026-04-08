@@ -260,6 +260,14 @@ app.use(express.static(path.join(__dirname, 'frontend'), {
 // Serve static images
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
+// Serve Stoptimetryx landing page
+app.get('/stoptimetryx', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'stoptimetryx.html'));
+});
+
 // Serve advanced dashboard
 app.get('/dashboard-advanced', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-dashboard-advanced.html'));

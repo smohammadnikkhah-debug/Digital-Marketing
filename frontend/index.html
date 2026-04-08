@@ -194,9 +194,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 <span class="brand-text">Mozarex AI</span>
             </div>
-            <div class="nav-menu">
+            <div class="nav-menu" style="display: flex; align-items: center; gap: 1rem;">
                 <a href="#features" class="nav-link">Features</a>
                 <a href="#pricing" class="nav-link">Pricing</a>
+                
+                <div class="nav-dropdown" style="position:relative; display:inline-block;" onmouseover="this.children[1].style.display='flex'" onmouseout="this.children[1].style.display='none'">
+                    <span class="nav-link" style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">Apps <i class="fas fa-chevron-down" style="font-size:0.8em;"></i></span>
+                    <div style="display:none; position:absolute; top:100%; left:0; background:#1a1a1a; min-width:180px; flex-direction:column; padding:0.5rem 0; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:1000; border:1px solid rgba(255,255,255,0.1);">
+                        <a href="/stoptimetryx" style="color:#fff; padding:0.8rem 1.5rem; text-decoration:none; display:block; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"><i class="fas fa-clock" style="margin-right:8px; color:#10b981;"></i> StopTimetryx</a>
+                    </div>
+                </div>
+
                 <a href="#testimonials" class="nav-link">Success Stories</a>
                 <a href="#contact" class="nav-link">Contact</a>
                 <a href="/login" class="nav-link auth-link">Sign In</a>
