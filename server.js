@@ -268,6 +268,14 @@ app.get('/stoptimetryx', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'stoptimetryx.html'));
 });
 
+// Serve Puratryx landing page
+app.get('/puratryx', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'puratryx.html'));
+});
+
 // Serve advanced dashboard
 app.get('/dashboard-advanced', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-dashboard-advanced.html'));
