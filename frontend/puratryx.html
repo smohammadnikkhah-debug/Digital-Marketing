@@ -76,18 +76,43 @@
         }
 
         .logo {
-            font-size: 1.75rem;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            color: var(--text-heading);
             text-decoration: none;
             display: flex;
             align-items: center;
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: var(--text-heading);
         }
 
         .logo span {
             color: var(--primary);
             text-shadow: 0 0 10px rgba(20, 242, 101, 0.3);
+        }
+
+        .logo img {
+            height: 38px;
+            width: 38px;
+            object-fit: cover;
+            object-position: 50% 15%; /* Crop to show only the top splash "P" icon */
+            display: block;
+            margin-right: 0.75rem;
+            mix-blend-mode: screen; /* Blend background! */
+            filter: contrast(1.1) brightness(1.2);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #footer-logo img {
+            height: 44px;
+            width: 44px;
+        }
+
+        .logo:hover img {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
         }
 
         .nav-links {
@@ -338,50 +363,6 @@
             transform: translate(40px, -10px) rotate(14deg) scale(0.92);
         }
 
-        /* Trust/Featured Section */
-        .featured-in {
-            padding: 3rem 8%;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            background: rgba(255, 255, 255, 0.01);
-            text-align: center;
-        }
-
-        .featured-in h3 {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--text-gray);
-            margin-bottom: 2rem;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-        }
-
-        .featured-grid {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 4rem;
-            flex-wrap: wrap;
-            opacity: 0.6;
-            transition: opacity 0.3s ease;
-        }
-
-        .featured-grid:hover {
-            opacity: 0.85;
-        }
-
-        .featured-logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--text-heading);
-            letter-spacing: -0.5px;
-        }
-
-        .featured-logo span {
-            color: var(--primary);
-        }
 
         /* Features Overview Grid (Track Section) */
         .track-section {
@@ -900,8 +881,35 @@
             nav {
                 padding: 1rem 5%;
             }
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: var(--primary);
+                cursor: pointer;
+                padding: 0.5rem;
+                z-index: 101;
+                transition: transform 0.3s ease;
+            }
             .nav-links {
-                display: none; /* Simplification */
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 70%;
+                height: 100vh;
+                background: rgba(7, 11, 8, 0.96);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                padding: 6rem 2rem 2rem;
+                gap: 2rem;
+                transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                border-left: 1px solid var(--border-color);
+                z-index: 100;
+            }
+            .nav-links.active {
+                right: 0;
             }
             .hero h1 {
                 font-size: 2.75rem;
@@ -933,13 +941,16 @@
 
     <!-- Navigation -->
     <nav>
-        <a href="#" class="logo" id="nav-logo">Pura<span>Tryx</span></a>
+        <a href="#" class="logo" id="nav-logo"><img src="/images/puratryx_logo.png" alt="Puratryx Logo"><span>Pura<span>Tryx</span></span></a>
         <ul class="nav-links">
             <li><a href="#features" id="nav-features">Features</a></li>
             <li><a href="#how" id="nav-how">How It Works</a></li>
             <li><a href="#testimonials" id="nav-reviews">Testimonials</a></li>
             <li><a href="#download" class="btn btn-outline" id="nav-get-app" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;">Get App</a></li>
         </ul>
+        <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle Menu">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
     </nav>
 
     <!-- Hero Section -->
@@ -989,16 +1000,6 @@
         </div>
     </section>
 
-    <!-- Trust Logo Section -->
-    <section class="featured-in">
-        <h3>Featured in top AI & Product Directories</h3>
-        <div class="featured-grid">
-            <div class="featured-logo">Product<span>Hunt</span></div>
-            <div class="featured-logo">TheresAn<span>AI</span>ForThat</div>
-            <div class="featured-logo">Superhuman<span>.ai</span></div>
-            <div class="featured-logo">AI<span>ToolReport</span></div>
-        </div>
-    </section>
 
     <!-- Features Overview Section (Track Section) -->
     <section id="features" class="track-section">
@@ -1186,7 +1187,7 @@
     <footer>
         <div class="footer-top">
             <div class="footer-info">
-                <a href="#" class="logo" id="footer-logo">Pura<span>Tryx</span></a>
+                <a href="#" class="logo" id="footer-logo" style="margin-bottom: 1.25rem;"><img src="/images/puratryx_logo.png" alt="Puratryx Logo"><span>Pura<span>Tryx</span></span></a>
                 <p>Automate chores, split responsibilities, and gamify cleaning with your family or roommates.</p>
             </div>
             
@@ -1225,5 +1226,26 @@
         </div>
     </footer>
 
+    <script>
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            if (navLinks.classList.contains('active')) {
+                mobileMenuBtn.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            } else {
+                mobileMenuBtn.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+            }
+        });
+
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                mobileMenuBtn.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+            });
+        });
+    </script>
 </body>
 </html>
