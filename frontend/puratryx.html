@@ -15,422 +15,1214 @@
     <meta name="description" content="Puratryx automates your household chores, simplifies deep cleaning, and keeps your living space in peak condition—effortlessly.">
     <meta name="keywords" content="chore tracker, household chores, smart cleaning app, shared responsibility, room cleaning, puratryx">
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-dark: #0d1117;
-            --bg-card: #161b22;
-            --primary: #00ff66; /* Vibrant Neon Green of Puratryx */
-            --primary-dark: #00cc52;
-            --text-main: #c9d1d9;
-            --text-heading: #f0f6fc;
-            --gradient: linear-gradient(135deg, #0d1117 0%, #172a21 100%);
+            --bg-dark: #070B08;
+            --bg-card: rgba(31, 41, 35, 0.45);
+            --bg-card-hover: rgba(41, 54, 46, 0.6);
+            --primary: #14F265; /* Neon Green */
+            --primary-glow: rgba(20, 242, 101, 0.15);
+            --primary-dark: #0FBC4F;
+            --text-main: #C9D1D9;
+            --text-heading: #F0F6FC;
+            --text-gray: #8B949E;
+            --border-color: rgba(20, 242, 101, 0.12);
+            --border-hover: rgba(20, 242, 101, 0.35);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
         }
 
         body {
-            background: var(--gradient);
             background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(20, 242, 101, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(20, 242, 101, 0.03) 0%, transparent 40%);
             color: var(--text-main);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-heading);
+            font-weight: 800;
+        }
+
+        /* Navigation */
         nav {
-            padding: 1.5rem 5%;
+            padding: 1.25rem 8%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(22, 27, 34, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(7, 11, 8, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s ease;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
+            font-size: 1.75rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
             color: var(--text-heading);
+            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
         }
 
         .logo span {
             color: var(--primary);
+            text-shadow: 0 0 10px rgba(20, 242, 101, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.75rem;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #050806;
+            box-shadow: 0 8px 24px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            background: #ffffff;
+            color: #050806;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-heading);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(20, 242, 101, 0.05);
+            transform: translateY(-2px);
+        }
+
+        /* Store Badges */
+        .store-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .store-button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.6rem 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .store-button:hover {
+            border-color: var(--primary);
+            background: #09120a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(20, 242, 101, 0.15);
+        }
+
+        .store-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .store-text {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .store-subtext {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-gray);
+        }
+
+        .store-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.2;
+            font-family: 'Outfit', sans-serif;
         }
 
         /* Hero Section */
         .hero {
-            padding: 8rem 5% 6rem;
+            min-height: 85vh;
+            padding: 5rem 8% 4rem;
             display: flex;
-            flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
             gap: 4rem;
         }
 
         .hero-content {
             flex: 1;
+            max-width: 620px;
+        }
+
+        .hero-badge {
+            background: rgba(20, 242, 101, 0.08);
+            border: 1px solid rgba(20, 242, 101, 0.2);
+            color: var(--primary);
+            padding: 0.4rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .hero h1 {
-            font-size: 4rem;
-            color: var(--text-heading);
-            margin-bottom: 1.5rem;
+            font-size: 4.25rem;
             line-height: 1.1;
-            max-width: 800px;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1.5px;
+        }
+
+        .hero h1 span.gradient {
+            color: var(--primary);
+            background: linear-gradient(120deg, #14F265 0%, #00ffcc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hero p {
-            font-size: 1.25rem;
-            max-width: 600px;
-            margin-bottom: 2.5rem;
-            color: #8b949e;
+            font-size: 1.2rem;
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            line-height: 1.6;
         }
 
-        .download-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-start;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            border: 2px solid transparent;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 4px 14px 0 rgba(0, 255, 102, 0.39);
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            color: #000;
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--text-heading);
-            border-color: rgba(255,255,255,0.2);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--text-heading);
-            transform: translateY(-2px);
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 5%;
-            background: var(--bg-card);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 4rem;
-            color: var(--text-heading);
-        }
-
-        .zigzag-features {
-            display: flex;
-            flex-direction: column;
-            gap: 6rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .feature-row {
-            display: flex;
-            align-items: center;
-            gap: 4rem;
-        }
-
-        .feature-row.reverse {
-            flex-direction: row-reverse;
-        }
-
-        .feature-image {
+        .hero-visual {
             flex: 1;
+            position: relative;
+            height: 580px;
             display: flex;
             justify-content: center;
+            align-items: center;
         }
 
-        .feature-image img {
+        .hero-glow-circle {
+            position: absolute;
+            width: 480px;
+            height: 480px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(20, 242, 101, 0.12) 0%, rgba(20, 242, 101, 0) 70%);
+            filter: blur(20px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 3D Overlapping Phone Mockup Stack */
+        .mockup-container {
+            position: relative;
             width: 100%;
-            max-width: 350px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
+            height: 100%;
+            z-index: 2;
         }
 
-        .feature-text {
-            flex: 1;
-            text-align: left;
+        .phone-mockup {
+            position: absolute;
+            width: 240px;
+            border-radius: 36px;
+            border: 7px solid #141915;
+            background: #000;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .feature-text h3 {
-            font-size: 2.5rem;
-            color: var(--text-heading);
-            margin-bottom: 1.5rem;
-        }
-
-        .feature-text p {
-            font-size: 1.25rem;
-            color: #8b949e;
-        }
-
-        .hero-image {
-            flex: 1.2;
-            max-width: 750px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .hero-image img {
+        .phone-mockup img {
             width: 100%;
             height: auto;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
+            display: block;
         }
 
-        /* Pain Point Hook Section */
-        .pain-point {
-            padding: 6rem 5%;
+        .phone-mockup.left {
+            left: 5%;
+            top: 15%;
+            transform: rotate(-10deg) scale(0.88);
+            z-index: 3;
+        }
+
+        .phone-mockup.center {
+            left: 28%;
+            top: 5%;
+            transform: scale(1);
+            z-index: 5;
+            box-shadow: 0 30px 60px -10px rgba(20, 242, 101, 0.18), 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        .phone-mockup.right {
+            right: 5%;
+            top: 15%;
+            transform: rotate(10deg) scale(0.88);
+            z-index: 4;
+        }
+
+        /* Mockup hover interaction */
+        .hero-visual:hover .phone-mockup.left {
+            transform: translate(-40px, -10px) rotate(-14deg) scale(0.92);
+        }
+
+        .hero-visual:hover .phone-mockup.center {
+            transform: translateY(-20px) scale(1.04);
+            box-shadow: 0 40px 70px -10px rgba(20, 242, 101, 0.28), 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        .hero-visual:hover .phone-mockup.right {
+            transform: translate(40px, -10px) rotate(14deg) scale(0.92);
+        }
+
+        /* Trust/Featured Section */
+        .featured-in {
+            padding: 3rem 8%;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.01);
+            text-align: center;
+        }
+
+        .featured-in h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .featured-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .featured-grid:hover {
+            opacity: 0.85;
+        }
+
+        .featured-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.5px;
+        }
+
+        .featured-logo span {
+            color: var(--primary);
+        }
+
+        /* Features Overview Grid (Track Section) */
+        .track-section {
+            padding: 7rem 8%;
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .section-header {
+            max-width: 700px;
+            margin: 0 auto 5rem;
+        }
+
+        .section-header h2 {
+            font-size: 3rem;
+            line-height: 1.1;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-header p {
+            font-size: 1.15rem;
+            color: var(--text-gray);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 3rem 2rem;
+            border-radius: 24px;
+            text-align: left;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-card-glow {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            top: -75px;
+            right: -75px;
+            pointer-events: none;
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card:hover .feature-card-glow {
+            transform: scale(1.4);
+        }
+
+        .feature-icon-wrapper {
+            background: rgba(20, 242, 101, 0.08);
+            border: 1px solid rgba(20, 242, 101, 0.15);
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            color: var(--text-gray);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Alternating Showcase Rows */
+        .showcase-section {
+            padding: 4rem 8% 8rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 9rem;
+        }
+
+        .showcase-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 6rem;
+        }
+
+        .showcase-row.reverse {
+            flex-direction: row-reverse;
+        }
+
+        .showcase-text {
+            flex: 1;
+            max-width: 520px;
+        }
+
+        .showcase-badge {
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .showcase-text h3 {
+            font-size: 2.75rem;
+            line-height: 1.15;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .showcase-text p {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            line-height: 1.7;
+        }
+
+        .showcase-visual {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .showcase-visual-glow {
+            position: absolute;
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, rgba(20, 242, 101, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .showcase-image-wrapper {
+            position: relative;
+            border-radius: 36px;
+            border: 6px solid #141915;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            max-width: 290px;
+            background: #000;
+            overflow: hidden;
+            transition: transform 0.4s ease;
+        }
+
+        .showcase-image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .showcase-row:hover .showcase-image-wrapper {
+            transform: translateY(-8px);
+        }
+
+        /* Floating Card Details (Profile Sync mockup highlight) */
+        .floating-detail-card {
+            position: absolute;
+            background: rgba(25, 33, 28, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1rem;
+            bottom: 15px;
+            right: -60px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            max-width: 250px;
+            z-index: 6;
+            transition: all 0.4s ease;
+        }
+
+        .showcase-row:hover .floating-detail-card {
+            transform: translate(-10px, -10px);
+            border-color: var(--primary);
+        }
+
+        .floating-icon {
+            background: rgba(20, 242, 101, 0.1);
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .floating-info h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .floating-info p {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+        }
+
+        /* Testimonials Section */
+        .testimonials {
+            padding: 7rem 8%;
+            background: rgba(255, 255, 255, 0.01);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
             max-width: 1200px;
             margin: 0 auto;
-            gap: 4rem;
         }
 
-        .pain-text {
-            flex: 1;
+        .testimonial-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem 2rem;
+            border-radius: 24px;
+            position: relative;
+            transition: all 0.3s ease;
         }
 
-        .pain-text h2 {
-            font-size: 3rem;
-            color: var(--text-heading);
+        .testimonial-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+
+        .stars {
+            color: var(--primary);
             margin-bottom: 1.5rem;
-            line-height: 1.2;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
         }
 
-        .pain-list {
-            list-style: none;
-            margin-top: 2rem;
+        .testimonial-card p {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: var(--text-heading);
+            font-style: italic;
         }
 
-        .pain-list li {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
+        .testimonial-user {
             display: flex;
             align-items: center;
             gap: 1rem;
         }
 
-        .pain-list li::before {
-            content: '✓';
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            background: rgba(20, 242, 101, 0.1);
             color: var(--primary);
-            font-weight: bold;
-            background: rgba(0,255,102,0.1);
-            width: 32px;
-            height: 32px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            border: 1px solid rgba(20, 242, 101, 0.2);
         }
 
-        .pain-image-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
+        .user-details h4 {
+            font-size: 1rem;
+            font-weight: 700;
         }
 
-        .pain-image-container img {
-            max-width: 100%;
-            height: auto;
-            max-width: 350px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
+        .user-details p {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            margin: 0;
+            font-style: normal;
         }
 
-        /* Banner CTA */
-        .cta-banner {
+        /* CTA Section */
+        .cta-section {
+            padding: 8rem 8% 9rem;
             text-align: center;
-            padding: 6rem 5%;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #0c201a 100%);
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
         }
 
-        .cta-banner .download-buttons {
+        .cta-card {
+            background: linear-gradient(135deg, rgba(31, 41, 35, 0.6) 0%, rgba(7, 11, 8, 0.9) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 36px;
+            padding: 5rem 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        .cta-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(20, 242, 101, 0.1) 0%, transparent 65%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .cta-card h2 {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .cta-card p {
+            font-size: 1.25rem;
+            color: var(--text-gray);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .cta-card .store-buttons {
             justify-content: center;
         }
 
-        .cta-banner h2 {
-            font-size: 2.5rem;
-            color: var(--text-heading);
-            margin-bottom: 2rem;
-        }
-
+        /* Footer */
         footer {
-            text-align: center;
-            padding: 2rem;
-            background: var(--bg-card);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            color: #8b949e;
+            background: #040605;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 5rem 8% 3rem;
+        }
+
+        .footer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 4rem;
+            margin-bottom: 4rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .footer-info {
+            max-width: 320px;
+        }
+
+        .footer-info p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links-group {
+            display: flex;
+            gap: 6rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links h4 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-heading);
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .footer-bottom p {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-gray);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(20, 242, 101, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .social-icon {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 3rem;
+                gap: 3rem;
+            }
+            .hero-content {
+                max-width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+            .store-buttons {
+                justify-content: center;
+            }
+            .hero-visual {
+                width: 100%;
+                max-width: 500px;
+                height: 450px;
+            }
+            .phone-mockup {
+                width: 180px;
+                border-radius: 28px;
+                border-width: 5px;
+            }
+            .phone-mockup.left {
+                left: 10%;
+                top: 10%;
+            }
+            .phone-mockup.center {
+                left: 32%;
+                top: 0%;
+            }
+            .phone-mockup.right {
+                right: 10%;
+                top: 10%;
+            }
+            .showcase-row, .showcase-row.reverse {
+                flex-direction: column;
+                text-align: center;
+                gap: 3rem;
+            }
+            .showcase-text {
+                max-width: 100%;
+            }
         }
 
         @media (max-width: 768px) {
-            .hero { flex-direction: column; text-align: center; gap: 2rem; }
-            .download-buttons { justify-content: center; }
-            .hero h1 { font-size: 2.5rem; }
-            .pain-point { flex-direction: column; }
-            .feature-row, .feature-row.reverse {
+            nav {
+                padding: 1rem 5%;
+            }
+            .nav-links {
+                display: none; /* Simplification */
+            }
+            .hero h1 {
+                font-size: 2.75rem;
+                letter-spacing: -1px;
+            }
+            .section-header h2 {
+                font-size: 2.25rem;
+            }
+            .showcase-text h3 {
+                font-size: 2.25rem;
+            }
+            .footer-top {
+                flex-direction: column;
+                gap: 3rem;
+            }
+            .footer-links-group {
+                gap: 3rem;
+                width: 100%;
+                justify-content: space-between;
+            }
+            .footer-bottom {
                 flex-direction: column;
                 text-align: center;
-                gap: 2rem;
             }
-            .feature-text { text-align: center; }
-            .feature-text h3 { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
 
+    <!-- Navigation -->
     <nav>
-        <div class="logo">Pura<span>Tryx</span></div>
-        <a href="#download" class="btn btn-outline" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Get App</a>
+        <a href="#" class="logo" id="nav-logo">Pura<span>Tryx</span></a>
+        <ul class="nav-links">
+            <li><a href="#features" id="nav-features">Features</a></li>
+            <li><a href="#how" id="nav-how">How It Works</a></li>
+            <li><a href="#testimonials" id="nav-reviews">Testimonials</a></li>
+            <li><a href="#download" class="btn btn-outline" id="nav-get-app" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;">Get App</a></li>
+        </ul>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1>A Sparkling Home Without the <br><span style="color: var(--primary)">Mental Load.</span></h1>
-            <p>Puratryx automates your household chores, simplifies deep cleaning, and keeps your living space in peak condition—effortlessly.</p>
+            <div class="hero-badge">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Best New Smart Home App of 2026
+            </div>
+            <h1>A Sparkling Home.<br>Without the <span class="gradient">Mental Load.</span></h1>
+            <p>Puratryx automates your household chores, schedules routines, and syncs your family—so you can live in a space that shines. Effortlessly.</p>
             
-            <div class="download-buttons" id="download">
-                <a href="https://apps.apple.com/us/app/puratryx-smart-cleaning/id6760213380" target="_blank" class="btn btn-primary">
-                    <svg viewBox="0 0 384 512" width="20" height="20" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-                    Download for iOS
+            <div class="store-buttons">
+                <a href="https://apps.apple.com/us/app/puratryx-smart-cleaning/id6760213380" target="_blank" class="store-button" id="btn-ios-download">
+                    <svg class="store-icon" viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                    <div class="store-text">
+                        <span class="store-subtext">Download on the</span>
+                        <span class="store-title">App Store</span>
+                    </div>
                 </a>
-                <a href="https://play.google.com/store/apps/details?id=com.puratryx.puratryx" target="_blank" class="btn btn-outline">
-                    <svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
-                    Download for Android
+                <a href="https://play.google.com/store/apps/details?id=com.puratryx.puratryx" target="_blank" class="store-button" id="btn-android-download">
+                    <svg class="store-icon" viewBox="0 0 512 512" fill="currentColor"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                    <div class="store-text">
+                        <span class="store-subtext">GET IT ON</span>
+                        <span class="store-title">Google Play</span>
+                    </div>
                 </a>
             </div>
         </div>
         
-        <div class="hero-image">
-            <img src="/images/media__1776041383683.jpg" alt="Master Your Cleaning Routine">
+        <div class="hero-visual">
+            <div class="hero-glow-circle"></div>
+            <div class="mockup-container">
+                <!-- Left: Choose Activities -->
+                <div class="phone-mockup left">
+                    <img src="/images/media__1782695584697.png" alt="Select Cleaning Activities Screen">
+                </div>
+                <!-- Center: Dashboard -->
+                <div class="phone-mockup center">
+                    <img src="/images/media__1782695584707.png" alt="Puratryx Dashboard Screen">
+                </div>
+                <!-- Right: Select Room -->
+                <div class="phone-mockup right">
+                    <img src="/images/media__1782695584715.png" alt="Room templates selection Screen">
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="pain-point">
-        <div class="pain-text">
-            <h2>Stop wondering when the kitchen was last deep cleaned.</h2>
-            <p style="font-size: 1.2rem; color: #8b949e; margin-bottom: 2rem;">Or whose turn it is to do the laundry. Puratryx remembers so you don’t have to.</p>
+    <!-- Trust Logo Section -->
+    <section class="featured-in">
+        <h3>Featured in top AI & Product Directories</h3>
+        <div class="featured-grid">
+            <div class="featured-logo">Product<span>Hunt</span></div>
+            <div class="featured-logo">TheresAn<span>AI</span>ForThat</div>
+            <div class="featured-logo">Superhuman<span>.ai</span></div>
+            <div class="featured-logo">AI<span>ToolReport</span></div>
+        </div>
+    </section>
+
+    <!-- Features Overview Section (Track Section) -->
+    <section id="features" class="track-section">
+        <div class="section-header">
+            <h2>Effortless Home Organization</h2>
+            <p>Designed for modern apartments, busy roommates, and active families. Puratryx provides the tools you need to split the chores load fairly.</p>
+        </div>
+        
+        <div class="features-grid">
+            <!-- Card 1 -->
+            <div class="feature-card">
+                <div class="feature-card-glow"></div>
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <h3>Flexible Templates</h3>
+                <p>Pick room templates like kitchens, living zones, and dining rooms. Launch your routine in 5 seconds with proposed frequencies.</p>
+            </div>
+            <!-- Card 2 -->
+            <div class="feature-card">
+                <div class="feature-card-glow"></div>
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <h3>Priority Scheduling</h3>
+                <p>No decision fatigue. See your next cleaning priority dynamically arranged based on how long since the room was last scrubbed.</p>
+            </div>
+            <!-- Card 3 -->
+            <div class="feature-card">
+                <div class="feature-card-glow"></div>
+                <div class="feature-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <h3>Household Sync</h3>
+                <p>Connect with family members or roommates via instant QR code scans to co-manage shared goals, track streaks, and split chores.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alternating Showcases -->
+    <section id="how" class="showcase-section">
+        <!-- Showcase Row 1: Templates -->
+        <div class="showcase-row">
+            <div class="showcase-text">
+                <span class="showcase-badge">01 . Quick Setup</span>
+                <h3>Chore Templates for Every Room</h3>
+                <p>Never start from scratch. Select pre-configured templates for bathrooms, child nurseries, garages, entry halls, and kitchens. Review standard task suggestions, select only what fits your home, and tap to build a clean routine in moments.</p>
+            </div>
+            <div class="showcase-visual">
+                <div class="showcase-visual-glow"></div>
+                <div class="showcase-image-wrapper">
+                    <img src="/images/media__1782695584697.png" alt="Chore suggestions checklist selection in Puratryx">
+                </div>
+            </div>
+        </div>
+
+        <!-- Showcase Row 2: Smart Scheduling -->
+        <div class="showcase-row reverse">
+            <div class="showcase-text">
+                <span class="showcase-badge">02 . Intelligent Dashboard</span>
+                <h3>Next Priority Task Suggestions</h3>
+                <p>Tell the app if you have 5 minutes, 15 minutes, or an hour to spare. Puratryx suggests the most critical task due for completion based on adaptive room data. Tackle due tasks step-by-step and keep streaks alive.</p>
+            </div>
+            <div class="showcase-visual">
+                <div class="showcase-visual-glow"></div>
+                <div class="showcase-image-wrapper">
+                    <img src="/images/media__1782695584707.png" alt="Interactive dashboard showing cleaning times and routine buttons">
+                </div>
+            </div>
+        </div>
+
+        <!-- Showcase Row 3: Shared Responsibility -->
+        <div class="showcase-row">
+            <div class="showcase-text">
+                <span class="showcase-badge">03 . Household Sync</span>
+                <h3>Gamify Your Household Chores</h3>
+                <p>Share responsibility with your roommates or family. Scan a QR code to sync tasks and track participation scores. Earn reward points for completed tasks, maintain weekly streaks, and build clean households together.</p>
+            </div>
+            <div class="showcase-visual">
+                <div class="showcase-visual-glow"></div>
+                <div class="showcase-image-wrapper" style="position: relative; overflow: visible;">
+                    <img src="/images/media__1782695584702.png" alt="Profile page showing total points and sync details" style="border-radius: 30px; border: 6px solid #141915;">
+                    <!-- Floating Badge Card -->
+                    <div class="floating-detail-card">
+                        <div class="floating-icon">★</div>
+                        <div class="floating-info">
+                            <h4>+15% This Week</h4>
+                            <p>James is leading the board!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Showcase Row 4: Room Clean Meters -->
+        <div class="showcase-row reverse">
+            <div class="showcase-text">
+                <span class="showcase-badge">04 . Cleanliness Score</span>
+                <h3>Target Areas in Real Time</h3>
+                <p>Keep track of specific room zones with visual cleanliness meters. Know exactly which area needs attention—such as the Kitchen, Toilet, or Bathroom—before clutter and dust starts to build up.</p>
+            </div>
+            <div class="showcase-visual">
+                <div class="showcase-visual-glow"></div>
+                <div class="showcase-image-wrapper">
+                    <img src="/images/media__1782695584715.png" alt="Room cleanliness percentage meters selection page">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+        <div class="section-header">
+            <h2>Loved by Busy Households</h2>
+            <p>Read why roomies, busy parents, and apartment owners love managing chores with Puratryx.</p>
+        </div>
+        
+        <div class="testimonials-grid">
+            <!-- Card 1 -->
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"My roommates and I used to argue constantly about whose turn it was to clean the fridge. Now, Puratryx schedules everything, and we just follow the dashboard."</p>
+                <div class="testimonial-user">
+                    <div class="user-avatar">SL</div>
+                    <div class="user-details">
+                        <h4>Sam Lawrence</h4>
+                        <p>Apartment Roommate</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"The room cleanliness meters gamified chore day for my kids. They compete to earn points and check off their daily chores. Highly recommended!"</p>
+                <div class="testimonial-user">
+                    <div class="user-avatar">MR</div>
+                    <div class="user-details">
+                        <h4>Megan R.</h4>
+                        <p>Mother of Two</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"I love the quick suggestion buttons. If I have 15 minutes before leaving, I tap it, clear the next priority task, and keep my apartment in perfect condition."</p>
+                <div class="testimonial-user">
+                    <div class="user-avatar">DK</div>
+                    <div class="user-details">
+                        <h4>David K.</h4>
+                        <p>Software Engineer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="download" class="cta-section">
+        <div class="cta-card">
+            <div class="cta-glow"></div>
+            <h2>Ready for a Shining Home?</h2>
+            <p>Download Puratryx today and split the cleaning mental load with your household.</p>
             
-            <ul class="pain-list">
-                <li>Eliminate mental clutter and automate clarity.</li>
-                <li>Set recurring schedules that adapt dynamically.</li>
-                <li>Assign household roles effortlessly so nothing drops.</li>
-            </ul>
-        </div>
-        <div class="pain-image-container">
-            <img src="/images/media__1776041453120.png" alt="Reduce Mental Load and Shine Meter">
-        </div>
-    </section>
-
-    <section class="features">
-        <h2 class="section-title">Intelligent schedules, household sync, and gamified rewards.</h2>
-        <div class="zigzag-features">
-            <!-- Row 1: Image Left, Text Right (NEW) -->
-            <div class="feature-row">
-                <div class="feature-image">
-                    <img src="/images/media__1776053983081.jpg" alt="Flexible Room Templates">
-                </div>
-                <div class="feature-text">
-                    <h3 style="color: var(--primary)">Flexible Templates</h3>
-                    <p>Select from highly flexible templates to instantly build your cleaning routines. Choose specific zones like Bedroom, Bathroom, or Kitchen to keep the entire home perfectly tidy without ever starting from scratch.</p>
-                </div>
-            </div>
-
-            <!-- Row 2: Text Left, Image Right (Was Row 1) -->
-            <div class="feature-row reverse">
-                <div class="feature-image">
-                    <img src="/images/media__1776053822337.jpg" alt="Smart Scheduling Dashboard">
-                </div>
-                <div class="feature-text">
-                    <h3 style="color: var(--primary)">Smart Scheduling</h3>
-                    <p>Recurring tasks that adapt dynamically. If a deep clean is skipped, Puratryx reshuffles the order based on absolute priority. Categorize tasks by room zones (like Kitchen, Bath, Garage) to easily power clean your session.</p>
-                </div>
-            </div>
-
-            <!-- Row 3: Image Left, Text Right (Was Row 2) -->
-            <div class="feature-row">
-                <div class="feature-image">
-                    <img src="/images/media__1776041432818.png" alt="Challenge Your Household">
-                </div>
-                <div class="feature-text">
-                    <h3 style="color: var(--primary)">Shared Responsibility</h3>
-                    <p>Don't carry the physical and mental load alone. Family and Roommate Sync allows you to effortlessly assign tasks to your household and get real-time updates straight to your pocket when they're finally completed.</p>
-                </div>
-            </div>
-
-            <!-- Row 4: Text Left, Image Right (Was Row 3) -->
-            <div class="feature-row reverse">
-                <div class="feature-image">
-                    <img src="/images/media__1776041437065.png" alt="Leaderboard Activity">
-                </div>
-                <div class="feature-text">
-                    <h3 style="color: var(--primary)">Visual Progress</h3>
-                    <p>Review insightful charts and dedicated 'Cleanliness Meters' for each room space to effectively gamify the chores experience. Earn exclusive virtual trophies and rewards as you dominate your weekly goals!</p>
-                </div>
+            <div class="store-buttons">
+                <a href="https://apps.apple.com/us/app/puratryx-smart-cleaning/id6760213380" target="_blank" class="store-button" id="cta-ios-download">
+                    <svg class="store-icon" viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+                    <div class="store-text">
+                        <span class="store-subtext">Download on the</span>
+                        <span class="store-title">App Store</span>
+                    </div>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.puratryx.puratryx" target="_blank" class="store-button" id="cta-android-download">
+                    <svg class="store-icon" viewBox="0 0 512 512" fill="currentColor"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg>
+                    <div class="store-text">
+                        <span class="store-subtext">GET IT ON</span>
+                        <span class="store-title">Google Play</span>
+                    </div>
+                </a>
             </div>
         </div>
     </section>
 
-    <section class="cta-banner">
-        <h2>Upgrade from Stressed to Shining.</h2>
-        <div class="download-buttons" style="margin-top: 2rem;">
-            <a href="https://apps.apple.com/us/app/puratryx-smart-cleaning/id6760213380" target="_blank" class="btn btn-primary">Download iOS App</a>
-            <a href="https://play.google.com/store/apps/details?id=com.puratryx.puratryx" target="_blank" class="btn btn-outline">Download Android App</a>
-        </div>
-    </section>
-
+    <!-- Footer -->
     <footer>
-        <p>Puratryx - Easier Home Routines.</p>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem;">© 2026 Mozarex. All rights reserved.</p>
+        <div class="footer-top">
+            <div class="footer-info">
+                <a href="#" class="logo" id="footer-logo">Pura<span>Tryx</span></a>
+                <p>Automate chores, split responsibilities, and gamify cleaning with your family or roommates.</p>
+            </div>
+            
+            <div class="footer-links-group">
+                <ul class="footer-links">
+                    <li><h4>Product</h4></li>
+                    <li><a href="#features" id="footer-features">Features</a></li>
+                    <li><a href="#how" id="footer-how">How It Works</a></li>
+                    <li><a href="#testimonials" id="footer-reviews">Testimonials</a></li>
+                </ul>
+                <ul class="footer-links">
+                    <li><h4>Support</h4></li>
+                    <li><a href="mailto:hello@puratryx.com" id="footer-contact">Contact Us</a></li>
+                    <li><a href="/policy.html" id="footer-privacy">Privacy Policy</a></li>
+                    <li><a href="/puratryx-deletion.html" id="footer-deletion">Account Deletion</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 Mozarex. All rights reserved.</p>
+            <div class="social-links">
+                <a href="https://www.facebook.com/puratryx" target="_blank" class="social-link" id="social-facebook">
+                    <svg class="social-icon" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+                </a>
+                <a href="https://www.instagram.com/puratryx" target="_blank" class="social-link" id="social-instagram">
+                    <svg class="social-icon" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051c-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                </a>
+                <a href="https://twitter.com/puratryx" target="_blank" class="social-link" id="social-twitter">
+                    <svg class="social-icon" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                </a>
+                <a href="https://linkedin.com/company/puratryx" target="_blank" class="social-link" id="social-linkedin">
+                    <svg class="social-icon" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
+            </div>
+        </div>
     </footer>
 
 </body>
