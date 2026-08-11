@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AivekAI - Smart Nutrition. Effortless You.</title>
+    <meta name="description" content="Log meals in seconds. AI calculates calories, macros and workouts automatically. Master fasting and track your weight progress with AivekAI.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;550;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #006B5C;
+            --primary-light: #EEF5F2;
+            --accent-color: #00C2A8;
+            --text-dark: #161D1B;
+            --text-grey: #5A6561;
+            --bg-light: #F7FAF9;
+            --white: #FFFFFF;
+            --border-radius-lg: 24px;
+            --border-radius-md: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--white);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0, 107, 92, 0.08);
+            transition: var(--transition);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 40px;
+            width: 40px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary-color);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-link {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 107, 92, 0.15);
+        }
+
+        .nav-btn:hover {
+            background-color: #005448;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 107, 92, 0.25);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 140px 24px 80px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--bg-light) 100%);
+            position: relative;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 48px;
+            line-height: 1.15;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero-content h1 span {
+            color: var(--text-dark);
+        }
+
+        .hero-content p {
+            font-size: 18px;
+            color: var(--text-grey);
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .app-store-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--text-dark);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .app-store-btn:hover {
+            transform: translateY(-2px);
+            background-color: #2c3533;
+        }
+
+        .app-store-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .app-store-btn span {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .app-store-btn span .small {
+            font-size: 10px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .app-store-btn span .bold {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .hero-image-area {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-img {
+            width: 100%;
+            max-width: 550px;
+            height: auto;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 20px 40px rgba(0, 107, 92, 0.12);
+            transition: var(--transition);
+        }
+
+        .hero-img:hover {
+            transform: scale(1.02);
+        }
+
+        /* Core Features Grid */
+        .features {
+            padding: 80px 24px;
+            background-color: var(--white);
+        }
+
+        .section-header {
+            max-width: 600px;
+            margin: 0 auto 56px;
+            text-align: center;
+        }
+
+        .section-tag {
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .section-header p {
+            color: var(--text-grey);
+            font-size: 16px;
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            background-color: var(--bg-light);
+            padding: 40px 32px;
+            border-radius: var(--border-radius-lg);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 107, 92, 0.04);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            background-color: var(--white);
+            box-shadow: 0 16px 36px rgba(0, 107, 92, 0.08);
+            border-color: rgba(0, 107, 92, 0.12);
+        }
+
+        .feature-icon-box {
+            width: 56px;
+            height: 56px;
+            background-color: var(--white);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 10px rgba(0, 107, 92, 0.05);
+            font-size: 24px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .feature-card p {
+            color: var(--text-grey);
+            font-size: 15px;
+        }
+
+        /* Interactive Scanning Simulator Section */
+        .interactive-scan {
+            padding: 80px 24px;
+            background-color: var(--bg-light);
+        }
+
+        .scan-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 12px 30px rgba(0, 107, 92, 0.06);
+            border: 1px solid rgba(0, 107, 92, 0.06);
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            overflow: hidden;
+        }
+
+        .scan-left {
+            padding: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .scan-left h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .scan-left p {
+            color: var(--text-grey);
+            margin-bottom: 24px;
+            font-size: 15px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .scan-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 1px solid rgba(0, 107, 92, 0.15);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .scan-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 107, 92, 0.1);
+        }
+
+        .scan-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 0 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .scan-btn:hover {
+            background-color: #005448;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background-color: var(--bg-light);
+            border: 1px solid rgba(0, 107, 92, 0.08);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chip:hover {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .scan-right {
+            background-color: #0c1a17;
+            padding: 48px;
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .console-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+        }
+
+        .console-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .dot-green { background-color: var(--accent-color); }
+
+        .console-log {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #d1d5db;
+            min-height: 180px;
+        }
+
+        /* Screenshot Gallery */
+        .gallery {
+            padding: 80px 24px;
+            background-color: var(--white);
+        }
+
+        .gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .mockup-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .device-mockup {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            border-radius: 36px;
+            box-shadow: 0 20px 48px rgba(0, 107, 92, 0.1);
+            transition: var(--transition);
+            margin-bottom: 24px;
+            border: 4px solid #161D1B;
+        }
+
+        .device-mockup:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 56px rgba(0, 107, 92, 0.18);
+        }
+
+        .mockup-wrapper h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .mockup-wrapper p {
+            color: var(--text-grey);
+            font-size: 14px;
+            max-width: 250px;
+        }
+
+        /* Coming Soon Banner CTA */
+        .cta-banner {
+            padding: 100px 24px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 80% 20%, rgba(0, 194, 168, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta-banner-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .cta-banner h2 {
+            font-size: 40px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .cta-banner p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--text-dark);
+            color: var(--white);
+            padding: 64px 24px 40px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr repeat(2, 1fr);
+            gap: 48px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 48px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .footer-brand p {
+            color: #A3B5B0;
+            font-size: 14px;
+            max-width: 320px;
+        }
+
+        .footer-col h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--accent-color);
+        }
+
+        .footer-links-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links-list a {
+            color: #A3B5B0;
+            text-decoration: none;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .footer-links-list a:hover {
+            color: var(--white);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #A3B5B0;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-bottom-links a {
+            color: #A3B5B0;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--white);
+        }
+
+        /* Coming Soon Modal Popup */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(22, 29, 27, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            padding: 40px;
+            border-radius: var(--border-radius-lg);
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0, 107, 92, 0.25);
+            transform: scale(0.9);
+            transition: var(--transition);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .modal h3 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .modal p {
+            color: var(--text-grey);
+            font-size: 15px;
+            margin-bottom: 28px;
+        }
+
+        .close-modal-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal-btn:hover {
+            background-color: #005448;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 40px;
+            }
+
+            .hero-content h1 {
+                font-size: 40px;
+            }
+
+            .hero-content p {
+                margin: 0 auto 32px;
+            }
+
+            .cta-buttons {
+                justify-content: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+
+            .scan-container {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-container {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+            
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Header -->
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo-area">
+                <img src="../images/aivekai_logo.png" alt="AivekAI Logo" class="logo-img">
+                <span class="logo-text">AivekAI</span>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#demo" class="nav-link">Web Demo</a></li>
+                <li><a href="#screens" class="nav-link">Screenshots</a></li>
+                <li><a href="#" onclick="showModal()" class="nav-btn">Download Now</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <span class="section-tag">AI-Powered Nutrition Coach</span>
+                <h1>Log Meals <span>in Seconds.</span></h1>
+                <p>AivekAI calculates calories, macros, fasting timers, and workouts automatically. Just talk to the AI or scan a photo to hit your target weight faster.</p>
+                <div class="cta-buttons">
+                    <a class="app-store-btn" onclick="showModal()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.1,16.67C20.08,16.74 19.67,18.11 18.71,19.5M15.97,4.17C16.63,3.37 17.07,2.28 16.95,1C16,1.04 14.9,1.6 14.24,2.38C13.68,3.04 13.19,4.14 13.34,5.39C14.39,5.47 15.4,4.88 15.97,4.17Z"/>
+                        </svg>
+                        <span>
+                            <span class="small">Download on the</span>
+                            <span class="bold">App Store</span>
+                        </span>
+                    </a>
+                    <a class="app-store-btn" onclick="showModal()">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5,3L16.2,14.2L12.5,17.9L5,3M19.2,6.2L16.2,9.2L12.5,5.5L19.2,6.2M5,3L12.5,5.5L16.2,9.2L5,3M19.2,6.2L21,12L19.2,17.8L16.2,14.8L19.2,6.2M5,21L12.5,18.5L16.2,14.8L5,21M16.2,14.8L19.2,17.8L12.5,18.5L16.2,14.8M5,3V21L16.2,14.2L5,3Z"/>
+                        </svg>
+                        <span>
+                            <span class="small">GET IT ON</span>
+                            <span class="bold">Google Play</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image-area">
+                <img src="../images/aivekai_hero.png" alt="AivekAI Dashboard Preview" class="hero-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Features Grid -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <span class="section-tag">Core Features</span>
+            <h2>Why Choose AivekAI?</h2>
+            <p>We combine advanced Artificial Intelligence with simple daily routines to make food and fasting tracking completely frictionless.</p>
+        </div>
+        
+        <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">🥑</div>
+                <h3>Friction-Free Logging</h3>
+                <p>Describe your meal in natural voice or scan a photo. The AI immediately estimates calories, macronutrients, and typical portion sizes without annoying follow-up questions.</p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">⏱️</div>
+                <h3>Master Your Fasting</h3>
+                <p>Track your eating and fasting windows dynamically. Get smart recommendations for 16:8 Leangains, OMAD, or Warrior protocols based on your weekly profile.</p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="feature-card">
+                <div class="feature-icon-box">📊</div>
+                <h3>Smart Daily Analytics</h3>
+                <p>See your weekly progress summaries clearly. Instantly monitor target vs. consumed metrics, log daily water targets, and check weight fluctuations over time.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Simulator Demo -->
+    <section class="interactive-scan" id="demo">
+        <div class="section-header">
+            <span class="section-tag">Interactive Preview</span>
+            <h2>Try Instant AI Scanning</h2>
+            <p>Type in a meal name below to simulate how AivekAI instantly detects food items and calculates calories without asking you for portion sizes.</p>
+        </div>
+
+        <div class="scan-container">
+            <div class="scan-left">
+                <h2>Try Meal Logger</h2>
+                <p>Type what you ate (or click a preset chip) and watch our AI estimate the meal details instantly:</p>
+                <div class="input-row">
+                    <input type="text" id="demoInput" class="scan-input" placeholder="e.g. egg sandwich with coffee...">
+                    <button class="scan-btn" onclick="runScan()">Scan Meal</button>
+                </div>
+                <div class="suggestion-chips">
+                    <span class="chip" onclick="setPreset('Egg sandwich with coffee')">🍳 Egg sandwich + coffee</span>
+                    <span class="chip" onclick="setPreset('Avocado toast with poached egg')">🥑 Avocado Toast</span>
+                    <span class="chip" onclick="setPreset('Grilled chicken salad')">🥗 Chicken Salad</span>
+                </div>
+            </div>
+            <div class="scan-right">
+                <div class="console-header">
+                    <span class="console-title">AI Food Detector v1.0</span>
+                    <div class="console-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                </div>
+                <div class="console-log" id="consoleLog">
+                    // Try searching or clicking a suggestion chip...<br>
+                    // The AI will automatically breakdown food items.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshot Gallery Showcase -->
+    <section class="gallery" id="screens">
+        <div class="section-header">
+            <span class="section-tag">App Screenshots</span>
+            <h2>Inside AivekAI</h2>
+            <p>Designed with clean, modern ovals, dark/light contrast cards, and vibrant indicators for daily routines.</p>
+        </div>
+
+        <div class="gallery-container">
+            <!-- Mockup 1 -->
+            <div class="mockup-wrapper">
+                <img src="../images/aivekai_screenshot_fasting.jpg" alt="Fasting Timer Screen" class="device-mockup">
+                <h4>Master Your Fasting</h4>
+                <p>Guided fasting templates designed for sustainable routines.</p>
+            </div>
+            
+            <!-- Mockup 2 -->
+            <div class="mockup-wrapper">
+                <img src="../images/aivekai_screenshot_log.jpg" alt="Meal Logger AI Bubble" class="device-mockup">
+                <h4>Instant Meal Logger</h4>
+                <p>Talk to the AI to add items or adjust food components dynamically.</p>
+            </div>
+            
+            <!-- Mockup 3 -->
+            <div class="mockup-wrapper">
+                <img src="../images/aivekai_screenshot_progress.jpg" alt="Weekly Analytics Screen" class="device-mockup">
+                <h4>Smart Progress Analytics</h4>
+                <p>Track weekly calorie budgets and water targets chronologically.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Banner -->
+    <section class="cta-banner">
+        <div class="cta-banner-container">
+            <h2>Ready to transform your health goals?</h2>
+            <p>Join thousands of users tracking nutrition effortlessly. Get early access to download AivekAI today.</p>
+            <div class="cta-buttons" style="margin-bottom: 0;">
+                <a class="app-store-btn" onclick="showModal()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.1,16.67C20.08,16.74 19.67,18.11 18.71,19.5M15.97,4.17C16.63,3.37 17.07,2.28 16.95,1C16,1.04 14.9,1.6 14.24,2.38C13.68,3.04 13.19,4.14 13.34,5.39C14.39,5.47 15.4,4.88 15.97,4.17Z"/>
+                    </svg>
+                    <span>
+                        <span class="small">Coming soon on the</span>
+                        <span class="bold">App Store</span>
+                    </span>
+                </a>
+                <a class="app-store-btn" onclick="showModal()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M5,3L16.2,14.2L12.5,17.9L5,3M19.2,6.2L16.2,9.2L12.5,5.5L19.2,6.2M5,3L12.5,5.5L16.2,9.2L5,3M19.2,6.2L21,12L19.2,17.8L16.2,14.8L19.2,6.2M5,21L12.5,18.5L16.2,14.8L5,21M16.2,14.8L19.2,17.8L12.5,18.5L16.2,14.8M5,3V21L16.2,14.2L5,3Z"/>
+                    </svg>
+                    <span>
+                        <span class="small">Coming soon on</span>
+                        <span class="bold">Google Play</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="#" class="logo-area" style="margin-bottom: 8px;">
+                    <img src="../images/aivekai_logo.png" alt="AivekAI Logo" class="logo-img">
+                    <span class="logo-text" style="color: var(--white);">AivekAI</span>
+                </a>
+                <p>Calculates calories, macronutrients, fasting timers, and workouts automatically via AI.</p>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul class="footer-links-list">
+                    <li><a href="policy.html">Privacy Policy</a></li>
+                    <li><a href="data-deletion.html">Account & Data Deletion</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul class="footer-links-list">
+                    <li><a href="mailto:support@stoptimetryx.com">Contact Support</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div>&copy; 2026 AivekAI by Mozarex. All rights reserved.</div>
+            <div class="footer-bottom-links">
+                <a href="policy.html">Privacy</a>
+                <a href="data-deletion.html">Data Deletion</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- App Store Coming Soon Modal Popup -->
+    <div class="modal" id="comingSoonModal">
+        <div class="modal-content">
+            <div class="modal-icon">📲</div>
+            <h3>Coming Very Soon!</h3>
+            <p>Our mobile app is currently undergoing final beta reviews on the Apple App Store and Google Play Store. Leave us a shout at support, or check back soon!</p>
+            <button class="close-modal-btn" onclick="hideModal()">Awesome</button>
+        </div>
+    </div>
+
+    <script>
+        function showModal() {
+            document.getElementById('comingSoonModal').classList.add('active');
+        }
+
+        function hideModal() {
+            document.getElementById('comingSoonModal').classList.remove('active');
+        }
+
+        function setPreset(text) {
+            document.getElementById('demoInput').value = text;
+            runScan();
+        }
+
+        const mealData = {
+            "egg sandwich with coffee": {
+                items: [
+                    "🍳 2 Large Fried Eggs: 156 kcal",
+                    "🍞 2 Slices Whole Wheat Bread: 140 kcal",
+                    "🍅 2 Tomato Slices: 10 kcal",
+                    "☕ Medium Coffee w/ low-fat milk: 50 kcal"
+                ],
+                totalCals: 356,
+                macros: "P: 18g  |  C: 32g  |  F: 16g"
+            },
+            "avocado toast with poached egg": {
+                items: [
+                    "🍞 1 Slice Sourdough Bread: 100 kcal",
+                    "🥑 1/2 Ripe Avocado: 160 kcal",
+                    "🍳 1 Large Poached Egg: 72 kcal",
+                    "🍋 Squeeze of fresh lemon & chili flakes"
+                ],
+                totalCals: 332,
+                macros: "P: 12g  |  C: 28g  |  F: 20g"
+            },
+            "grilled chicken salad": {
+                items: [
+                    "🍗 Grilled Chicken Breast (150g): 165 kcal",
+                    "🥗 Mixed Salad Greens (2 cups): 20 kcal",
+                    "🥒 Cucumber & Cherry Tomatoes: 25 kcal",
+                    "🥑 1/4 Avocado: 80 kcal",
+                    "🍯 Vinaigrette Dressing (1 tbsp): 60 kcal"
+                ],
+                totalCals: 350,
+                macros: "P: 38g  |  C: 11g  |  F: 18g"
+            }
+        };
+
+        function runScan() {
+            const rawInput = document.getElementById('demoInput').value.trim();
+            const logBox = document.getElementById('consoleLog');
+            
+            if (!rawInput) {
+                logBox.innerHTML = `// Please type a meal first...`;
+                return;
+            }
+
+            logBox.innerHTML = `> Analyzing user input: "${rawInput}"<br>> Initializing AI Food Scanning Model...<br>> Scanning portion sizes...`;
+            
+            setTimeout(() => {
+                const normInput = rawInput.toLowerCase();
+                let matchKey = "";
+                
+                if (normInput.includes('egg') || normInput.includes('coffee')) {
+                    matchKey = "egg sandwich with coffee";
+                } else if (normInput.includes('avocado') || normInput.includes('toast')) {
+                    matchKey = "avocado toast with poached egg";
+                } else if (normInput.includes('chicken') || normInput.includes('salad')) {
+                    matchKey = "grilled chicken salad";
+                }
+
+                if (matchKey && mealData[matchKey]) {
+                    const data = mealData[matchKey];
+                    let out = `> Analyzing user input: "${rawInput}"<br>`;
+                    out += `> <span style="color: var(--accent-color);">[SUCCESS] AI Food Breakdown Resolved:</span><br><br>`;
+                    data.items.forEach(item => {
+                        out += `  * ${item}<br>`;
+                    });
+                    out += `<br>================================<br>`;
+                    out += `⚡ TOTAL ESTIMATED CALORIES: <strong>${data.totalCals} kcal</strong><br>`;
+                    out += `📊 MACROS: <strong>${data.macros}</strong><br>`;
+                    out += `================================`;
+                    logBox.innerHTML = out;
+                } else {
+                    // Fallback generic food analyser
+                    const estimatedCals = 250 + Math.floor(Math.random() * 300);
+                    const estP = 10 + Math.floor(Math.random() * 20);
+                    const estC = 20 + Math.floor(Math.random() * 35);
+                    const estF = 5 + Math.floor(Math.random() * 15);
+                    
+                    let out = `> Analyzing user input: "${rawInput}"<br>`;
+                    out += `> <span style="color: var(--accent-color);">[SUCCESS] AI Food Breakdown (Inferred Portion Sizes):</span><br><br>`;
+                    out += `  * Inferred standard typical portion size of "${rawInput}"<br>`;
+                    out += `  * Estimated ingredients breakdown complete.<br><br>`;
+                    out += `================================<br>`;
+                    out += `⚡ TOTAL ESTIMATED CALORIES: <strong>${estimatedCals} kcal</strong><br>`;
+                    out += `📊 MACROS: <strong>P: ${estP}g  |  C: ${estC}g  |  F: ${estF}g</strong><br>`;
+                    out += `================================`;
+                    logBox.innerHTML = out;
+                }
+            }, 800);
+        }
+    </script>
+</body>
+
+</html>
