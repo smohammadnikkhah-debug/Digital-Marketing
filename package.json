@@ -4,8 +4,7 @@
   "description": "A digital marketing website for SEO analysis and recommendations",
   "main": "server.js",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node server.js",

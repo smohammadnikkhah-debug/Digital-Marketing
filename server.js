@@ -276,6 +276,22 @@ app.get('/puratryx', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'puratryx.html'));
 });
 
+// Serve AivekAI landing page
+app.get('/aivekai', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai.html'));
+});
+
+// Serve data deletion page
+app.get('/data-deletion', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.sendFile(path.join(__dirname, 'frontend', 'data-deletion.html'));
+});
+
 // Serve advanced dashboard
 app.get('/dashboard-advanced', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'seo-dashboard-advanced.html'));

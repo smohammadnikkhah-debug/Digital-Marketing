@@ -1,698 +1,1165 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K59VFCP8');</script>
-<!-- End Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K59VFCP8');</script>
+    <!-- End Google Tag Manager -->
+    
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://analytics.tiktok.com https://*.tiktok.com; connect-src 'self' https://analytics.tiktok.com https://*.tiktok.com;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mozarex AI - The Future of Intelligent SEO & Digital Marketing</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Mozarex - Professional One-Center IT & Software Solutions</title>
+    
+    <!-- Fonts and Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* Default mobile menu toggle styles */
-        .mobile-menu-toggle {
-            display: none;
+        :root {
+            --bg-dark: #0a0e12;
+            --bg-card: #12181f;
+            --primary: #00b0ff;
+            --primary-dark: #0091ea;
+            --accent: #10b981;
+            --accent-dark: #059669;
+            --text-main: #b2c0cc;
+            --text-heading: #f0f6fc;
+            --white: #ffffff;
+            --gradient: linear-gradient(135deg, #0a0e12 0%, #172230 100%);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-            /* Navigation */
-            .nav-container {
-                padding: 0 1rem;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--gradient);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(10, 14, 18, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-icon img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .brand-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-link {
+            font-weight: 550;
+            font-size: 15px;
+            color: var(--text-main);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        /* Dropdown Styles */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg-card);
+            min-width: 220px;
+            flex-direction: column;
+            padding: 8px 0;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 12px;
+        }
+
+        .nav-dropdown:hover .dropdown-menu {
+            display: flex;
+        }
+
+        .dropdown-item {
+            color: var(--white);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+        }
+
+        .nav-btn {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 176, 255, 0.15);
+        }
+
+        .nav-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            color: var(--white);
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 160px 0 100px;
+            position: relative;
+        }
+
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-size: 52px;
+            line-height: 1.15;
+            font-weight: 900;
+            color: var(--white);
+            margin-bottom: 24px;
+            letter-spacing: -1.5px;
+        }
+
+        .hero-content h1 span {
+            color: var(--primary);
+        }
+
+        .hero-content p {
+            font-size: 18px;
+            color: var(--text-main);
+            margin-bottom: 40px;
+            max-width: 580px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            box-shadow: 0 4px 14px rgba(0, 176, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--white);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--white);
+            background-color: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .stat-item h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-item p {
+            font-size: 13px;
+            color: var(--text-main);
+            margin-bottom: 0;
+        }
+
+        /* Stacked Apps Hero Preview Mockup */
+        .hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mockup-grid {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            height: 380px;
+        }
+
+        .mockup-card {
+            position: absolute;
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 290px;
+        }
+
+        .mockup-card img {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            object-fit: contain;
+        }
+
+        .mockup-card h4 {
+            color: var(--white);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .mockup-card p {
+            font-size: 12px;
+            color: var(--text-main);
+            margin-bottom: 0;
+        }
+
+        .card-aivekai {
+            top: 20px;
+            left: 20px;
+            z-index: 3;
+            border-left: 4px solid var(--accent);
+        }
+
+        .card-puratryx {
+            top: 130px;
+            right: 20px;
+            z-index: 2;
+            border-left: 4px solid var(--primary);
+        }
+
+        .card-stoptimetryx {
+            bottom: 20px;
+            left: 50px;
+            z-index: 1;
+            border-left: 4px solid #f59e0b;
+        }
+
+        /* Featured Products (Apps We've Built) */
+        .products-section {
+            padding: 100px 0;
+            background-color: rgba(255, 255, 255, 0.01);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 64px;
+        }
+
+        .section-header span {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 20px;
+            letter-spacing: -0.8px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .product-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+            font-size: 28px;
+        }
+
+        .product-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 14px;
+        }
+
+        .product-card p {
+            font-size: 14px;
+            color: var(--text-main);
+            margin-bottom: 28px;
+            flex-grow: 1;
+        }
+
+        .product-link {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .product-link:hover {
+            color: var(--white);
+            transform: translateX(4px);
+        }
+
+        /* Services Section (One-Center IT Solution) */
+        .services-section {
+            padding: 100px 0;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .service-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            transition: var(--transition);
+        }
+
+        .service-card:hover {
+            border-color: rgba(0, 176, 255, 0.2);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
+            transform: translateY(-4px);
+        }
+
+        .service-icon {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+
+        .service-card p {
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        /* Advantage Section */
+        .advantage-section {
+            padding: 100px 0;
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .advantage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .advantage-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .advantage-item {
+            display: flex;
+            gap: 16px;
+        }
+
+        .advantage-num {
+            width: 36px;
+            height: 36px;
+            background-color: rgba(0, 176, 255, 0.1);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .advantage-text h4 {
+            color: var(--white);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .advantage-text p {
+            font-size: 14px;
+        }
+
+        /* Contact Consultation Form */
+        .contact-section {
+            padding: 100px 0;
+        }
+
+        .contact-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--border-radius);
+            padding: 56px;
+            text-align: center;
+        }
+
+        .contact-container h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+
+        .contact-container p {
+            font-size: 15px;
+            color: var(--text-main);
+            margin-bottom: 40px;
+        }
+
+        .contact-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            text-align: left;
+        }
+
+        .form-full {
+            grid-column: span 2;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--white);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 16px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--white);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.15);
+        }
+
+        .contact-form button {
+            grid-column: span 2;
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 12px;
+        }
+
+        .contact-form button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .success-message {
+            display: none;
+            grid-column: span 2;
+            padding: 15px;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            color: var(--accent);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #05070a;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 80px 0 40px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr repeat(2, 1fr);
+            gap: 48px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 48px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .footer-brand p {
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        .footer-col h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--white);
+        }
+
+        .footer-links-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links-list a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .footer-links-list a:hover {
+            color: var(--white);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-bottom-links a {
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--white);
+        }
+
+        /* Mobile Menu */
+        @media (max-width: 992px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 48px;
             }
+
+            .hero-content h1 {
+                font-size: 40px;
+            }
+
+            .hero-content p {
+                margin: 0 auto 32px;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                height: 360px;
+            }
+
+            .mockup-grid {
+                max-width: 380px;
+                margin: 0 auto;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            .advantage-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
             .nav-menu {
                 display: none;
                 position: fixed;
                 top: 70px;
                 left: 0;
                 width: 100%;
-                background: #1a1a1a;
+                background-color: var(--bg-dark);
                 flex-direction: column;
-                padding: 2rem;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                z-index: 1000;
+                padding: 32px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             }
+
             .nav-menu.active {
                 display: flex;
             }
-            .nav-link {
-                padding: 1rem 0;
-                border-bottom: 1px solid #333;
-                width: 100%;
-                text-align: left;
-            }
+
             .mobile-menu-toggle {
                 display: block;
-                color: #fff;
-                font-size: 1.5rem;
-                cursor: pointer;
-                padding: 0.5rem;
-                border: none;
-                background: none;
             }
 
-            /* Hero Section */
-            .hero-container {
-                flex-direction: column;
-                padding: 2rem 1rem;
-                text-align: center;
-            }
-            .hero-title {
-                font-size: 2rem;
-                line-height: 1.2;
-                margin-bottom: 1rem;
-            }
-            .hero-subtitle {
-                font-size: 1rem;
-                line-height: 1.5;
-                margin-bottom: 2rem;
-            }
-            .hero-stats {
-                flex-direction: column;
-                gap: 1rem;
-                margin-bottom: 2rem;
-            }
-            .hero-actions {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: center;
-            }
-            .btn-primary, .btn-secondary {
-                width: 100%;
-                max-width: 300px;
-                padding: 1rem 2rem;
-                font-size: 1rem;
-            }
-            .hero-visual {
-                margin-top: 2rem;
-            }
-            .dashboard-preview {
-                max-width: 100%;
-                padding: 1.5rem;
-            }
-
-            /* Features Grid */
-            .features-grid {
+            .contact-form {
                 grid-template-columns: 1fr;
-                gap: 2rem;
-                padding: 0 1rem;
-            }
-            .feature-card {
-                padding: 2rem 1.5rem;
-            }
-            .feature-icon {
-                font-size: 2rem;
-                margin-bottom: 1.5rem;
             }
 
-            /* Comparison Section */
-            .comparison-grid {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-            .comparison-item {
-                flex-direction: column;
-                text-align: center;
-            }
-            .vs-arrow {
-                transform: rotate(90deg);
-                margin: 1rem 0;
+            .form-full {
+                grid-column: span 1;
             }
 
-            /* Testimonials */
+            .contact-form button {
+                grid-column: span 1;
+            }
 
-            .testimonials-grid {
+            .footer-grid {
                 grid-template-columns: 1fr;
-                gap: 2rem;
             }
-            .testimonial-card {
-                padding: 2rem 1.5rem;
-                flex-direction: column;
-                text-align: center;
-            }
-
-            /* Container */
-            .container {
-                padding: 0 1rem;
-            }
-
-            /* Button */
-            .cta-actions {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            /* Footer */
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-                gap: 2rem;
-            }
-            .footer-links {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 2rem;
-            }
-
-            /* Typography */
-            h1 { font-size: 2rem; }
-            h2 { font-size: 1.75rem; }
-            h3 { font-size: 1.5rem; }
-        }
-
-        @media (max-width: 480px) {
-            .hero-title {
-                font-size: 1.75rem;
-            }
-            .hero-subtitle {
-                font-size: 0.9rem;
-            }
-            h2 { font-size: 1.5rem; }
-            h3 { font-size: 1.25rem; }
         }
     </style>
-    <meta name="description" content="Revolutionary AI-powered SEO platform that combines DataForSEO intelligence with OpenAI automation. Get comprehensive website analysis, automated content generation, and intelligent marketing strategies.">
-    <meta name="keywords" content="AI SEO, DataForSEO, OpenAI, digital marketing, website analysis, content generation, SEO automation">
 </head>
+
 <body>
     <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K59VFCP8"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <div class="brand-icon">
-                    <img src="/images/Logo_M.png" alt="Mozarex Logo">
-                </div>
-                <span class="brand-text">Mozarex AI</span>
-            </div>
-            <div class="nav-menu" style="display: flex; align-items: center; gap: 1rem;">
-                <a href="#features" class="nav-link">Features</a>
-                <a href="#pricing" class="nav-link">Pricing</a>
-                
-                <div class="nav-dropdown" style="position:relative; display:inline-block;" onmouseover="this.children[1].style.display='flex'" onmouseout="this.children[1].style.display='none'">
-                    <span class="nav-link" style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">Apps <i class="fas fa-chevron-down" style="font-size:0.8em;"></i></span>
-                    <div style="display:none; position:absolute; top:100%; left:0; background:#1a1a1a; min-width:180px; flex-direction:column; padding:0.5rem 0; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:1000; border:1px solid rgba(255,255,255,0.1);">
-                        <a href="/stoptimetryx" style="color:#fff; padding:0.8rem 1.5rem; text-decoration:none; display:block; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"><i class="fas fa-clock" style="margin-right:8px; color:#10b981;"></i> StopTimetryx</a>
-                    </div>
-                </div>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K59VFCP8"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
-                <a href="#testimonials" class="nav-link">Success Stories</a>
-                <a href="#contact" class="nav-link">Contact</a>
-                <a href="/login" class="nav-link auth-link">Sign In</a>
-                <a href="/plans" class="nav-link cta-button">Get Started</a>
-            </div>
-            <div class="mobile-menu-toggle">
-                <i class="fas fa-bars"></i>
+    <!-- Navigation Header -->
+    <header>
+        <div class="container">
+            <div class="nav-container">
+                <a href="#" class="nav-brand">
+                    <div class="brand-icon">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
+                    </div>
+                    <span class="brand-text">Mozarex</span>
+                </a>
+                <ul class="nav-menu">
+                    <li><a href="#services" class="nav-link">Services</a></li>
+                    
+                    <!-- Apps Dropdown Menu -->
+                    <li class="nav-dropdown">
+                        <span class="nav-link" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            Our Apps <i class="fas fa-chevron-down" style="font-size: 11px; opacity: 0.8;"></i>
+                        </span>
+                        <div class="dropdown-menu">
+                            <a href="/stoptimetryx" class="dropdown-item">
+                                <i class="fas fa-clock" style="color: #f59e0b;"></i> StopTimetryx
+                            </a>
+                            <a href="/puratryx" class="dropdown-item">
+                                <i class="fas fa-home" style="color: var(--primary);"></i> Puratryx
+                            </a>
+                            <a href="/aivekai" class="dropdown-item">
+                                <i class="fas fa-brain" style="color: var(--accent);"></i> AivekAI
+                            </a>
+                        </div>
+                    </li>
+                    
+                    <li><a href="#advantage" class="nav-link">Why Mozarex</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    <li><a href="#contact" class="nav-btn">Free Consultation</a></li>
+                </ul>
+                <button class="mobile-menu-toggle" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-background">
-            <div class="hero-particles"></div>
+        <div class="container">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1>One Center. <span>All Your IT & Software Needs.</span></h1>
+                    <p>Mozarex is a professional one-center technology solution partner for modern businesses. We design and build premium web applications, native iOS & Android apps, custom software systems, and manage all your IT requirements from a unified hub.</p>
+                    <div class="hero-actions">
+                        <a href="#contact" class="btn-primary">
+                            <i class="fas fa-calendar-check"></i> Schedule Consultation
+                        </a>
+                        <a href="#apps" class="btn-secondary">
+                            <i class="fas fa-mobile-alt"></i> View Our Built Apps
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <h3>100%</h3>
+                            <p>One-Center Delivery</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>0</h3>
+                            <p>Third-Party Finger Pointing</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>SaaS-Grade</h3>
+                            <p>Premium App Architecture</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="mockup-grid">
+                        <!-- AivekAI Mockup Card -->
+                        <div class="mockup-card card-aivekai">
+                            <img src="../images/aivekai_logo.png" alt="AivekAI Logo">
+                            <div>
+                                <h4>AivekAI</h4>
+                                <p>Smart AI Nutrition Coach</p>
+                            </div>
+                        </div>
+                        <!-- Puratryx Mockup Card -->
+                        <div class="mockup-card card-puratryx">
+                            <img src="../images/puratryx_logo.png" alt="Puratryx Logo">
+                            <div>
+                                <h4>Puratryx</h4>
+                                <p>Household Chores Planner</p>
+                            </div>
+                        </div>
+                        <!-- StopTimetryx Mockup Card -->
+                        <div class="mockup-card card-stoptimetryx">
+                            <div style="width: 50px; height: 50px; background:#161b22; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px;">⏱️</div>
+                            <div>
+                                <h4>StopTimetryx</h4>
+                                <p>Time & Habit Builder</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="hero-container">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <i class="fas fa-rocket"></i>
-                    <span>The Future of SEO is Here</span>
-                </div>
-                <h1 class="hero-title">
-                    Mozarex AI: The Smarter Way to Rank on Google
-                </h1>
-                <p class="hero-subtitle">
-                    Stop guessing and start growing. Mozarex is your all-in-one AI platform that takes the complexity out of SEO. Our intelligent engine analyzes your website, pinpoints exactly what to fix, and even generates content to help you win on search. It's powerful, automated, and so easy to use, you'll feel like an expert from day one.
-                </p>
-                
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">70%</div>
-                        <div class="stat-label">Faster Content Generation/Optimization</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">3x</div>
-                        <div class="stat-label">Faster Strategy Development</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">80%</div>
-                        <div class="stat-label">Automation of Routine Tasks</div>
-                    </div>
-                </div>
+    </section>
 
-                <div class="hero-actions">
-                    <a href="/plans" class="btn-primary">
-                        <i class="fas fa-user-plus"></i>
-                        Sign Up Free
-                    </a>
-                    <a href="/login" class="btn-secondary">
-                        <i class="fas fa-chart-line"></i>
-                        Sign In to Dashboard
-                    </a>
-                </div>
-
+    <!-- Our Apps Section -->
+    <section class="products-section" id="apps">
+        <div class="container">
+            <div class="section-header">
+                <span>Featured Software Products</span>
+                <h2>SaaS Applications We've Built</h2>
+                <p>We build production-grade, highly engaging apps designed with beautiful ovals, fluid interfaces, and intelligent backends.</p>
             </div>
             
-            <div class="hero-visual">
-                <div class="dashboard-preview">
-                    <div class="preview-header">
-                        <div class="preview-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <div class="preview-title">Mozarex AI Dashboard</div>
-                    </div>
-                    <div class="preview-content">
-                        <div class="preview-card">
-                            <div class="card-icon">📊</div>
-                            <div class="card-content">
-                                <h4>SEO Score: 94/100</h4>
-                                <p>Technical Analysis Complete</p>
-                            </div>
-                        </div>
-                        <div class="preview-card">
-                            <div class="card-icon">🎯</div>
-                            <div class="card-content">
-                                <h4>247 Keywords Found</h4>
-                                <p>Opportunities Identified</p>
-                            </div>
-                        </div>
-                        <div class="preview-card">
-                            <div class="card-icon">🤖</div>
-                            <div class="card-content">
-                                <h4>AI Content Generated</h4>
-                                <p>30-Day Calendar Ready</p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="products-grid">
+                <!-- App 1 -->
+                <div class="product-card">
+                    <div class="product-icon" style="background-color: rgba(0, 194, 168, 0.1); color: var(--accent);">🥑</div>
+                    <h3>AivekAI</h3>
+                    <p>An intelligent nutrition logging coach that uses image recognition and natural language processing to log meals friction-free, track calorie targets, and manage fasting intervals dynamically.</p>
+                    <a href="/aivekai" class="product-link">Explore Landing Page &rarr;</a>
+                </div>
+
+                <!-- App 2 -->
+                <div class="product-card">
+                    <div class="product-icon" style="background-color: rgba(0, 176, 255, 0.1); color: var(--primary);">🏡</div>
+                    <h3>Puratryx</h3>
+                    <p>A collaborative family routine manager that coordinates household cleaning tasks, links multiple devices securely via QR codes, and gamifies routines with points and task history logs.</p>
+                    <a href="/puratryx" class="product-link">Explore Landing Page &rarr;</a>
+                </div>
+
+                <!-- App 3 -->
+                <div class="product-card">
+                    <div class="product-icon" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b;">⏱️</div>
+                    <h3>StopTimetryx</h3>
+                    <p>A smart stopwatch and daily habit builder that structures timelines, monitors stopwatch performance metrics, and lets users build sequential habit stacks with visual streaks.</p>
+                    <a href="/stoptimetryx" class="product-link">Explore Landing Page &rarr;</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
+    <!-- Services Section -->
+    <section class="services-section" id="services">
         <div class="container">
             <div class="section-header">
-                <h2>Everything Your Business Needs to Dominate Search</h2>
-                <p>Powerful AI-driven tools that replace expensive SEO platforms and manual work</p>
+                <span>IT & Development Services</span>
+                <h2>One-Center IT Solutions</h2>
+                <p>From individual web development to full-scale enterprise software deployment, we manage all your IT requirements under a single professional roof.</p>
             </div>
 
-            <div class="features-grid">
-                <div class="feature-card primary">
-                    <div class="feature-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <h3>Mozarex AI Intelligence</h3>
-                    <p>Our proprietary AI engine analyzes your website and provides actionable insights tailored to your business goals and industry.</p>
-                    <ul class="feature-list">
-                        <li>Real-time website analysis</li>
-                        <li>Intelligent content recommendations</li>
-                        <li>Automated optimization suggestions</li>
-                    </ul>
+            <div class="services-grid">
+                <!-- Service 1 -->
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-mobile-screen"></i></div>
+                    <h3>Mobile App Development</h3>
+                    <p>High-fidelity, responsive iOS and Android apps built with Flutter, Swift, and Kotlin. Designed for fast native performance.</p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3>Advanced SEO Analytics</h3>
-                    <p>Comprehensive technical analysis, keyword research, competitor insights, and backlink analysis powered by our intelligent AI system.</p>
-                    <ul class="feature-list">
-                        <li>Technical SEO audit</li>
-                        <li>Keyword difficulty analysis</li>
-                        <li>Competitor benchmarking</li>
-                    </ul>
+                <!-- Service 2 -->
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-laptop-code"></i></div>
+                    <h3>Websites & SaaS Platforms</h3>
+                    <p>Corporate landing pages, interactive SaaS dashboards, and database integrations built with clean layouts and semantic code.</p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <h3>AI Content Generation</h3>
-                    <p>Generate high-quality, SEO-optimized content for your website and social media using OpenAI's advanced language models.</p>
-                    <ul class="feature-list">
-                        <li>Blog post generation</li>
-                        <li>Social media content</li>
-                        <li>Meta descriptions & titles</li>
-                    </ul>
+                <!-- Service 3 -->
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-brain"></i></div>
+                    <h3>AI & Workflow Automation</h3>
+                    <p>Custom OpenAI GPT integrations, image recognition pipelines, and automated script workflows to save hours of manual business labor.</p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <h3>Content Calendar Automation</h3>
-                    <p>AI-powered content calendar that generates personalized content based on your business services and target keywords.</p>
-                    <ul class="feature-list">
-                        <li>30-day content planning</li>
-                        <li>Platform-specific optimization</li>
-                        <li>Approval workflow</li>
-                    </ul>
+                <!-- Service 4 -->
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                    <h3>Cloud & Server Architecture</h3>
+                    <p>Secure cloud backend infrastructure and database design (Supabase, Firebase, AWS) configured for safe scaling and backups.</p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3>Social Media Integration</h3>
-                    <p>Connect and manage multiple social media accounts with automated posting and campaign management.</p>
-                    <ul class="feature-list">
-                        <li>Multi-platform posting</li>
-                        <li>Campaign scheduling</li>
-                        <li>Performance tracking</li>
-                    </ul>
+                <!-- Service 5 -->
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Technical SEO & Analytics</h3>
+                    <p>Advanced website performance audits, custom Google Tag Manager (GTM) setups, and marketing tracking architectures.</p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3>Unlock 300%+ Organic Traffic Growth</h3>
-                    <p>Our AI-driven strategies help businesses achieve exponential growth in organic traffic through intelligent optimization and content strategies.</p>
-                    <ul class="feature-list">
-                        <li>Strategic keyword targeting</li>
-                        <li>Content optimization</li>
-                        <li>Performance tracking</li>
-                    </ul>
+                <!-- Service 6 -->
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-shield-halved"></i></div>
+                    <h3>Managed IT & Support</h3>
+                    <p>Continuous security auditing, API monitoring, bug fixing, and software scale consultation. You're never left in the dark.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Comparison Section -->
-    <section class="comparison">
+    <!-- Advantage Section -->
+    <section class="advantage-section" id="advantage">
         <div class="container">
-            <div class="section-header">
-                <h2>Why Choose Mozarex AI Over Expensive SEO Tools?</h2>
-                <p>Save $900+ per month with our all-in-one platform</p>
-            </div>
-
-            <div class="comparison-grid">
-                <div class="comparison-item">
-                    <div class="tool-replaced">
-                        <h4>Ahrefs + SEMrush + Other SEO Tools</h4>
-                        <div class="price">$500/month</div>
-                    </div>
-                    <div class="vs-arrow">→</div>
-                    <div class="mozarex-feature">
-                        <h4>Mozarex AI Analytics</h4>
-                        <div class="price">~$49.90/month</div>
-                    </div>
-                </div>
-
-                <div class="comparison-item">
-                    <div class="tool-replaced">
-                        <h4>OpenAI API + Content Tools</h4>
-                        <div class="price">$300/month</div>
-                    </div>
-                    <div class="vs-arrow">→</div>
-                    <div class="mozarex-feature">
-                        <h4>AI Content Generation</h4>
-                        <div class="price">Included</div>
-                    </div>
-                </div>
-
-                <div class="comparison-item">
-                    <div class="tool-replaced">
-                        <h4>Social Media Management</h4>
-                        <div class="price">$200/month</div>
-                    </div>
-                    <div class="vs-arrow">→</div>
-                    <div class="mozarex-feature">
-                        <h4>Integrated Social Tools</h4>
-                        <div class="price">Coming Soon</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="savings-highlight">
-                <div class="savings-amount">Save $900+ per month</div>
-                <div class="savings-text">While getting better results with AI-powered automation</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Success Stories -->
-    <section class="testimonials" id="testimonials">
-        <div class="container">
-            <div class="section-header">
-                <h2>Real Results. Real Fast.</h2>
-                <p>See how businesses are transforming their digital presence</p>
-            </div>
-
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="testimonial-stats">
-                        <div class="stat-highlight">390%</div>
-                        <div class="stat-label">Traffic Increase</div>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"Mozarex AI transformed our digital marketing strategy. The AI-powered content generation and SEO analysis helped us dominate our local market in just 4 weeks."</p>
-                        <div class="testimonial-author">
-                            <div class="author-info">
-                                <strong>Sarah Johnson</strong>
-                                <span>Marketing Director, TechStart Inc.</span>
+            <div class="advantage-grid">
+                <div>
+                    <h2 style="font-size: 36px; font-weight: 800; color: var(--white); margin-bottom: 20px; letter-spacing: -1px;">The Power of a One-Center IT Solution</h2>
+                    <p style="font-size: 16px; margin-bottom: 32px;">Stop paying multiple agencies, design shops, and isolated server consultants who blame each other when something breaks. Mozarex handles the entire engineering stack seamlessly.</p>
+                    <ul class="advantage-list">
+                        <li class="advantage-item">
+                            <div class="advantage-num">1</div>
+                            <div class="advantage-text">
+                                <h4>Single Point of Accountability</h4>
+                                <p>One professional contact for your mobile apps, web platform, servers, and SEO. No finger-pointing.</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="testimonial-stats">
-                        <div class="stat-highlight">97%</div>
-                        <div class="stat-label">Ranking Improvement</div>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"The combination of DataForSEO insights and OpenAI content generation is incredible. We went from page 10 to page 1 for our target keywords in record time."</p>
-                        <div class="testimonial-author">
-                            <div class="author-info">
-                                <strong>Mike Chen</strong>
-                                <span>CEO, Digital Solutions Agency</span>
+                        </li>
+                        <li class="advantage-item">
+                            <div class="advantage-num">2</div>
+                            <div class="advantage-text">
+                                <h4>Unified Codebases & Systems</h4>
+                                <p>Web dashboards and mobile apps are integrated directly to sync databases safely with no lag.</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="testimonial-stats">
-                        <div class="stat-highlight">90%</div>
-                        <div class="stat-label">Cost Reduction</div>
-                    </div>
-                    <div class="testimonial-content">
-                        <p>"We replaced 5 different SEO tools with Mozarex AI and saved thousands per month while getting better results. The AI automation is a game-changer."</p>
-                        <div class="testimonial-author">
-                            <div class="author-info">
-                                <strong>Emily Rodriguez</strong>
-                                <span>Founder, Growth Marketing Co.</span>
+                        </li>
+                        <li class="advantage-item">
+                            <div class="advantage-num">3</div>
+                            <div class="advantage-text">
+                                <h4>Massive Cost Efficiency</h4>
+                                <p>Eliminate overlapping subscriptions, redundant agency fees, and expensive translation layers.</p>
                             </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <img src="../images/aivekai_hero.png" alt="Mozarex Premium Engineering" style="width: 100%; border-radius: var(--border-radius); box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);">
                 </div>
             </div>
         </div>
     </section>
 
-
-    <!-- CTA Section -->
-    <section class="cta-section">
+    <!-- Contact & Consultation Form -->
+    <section class="contact-section" id="contact">
         <div class="container">
-            <div class="cta-content">
-                <h2>Ready to Transform Your Digital Presence?</h2>
-                <p>Join thousands of businesses already using Mozarex AI to dominate search results and grow their online presence.</p>
-                <div class="cta-actions">
-                    <a href="/signup" class="btn-primary large">
-                        <i class="fas fa-rocket"></i>
-                        Start Your Free Analysis
-                    </a>
-            <a href="/login" class="btn-secondary large">
-                <i class="fas fa-chart-line"></i>
-                Sign In to Dashboard
-            </a>
-                </div>
-                <div class="cta-guarantee">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>7-day free trial • No credit card required • Cancel anytime</span>
-                </div>
+            <div class="contact-container">
+                <h2>Let's Build Your Project</h2>
+                <p>Fill out the form below to get a free professional consultation and custom pricing quote for your app, website, or IT needs.</p>
+                
+                <form class="contact-form" onsubmit="submitContactForm(event)">
+                    <div class="form-group">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" required placeholder="e.g. John Doe">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" required placeholder="e.g. john@yourbusiness.com">
+                    </div>
+                    
+                    <div class="form-group form-full">
+                        <label for="projectType">What are you looking to build?</label>
+                        <select id="projectType" required>
+                            <option value="">-- Select Project Type --</option>
+                            <option value="Mobile App (iOS & Android)">Mobile App (iOS & Android)</option>
+                            <option value="Web Application / SaaS">Web Application / SaaS</option>
+                            <option value="Corporate Website">Corporate Website</option>
+                            <option value="AI / Automation System">AI / Automation System</option>
+                            <option value="Full Managed IT & Support">Full Managed IT & Support</option>
+                            <option value="Other Technology Requirements">Other Technology Requirements</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-full">
+                        <label for="message">Project Details</label>
+                        <textarea id="message" required rows="5" placeholder="Briefly describe your business requirements and target goals..."></textarea>
+                    </div>
+
+                    <button type="submit">Submit Request &rarr;</button>
+                    
+                    <div id="successMsg" class="success-message">
+                        Compilation complete! Redirecting to email client to send your message to info@mozarex.com...
+                    </div>
+                </form>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer>
         <div class="container">
-            <div class="footer-content">
+            <div class="footer-grid">
                 <div class="footer-brand">
-                    <div class="brand-icon">
-                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
-                    </div>
-                    <span class="brand-text">Mozarex AI</span>
-                    <p>The future of intelligent SEO and digital marketing</p>
+                    <a href="#" class="logo-area" style="margin-bottom: 8px;">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo" class="logo-img" style="height: 36px;">
+                        <span class="logo-text" style="color: var(--white);">Mozarex</span>
+                    </a>
+                    <p>Your one-center partner for mobile app development, premium web applications, database structures, and comprehensive business IT requirements.</p>
                 </div>
-                <div class="footer-links">
-                    <div class="link-group">
-                        <h4>Product</h4>
-                        <a href="#features">Features</a>
-                        <a href="#pricing">Pricing</a>
-                        <a href="#demo">Demo</a>
-                        <a href="#integrations">Integrations</a>
-                    </div>
-                    <div class="link-group">
-                        <h4>Company</h4>
-                        <a href="#about">About</a>
-                        <a href="#careers">Careers</a>
-                        <a href="#contact">Contact</a>
-                        <a href="#blog">Blog</a>
-                    </div>
-                    <div class="link-group">
-                        <h4>Support</h4>
-                        <a href="#help">Help Center</a>
-                        <a href="/policy.html">Policy</a>
-                        <a href="#status">Status</a>
-                        <a href="#community">Community</a>
-                    </div>
+                
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="policy.html">Privacy Policy</a></li>
+                        <li><a href="data-deletion.html">Account & Data Deletion</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="mailto:info@mozarex.com">info@mozarex.com</a></li>
+                    </ul>
                 </div>
             </div>
+            
             <div class="footer-bottom">
-                <p>&copy; 2024 Mozarex AI. All rights reserved.</p>
-                <div class="footer-legal">
-                    <a href="#privacy">Privacy Policy</a>
-                    <a href="#terms">Terms of Service</a>
-                    <a href="#cookies">Cookie Policy</a>
+                <p>&copy; 2026 Mozarex by Mozarex. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="policy.html">Privacy Policy</a>
+                    <a href="data-deletion.html">Account Deletion</a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script src="script.js"></script>
     <script>
-        // Load Stripe products for pricing section
-        async function loadStripeProducts() {
-            try {
-                const response = await fetch('/api/stripe/products');
-                const data = await response.json();
-                
-                if (data.success && data.products.length > 0) {
-                    updatePricingSection(data.products);
-                }
-            } catch (error) {
-                console.error('Error loading Stripe products:', error);
-                // Keep static pricing as fallback
-            }
-        }
-
-        // Update pricing section with Stripe data
-        function updatePricingSection(products) {
-            const pricingGrid = document.querySelector('.pricing-grid');
-            if (!pricingGrid) return;
-
-            // Clear existing content
-            pricingGrid.innerHTML = '';
-
-            // Only show first 3 products for home page
-            const displayProducts = products.slice(0, 3);
-
-            displayProducts.forEach((product, index) => {
-                const pricingCard = createPricingCard(product, index);
-                pricingGrid.appendChild(pricingCard);
-            });
-        }
-
-        // Create pricing card element
-        function createPricingCard(product, index) {
-            const card = document.createElement('div');
-            card.className = `pricing-card ${product.popular ? 'featured' : ''}`;
-            
-            const monthlyPrice = product.monthly?.formatted || '$99';
-            const priceAmount = monthlyPrice.replace(/[$,]/g, '').split('/')[0];
-            
-            card.innerHTML = `
-                ${product.popular ? '<div class="plan-badge">Most Popular</div>' : ''}
-                <div class="plan-header">
-                    <h3>${product.name}</h3>
-                    <div class="plan-price">
-                        <span class="currency">$</span>
-                        <span class="amount">${priceAmount}</span>
-                        <span class="period">/month</span>
-                    </div>
-                    <p>${product.description || 'Perfect for your business needs'}</p>
-                </div>
-                <ul class="plan-features">
-                    ${product.features.map(feature => `<li><i class="fas fa-check"></i> ${feature}</li>`).join('')}
-                </ul>
-                <a href="/plans" class="plan-button">Start Free Trial</a>
-            `;
-
-            return card;
-        }
-
-        // Mobile Menu Toggle
-        function toggleMobileMenu() {
+        function toggleMenu() {
             const menu = document.querySelector('.nav-menu');
-            const toggle = document.querySelector('.mobile-menu-toggle');
-            
-            if (menu.classList.contains('active')) {
-                menu.classList.remove('active');
-                toggle.innerHTML = '<i class="fas fa-bars"></i>';
-            } else {
-                menu.classList.add('active');
-                toggle.innerHTML = '<i class="fas fa-times"></i>';
-            }
+            menu.classList.toggle('active');
         }
 
-        // Close mobile menu when clicking on a link
-        function closeMobileMenu() {
-            const menu = document.querySelector('.nav-menu');
-            const toggle = document.querySelector('.mobile-menu-toggle');
+        function submitContactForm(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const projectType = document.getElementById('projectType').value;
+            const message = document.getElementById('message').value.trim();
             
-            menu.classList.remove('active');
-            toggle.innerHTML = '<i class="fas fa-bars"></i>';
+            const subject = encodeURIComponent(`Project Inquiry - ${projectType}`);
+            const body = encodeURIComponent(
+                `Hello Mozarex Team,\n\n` +
+                `I would like to request a consultation for the following project:\n\n` +
+                `Client Name: ${name}\n` +
+                `Contact Email: ${email}\n` +
+                `Project Type: ${projectType}\n\n` +
+                `Project Details:\n${message}\n\n` +
+                `Please contact me to arrange next steps.\n\n` +
+                `Thank you.`
+            );
+            
+            document.getElementById('successMsg').style.display = 'block';
+            
+            setTimeout(() => {
+                window.location.href = `mailto:info@mozarex.com?subject=${subject}&body=${body}`;
+            }, 1000);
         }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Enable mobile menu toggle
-            const mobileToggle = document.querySelector('.mobile-menu-toggle');
-            if (mobileToggle) {
-                mobileToggle.addEventListener('click', toggleMobileMenu);
-            }
-
-            // Close menu when clicking on nav links
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', closeMobileMenu);
-            });
-
-            // Close menu when clicking outside
-            document.addEventListener('click', function(event) {
-                const menu = document.querySelector('.nav-menu');
-                const toggle = document.querySelector('.mobile-menu-toggle');
-                
-                if (menu.classList.contains('active') && 
-                    !menu.contains(event.target) && 
-                    !toggle.contains(event.target)) {
-                    closeMobileMenu();
-                }
-            });
-
-            // Check for rate limit error
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('error') === 'rate_limit') {
-                console.log('🚨 Rate limit error detected');
-                alert('Too many login attempts. Please wait a few minutes before trying again.');
-                // Clean up the URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            
-            loadStripeProducts();
-        });
     </script>
+</body>
+
+</html>
