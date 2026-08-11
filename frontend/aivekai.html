@@ -162,6 +162,10 @@
             margin-bottom: 40px;
         }
 
+        .cta-banner .cta-buttons {
+            justify-content: center;
+        }
+
         .app-store-btn {
             display: inline-flex;
             align-items: center;
@@ -472,8 +476,8 @@
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 28px;
         }
 
         .mockup-wrapper {
@@ -735,13 +739,21 @@
             }
 
             .gallery-container {
-                grid-template-columns: 1fr;
-                max-width: 400px;
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 720px;
+                gap: 24px;
             }
             
             .footer-container {
                 grid-template-columns: 1fr;
                 gap: 32px;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .gallery-container {
+                grid-template-columns: 1fr !important;
+                max-width: 320px !important;
             }
         }
     </style>
@@ -830,41 +842,32 @@
         </div>
     </section>
 
-    <!-- Interactive Simulator Demo -->
-    <section class="interactive-scan" id="demo">
+    <!-- Community Feed Feature Section -->
+    <section class="interactive-scan" id="demo" style="background-color: var(--white);">
         <div class="section-header">
-            <span class="section-tag">Interactive Preview</span>
-            <h2>Try Instant AI Scanning</h2>
-            <p>Type in a meal name below to simulate how AivekAI instantly detects food items and calculates calories without asking you for portion sizes.</p>
+            <span class="section-tag">Community & Social Support</span>
+            <h2>Never Journey Alone</h2>
+            <p>Share your milestones, celebrate daily victories, and receive real-time support from people on the exact same path.</p>
         </div>
 
-        <div class="scan-container">
-            <div class="scan-left">
-                <h2>Try Meal Logger</h2>
-                <p>Type what you ate (or click a preset chip) and watch our AI estimate the meal details instantly:</p>
-                <div class="input-row">
-                    <input type="text" id="demoInput" class="scan-input" placeholder="e.g. egg sandwich with coffee...">
-                    <button class="scan-btn" onclick="runScan()">Scan Meal</button>
-                </div>
-                <div class="suggestion-chips">
-                    <span class="chip" onclick="setPreset('Egg sandwich with coffee')">🍳 Egg sandwich + coffee</span>
-                    <span class="chip" onclick="setPreset('Avocado toast with poached egg')">🥑 Avocado Toast</span>
-                    <span class="chip" onclick="setPreset('Grilled chicken salad')">🥗 Chicken Salad</span>
-                </div>
+        <div class="scan-container" style="grid-template-columns: 1.1fr 0.9fr; background: var(--bg-light); align-items: center; max-width: 1050px;">
+            <div class="scan-left" style="padding: 48px;">
+                <h2 style="color: var(--primary-color); font-size: 32px; font-weight: 800; margin-bottom: 20px;">Supportive Community Feed</h2>
+                <p style="font-size: 16px; line-height: 1.6; color: var(--text-grey); margin-bottom: 24px;">Success is easier when you're part of a team. AivekAI's community feed lets you connect, follow other health journeys, and share hydration milestones or food logs securely.</p>
+                <ul class="advantage-list" style="list-style: none; display: flex; flex-direction: column; gap: 16px; text-align: left;">
+                    <li style="display: flex; gap: 12px; font-size: 15px; color: var(--text-dark); font-weight: 600; align-items: center;">
+                        <span style="color: var(--accent-color); font-weight: 900; font-size: 18px;">✓</span> Share hydration & calorie milestones
+                    </li>
+                    <li style="display: flex; gap: 12px; font-size: 15px; color: var(--text-dark); font-weight: 600; align-items: center;">
+                        <span style="color: var(--accent-color); font-weight: 900; font-size: 18px;">✓</span> Follow friends & verify daily habits
+                    </li>
+                    <li style="display: flex; gap: 12px; font-size: 15px; color: var(--text-dark); font-weight: 600; align-items: center;">
+                        <span style="color: var(--accent-color); font-weight: 900; font-size: 18px;">✓</span> Exchange recipes & get daily motivation
+                    </li>
+                </ul>
             </div>
-            <div class="scan-right">
-                <div class="console-header">
-                    <span class="console-title">AI Food Detector v1.0</span>
-                    <div class="console-dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot dot-green"></div>
-                    </div>
-                </div>
-                <div class="console-log" id="consoleLog">
-                    // Try searching or clicking a suggestion chip...<br>
-                    // The AI will automatically breakdown food items.
-                </div>
+            <div class="scan-right" style="background-color: transparent; padding: 40px; display: flex; justify-content: center; align-items: center;">
+                <img src="../images/aivekai_screenshot_community.jpg" alt="AivekAI Community Feed" class="device-mockup" style="max-width: 280px; margin-bottom: 0; box-shadow: 0 20px 48px rgba(0, 107, 92, 0.15); border: 4px solid #161D1B; border-radius: 36px;">
             </div>
         </div>
     </section>
@@ -882,7 +885,7 @@
             <div class="mockup-wrapper">
                 <img src="../images/aivekai_screenshot_fasting.jpg" alt="Fasting Timer Screen" class="device-mockup">
                 <h4>Master Your Fasting</h4>
-                <p>Guided fasting templates designed for sustainable routines.</p>
+                <p>Guided fasting templates designed for sustainable eating windows.</p>
             </div>
             
             <!-- Mockup 2 -->
@@ -891,12 +894,19 @@
                 <h4>Instant Meal Logger</h4>
                 <p>Talk to the AI to add items or adjust food components dynamically.</p>
             </div>
-            
+
             <!-- Mockup 3 -->
             <div class="mockup-wrapper">
+                <img src="../images/aivekai_screenshot_body.jpg" alt="Daily Goals Target Screen" class="device-mockup">
+                <h4>Built For Your Body</h4>
+                <p>Get personalized target metrics based on your body composition.</p>
+            </div>
+            
+            <!-- Mockup 4 -->
+            <div class="mockup-wrapper">
                 <img src="../images/aivekai_screenshot_progress.jpg" alt="Weekly Analytics Screen" class="device-mockup">
-                <h4>Smart Progress Analytics</h4>
-                <p>Track weekly calorie budgets and water targets chronologically.</p>
+                <h4>See Your Real Progress</h4>
+                <p>Track your calorie deficit, water intake, and weight history.</p>
             </div>
         </div>
     </section>
@@ -906,7 +916,7 @@
         <div class="cta-banner-container">
             <h2>Ready to transform your health goals?</h2>
             <p>Join thousands of users tracking nutrition effortlessly. Get early access to download AivekAI today.</p>
-            <div class="cta-buttons" style="margin-bottom: 0;">
+            <div class="cta-buttons" style="margin-bottom: 0; justify-content: center;">
                 <a class="app-store-btn" onclick="showModal()">
                     <svg viewBox="0 0 24 24">
                         <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.1,16.67C20.08,16.74 19.67,18.11 18.71,19.5M15.97,4.17C16.63,3.37 17.07,2.28 16.95,1C16,1.04 14.9,1.6 14.24,2.38C13.68,3.04 13.19,4.14 13.34,5.39C14.39,5.47 15.4,4.88 15.97,4.17Z"/>
