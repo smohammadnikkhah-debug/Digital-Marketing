@@ -139,6 +139,10 @@ app.get('/aivekai/partners/apply', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-apply.html'));
 });
 
+app.get(['/aivekai/partners/terms', '/aivekai/partners/terms-and-policy'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-terms.html'));
+});
+
 // Serve static images directory
 app.use('/images', express.static(path.join(__dirname, 'images')));
 

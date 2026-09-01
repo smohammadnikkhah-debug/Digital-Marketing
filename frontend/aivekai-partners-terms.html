@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AivekAI Partner Program Terms & Policy</title>
+    <meta name="description" content="Official terms and policy governing participation in the AivekAI Partner Program. Commission structures, referral rules, payout conditions, and marketing standards.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #006B5C;
+            --primary-dark: #004D42;
+            --primary-light: #E6F4F1;
+            --accent: #00C2A8;
+            --text-dark: #121816;
+            --text-muted: #5C6764;
+            --bg-page: #F8FAF9;
+            --white: #FFFFFF;
+            --border: rgba(0, 107, 92, 0.15);
+            --card-shadow: 0 12px 36px rgba(0, 107, 92, 0.08);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.7;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+        }
+
+        .brand-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .btn-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 110px auto 60px;
+            padding: 0 24px;
+        }
+
+        .terms-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 48px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+
+        .meta-info {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .intro-box {
+            background: rgba(0, 107, 92, 0.04);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin-bottom: 36px;
+            font-size: 1.02rem;
+        }
+
+        .intro-box p {
+            margin-bottom: 12px;
+        }
+
+        .intro-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: #2D3735;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 24px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: #2D3735;
+        }
+
+        .example-box {
+            background: #F4F8F7;
+            border: 1px solid rgba(0, 107, 92, 0.12);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin: 16px 0 20px;
+            font-size: 0.95rem;
+        }
+
+        .example-box strong {
+            color: var(--primary-dark);
+        }
+
+        .highlight-box {
+            background: #FFF9E6;
+            border-left: 4px solid #E6A100;
+            padding: 16px 20px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 20px 0;
+            font-size: 0.95rem;
+            color: #5C4300;
+        }
+
+        .action-banner {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-top: 40px;
+            padding-bottom: 40px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .terms-card {
+                padding: 28px 20px;
+            }
+            h1 {
+                font-size: 1.7rem;
+            }
+            .action-banner {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .action-banner a {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="/aivekai/partners" class="brand-logo">
+                <img src="/images/aivek-icon.png" alt="AivekAI" onerror="this.src='/images/aivekai.png'">
+                <span>AivekAI Partners</span>
+            </a>
+            <div class="nav-actions">
+                <a href="/aivekai/partners/login" class="btn-link">Partner Portal</a>
+                <a href="/aivekai/partners/apply" class="btn-primary">Apply Now</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="terms-card">
+            <span class="badge">Official Agreement</span>
+            <h1>AivekAI Partner Program Terms & Policy</h1>
+            <div class="meta-info">
+                <strong>Effective Date:</strong> September 1, 2026 &middot; <strong>Operated by:</strong> Mozarex &middot; <strong>Jurisdiction:</strong> Australia & International
+            </div>
+
+            <div class="intro-box">
+                <p>These AivekAI Partner Program Terms & Policy ("Partner Terms") govern participation in the AivekAI Partner Program operated by Mozarex ("AivekAI", "we", "us", or "our").</p>
+                <p>By applying for, joining, or participating in the AivekAI Partner Program, you ("Partner", "you", or "your") agree to these Partner Terms.</p>
+                <p>These Partner Terms apply in addition to any other applicable AivekAI terms and policies.</p>
+            </div>
+
+            <h2>1. The AivekAI Partner Program</h2>
+            <p>The AivekAI Partner Program allows approved creators, influencers, coaches, nutrition professionals, publishers and other eligible partners to promote AivekAI and potentially earn commissions from qualifying customer subscriptions attributed to them.</p>
+            <p>Participation is subject to approval by AivekAI.</p>
+            <p>Submitting an application does not guarantee acceptance into the Partner Program.</p>
+            <p>AivekAI may approve, reject, suspend or terminate a Partner account in accordance with these Partner Terms.</p>
+
+            <h2>2. Partner Eligibility</h2>
+            <p>To participate, you must:</p>
+            <ul>
+                <li>be at least 18 years old;</li>
+                <li>provide accurate and current information;</li>
+                <li>provide a valid email address and payout information;</li>
+                <li>have the legal capacity to enter into these Partner Terms;</li>
+                <li>comply with applicable advertising, consumer protection, tax and marketing laws;</li>
+                <li>comply with the rules of platforms on which you promote AivekAI; and</li>
+                <li>not use misleading, fraudulent or deceptive methods to generate referrals.</li>
+            </ul>
+            <p>We may request additional information to verify your identity, business, promotional channels or eligibility before approving an application or processing a payout.</p>
+
+            <h2>3. Partner Account</h2>
+            <p>Approved Partners receive access to the AivekAI Partner Portal.</p>
+            <p>You are responsible for maintaining the security of your account credentials.</p>
+            <p>You must not share your Partner Portal account with unauthorized persons.</p>
+            <p>You must notify us promptly if you believe your account or referral code has been compromised.</p>
+            <p>You are responsible for ensuring that your account information, including payout information, remains accurate.</p>
+
+            <h2>4. Referral Code and Partner Link</h2>
+            <p>Approved Partners may receive a unique referral code and/or referral link.</p>
+            <div class="example-box">
+                <strong>Example:</strong> Referral code: <code>JAMES</code> &middot; Campaign Link: <code>https://mozarex.com/aivekai?ref=JAMES</code>
+            </div>
+            <p>AivekAI may use third-party attribution technology, including Kochava SmartLinks, to identify customers who arrive through Partner links.</p>
+            <p>Partners may distribute their referral links or codes through approved channels such as social media, websites, videos, blogs and other promotional content, subject to these Partner Terms.</p>
+            <p>Referral codes and links remain associated with the AivekAI Partner Program and may be disabled or changed where reasonably necessary.</p>
+
+            <h2>5. Customer Attribution</h2>
+            <p>A customer may be attributed to a Partner when a valid Partner referral is successfully recorded by AivekAI.</p>
+            <p>Attribution may occur through:</p>
+            <ul>
+                <li>a Partner referral link;</li>
+                <li>a referral code;</li>
+                <li>supported deep-link or deferred deep-link attribution; or</li>
+                <li>another attribution method approved by AivekAI.</li>
+            </ul>
+            <p>AivekAI's systems and records will be used to determine referral attribution.</p>
+
+            <h3>First Valid Referral</h3>
+            <p>Where more than one Partner attempts to refer the same customer, the first valid referral successfully attributed to that customer will generally receive the attribution.</p>
+            <p>Once a customer has been validly attributed to a Partner, the referral is normally locked and cannot simply be overwritten by another Partner code.</p>
+            <p>We may correct attribution where there is clear evidence of technical error, fraud, manipulation or administrative error.</p>
+
+            <h2>6. Customer Discounts</h2>
+            <p>Some Partner referrals may make customers eligible for a promotional discount on an AivekAI subscription.</p>
+            <p>Discounts:</p>
+            <ul>
+                <li>may vary by campaign, Partner, country or store;</li>
+                <li>may only apply to selected subscription products;</li>
+                <li>may be limited to the first subscription period;</li>
+                <li>may not apply to renewals; and</li>
+                <li>are subject to eligibility and availability through the applicable app store.</li>
+            </ul>
+            <p>Unless specifically stated otherwise, Partner promotional discounts currently apply to eligible annual subscription offers, while monthly subscriptions remain at their normal applicable price.</p>
+            <p>The actual price displayed and charged by Apple App Store or Google Play is authoritative.</p>
+            <p>A Partner must not promise a price or discount that AivekAI or the applicable app store does not actually offer.</p>
+
+            <h2>7. Partner Commission</h2>
+            <p>Approved Partners may receive a commission on eligible revenue generated from qualifying customers attributed to them.</p>
+            <p>The applicable commission rate will be shown in the Partner Portal or otherwise communicated to the Partner.</p>
+            <div class="example-box">
+                <strong>Example:</strong> An approved Partner may have a <strong>30% commission rate</strong>. The actual rate applicable to each Partner may differ.
+            </div>
+            <p>AivekAI records the applicable commission rate when qualifying commission is generated so that subsequent changes to a Partner's commission rate do not improperly change historical commission calculations.</p>
+
+            <h2>8. Recurring Commission</h2>
+            <p>Where a Partner's offer includes recurring commission, the Partner may continue earning commission from eligible subscription revenue generated by their attributed customers while those subscriptions remain eligible under the Partner Program.</p>
+            <p>Recurring commission is not a guarantee of lifetime payment.</p>
+            <p>Commission eligibility remains subject to:</p>
+            <ul>
+                <li>continued qualifying customer payments;</li>
+                <li>successful store transaction verification;</li>
+                <li>refunds and reversals;</li>
+                <li>these Partner Terms;</li>
+                <li>the Partner's account remaining eligible;</li>
+                <li>fraud and abuse controls; and</li>
+                <li>any specific campaign or commission terms communicated to the Partner.</li>
+            </ul>
+
+            <h2>9. What Counts as Eligible Revenue</h2>
+            <p>Commission is calculated only from revenue that AivekAI recognizes as eligible under the Partner Program.</p>
+            <p>A displayed subscription, referral, click, install or estimated transaction does not by itself create an unconditional right to payment.</p>
+            <p>AivekAI verifies transactions using applicable platform/store information before commission becomes payable.</p>
+            <p>Commission may therefore progress through different states, including pending, available, allocated and paid.</p>
+
+            <h2>10. Pending Commission</h2>
+            <p>New commission may initially appear as Pending.</p>
+            <p>Pending commission is not yet available for withdrawal.</p>
+            <p>A pending amount may be awaiting:</p>
+            <ul>
+                <li>transaction verification;</li>
+                <li>payment confirmation;</li>
+                <li>applicable holding periods;</li>
+                <li>refund/reversal periods;</li>
+                <li>fraud review; or</li>
+                <li>other financial reconciliation.</li>
+            </ul>
+            <p>A pending commission does not constitute a final payable amount.</p>
+
+            <h2>11. Available Commission</h2>
+            <p>Commission becomes Available once the applicable verification and eligibility requirements have been satisfied.</p>
+            <p>Only available commission may be considered for payout, subject to the minimum payout threshold and other requirements.</p>
+
+            <h2>12. Payout Threshold</h2>
+            <p>A minimum payout threshold may apply.</p>
+            <p>The applicable threshold is displayed in the Partner Portal and may depend on the payout currency (e.g. A$100.00 / US$100.00).</p>
+            <p>If the Partner's available balance has not reached the applicable minimum threshold, the balance will normally remain in the Partner account until the threshold is reached.</p>
+
+            <h2>13. PayPal Payouts</h2>
+            <p>AivekAI currently uses PayPal as a Partner payout provider.</p>
+            <p>Partners are responsible for providing a valid PayPal payout destination.</p>
+            <p>The Partner must ensure that:</p>
+            <ul>
+                <li>the PayPal account details are correct;</li>
+                <li>the account is capable of receiving the relevant payment;</li>
+                <li>the Partner is legally permitted to receive the payout; and</li>
+                <li>any PayPal verification requirements have been completed.</li>
+            </ul>
+            <p>AivekAI is not responsible for delays resulting from incorrect Partner-provided payout information or restrictions imposed by PayPal.</p>
+
+            <h2>14. Payout Fees</h2>
+            <p>Unless otherwise stated in the Partner Portal or agreed with the Partner, AivekAI currently bears the PayPal provider payout fee separately from the Partner's approved commission amount.</p>
+            <div class="example-box">
+                <strong>Example:</strong> If a Partner has A$107.54 of approved commission and PayPal charges AivekAI a separate provider fee, the provider fee does not automatically reduce the Partner's A$107.54 commission.
+            </div>
+            <p>AivekAI may change its payout fee policy prospectively by updating these Partner Terms or providing appropriate notice.</p>
+
+            <h2>15. Refunds, Chargebacks and Reversals</h2>
+            <p>Commission is earned only on valid, eligible revenue.</p>
+            <p>If a customer transaction is subsequently refunded, partially refunded, revoked, reversed, charged back, found to be fraudulent, or otherwise invalidated, the related Partner commission may be adjusted or reversed.</p>
+            <p>For a partial refund, the related commission may be adjusted proportionally.</p>
+            <p>Where commission has already been paid, the adjustment may be deducted from future Partner commissions or handled through another reasonable reconciliation process.</p>
+            <p>We will not intentionally charge commission on revenue that AivekAI did not validly retain.</p>
+
+            <h2>16. Customer Cancellation</h2>
+            <p>A customer cancelling their subscription does not automatically invalidate commission that was legitimately earned from eligible payments already completed.</p>
+            <p>However, no future recurring commission will be generated where there is no further qualifying subscription revenue.</p>
+
+            <h2>17. Failed or Returned Partner Payouts</h2>
+            <p>A payout may fail, be held, returned, blocked, unclaimed, reversed or otherwise delayed by PayPal.</p>
+            <p>Where this happens, AivekAI may hold the relevant commission while the payout is investigated or reconciled.</p>
+            <p>A returned or reversed payout will not automatically be sent again without appropriate verification.</p>
+            <p>Partners may be asked to correct their payout details before another payout attempt.</p>
+
+            <h2>18. Taxes</h2>
+            <p>Partners are responsible for determining and meeting their own tax obligations arising from commissions received through the Partner Program.</p>
+            <p>AivekAI does not provide tax advice.</p>
+            <p>Where legally required, AivekAI may request tax, identity, business or residency information and may withhold or report amounts as required by applicable law.</p>
+            <p>Partners should obtain independent professional advice regarding their circumstances.</p>
+
+            <h2>19. Advertising Disclosure</h2>
+            <p>Partners must clearly disclose their commercial relationship with AivekAI whenever required by applicable law or platform rules.</p>
+            <p>For example, content may need to clearly indicate that it contains an affiliate link, referral relationship, paid partnership or other commercial arrangement.</p>
+            <p>The disclosure must be sufficiently clear for an ordinary consumer to understand that the Partner may receive a benefit if they subscribe through the Partner's referral.</p>
+            <p>Partners must comply with applicable advertising rules in the countries where they promote AivekAI.</p>
+
+            <h2>20. Marketing Standards</h2>
+            <p>Partners must promote AivekAI accurately and responsibly.</p>
+            <p>Partners must not:</p>
+            <ul>
+                <li>make false or misleading claims;</li>
+                <li>guarantee weight loss or specific health outcomes;</li>
+                <li>make unsupported medical or nutritional claims;</li>
+                <li>represent themselves as AivekAI employees;</li>
+                <li>misrepresent AivekAI features or capabilities;</li>
+                <li>advertise discounts that are not available;</li>
+                <li>use fake testimonials or reviews;</li>
+                <li>create fake accounts or transactions;</li>
+                <li>manipulate referrals or attribution;</li>
+                <li>use spam;</li>
+                <li>impersonate another person or business;</li>
+                <li>engage in deceptive advertising;</li>
+                <li>misrepresent commission arrangements;</li>
+                <li>encourage customers to misuse the service; or</li>
+                <li>violate applicable platform rules or laws.</li>
+            </ul>
+
+            <h2>21. Health and Weight-Loss Claims</h2>
+            <p>Because AivekAI relates to food, nutrition and calorie tracking, Partners must take particular care with health-related marketing.</p>
+            <p>Partners must not claim that AivekAI:</p>
+            <ul>
+                <li>diagnoses medical conditions;</li>
+                <li>treats or cures diseases;</li>
+                <li>guarantees weight loss;</li>
+                <li>replaces medical advice;</li>
+                <li>guarantees the accuracy of every calorie or nutrition estimate; or</li>
+                <li>produces guaranteed health outcomes.</li>
+            </ul>
+            <p>AivekAI should be represented as a tool designed to assist users with tracking and understanding food, calorie and nutrition information.</p>
+
+            <h2>22. Brand Usage</h2>
+            <p>Partners may use approved AivekAI logos, screenshots, product descriptions and marketing materials solely for legitimate promotion of AivekAI under the Partner Program.</p>
+            <p>Partners must not:</p>
+            <ul>
+                <li>modify the AivekAI brand in a misleading way;</li>
+                <li>imply ownership of the AivekAI brand;</li>
+                <li>register confusingly similar domains, social accounts or trademarks;</li>
+                <li>create websites or accounts that impersonate AivekAI; or</li>
+                <li>imply official endorsement beyond the Partner relationship.</li>
+            </ul>
+            <p>All AivekAI intellectual property remains the property of its applicable owner.</p>
+
+            <h2>23. Paid Advertising</h2>
+            <p>Partners must not use paid advertising in a way that impersonates AivekAI or creates confusion about whether an advertisement is operated directly by AivekAI.</p>
+            <p>Unless expressly approved by AivekAI, Partners must not bid on AivekAI-branded search terms or misleading variations intended to intercept users already searching specifically for AivekAI.</p>
+            <p>AivekAI may impose additional paid-advertising restrictions for individual campaigns.</p>
+
+            <h2>24. Self-Referrals and Artificial Transactions</h2>
+            <p>Partners must not generate commission through artificial or manipulated transactions.</p>
+            <p>Prohibited conduct includes:</p>
+            <ul>
+                <li>creating fake customers;</li>
+                <li>generating fake subscriptions;</li>
+                <li>repeatedly subscribing through your own referral solely to earn commission;</li>
+                <li>coordinating artificial purchases;</li>
+                <li>manipulating devices/accounts to generate referrals;</li>
+                <li>using stolen payment methods;</li>
+                <li>intentionally exploiting attribution systems; or</li>
+                <li>otherwise creating transactions without genuine customer intent.</li>
+            </ul>
+            <p>AivekAI may withhold or reverse commission reasonably associated with fraudulent or abusive activity while it investigates.</p>
+
+            <h2>25. Spam and Unsolicited Marketing</h2>
+            <p>Partners must not promote AivekAI using unlawful spam, unsolicited bulk communications or other prohibited marketing practices.</p>
+            <p>Partners are responsible for complying with applicable email, SMS, privacy and electronic marketing laws.</p>
+
+            <h2>26. Partner Data and Privacy</h2>
+            <p>AivekAI may process information about Partners for purposes including:</p>
+            <ul>
+                <li>administering Partner accounts;</li>
+                <li>referral attribution;</li>
+                <li>calculating commissions;</li>
+                <li>processing payouts;</li>
+                <li>preventing fraud;</li>
+                <li>maintaining financial records;</li>
+                <li>communicating about the Partner Program; and</li>
+                <li>complying with legal obligations.</li>
+            </ul>
+            <p>Partner information will be handled in accordance with applicable privacy requirements and AivekAI's Privacy Policy.</p>
+
+            <h2>27. Customer Privacy</h2>
+            <p>Partners generally do not receive unrestricted access to individual customer personal information merely because they referred the customer.</p>
+            <p>The Partner Portal may provide aggregated or limited information necessary to understand referrals, commissions and performance.</p>
+            <p>Partners must not attempt to identify, obtain or misuse customer information beyond information legitimately made available to them.</p>
+
+            <h2>28. Fraud and Abuse Monitoring</h2>
+            <p>AivekAI may review Partner activity for fraud, abuse, unusual referral patterns or violations of these Partner Terms.</p>
+            <p>During an investigation, AivekAI may reasonably:</p>
+            <ul>
+                <li>place commissions on hold;</li>
+                <li>delay a payout;</li>
+                <li>restrict Partner Portal functionality;</li>
+                <li>request supporting information; or</li>
+                <li>temporarily suspend the Partner account.</li>
+            </ul>
+            <p>Where possible and appropriate, AivekAI will provide the Partner with information about material actions affecting their account.</p>
+
+            <h2>29. Suspension and Termination</h2>
+            <p>AivekAI may suspend or terminate participation in the Partner Program where a Partner:</p>
+            <ul>
+                <li>materially breaches these Partner Terms;</li>
+                <li>engages in fraud or attempted fraud;</li>
+                <li>makes misleading health or marketing claims;</li>
+                <li>abuses the referral system;</li>
+                <li>violates applicable law;</li>
+                <li>misuses AivekAI intellectual property;</li>
+                <li>creates material risk to AivekAI or its customers; or</li>
+                <li>repeatedly violates Partner Program requirements.</li>
+            </ul>
+            <p>Partners may also request to leave the Partner Program at any time.</p>
+
+            <h2>30. Commission Following Termination</h2>
+            <p>Termination does not automatically erase valid commission legitimately earned before termination.</p>
+            <p>However, fraudulent, invalid, refunded, reversed or otherwise ineligible transactions remain subject to adjustment.</p>
+            <p>Eligibility for future recurring commissions following termination may depend on the reason for termination and the applicable Partner arrangement.</p>
+
+            <h2>31. Changes to Commission Rates and Program Terms</h2>
+            <p>AivekAI may modify commission rates, promotional offers, payout thresholds, payout methods, eligibility requirements, or other Partner Program rules.</p>
+            <p>Changes apply prospectively unless a retrospective adjustment is required because of fraud, refunds, reversals, legal requirements or correction of an error.</p>
+            <p>Where a material change affects Partners, AivekAI will provide reasonable notice through the Partner Portal, email or another appropriate method.</p>
+            <p>Historical commission already validly earned will not be arbitrarily recalculated simply because a future commission rate changes.</p>
+
+            <h2>32. Program Availability</h2>
+            <p>AivekAI does not guarantee that the Partner Program, a particular promotional offer or a particular commission structure will remain available indefinitely.</p>
+            <p>We may modify or discontinue the Partner Program subject to applicable law and our obligations regarding eligible commission already earned.</p>
+
+            <h2>33. Independent Relationship</h2>
+            <p>Participation in the Partner Program does not create an employment, agency, partnership, franchise or joint venture relationship between the Partner and AivekAI.</p>
+            <p>Partners act independently and are responsible for their own business activities, expenses and obligations.</p>
+            <p>Partners do not have authority to enter into agreements or make commitments on behalf of AivekAI.</p>
+
+            <h2>34. No Guarantee of Earnings</h2>
+            <p>AivekAI does not guarantee any level of Partner earnings.</p>
+            <p>Actual earnings depend on factors including referrals, customer conversions, qualifying transactions, subscription retention, refunds and the applicable commission rate.</p>
+            <p>Any examples of potential commission are illustrative only unless expressly stated otherwise.</p>
+
+            <h2>35. Records and Disputes</h2>
+            <p>If a Partner believes a referral, commission or payout is incorrect, they should contact AivekAI with sufficient information for us to investigate.</p>
+            <p>AivekAI may use relevant system records, store transaction information, referral attribution data and payout-provider records when investigating disputes.</p>
+            <p>Partners should raise commission or payout discrepancies within a reasonable period after becoming aware of them.</p>
+
+            <h2>36. Limitation and Applicable General Terms</h2>
+            <p>Participation in the Partner Program remains subject to applicable law and any relevant limitations, disclaimers and dispute provisions contained in AivekAI's general Terms of Service.</p>
+            <p>Nothing in these Partner Terms excludes rights or remedies that cannot legally be excluded.</p>
+
+            <h2>37. Contact</h2>
+            <p>Questions concerning the Partner Program, commissions, payouts or these Partner Terms can be submitted to:</p>
+            <div class="example-box">
+                <strong>AivekAI Partner Program</strong><br>
+                Email: <a href="mailto:info@mozarex.com" style="color: var(--primary); font-weight: 600;">info@mozarex.com</a><br>
+                Website: <a href="https://mozarex.com" style="color: var(--primary);">https://mozarex.com</a>
+            </div>
+
+            <!-- Action Banner -->
+            <div class="action-banner">
+                <a href="/aivekai/partners/apply" class="btn-primary">Back to Application</a>
+                <a href="/aivekai/partners" class="btn-link">&larr; Return to Partner Overview</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 Mozarex & AivekAI. All rights reserved. &middot; <a href="/policy">Privacy Policy</a> &middot; <a href="/aivekai/partners/terms">Partner Terms & Policy</a></p>
+        </div>
+    </div>
+</body>
+
+</html>
