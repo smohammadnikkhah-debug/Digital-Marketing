@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const supabaseService = require('../services/supabaseService');
 
 // AI-powered keyword optimization endpoint
 router.post('/optimize-keyword', async (req, res) => {
@@ -356,5 +357,439 @@ async function applyRecommendationsToContent(blogContent, recommendations) {
         seoScore: seoScore
     };
 }
+
+// ==========================================
+// AivekAI Secure Backend Routes & Middlewares
+// ==========================================
+
+// Initialize Supabase Client specifically for AivekAI (separating AivekAI from Digital Marketing dashboard database)
+const { createClient } = require('@supabase/supabase-js');
+const aivekaiSupabaseUrl = process.env.AIVEKAI_SUPABASE_URL || process.env.SUPABASE_URL;
+const aivekaiSupabaseKey = process.env.AIVEKAI_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const aivekaiSupabase = (aivekaiSupabaseUrl && aivekaiSupabaseKey) ? createClient(aivekaiSupabaseUrl, aivekaiSupabaseKey) : null;
+
+const appEnv = process.env.APP_ENV || 'development';
+console.log(`🤖 AivekAI Backend running in environment: ${appEnv.toUpperCase()}`);
+
+const jwt = require('jsonwebtoken');
+const sessionSecret = process.env.AIVEKAI_SESSION_SIGNING_SECRET || 'aivekai_dev_session_signing_secret_key_12345';
+
+// Memory store for session creation abuse controls (IP & Installation ID rate limiting)
+const sessionCreations = new Map();
+
+// Helper to clean up expired/stale entries in the creations map
+function cleanSessionCreations() {
+    const now = Date.now();
+    for (const [key, timestamps] of sessionCreations.entries()) {
+        const fresh = timestamps.filter(t => t > now - 60 * 60 * 1000); // keep last 1 hour
+        if (fresh.length === 0) {
+            sessionCreations.delete(key);
+        } else {
+            sessionCreations.set(key, fresh);
+        }
+    }
+}
+
+// Endpoint to generate a signed anonymous session token
+// POST /api/session/anonymous
+router.post('/session/anonymous', (req, res) => {
+    try {
+        cleanSessionCreations();
+        const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+        const { installationId } = req.body;
+
+        if (!installationId || typeof installationId !== 'string' || installationId.length < 10) {
+            return res.status(400).json({ error: 'Valid installationId is required.' });
+        }
+
+        // Apply session creation abuse protections
+        const ipKey = `ip:${clientIp}`;
+        const instKey = `inst:${installationId}`;
+        const now = Date.now();
+
+        // 1. IP rate limit (max 10 sessions per hour)
+        const ipTimestamps = sessionCreations.get(ipKey) || [];
+        const recentIpCreations = ipTimestamps.filter(t => t > now - 60 * 60 * 1000);
+        if (recentIpCreations.length >= 10) {
+            console.warn(`[ABUSE] Session creation rate limit hit for IP: ${clientIp}`);
+            return res.status(429).json({ error: 'Too many sessions created. Please try again later.' });
+        }
+
+        // 2. Installation ID rate limit (max 5 sessions per hour)
+        const instTimestamps = sessionCreations.get(instKey) || [];
+        const recentInstCreations = instTimestamps.filter(t => t > now - 60 * 60 * 1000);
+        if (recentInstCreations.length >= 5) {
+            console.warn(`[ABUSE] Session creation rate limit hit for Installation ID: ${installationId}`);
+            return res.status(429).json({ error: 'Too many sessions created. Please try again later.' });
+        }
+
+        // Record creations
+        recentIpCreations.push(now);
+        sessionCreations.set(ipKey, recentIpCreations);
+        recentInstCreations.push(now);
+        sessionCreations.set(instKey, recentInstCreations);
+
+        // Generate a random session ID
+        const crypto = require('crypto');
+        const sessionId = crypto.randomUUID();
+
+        // Sign JWT token expiring in 7 days
+        const token = jwt.sign(
+            { sessionId, installationId },
+            sessionSecret,
+            { expiresIn: '7d' }
+        );
+
+        return res.json({ token });
+    } catch (err) {
+        console.error('[SESSION] Error generating anonymous session:', err);
+        return res.status(500).json({ error: 'Failed to establish anonymous session.' });
+    }
+});
+
+// Middleware to verify signed anonymous session tokens
+async function verifyAivekAIAnonymousSession(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
+        }
+        const token = authHeader.substring(7).trim();
+        if (!token) {
+            return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
+        }
+
+        // Verify token signature and expiration
+        const decoded = jwt.verify(token, sessionSecret);
+        if (!decoded.sessionId || !decoded.installationId) {
+            return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
+        }
+
+        req.user = { 
+            sessionId: decoded.sessionId, 
+            installationId: decoded.installationId 
+        };
+        next();
+    } catch (err) {
+        console.warn('[AUTH] Token verification failed:', err.message);
+        return res.status(401).json({ error: 'Your session has expired. Please sign in again.' });
+    }
+}
+
+// In-memory rate limiting map
+const rateLimitMap = new Map();
+
+function aiRateLimiter(limitPerMinute = 10, limitPerDay = 100) {
+    return (req, res, next) => {
+        const userId = req.user.sessionId;
+        const now = Date.now();
+        const oneMinuteAgo = now - 60 * 1000;
+        const oneDayAgo = now - 24 * 60 * 60 * 1000;
+
+        if (!rateLimitMap.has(userId)) {
+            rateLimitMap.set(userId, []);
+        }
+
+        let timestamps = rateLimitMap.get(userId);
+        
+        // Clean up timestamps older than 24 hours
+        timestamps = timestamps.filter(t => t > oneDayAgo);
+        
+        // Check 1-minute limit
+        const minuteCount = timestamps.filter(t => t > oneMinuteAgo).length;
+        if (minuteCount >= limitPerMinute) {
+            console.warn(`[RATE_LIMIT] User ${userId} exceeded minute limit: ${minuteCount}/${limitPerMinute}`);
+            return res.status(429).json({
+                error: 'AI analysis is temporarily unavailable. Please try again shortly.'
+            });
+        }
+
+        // Check daily limit
+        if (timestamps.length >= limitPerDay) {
+            console.warn(`[RATE_LIMIT] User ${userId} exceeded daily limit: ${timestamps.length}/${limitPerDay}`);
+            return res.status(429).json({
+                error: 'Daily limit reached. Please try again tomorrow.'
+            });
+        }
+
+        // Add current timestamp
+        timestamps.push(now);
+        rateLimitMap.set(userId, timestamps);
+        next();
+    };
+}
+
+// Active request promise cache for deduplication
+const activeRequests = new Map();
+
+function getDeduplicationHash(userId, operation, input) {
+    const crypto = require('crypto');
+    const normalizedInput = typeof input === 'string' ? input.trim().toLowerCase() : JSON.stringify(input);
+    return crypto.createHash('md5').update(`${userId}:${operation}:${normalizedInput}`).digest('hex');
+}
+
+// OpenAI API call with backoff retries
+async function callOpenAIWithRetry(url, headers, body, maxRetries = 3) {
+    let delay = 1000;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(body)
+            });
+
+            if (response.status === 200) {
+                return {
+                    statusCode: 200,
+                    data: await response.json(),
+                    headers: response.headers,
+                    retryCount: attempt
+                };
+            }
+
+            console.warn(`[OPENAI] Attempt ${attempt} failed with status: ${response.status}`);
+            
+            // Do not retry 401, 403, or client validation errors
+            if (response.status === 401 || response.status === 403 || response.status === 400) {
+                const errText = await response.text();
+                throw new Error(`OpenAI Client Error: ${response.status} - ${errText}`);
+            }
+
+            if (attempt === maxRetries) {
+                const errText = await response.text();
+                throw new Error(`OpenAI failed after ${maxRetries} retries: ${response.status} - ${errText}`);
+            }
+
+        } catch (err) {
+            console.error(`[OPENAI] Attempt ${attempt} error:`, err.message);
+            if (attempt === maxRetries) {
+                throw err;
+            }
+        }
+
+        console.log(`[OPENAI] Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2;
+    }
+}
+
+// Log OpenAI usage metrics to usage_logs table in Supabase
+async function logOpenAIUsage(userId, operation, isImage, response, duration, retryCount, duplicatesBlocked = 0) {
+    try {
+        const usage = response.data.usage || {};
+        const inputTokens = usage.prompt_tokens || 0;
+        const outputTokens = usage.completion_tokens || 0;
+        const totalTokens = usage.total_tokens || 0;
+        
+        const estimatedCost = (inputTokens * 0.150 / 1000000) + (outputTokens * 0.600 / 1000000);
+
+        const logData = {
+            user_id: userId,
+            action_type: 'openai_request',
+            timestamp: new Date().toISOString(),
+            details: {
+                environment: appEnv,
+                operation: operation,
+                is_image: isImage,
+                model: response.data.model || 'gpt-4o-mini',
+                response_code: response.statusCode,
+                duration_ms: duration,
+                retry_count: retryCount,
+                input_tokens: inputTokens,
+                output_tokens: outputTokens,
+                total_tokens: totalTokens,
+                estimated_cost: estimatedCost,
+                duplicates_blocked: duplicatesBlocked,
+                request_id: response.headers.get('x-request-id') || response.headers.get('apiproxy-request-id') || ''
+            }
+        };
+
+        await aivekaiSupabase
+            .from('usage_logs')
+            .insert(logData);
+
+        console.log(`[LOG] AI Usage logged for user ${userId}. Cost: $${estimatedCost.toFixed(6)}, Tokens: ${totalTokens}`);
+    } catch (err) {
+        console.error('[LOG] Error saving usage log:', err.message);
+    }
+}
+
+// Route: Chat completions (analyzes food/exercise text or photos)
+router.post('/chat', verifyAivekAIAnonymousSession, aiRateLimiter(10, 100), async (req, res) => {
+    const userId = req.user.sessionId;
+    const { messages, input, isImage } = req.body;
+    
+    const inputForHash = input || (messages && messages.length > 0 ? messages[messages.length - 1].content : '');
+    const dedupeHash = getDeduplicationHash(userId, 'chat', inputForHash);
+
+    if (activeRequests.has(dedupeHash)) {
+        console.log(`[DEDUPE] Reusing active request for user ${userId}`);
+        try {
+            const cachedResult = await activeRequests.get(dedupeHash);
+            return res.json(cachedResult);
+        } catch (err) {}
+    }
+
+    const requestPromise = (async () => {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_KEY_NOT_CONFIGURED');
+        }
+
+        const startTime = Date.now();
+        const openaiUrl = 'https://api.openai.com/v1/chat/completions';
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        };
+
+        const body = {
+            model: 'gpt-4o-mini',
+            messages: messages,
+            response_format: { type: 'json_object' }
+        };
+
+        const response = await callOpenAIWithRetry(openaiUrl, headers, body);
+        const duration = Date.now() - startTime;
+
+        logOpenAIUsage(userId, 'chat', !!isImage, response, duration, response.retryCount);
+
+        return response.data;
+    })();
+
+    activeRequests.set(dedupeHash, requestPromise);
+
+    try {
+        const result = await requestPromise;
+        res.json(result);
+    } catch (err) {
+        console.error('[CHAT] Error in OpenAI backend call:', err.message);
+        if (err.message === 'OPENAI_KEY_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI analysis is temporarily unavailable. Please try again shortly.' });
+        }
+        res.status(500).json({ error: 'We couldn\'t connect right now. Please check your connection and try again.' });
+    } finally {
+        setTimeout(() => activeRequests.delete(dedupeHash), 5000);
+    }
+});
+
+// Route: Personalized wellness recommendations
+router.post('/recommendation', verifyAivekAIAnonymousSession, aiRateLimiter(10, 100), async (req, res) => {
+    const userId = req.user.sessionId;
+    const { messages } = req.body;
+
+    const dedupeHash = getDeduplicationHash(userId, 'recommendation', messages);
+
+    if (activeRequests.has(dedupeHash)) {
+        try {
+            const cachedResult = await activeRequests.get(dedupeHash);
+            return res.json(cachedResult);
+        } catch (err) {}
+    }
+
+    const requestPromise = (async () => {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_KEY_NOT_CONFIGURED');
+        }
+
+        const startTime = Date.now();
+        const openaiUrl = 'https://api.openai.com/v1/chat/completions';
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        };
+
+        const body = {
+            model: 'gpt-4o-mini',
+            messages: messages,
+            response_format: { type: 'json_object' }
+        };
+
+        const response = await callOpenAIWithRetry(openaiUrl, headers, body);
+        const duration = Date.now() - startTime;
+
+        logOpenAIUsage(userId, 'recommendation', false, response, duration, response.retryCount);
+
+        return response.data;
+    })();
+
+    activeRequests.set(dedupeHash, requestPromise);
+
+    try {
+        const result = await requestPromise;
+        res.json(result);
+    } catch (err) {
+        console.error('[RECOMMENDATION] Error in OpenAI backend call:', err.message);
+        if (err.message === 'OPENAI_KEY_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI analysis is temporarily unavailable. Please try again shortly.' });
+        }
+        res.status(500).json({ error: 'We couldn\'t connect right now. Please check your connection and try again.' });
+    } finally {
+        setTimeout(() => activeRequests.delete(dedupeHash), 5000);
+    }
+});
+
+// Route: Text and image content moderation
+router.post('/moderate', verifyAivekAIAnonymousSession, aiRateLimiter(10, 100), async (req, res) => {
+    const userId = req.user.sessionId;
+    const { type, text, messages } = req.body;
+
+    const dedupeHash = getDeduplicationHash(userId, 'moderate', req.body);
+
+    if (activeRequests.has(dedupeHash)) {
+        try {
+            const cachedResult = await activeRequests.get(dedupeHash);
+            return res.json(cachedResult);
+        } catch (err) {}
+    }
+
+    const requestPromise = (async () => {
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OPENAI_KEY_NOT_CONFIGURED');
+        }
+
+        const startTime = Date.now();
+        let openaiUrl = 'https://api.openai.com/v1/chat/completions';
+        let body = {};
+
+        if (type === 'moderations') {
+            openaiUrl = 'https://api.openai.com/v1/moderations';
+            body = { input: text };
+        } else {
+            body = {
+                model: 'gpt-4o-mini',
+                messages: messages,
+                response_format: { type: 'json_object' }
+            };
+        }
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        };
+
+        const response = await callOpenAIWithRetry(openaiUrl, headers, body);
+        const duration = Date.now() - startTime;
+
+        logOpenAIUsage(userId, 'moderate_' + type, false, response, duration, response.retryCount);
+
+        return response.data;
+    })();
+
+    activeRequests.set(dedupeHash, requestPromise);
+
+    try {
+        const result = await requestPromise;
+        res.json(result);
+    } catch (err) {
+        console.error('[MODERATE] Error in OpenAI backend call:', err.message);
+        if (err.message === 'OPENAI_KEY_NOT_CONFIGURED') {
+            return res.status(503).json({ error: 'AI analysis is temporarily unavailable. Please try again shortly.' });
+        }
+        res.status(500).json({ error: 'We couldn\'t connect right now. Please check your connection and try again.' });
+    } finally {
+        setTimeout(() => activeRequests.delete(dedupeHash), 5000);
+    }
+});
 
 module.exports = router;

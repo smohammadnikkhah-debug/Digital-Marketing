@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AivekAI Admin - Partner & PayPal Payout Management</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #006B5C;
+            --primary-dark: #004D42;
+            --primary-light: #E6F4F1;
+            --accent: #00C2A8;
+            --text-dark: #121816;
+            --text-muted: #5C6764;
+            --bg-page: #F4F7F6;
+            --white: #FFFFFF;
+            --border: rgba(0, 107, 92, 0.12);
+            --card-shadow: 0 8px 24px rgba(0, 107, 92, 0.05);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+        }
+
+        .brand-badge {
+            background: #FEE2E2;
+            color: #991B1B;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 32px auto;
+            padding: 0 32px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            background: var(--white);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 28px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+            margin-top: 14px;
+        }
+
+        th {
+            padding: 14px 16px;
+            background: var(--bg-page);
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-active, .badge-paid, .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-pending, .badge-submitted, .badge-draft { background: #FEF3C7; color: #92400E; }
+        .badge-approved { background: #E0E7FF; color: #3730A3; }
+        .badge-failed, .badge-cancelled { background: #FEE2E2; color: #991B1B; }
+
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--white);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-action:hover { background: var(--primary-light); color: var(--primary); }
+        .btn-approve { background: var(--primary); color: var(--white); border: none; }
+        .btn-approve:hover { background: var(--primary-dark); color: var(--white); }
+        .btn-paypal { background: #0070BA; color: var(--white); border: none; font-weight: 700; }
+        .btn-paypal:hover { background: #003087; color: var(--white); }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            max-width: 540px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-box h3 { margin-bottom: 16px; font-size: 1.3rem; }
+        .modal-box .form-group { margin-bottom: 16px; }
+        .modal-box label { display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; }
+        .modal-box input, .modal-box select, .modal-box textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="brand-logo">
+            <span>AivekAI</span>
+            <span class="brand-badge">Admin Portal</span>
+        </div>
+        <div>
+            <span style="font-weight: 600; margin-right: 16px;">Super Admin (Logged In)</span>
+            <button class="btn-action" onclick="window.location.href='/aivekai/partners/login'">Sign Out</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('partnersTab')">👥 Partners Overview</button>
+            <button class="tab-btn" onclick="switchTab('applicationsTab')">📝 Applications Review</button>
+            <button class="tab-btn" onclick="switchTab('payoutsTab')">💳 PayPal Payout Batches</button>
+            <button class="tab-btn" onclick="switchTab('adjustmentsTab')">⚖️ Financial Adjustments</button>
+            <button class="tab-btn" onclick="switchTab('auditTab')">📜 Admin Audit Trail</button>
+        </div>
+
+        <!-- Partners Tab -->
+        <div id="partnersTab" class="tab-content active">
+            <div class="card">
+                <h3>Registered Partners & Commission Controls</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Partner</th>
+                            <th>Referral Code</th>
+                            <th>Commission Rate</th>
+                            <th>PayPal Payout Email</th>
+                            <th>New Referrals</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnersTableBody">
+                        <tr>
+                            <td><strong>James Smith</strong><br><small style="color:var(--text-muted);">james@example.com</small></td>
+                            <td><code>JAMES</code></td>
+                            <td>30.0%</td>
+                            <td><code>ja***@example.com</code></td>
+                            <td><span style="color:#10B981;">● Enabled</span></td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>
+                                <button class="btn-action" onclick="togglePause('partner_james_123', false)">Pause</button>
+                                <button class="btn-action" onclick="openAdjustmentModal('partner_james_123', 'James Smith')">Adjust Balance</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sarah Jenkins</strong><br><small style="color:var(--text-muted);">sarah@example.com</small></td>
+                            <td><code>SARAH</code></td>
+                            <td>25.0%</td>
+                            <td><code>sa***@example.com</code></td>
+                            <td><span style="color:#10B981;">● Enabled</span></td>
+                            <td><span class="badge badge-active">Active</span></td>
+                            <td>
+                                <button class="btn-action" onclick="togglePause('partner_sarah_456', false)">Pause</button>
+                                <button class="btn-action" onclick="openAdjustmentModal('partner_sarah_456', 'Sarah Jenkins')">Adjust Balance</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Applications Tab -->
+        <div id="applicationsTab" class="tab-content">
+            <div class="card">
+                <h3>Pending Creator Applications</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Niche / Audience</th>
+                            <th>Channels</th>
+                            <th>Preferred Code</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applicationsTableBody">
+                        <tr>
+                            <td><strong>Alex Rivera</strong><br><small style="color:var(--text-muted);">alex@fitnesselite.com</small></td>
+                            <td>Bodybuilding (50k-200k)</td>
+                            <td>IG: @alex_fit &middot; TikTok: @alexrivera</td>
+                            <td><code>RIVERA</code></td>
+                            <td>Today</td>
+                            <td>
+                                <button class="btn-action btn-approve" onclick="approveApplication('app_001', 'Alex Rivera', 'RIVERA')">Approve Partner</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PayPal Payouts Tab -->
+        <div id="payoutsTab" class="tab-content">
+            <div class="card">
+                <h3>Generate PayPal Payout Batch (Threshold: $100.00)</h3>
+                <div style="display: flex; gap: 12px; margin-top: 14px; margin-bottom: 24px;">
+                    <select id="payoutPartnerSelect" style="padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                        <option value="partner_james_123">James Smith (AUD)</option>
+                        <option value="partner_sarah_456">Sarah Jenkins (AUD)</option>
+                    </select>
+                    <button class="btn-action btn-approve" onclick="createPayoutBatch()">+ Create Draft Payout</button>
+                </div>
+
+                <h3>Active & Historical PayPal Payout Batches</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payout ID</th>
+                            <th>Partner</th>
+                            <th>Amount</th>
+                            <th>Snapshotted Recipient</th>
+                            <th>Status</th>
+                            <th>PayPal Batch ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payoutsTableBody">
+                        <tr>
+                            <td><strong>#PAY-001</strong></td>
+                            <td>James Smith</td>
+                            <td style="font-weight: 700; color: var(--primary);">A$27.54</td>
+                            <td><code>james@example.com</code></td>
+                            <td><span class="badge badge-approved">Approved</span></td>
+                            <td><small style="color:var(--text-muted);">Ready to Send</small></td>
+                            <td>
+                                <button class="btn-action btn-paypal" onclick="sendViaPayPal('payout_001', 'James Smith', '27.54', 'james@example.com')">Send via PayPal</button>
+                                <button class="btn-action" onclick="cancelPayout('payout_001')">Cancel</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Adjustments Tab -->
+        <div id="adjustmentsTab" class="tab-content">
+            <div class="card">
+                <h3>Manual Financial Adjustments</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Create immutable ledger adjustments for partner compensations, bonus credits, or manual offsets. Every action is recorded in the audit log.</p>
+                <div style="margin-top: 16px;">
+                    <button class="btn-action btn-approve" onclick="openAdjustmentModal('partner_james_123', 'James Smith')">+ Create Manual Adjustment</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Log Tab -->
+        <div id="auditTab" class="tab-content">
+            <div class="card">
+                <h3>Admin Audit Trail</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Admin</th>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>Notes / Values</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTableBody">
+                        <tr>
+                            <td>Today, 10:20</td>
+                            <td><code>auth_admin_999</code></td>
+                            <td><span class="badge badge-active">SUBMIT_PAYPAL_PAYOUT</span></td>
+                            <td>Payout: <code>#PAY-001</code></td>
+                            <td>Submitted to PayPal Payouts API</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Adjustment Modal -->
+    <div id="adjustmentModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Create Financial Adjustment</h3>
+            <div class="form-group">
+                <label>Partner</label>
+                <input type="text" id="adjPartnerName" readonly>
+            </div>
+            <div class="form-group">
+                <label>Adjustment Amount (Cents / Minor Units)</label>
+                <input type="number" id="adjAmount" placeholder="e.g. 5000 for $50.00" value="2500">
+            </div>
+            <div class="form-group">
+                <label>Currency</label>
+                <select id="adjCurrency">
+                    <option value="AUD">AUD</option>
+                    <option value="USD">USD</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Reason / Audit Note (Required)</label>
+                <textarea id="adjReason" rows="2" placeholder="e.g. Promotion launch bonus credit"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-action" onclick="closeAdjustmentModal()">Cancel</button>
+                <button class="btn-action btn-approve" onclick="submitAdjustment()">Submit Adjustment</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAdjPartnerId = null;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function openAdjustmentModal(partnerId, partnerName) {
+            currentAdjPartnerId = partnerId;
+            document.getElementById('adjPartnerName').value = partnerName;
+            document.getElementById('adjustmentModal').style.display = 'flex';
+        }
+
+        function closeAdjustmentModal() {
+            document.getElementById('adjustmentModal').style.display = 'none';
+        }
+
+        async function submitAdjustment() {
+            const amountMinor = document.getElementById('adjAmount').value;
+            const currency = document.getElementById('adjCurrency').value;
+            const reason = document.getElementById('adjReason').value.trim();
+
+            if (!reason) {
+                alert('Please provide an audit reason.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/aivekai/partners/admin/adjustments/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer mock_token_admin'
+                    },
+                    body: JSON.stringify({
+                        partnerId: currentAdjPartnerId,
+                        amountMinor,
+                        currency,
+                        reason
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Financial adjustment recorded in ledger successfully!');
+                    closeAdjustmentModal();
+                } else {
+                    alert('Failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Network error.');
+            }
+        }
+
+        async function createPayoutBatch() {
+            const partnerId = document.getElementById('payoutPartnerSelect').value;
+            const response = await fetch('/api/aivekai/partners/admin/payouts/create-batch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer mock_token_admin'
+                },
+                body: JSON.stringify({ partnerId, currency: 'AUD' })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert(`Payout batch created: ID ${data.payout.id} for A$${(data.payout.amount_minor/100).toFixed(2)}`);
+            } else {
+                alert(data.error || 'Failed to create payout batch');
+            }
+        }
+
+        async function sendViaPayPal(payoutId, partnerName, amount, email) {
+            const confirmed = confirm(`Are you sure you want to disburse A$${amount} via PayPal to ${partnerName} (${email})?`);
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch('/api/aivekai/partners/admin/payouts/send-paypal', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer mock_token_admin'
+                    },
+                    body: JSON.stringify({ payoutId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Payout submitted to PayPal successfully!');
+                } else {
+                    alert(data.error || 'Failed to submit PayPal payout');
+                }
+            } catch (e) {
+                alert('Network error.');
+            }
+        }
+
+        async function cancelPayout(payoutId) {
+            if (!confirm('Cancel this payout batch and release commissions?')) return;
+            const response = await fetch('/api/aivekai/partners/admin/payouts/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer mock_token_admin'
+                },
+                body: JSON.stringify({ payoutId })
+            });
+            const data = await response.json();
+            if (data.success) alert('Payout batch cancelled.');
+        }
+    </script>
+</body>
+</html>

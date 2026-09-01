@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AivekAI Partner Program - Earn Recurring Commission</title>
+    <meta name="description" content="Join the AivekAI Partner Program. Earn recurring commissions introducing your audience to smarter nutrition, photo meal scanning and voice calorie tracking.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #006B5C;
+            --primary-dark: #004D42;
+            --primary-light: #E6F4F1;
+            --accent: #00C2A8;
+            --text-dark: #121816;
+            --text-muted: #5C6764;
+            --bg-page: #F8FAF9;
+            --white: #FFFFFF;
+            --border: rgba(0, 107, 92, 0.12);
+            --card-shadow: 0 10px 30px rgba(0, 107, 92, 0.06);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+        }
+
+        .brand-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .brand-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .btn-outline {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .btn-primary {
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            background: var(--primary);
+            color: var(--white);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 14px rgba(0, 107, 92, 0.25);
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 140px 24px 80px;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.15;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 36px;
+            line-height: 1.6;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 16px 36px;
+            font-size: 1.05rem;
+            border-radius: var(--radius-md);
+        }
+
+        /* Stats Grid */
+        .stats-section {
+            max-width: 1100px;
+            margin: 0 auto 80px;
+            padding: 0 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 30px 24px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat-card h3 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .stat-card p {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        /* Features Section */
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px 30px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* How it works */
+        .how-it-works {
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 80px 24px;
+            margin-bottom: 100px;
+        }
+
+        .steps-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 30px;
+        }
+
+        .step-item {
+            position: relative;
+        }
+
+        .step-num {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
+        .step-item h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step-item p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Example Callout */
+        .example-banner {
+            max-width: 1100px;
+            margin: 0 auto 100px;
+            padding: 40px;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: var(--white);
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+
+        .example-banner h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .example-banner p {
+            font-size: 1.05rem;
+            opacity: 0.9;
+            max-width: 750px;
+            margin: 0 auto 24px;
+        }
+
+        .disclaimer-text {
+            font-size: 0.8rem;
+            opacity: 0.75;
+            font-style: italic;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.3rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .nav-container {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="nav-container">
+            <a href="/aivekai" class="brand-logo">
+                <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+                <span>AivekAI</span>
+                <span class="brand-badge">Partners</span>
+            </a>
+            <div class="nav-actions">
+                <a href="/aivekai/partners/login" class="btn-outline">Partner Login</a>
+                <a href="/aivekai/partners/apply" class="btn-primary">Apply Now</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main>
+        <section class="hero">
+            <div class="hero-tag">
+                <span>✨</span> The AivekAI Partner & Creator Network
+            </div>
+            <h1>Earn recurring commission by introducing your audience to <span>smarter nutrition</span>.</h1>
+            <p>Empower your community with effortless meal scanning, voice food logging, and AI dietary coaching while building long-term recurring revenue.</p>
+            <div class="hero-cta-group">
+                <a href="/aivekai/partners/apply" class="btn-primary btn-large">Become a Partner</a>
+                <a href="/aivekai/partners/login" class="btn-outline btn-large">Access Partner Portal</a>
+            </div>
+        </section>
+
+        <!-- Stats Overview -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Recurring</h3>
+                    <p>Earn on initial purchases & ongoing yearly renewals</p>
+                </div>
+                <div class="stat-card">
+                    <h3>SmartLinks</h3>
+                    <p>Automated deferred deep-link attribution via Kochava</p>
+                </div>
+                <div class="stat-card">
+                    <h3>SaaS Portal</h3>
+                    <p>Live commission ledger, campaign analytics & payouts</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Special Offer</h3>
+                    <p>Exclusive introductory discounts for your audience</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Value Proposition Section -->
+        <section>
+            <div class="section-header">
+                <h2>Why Creators & Health Professionals Choose AivekAI</h2>
+                <p>A true partnership model designed to align incentives and reward your influence.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💎</div>
+                    <h3>Recurring Annual Commission</h3>
+                    <p>Unlike one-off referral programs, you continue earning commission each year your referred subscribers renew their AivekAI annual plan.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Deterministic Attribution</h3>
+                    <p>Powered by Kochava SmartLinks. When someone clicks your link, whether they install right away or days later, the attribution is permanently mapped to your partner account.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎁</div>
+                    <h3>Configured Audience Benefits</h3>
+                    <p>Give your followers a compelling introductory discount on their annual subscription, making it a win-win recommendation for your community.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Transparent Partner Portal</h3>
+                    <p>Access your private web dashboard to create custom campaign links (e.g. TikTok vs Instagram), monitor conversion rates, and audit your verified commission ledger.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy-First Architecture</h3>
+                    <p>All financial reporting is aggregated and anonymized. We respect your audience's privacy while giving you full accounting visibility over every dollar earned.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <h3>Reliable Monthly Disbursements</h3>
+                    <p>Automatic payout batching and accounting once your commissions satisfy the standard holding period and minimum payout threshold.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How it works -->
+        <section class="how-it-works">
+            <div class="section-header">
+                <h2>How The Program Works</h2>
+                <p>Four simple steps from application to monthly payouts.</p>
+            </div>
+            <div class="steps-container">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <h4>Apply Online</h4>
+                    <p>Fill out our short application detailing your audience and promotion channels.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <h4>Get Approved</h4>
+                    <p>Our team reviews and approves your custom referral code, SmartLink, and commission terms.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <h4>Share with Your Audience</h4>
+                    <p>Use custom campaign SmartLinks across your bio, stories, videos, and newsletters.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">4</div>
+                    <h4>Earn Recurring Revenue</h4>
+                    <p>Track verified transactions, watch your balance grow, and receive regular payouts.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Example Banner -->
+        <section style="padding: 0 24px;">
+            <div class="example-banner">
+                <h3>Ready to monetize your fitness & wellness content?</h3>
+                <p>Join dietitians, personal trainers, and fitness creators who trust AivekAI to support their clients' nutritional success.</p>
+                <a href="/aivekai/partners/apply" class="btn-primary btn-large" style="background: #FFFFFF; color: var(--primary); font-weight: 700;">Apply to Partner Program</a>
+                <p class="disclaimer-text" style="margin-top: 18px; margin-bottom: 0;">*Illustrative example: Partner commission rates and customer discount offers are configured individually upon approval.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Mozarex & AivekAI. All rights reserved. <a href="/policy">Privacy Policy</a> &middot; <a href="/aivekai/partners/login">Partner Portal</a></p>
+    </footer>
+
+</body>
+</html>

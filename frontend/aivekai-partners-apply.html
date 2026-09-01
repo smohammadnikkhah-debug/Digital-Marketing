@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for AivekAI Partner Program</title>
+    <meta name="description" content="Apply to become an official AivekAI creator partner. Earn recurring commissions on nutrition and calorie tracking subscriptions.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #006B5C;
+            --primary-dark: #004D42;
+            --primary-light: #E6F4F1;
+            --accent: #00C2A8;
+            --text-dark: #121816;
+            --text-muted: #5C6764;
+            --bg-page: #F8FAF9;
+            --white: #FFFFFF;
+            --border: rgba(0, 107, 92, 0.15);
+            --card-shadow: 0 12px 36px rgba(0, 107, 92, 0.08);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+        }
+
+        .brand-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .btn-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 110px auto 60px;
+            padding: 0 24px;
+        }
+
+        .form-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .form-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .form-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        label span.req {
+            color: #E53E3E;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            background: var(--white);
+            transition: var(--transition);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 107, 92, 0.12);
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 26px;
+            margin-bottom: 26px;
+        }
+
+        .checkbox-group input {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-group label {
+            font-size: 0.88rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .checkbox-group a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--primary);
+            color: var(--white);
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 107, 92, 0.25);
+            transition: var(--transition);
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert-box {
+            display: none;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+
+        .alert-success {
+            background: #E6F4EA;
+            color: #137333;
+            border: 1px solid #CEEAD6;
+        }
+
+        .alert-error {
+            background: #FCE8E6;
+            color: #C5221F;
+            border: 1px solid #FAD2CF;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 24px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/aivekai/partners" class="brand-logo">
+                <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+                <span>AivekAI Partners</span>
+            </a>
+            <a href="/aivekai/partners/login" class="btn-link">Already a partner? Log In</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Partner Program Application</h1>
+                <p>Join our curated creator and affiliate network. Applications are reviewed within 2-3 business days.</p>
+            </div>
+
+            <div id="alertBox" class="alert-box"></div>
+
+            <form id="partnerApplyForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fullName">Full Name <span class="req">*</span></label>
+                        <input type="text" id="fullName" name="fullName" placeholder="e.g. James Smith" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="businessName">Creator / Business Name</label>
+                        <input type="text" id="businessName" name="businessName" placeholder="e.g. James Fitness Nutrition">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="req">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="james@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Country <span class="req">*</span></label>
+                        <select id="country" name="country" required>
+                            <option value="AU">Australia</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                            <option value="NZ">New Zealand</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="website">Website / Blog URL</label>
+                        <input type="url" id="website" name="website" placeholder="https://yourwebsite.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="instagram">Instagram Handle</label>
+                        <input type="text" id="instagram" name="instagram" placeholder="@username">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tiktok">TikTok Handle</label>
+                        <input type="text" id="tiktok" name="tiktok" placeholder="@username">
+                    </div>
+                    <div class="form-group">
+                        <label for="youtube">YouTube Channel</label>
+                        <input type="text" id="youtube" name="youtube" placeholder="youtube.com/@channel">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="audienceSize">Estimated Audience Size <span class="req">*</span></label>
+                        <select id="audienceSize" name="audienceSize" required>
+                            <option value="1k-10k">1,000 – 10,000</option>
+                            <option value="10k-50k">10,000 – 50,000</option>
+                            <option value="50k-200k">50,000 – 200,000</option>
+                            <option value="200k+">200,000+</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="audienceNiche">Content Niche <span class="req">*</span></label>
+                        <select id="audienceNiche" name="audienceNiche" required>
+                            <option value="Fitness & Bodybuilding">Fitness & Bodybuilding</option>
+                            <option value="Nutrition & Dietetics">Nutrition & Dietetics</option>
+                            <option value="Weight Loss & Transformation">Weight Loss & Transformation</option>
+                            <option value="Wellness & Lifestyle">Wellness & Lifestyle</option>
+                            <option value="Coaching & Personal Training">Coaching & Personal Training</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="preferredReferralCode">Preferred Referral Code <span class="req">*</span></label>
+                    <input type="text" id="preferredReferralCode" name="preferredReferralCode" placeholder="e.g. JAMES" maxlength="20" required>
+                    <p class="help-text">Your custom code used for SmartLinks & manual user entry (Alphanumeric, uppercase).</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="promotionPlan">How do you plan to promote AivekAI? <span class="req">*</span></label>
+                    <textarea id="promotionPlan" name="promotionPlan" rows="3" placeholder="e.g. Instagram Reels, client nutrition plans, YouTube meal prep videos..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" name="notes" rows="2" placeholder="Any specific requirements, questions or context..."></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="termsAccepted" name="termsAccepted" required>
+                    <label for="termsAccepted">I agree to the <a href="/policy" target="_blank">AivekAI Partner Program Terms</a> and acknowledge that applications are subject to manual administrative review and approval.</label>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-submit">Submit Application</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('partnerApplyForm');
+        const alertBox = document.getElementById('alertBox');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting Application...';
+            alertBox.style.display = 'none';
+
+            const formData = {
+                fullName: document.getElementById('fullName').value.trim(),
+                businessName: document.getElementById('businessName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                country: document.getElementById('country').value,
+                website: document.getElementById('website').value.trim(),
+                instagram: document.getElementById('instagram').value.trim(),
+                tiktok: document.getElementById('tiktok').value.trim(),
+                youtube: document.getElementById('youtube').value.trim(),
+                audienceSize: document.getElementById('audienceSize').value,
+                audienceNiche: document.getElementById('audienceNiche').value,
+                preferredReferralCode: document.getElementById('preferredReferralCode').value.trim().toUpperCase(),
+                promotionPlan: document.getElementById('promotionPlan').value.trim(),
+                notes: document.getElementById('notes').value.trim(),
+                termsAccepted: document.getElementById('termsAccepted').checked
+            };
+
+            try {
+                const response = await fetch('/api/aivekai/partners/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alertBox.className = 'alert-box alert-success';
+                    alertBox.innerText = result.message || 'Application submitted successfully! Our team will review your details.';
+                    alertBox.style.display = 'block';
+                    form.reset();
+                    submitBtn.innerText = 'Application Submitted';
+                } else {
+                    alertBox.className = 'alert-box alert-error';
+                    alertBox.innerText = result.error || 'Failed to submit application. Please check your information.';
+                    alertBox.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Submit Application';
+                }
+            } catch (err) {
+                alertBox.className = 'alert-box alert-error';
+                alertBox.innerText = 'A network error occurred. Please try again.';
+                alertBox.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Application';
+            }
+        });
+    </script>
+</body>
+</html>

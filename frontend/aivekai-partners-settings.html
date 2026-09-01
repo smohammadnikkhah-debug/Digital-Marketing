@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AivekAI Partner Dashboard - Settings</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #006B5C;
+            --primary-dark: #004D42;
+            --primary-light: #E6F4F1;
+            --accent: #00C2A8;
+            --text-dark: #121816;
+            --text-muted: #5C6764;
+            --bg-page: #F4F7F6;
+            --white: #FFFFFF;
+            --border: rgba(0, 107, 92, 0.12);
+            --card-shadow: 0 8px 24px rgba(0, 107, 92, 0.05);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        aside {
+            width: 260px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand img { width: 34px; height: 34px; border-radius: 8px; }
+        .nav-list { list-style: none; padding: 20px 14px; flex: 1; }
+        .nav-item { margin-bottom: 6px; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        main {
+            margin-left: 260px;
+            flex: 1;
+            padding: 32px 40px;
+            max-width: 900px;
+        }
+
+        .header-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .header-title h1 { font-size: 1.8rem; font-weight: 800; }
+        .header-title p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 24px;
+        }
+
+        .card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 18px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.88rem;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        input[type="text"], input[type="email"], input[type="url"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 12px 28px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-save:hover { background: var(--primary-dark); }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10B981;
+            color: var(--white);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <aside>
+        <a href="/aivekai/partners/dashboard" class="sidebar-brand">
+            <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+            <span>AivekAI Partner</span>
+        </a>
+
+        <ul class="nav-list">
+            <li class="nav-item"><a href="/aivekai/partners/dashboard" class="nav-link">📊 Overview</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link">💰 Commission Ledger</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/payouts" class="nav-link">💳 Payouts</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/settings" class="nav-link active">⚙️ Settings</a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="partner-profile">
+                <div class="avatar">J</div>
+                <div>
+                    <strong>James Smith</strong>
+                    <div style="font-size: 0.75rem; color: #10B981;">● Active Partner</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="window.location.href='/aivekai/partners/login'">Sign Out</button>
+        </div>
+    </aside>
+
+    <main>
+        <div class="header-strip">
+            <div class="header-title">
+                <h1>Partner Settings & Preferences</h1>
+                <p>Manage your public profile, social links, and payout notification emails.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Profile & Channels</h3>
+            <form id="settingsForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Display Name</label>
+                        <input type="text" id="partnerName" value="James Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Notification Email</label>
+                        <input type="email" id="partnerEmail" value="james@example.com">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Website</label>
+                        <input type="url" id="partnerWebsite" value="https://jamesnutrition.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Instagram</label>
+                        <input type="text" id="partnerInsta" value="@james_fit">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>TikTok</label>
+                        <input type="text" id="partnerTikTok" value="@james_nutrition">
+                    </div>
+                    <div class="form-group">
+                        <label>YouTube</label>
+                        <input type="text" id="partnerYouTube" value="youtube.com/@jamesfit">
+                    </div>
+                </div>
+
+                <button type="button" class="btn-save" onclick="saveSettings()">Save Changes</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>🔒 Fixed Partner Configuration (Admin Controlled)</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">The following properties are governed by administrative agreement:</p>
+            <div style="background: var(--bg-page); padding: 16px; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.8;">
+                <div><strong>Assigned Referral Code:</strong> <code>JAMES</code></div>
+                <div><strong>Current Commission Rate:</strong> 30% Recurring</div>
+                <div><strong>Partner Status:</strong> Active (Accepting New & Earning Recurring)</div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">Settings updated successfully!</div>
+
+    <script>
+        function saveSettings() {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+    </script>
+</body>
+</html>

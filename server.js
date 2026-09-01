@@ -284,6 +284,55 @@ app.get('/aivekai', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'aivekai.html'));
 });
 
+// Serve AivekAI Partner Program & Admin Portal Routes
+app.get('/aivekai/partners', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners.html'));
+});
+
+app.get('/aivekai/partners/apply', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-apply.html'));
+});
+
+app.get('/aivekai/partners/login', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-login.html'));
+});
+
+app.get('/aivekai/partners/dashboard', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-dashboard.html'));
+});
+
+app.get('/aivekai/partners/commissions', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-commissions.html'));
+});
+
+app.get('/aivekai/partners/payouts', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-payouts.html'));
+});
+
+app.get('/aivekai/partners/settings', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-settings.html'));
+});
+
+app.get('/aivekai/admin/partners', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'frontend', 'aivekai-admin-partners.html'));
+});
+
+// Mount AivekAI Partners API Router & PayPal Webhook
+const aivekaiPartnersRouter = require('./routes/aivekaiPartners');
+app.use('/api/aivekai/partners', aivekaiPartnersRouter);
+app.post('/api/aivekai/paypal/webhook', (req, res, next) => {
+    req.url = '/paypal/webhook';
+    aivekaiPartnersRouter(req, res, next);
+});
+
 // Serve data deletion page
 app.get('/data-deletion', (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
