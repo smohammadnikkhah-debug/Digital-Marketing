@@ -1567,3 +1567,41 @@ GRANT EXECUTE ON FUNCTION public.get_partner_dashboard_summary() TO authenticate
 -- 6.4. Grant customer-facing referral functions to anon, authenticated, and service_role
 GRANT EXECUTE ON FUNCTION public.validate_and_apply_referral(UUID, TEXT, TEXT, JSONB) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.get_customer_referral_offer(UUID) TO anon, authenticated, service_role;
+
+-- ==============================================================================
+-- 7. Remote App Configuration Table & Remote Kill Switches
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS public.app_remote_config (
+    key TEXT PRIMARY KEY,
+    value_boolean BOOLEAN,
+    value_text TEXT,
+    value_json JSONB,
+    description TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.app_remote_config ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read access to app_remote_config" ON public.app_remote_config;
+CREATE POLICY "Allow public read access to app_remote_config"
+ON public.app_remote_config
+FOR SELECT
+TO anon, authenticated
+USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow service_role full management on app_remote_config" ON public.app_remote_config;
+CREATE POLICY "Allow service_role full management on app_remote_config"
+ON public.app_remote_config
+FOR ALL
+TO service_role
+USING (TRUE)
+WITH CHECK (TRUE);
+
+-- Seed GoMarketMe remote flag: MUST DEFAULT TO FALSE (disabled by default)
+INSERT INTO public.app_remote_config (key, value_boolean, description)
+VALUES ('gomarketme_enabled', FALSE, 'Remote kill-switch for GoMarketMe SDK integration (default: false)')
+ON CONFLICT (key) DO UPDATE
+SET description = EXCLUDED.description;
+
