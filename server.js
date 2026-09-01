@@ -14,6 +14,9 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
+// Configure Express to trust DigitalOcean reverse proxy headers for secure session cookies
+app.set('trust proxy', 1);
+
 // Security & Middleware
 app.use(cors());
 app.use(cookieParser());
@@ -33,21 +36,56 @@ app.use((req, res, next) => {
   next();
 });
 
-// Session middleware for authenticated partner portal
+// Session middleware for authenticated partner and admin portals
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'aivekai_partner_portal_session_secret_default',
+  name: 'aivekai_session_id',
+  secret: process.env.SESSION_SECRET || 'aivekai_portal_session_secret_default',
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: 'auto',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
+
+// ==============================================================================
+// PROTECTED ADMIN ROUTE GUARDS (Evaluated BEFORE static serving)
+// ==============================================================================
+
+// Admin Login Page
+app.get('/aivekai/admin/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-login.html'));
+});
+
+// Protected Admin Portal (Strict Server-Side Auth Check)
+app.get('/aivekai/admin/partners', (req, res) => {
+  if (!req.session || !req.session.adminAuthUserId || req.session.adminRole !== 'admin') {
+    return res.redirect(302, '/aivekai/admin/login');
+  }
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-partners.html'));
+});
+
+// Protected Wildcard Admin Pages
+app.get('/aivekai/admin/*', (req, res) => {
+  if (!req.session || !req.session.adminAuthUserId || req.session.adminRole !== 'admin') {
+    return res.redirect(302, '/aivekai/admin/login');
+  }
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-partners.html'));
+});
+
+// Explicit redirect for any direct filename access attempts
+app.get(['/aivekai-admin-partners.html', '/aivekai-admin-partners'], (req, res) => {
+  return res.redirect(302, '/aivekai/admin/login');
+});
 
 // Serve static images directory
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-// Static files from frontend with Cache-Control headers
+// Public static files from frontend with Cache-Control headers
 app.use(express.static(path.join(__dirname, 'frontend'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
@@ -93,7 +131,7 @@ app.get('/data-deletion', (req, res) => {
 });
 
 // ==============================================================================
-// AIVEKAI PARTNER PROGRAM & ADMIN PORTAL
+// AIVEKAI PARTNER PROGRAM
 // ==============================================================================
 
 app.get('/aivekai/partners', (req, res) => {
@@ -124,17 +162,14 @@ app.get('/aivekai/partners/settings', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-settings.html'));
 });
 
-app.get('/aivekai/admin/partners', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-admin-partners.html'));
-});
-
 // ==============================================================================
 // BACKEND API ROUTERS
 // ==============================================================================
 
-// AivekAI Partner Program API Router
+// AivekAI Partner Program & Admin API Router
 const aivekaiPartnersRouter = require('./routes/aivekaiPartners');
 app.use('/api/aivekai/partners', aivekaiPartnersRouter);
+app.use('/api/aivekai/admin', aivekaiPartnersRouter);
 
 // PayPal Webhook Alias Route
 app.post('/api/aivekai/paypal/webhook', (req, res, next) => {
@@ -168,6 +203,7 @@ if (require.main === module) {
     console.log(`🚀 Mozarex Platform Server running on port ${PORT}`);
     console.log(`🌐 Marketing: http://localhost:${PORT}/aivekai`);
     console.log(`🤝 Partner Portal: http://localhost:${PORT}/aivekai/partners`);
+    console.log(`🔒 Admin Login: http://localhost:${PORT}/aivekai/admin/login`);
     console.log(`👑 Admin Portal: http://localhost:${PORT}/aivekai/admin/partners`);
     console.log(`🖼️  Static Images: http://localhost:${PORT}/images/`);
     console.log(`=======================================================`);

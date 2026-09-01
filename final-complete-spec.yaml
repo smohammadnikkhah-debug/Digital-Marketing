@@ -28,9 +28,19 @@ services:
     value: your_openai_api_key
   - key: PAYPAL_ENVIRONMENT
     value: sandbox
-  - key: PAYPAL_CLIENT_ID
-    value: your_paypal_client_id
-  - key: PAYPAL_CLIENT_SECRET
-    value: your_paypal_client_secret
-  - key: PAYPAL_WEBHOOK_ID
-    value: your_paypal_webhook_id
+  - key: PAYPAL_SANDBOX_CLIENT_ID
+    value: your_paypal_sandbox_client_id
+  - key: PAYPAL_SANDBOX_CLIENT_SECRET
+    value: your_paypal_sandbox_client_secret
+  - key: PAYPAL_SANDBOX_WEBHOOK_ID
+    value: your_paypal_sandbox_webhook_id
+  - key: PAYPAL_LIVE_CLIENT_ID
+    value: your_paypal_live_client_id
+  - key: PAYPAL_LIVE_CLIENT_SECRET
+    value: your_paypal_live_client_secret
+  - key: PAYPAL_LIVE_WEBHOOK_ID
+    value: your_paypal_live_webhook_id
+  - key: PAYPAL_LIVE_PAYOUTS_ENABLED
+    value: "false"
+  - key: PAYPAL_LIVE_FIRST_PAYOUT_MAX_MINOR
+    value: "1000"

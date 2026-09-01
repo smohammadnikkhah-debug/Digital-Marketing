@@ -526,6 +526,28 @@
             overflow: hidden;
         }
 
+        .partner-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 194, 168, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(0, 194, 168, 0.35);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .partner-cta-btn:hover {
+            background: var(--accent-color);
+            color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 194, 168, 0.25);
+        }
+
         .cta-banner::before {
             content: '';
             position: absolute;
@@ -936,6 +958,14 @@
                     </span>
                 </a>
             </div>
+
+            <!-- Become a Partner Callout -->
+            <div style="margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;">
+                <span style="color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 500;">Are you a fitness creator, coach, or nutritionist?</span>
+                <a href="/aivekai/partners" class="partner-cta-btn" id="hero-partner-cta">
+                    Become a Partner &rarr;
+                </a>
+            </div>
         </div>
     </section>
 
@@ -948,6 +978,14 @@
                     <span class="logo-text" style="color: var(--white);">AivekAI</span>
                 </a>
                 <p>Calculates calories, macronutrients, fasting timers, and workouts automatically via AI.</p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Creators</h4>
+                <ul class="footer-links-list">
+                    <li><a href="/aivekai/partners" id="footer-partner-link">Become a Partner</a></li>
+                    <li><a href="/aivekai/partners/login">Partner Portal Login</a></li>
+                </ul>
             </div>
             
             <div class="footer-col">
@@ -969,6 +1007,7 @@
         <div class="footer-bottom">
             <div>&copy; 2026 AivekAI by Mozarex. All rights reserved.</div>
             <div class="footer-bottom-links">
+                <a href="/aivekai/partners">Partner Program</a>
                 <a href="policy.html">Privacy</a>
                 <a href="data-deletion.html">Data Deletion</a>
             </div>

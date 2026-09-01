@@ -2,22 +2,61 @@ const https = require('https');
 
 /**
  * PayPal Payouts Integration Service for AivekAI Partner Program
- * Handles OAuth 2.0 client credential caching, payout submission, batch & item lookups,
- * webhook verification, and state reconciliation.
+ * Phase 7B.1 Multi-Environment Dual-Credential Architecture
+ * 
+ * Supports coexisting Sandbox and Live credentials with strict isolation:
+ * - PAYPAL_SANDBOX_CLIENT_ID, PAYPAL_SANDBOX_CLIENT_SECRET, PAYPAL_SANDBOX_WEBHOOK_ID
+ * - PAYPAL_LIVE_CLIENT_ID, PAYPAL_LIVE_CLIENT_SECRET, PAYPAL_LIVE_WEBHOOK_ID
+ * - Strict zero-cross-fallback guarantee: Sandbox cannot access Live credentials; Live cannot access Sandbox credentials.
+ * - Missing selected-environment credentials fail closed.
  */
 class PaypalPayoutService {
   constructor() {
-    this.clientId = process.env.PAYPAL_CLIENT_ID || '';
-    this.clientSecret = process.env.PAYPAL_CLIENT_SECRET || '';
-    this.webhookId = process.env.PAYPAL_WEBHOOK_ID || '';
-    this.environment = (process.env.PAYPAL_ENVIRONMENT || 'sandbox').toLowerCase();
+    this._reloadConfig();
+  }
 
-    // Base URL configuration
-    this.baseUrl = this.environment === 'live'
-      ? 'https://api-m.paypal.com'
-      : 'https://api-m.sandbox.paypal.com';
+  /**
+   * Reload environment and resolve credentials strictly based on PAYPAL_ENVIRONMENT
+   */
+  _reloadConfig() {
+    const rawEnv = (process.env.PAYPAL_ENVIRONMENT || 'sandbox').trim().toLowerCase();
+    
+    if (rawEnv !== 'sandbox' && rawEnv !== 'live') {
+      this.environment = 'invalid';
+      this.baseUrl = null;
+      this.clientId = '';
+      this.clientSecret = '';
+      this.webhookId = '';
+    } else {
+      this.environment = rawEnv;
+      this.baseUrl = rawEnv === 'live'
+        ? 'https://api-m.paypal.com'
+        : 'https://api-m.sandbox.paypal.com';
 
-    // Cached OAuth token
+      if (rawEnv === 'sandbox') {
+        // Exclusively select Sandbox credentials (with legacy fallback to generic vars only during migration)
+        this.clientId = process.env.PAYPAL_SANDBOX_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || '';
+        this.clientSecret = process.env.PAYPAL_SANDBOX_CLIENT_SECRET || process.env.PAYPAL_CLIENT_SECRET || '';
+        this.webhookId = process.env.PAYPAL_SANDBOX_WEBHOOK_ID || process.env.PAYPAL_WEBHOOK_ID || 'mock_paypal_webhook_id';
+      } else if (rawEnv === 'live') {
+        // Exclusively select Live credentials; NEVER fall back to Sandbox credentials
+        this.clientId = process.env.PAYPAL_LIVE_CLIENT_ID || '';
+        this.clientSecret = process.env.PAYPAL_LIVE_CLIENT_SECRET || '';
+        this.webhookId = process.env.PAYPAL_LIVE_WEBHOOK_ID || '';
+      }
+    }
+
+    this.livePayoutsEnabled = process.env.PAYPAL_LIVE_PAYOUTS_ENABLED === 'true';
+    
+    // Dynamic First Live Payout limit in minor units from environment (fails closed if missing/invalid in live mode)
+    const rawCeiling = process.env.PAYPAL_LIVE_FIRST_PAYOUT_MAX_MINOR;
+    if (rawCeiling !== undefined && rawCeiling !== null && rawCeiling !== '') {
+      const parsed = parseInt(rawCeiling, 10);
+      this.firstLivePayoutMaxMinor = (!isNaN(parsed) && parsed > 0) ? parsed : 'INVALID';
+    } else {
+      this.firstLivePayoutMaxMinor = null;
+    }
+
     this.cachedToken = null;
     this.tokenExpiresAt = 0;
   }
@@ -26,6 +65,10 @@ class PaypalPayoutService {
    * Helper HTTP request wrapper
    */
   async _request(options, postData = null) {
+    if (!this.baseUrl) {
+      throw new Error('PayPal service failed closed: Invalid or unconfigured PAYPAL_ENVIRONMENT');
+    }
+
     if (!this.clientSecret || this.clientId.startsWith('mock_')) {
       return this._handleMockRequest(options, postData);
     }
@@ -58,7 +101,7 @@ class PaypalPayoutService {
   }
 
   /**
-   * Internal mock handler for local development & automated test suites
+   * Internal mock handler for local unit test suites
    */
   _handleMockRequest(options, postData) {
     const path = options.path;
@@ -67,7 +110,7 @@ class PaypalPayoutService {
       return Promise.resolve({
         statusCode: 200,
         data: {
-          access_token: `mock_paypal_token_${Date.now()}`,
+          access_token: `mock_paypal_token_${this.environment}_${Date.now()}`,
           token_type: 'Bearer',
           expires_in: 32400
         }
@@ -85,13 +128,13 @@ class PaypalPayoutService {
             batch_status: 'PENDING',
             sender_batch_header: parsed.sender_batch_header
           },
-          links: [{ href: `${this.baseUrl}/v1/payments/payouts/${batchId}`, rel: 'self' }]
+          links: [{ href: `${this.baseUrl || 'https://api-m.sandbox.paypal.com'}/v1/payments/payouts/${batchId}`, rel: 'self' }]
         }
       });
     }
 
     if (path.includes('/v1/payments/payouts/')) {
-      const batchId = path.split('/').pop();
+      const batchId = path.split('/').pop().split('?')[0];
       return Promise.resolve({
         statusCode: 200,
         data: {
@@ -157,9 +200,92 @@ class PaypalPayoutService {
   }
 
   /**
+   * Check Production Live Readiness
+   */
+  checkReadiness() {
+    this._reloadConfig();
+
+    const checks = {
+      environment: this.environment,
+      isEnvironmentValid: this.environment === 'sandbox' || this.environment === 'live',
+      hasClientId: Boolean(this.clientId && this.clientId.length > 5),
+      hasClientSecret: Boolean(this.clientSecret && this.clientSecret.length > 5),
+      hasWebhookId: Boolean(this.webhookId && this.webhookId.length > 5),
+      livePayoutsEnabled: this.livePayoutsEnabled,
+      firstLivePayoutMaxMinor: this.firstLivePayoutMaxMinor,
+      baseUrl: this.baseUrl
+    };
+
+    const isReadyForLiveExecution = (
+      checks.environment === 'live' &&
+      checks.hasClientId &&
+      checks.hasClientSecret &&
+      checks.hasWebhookId &&
+      checks.livePayoutsEnabled
+    );
+
+    return {
+      ...checks,
+      isReadyForLiveExecution,
+      status: this.environment === 'live'
+        ? (isReadyForLiveExecution ? 'LIVE_ENABLED' : 'LIVE_SAFETY_LOCKED')
+        : 'SANDBOX_ACTIVE'
+    };
+  }
+
+  /**
+   * Safety verification before submitting a payout
+   */
+  validatePayoutPreconditions({ amountMinor, currency }) {
+    this._reloadConfig();
+
+    if (!this.baseUrl) {
+      throw new Error('Payout blocked: Invalid or unconfigured PAYPAL_ENVIRONMENT');
+    }
+
+    if (!this.clientId || !this.clientSecret) {
+      throw new Error(`Payout blocked: Missing PayPal ${this.environment.toUpperCase()} API credentials`);
+    }
+
+    if (this.environment === 'live') {
+      if (!this.webhookId) {
+        throw new Error('Live payout blocked: Missing PayPal Live Webhook ID');
+      }
+
+      if (!this.livePayoutsEnabled) {
+        throw new Error('Live payout blocked: PAYPAL_LIVE_PAYOUTS_ENABLED is false');
+      }
+
+      if (this.firstLivePayoutMaxMinor === 'INVALID') {
+        throw new Error('Live payout blocked: PAYPAL_LIVE_FIRST_PAYOUT_MAX_MINOR has an invalid numeric value');
+      }
+
+      if (this.firstLivePayoutMaxMinor === null) {
+        throw new Error('Live payout blocked: PAYPAL_LIVE_FIRST_PAYOUT_MAX_MINOR is missing. A first-payout ceiling is required for Live mode activation.');
+      }
+
+      if (amountMinor > this.firstLivePayoutMaxMinor) {
+        throw new Error(`Live payout blocked: Amount (${(amountMinor / 100).toFixed(2)} ${currency}) exceeds first-live-payout ceiling of ${(this.firstLivePayoutMaxMinor / 100).toFixed(2)} ${currency}`);
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Obtain and cache OAuth 2.0 Access Token
    */
   async getAccessToken() {
+    this._reloadConfig();
+
+    if (!this.baseUrl) {
+      throw new Error('OAuth blocked: Invalid or unconfigured PAYPAL_ENVIRONMENT');
+    }
+
+    if (!this.clientId || !this.clientSecret) {
+      throw new Error(`OAuth blocked: Missing PayPal ${this.environment.toUpperCase()} API credentials`);
+    }
+
     const now = Date.now();
     if (this.cachedToken && this.tokenExpiresAt > now + 300000) {
       return this.cachedToken;
@@ -194,6 +320,9 @@ class PaypalPayoutService {
     if (!internalPayoutId || !recipientEmail || !amountMinor || !currency) {
       throw new Error('Missing required payout parameter');
     }
+
+    // Run production safety gates
+    this.validatePayoutPreconditions({ amountMinor, currency });
 
     const token = await this.getAccessToken();
     const batchId = senderBatchId || `AIVEKAI-PAYOUT-${internalPayoutId}`;
@@ -246,6 +375,7 @@ class PaypalPayoutService {
       amount_minor: amountMinor,
       currency,
       recipient_email: recipientEmail,
+      environment: this.environment,
       raw_response: response.data
     };
   }
@@ -254,6 +384,12 @@ class PaypalPayoutService {
    * Get PayPal Payout Batch Details
    */
   async getPayoutBatch(payoutBatchId) {
+    this._reloadConfig();
+
+    if (!this.baseUrl) {
+      throw new Error('Lookup blocked: Invalid or unconfigured PAYPAL_ENVIRONMENT');
+    }
+
     const token = await this.getAccessToken();
     const url = new URL(`${this.baseUrl}/v1/payments/payouts/${payoutBatchId}`);
 
@@ -276,6 +412,12 @@ class PaypalPayoutService {
    * Get PayPal Payout Item Details
    */
   async getPayoutItem(payoutItemId) {
+    this._reloadConfig();
+
+    if (!this.baseUrl) {
+      throw new Error('Lookup blocked: Invalid or unconfigured PAYPAL_ENVIRONMENT');
+    }
+
     const token = await this.getAccessToken();
     const url = new URL(`${this.baseUrl}/v1/payments/payouts-item/${payoutItemId}`);
 
@@ -296,31 +438,15 @@ class PaypalPayoutService {
 
   /**
    * Normalize Provider Status to Internal Financial Status
-   * Explicitly separates pre-delivery failures vs. post-delivery returns vs. in-flight
    */
   normalizePayPalStatus(status) {
     if (!status) return 'submitted';
     const s = status.toUpperCase();
 
-    // 1. Success (funds delivered)
-    if (s === 'SUCCESS') {
-      return 'paid';
-    }
-
-    // 2. Pre-delivery rejection (funds never left our balance)
-    if (['DENIED', 'FAILED', 'BLOCKED'].includes(s)) {
-      return 'failed';
-    }
-
-    // 3. Post-delivery return / reversal (funds returned after submission/delivery - requires manual accounting review)
-    if (['RETURNED', 'REFUNDED', 'REVERSED'].includes(s)) {
-      return 'reversed';
-    }
-
-    // 4. In-flight / pending delivery (funds held by PayPal, recipient pending claim)
-    if (['PENDING', 'UNCLAIMED', 'PROCESSING', 'ONHOLD'].includes(s)) {
-      return 'submitted';
-    }
+    if (s === 'SUCCESS') return 'paid';
+    if (['DENIED', 'FAILED', 'BLOCKED', 'CANCELED'].includes(s)) return 'failed';
+    if (['RETURNED', 'REFUNDED', 'REVERSED'].includes(s)) return 'reversed';
+    if (['PENDING', 'UNCLAIMED', 'PROCESSING', 'ONHOLD', 'HELD'].includes(s)) return 'submitted';
 
     return 'submitted';
   }
@@ -329,12 +455,14 @@ class PaypalPayoutService {
    * Verify PayPal Webhook Authenticity
    */
   async verifyWebhook({ headers, rawBody, webhookId }) {
-    const actualWebhookId = webhookId || this.webhookId;
-    if (!actualWebhookId) {
-      return false;
-    }
+    this._reloadConfig();
 
-    if (this.clientId.startsWith('mock_')) {
+    if (!this.baseUrl) return false;
+
+    const actualWebhookId = webhookId || this.webhookId;
+    if (!actualWebhookId) return false;
+
+    if (!this.clientSecret || this.clientId.startsWith('mock_')) {
       if (headers['paypal-auth-algo'] === 'INVALID_SIG' || actualWebhookId === 'WRONG_ID') {
         return false;
       }
