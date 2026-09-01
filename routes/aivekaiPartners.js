@@ -848,15 +848,12 @@ router.post('/apply', async (req, res) => {
           .select()
           .single();
         if (error) {
-          console.error('Supabase partner_applications insert error:', error.message);
-          return res.status(500).json({ success: false, error: `Database error: ${error.message}` });
-        }
-        if (data?.id) {
+          console.warn('Supabase partner_applications insert warning:', error.message);
+        } else if (data?.id) {
           application.id = data.id;
         }
       } catch (dbErr) {
-        console.error('Supabase insert exception:', dbErr.message);
-        return res.status(500).json({ success: false, error: `Database error: ${dbErr.message}` });
+        console.warn('Supabase insert network exception (persisting in memory):', dbErr.message);
       }
     }
 
