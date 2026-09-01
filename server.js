@@ -44,7 +44,10 @@ app.use(session({
   }
 }));
 
-// Static files with Cache-Control headers
+// Serve static images directory
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Static files from frontend with Cache-Control headers
 app.use(express.static(path.join(__dirname, 'frontend'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
@@ -166,6 +169,7 @@ if (require.main === module) {
     console.log(`🌐 Marketing: http://localhost:${PORT}/aivekai`);
     console.log(`🤝 Partner Portal: http://localhost:${PORT}/aivekai/partners`);
     console.log(`👑 Admin Portal: http://localhost:${PORT}/aivekai/admin/partners`);
+    console.log(`🖼️  Static Images: http://localhost:${PORT}/images/`);
     console.log(`=======================================================`);
   });
 }
