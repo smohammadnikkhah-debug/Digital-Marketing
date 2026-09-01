@@ -48,6 +48,20 @@ function requireCsrfToken(req, res, next) {
 
 router.use(requireCsrfToken);
 
+// Middleware: In production (NODE_ENV !== 'test'), enforce database availability (Fail Closed)
+router.use((req, res, next) => {
+  if (process.env.NODE_ENV !== 'test') {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return res.status(503).json({
+        success: false,
+        error: 'Service Unavailable: Supabase database connection is not configured or offline.'
+      });
+    }
+  }
+  next();
+});
+
 // Helper to initialize Supabase client
 function getSupabaseClient() {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -838,27 +852,31 @@ router.post('/apply', async (req, res) => {
       created_at: new Date().toISOString()
     };
 
-    // 1. Insert into Supabase partner_applications if client available
-    const supabase = getSupabaseClient();
-    if (supabase && process.env.NODE_ENV !== 'test') {
-      try {
-        const { data, error } = await supabase
-          .from('partner_applications')
-          .insert([application])
-          .select()
-          .single();
-        if (error) {
-          console.warn('Supabase partner_applications insert warning:', error.message);
-        } else if (data?.id) {
-          application.id = data.id;
-        }
-      } catch (dbErr) {
-        console.warn('Supabase insert network exception (persisting in memory):', dbErr.message);
+    // 1. Insert into Supabase partner_applications (Production Mode: Fail closed on error)
+    if (process.env.NODE_ENV !== 'test') {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        return res.status(503).json({ success: false, error: 'Service Unavailable: Database connection required' });
       }
+      const { data, error } = await supabase
+        .from('partner_applications')
+        .insert([application])
+        .select()
+        .single();
+      if (error) {
+        console.error('Supabase partner_applications insert error:', error.message);
+        return res.status(500).json({ success: false, error: `Database error: ${error.message}` });
+      }
+      if (data?.id) {
+        application.id = data.id;
+      }
+    } else {
+      // Test environment only
+      if (process.env.TEST_DB_FAIL === 'true') {
+        return res.status(500).json({ success: false, error: 'Database error saving application.' });
+      }
+      mockStore.applications.push(application);
     }
-
-    // Save to in-memory store
-    mockStore.applications.push(application);
 
     // 2. Non-blocking Admin Email Notification & Applicant Confirmation Dispatch
     try {
