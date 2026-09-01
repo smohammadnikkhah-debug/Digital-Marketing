@@ -862,11 +862,11 @@ router.post('/apply', async (req, res) => {
     // Save to in-memory store
     mockStore.applications.push(application);
 
-    // 2. Non-blocking Admin Email Notification Dispatch
+    // 2. Non-blocking Admin Email Notification & Applicant Confirmation Dispatch
     try {
-      await partnerEmailService.sendApplicationNotification(application);
+      await partnerEmailService.sendAllApplicationNotifications(application);
     } catch (emailErr) {
-      console.error('Partner application notification email delivery failure:', emailErr.message);
+      console.error('Partner application email delivery failure:', emailErr.message);
       mockStore.auditLogs.push({
         id: `log_${Date.now()}`,
         action: 'partner_application_email_failed',

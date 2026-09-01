@@ -1,7 +1,8 @@
 const https = require('https');
 
-// Idempotency tracking set to prevent duplicate emails for identical application IDs
+// Idempotency tracking sets to prevent duplicate emails for identical application IDs
 const sentApplicationNotificationIds = new Set();
+const sentApplicantConfirmationIds = new Set();
 const sentEmailsLog = [];
 
 /**
@@ -37,12 +38,13 @@ function formatDateTime(isoString) {
 }
 
 /**
- * Partner Email Notification Service
+ * Partner Email Notification & Confirmation Service
  */
 class PartnerEmailService {
   constructor() {
     this.sentEmails = sentEmailsLog;
     this.sentApplicationIds = sentApplicationNotificationIds;
+    this.sentApplicantConfirmationIds = sentApplicantConfirmationIds;
     this.mockFailure = false; // Hook for testing provider failure recovery
   }
 
@@ -52,6 +54,7 @@ class PartnerEmailService {
   resetState() {
     this.sentEmails.length = 0;
     this.sentApplicationIds.clear();
+    this.sentApplicantConfirmationIds.clear();
     this.mockFailure = false;
   }
 
@@ -63,7 +66,7 @@ class PartnerEmailService {
   }
 
   /**
-   * Generates sanitized plain text and HTML email content.
+   * Generates sanitized plain text and HTML admin notification content.
    */
   buildEmailContent(app) {
     const safeName = escapeHtml(app.full_name || app.fullName);
@@ -203,6 +206,92 @@ https://mozarex.com/aivekai/admin/partners
   }
 
   /**
+   * Generates sanitized plain text and HTML applicant confirmation content.
+   */
+  buildApplicantConfirmationContent(app) {
+    const safeName = escapeHtml(app.full_name || app.fullName || 'Partner');
+    const safeCode = escapeHtml(app.preferred_referral_code || app.preferredReferralCode || 'Pending');
+    const safeId = escapeHtml(app.id || 'N/A');
+    const formattedDate = formatDateTime(app.created_at);
+
+    const subject = 'Your AivekAI Partner Program Application Received';
+
+    const textBody = `
+Hi ${app.full_name || app.fullName || 'there'},
+
+Thanks for applying to the AivekAI Partner Program. Your application has been received and is currently pending review.
+
+Application Summary:
+- Application ID: ${app.id}
+- Preferred Referral Code: ${app.preferred_referral_code || app.preferredReferralCode || 'Pending'}
+- Status: Pending Review
+- Submitted: ${formattedDate}
+
+What happens next?
+Our team reviews each creator application within 2-3 business days. Once approved, you will receive an invitation email with your portal activation instructions.
+
+You can review our program guidelines anytime:
+Partner Program Terms & Policy: https://mozarex.com/aivekai/partners/terms
+
+If you have any questions, feel free to reply to this email or contact us at info@mozarex.com.
+
+Best regards,
+The AivekAI Partner Team
+https://mozarex.com/aivekai/partners
+`.trim();
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 20px; background-color: #f4f6f8; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .header { border-bottom: 2px solid #006B5C; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h2 { color: #006B5C; margin: 0 0 6px 0; font-size: 22px; }
+    .badge { display: inline-block; background: #E6F4F1; color: #004D42; padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .summary-box { background: #F8FAF9; border: 1px solid rgba(0,107,92,0.12); border-radius: 8px; padding: 18px; margin: 20px 0; }
+    .summary-item { margin-bottom: 8px; font-size: 14px; }
+    .summary-item:last-child { margin-bottom: 0; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e1e4e8; font-size: 13px; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Application Received</span>
+      <h2>AivekAI Partner Program</h2>
+    </div>
+
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${safeName}</strong>,</p>
+    <p style="font-size: 15px; color: #2D3735;">Thanks for applying to the AivekAI Partner Program. Your application has been received and is currently pending review.</p>
+
+    <div class="summary-box">
+      <div class="summary-item"><strong>Application ID:</strong> <code>${safeId}</code></div>
+      <div class="summary-item"><strong>Preferred Referral Code:</strong> <code>${safeCode}</code></div>
+      <div class="summary-item"><strong>Status:</strong> <span style="color: #006B5C; font-weight: 700;">Pending Review</span></div>
+      <div class="summary-item"><strong>Submitted:</strong> ${formattedDate}</div>
+    </div>
+
+    <h3 style="color: #004D42; font-size: 15px; margin-top: 24px; margin-bottom: 8px;">What happens next?</h3>
+    <p style="font-size: 14px; color: #5C6764; margin-bottom: 16px;">Our team reviews each partner application within <strong>2-3 business days</strong>. Once approved, you will receive an invitation email with your portal access and onboarding instructions.</p>
+
+    <p style="font-size: 14px; color: #5C6764;">In the meantime, you can review our <a href="https://mozarex.com/aivekai/partners/terms" style="color: #006B5C; font-weight: 600;" target="_blank">Partner Program Terms & Policy</a>.</p>
+
+    <div class="footer">
+      Questions? Contact our partner team at <a href="mailto:info@mozarex.com" style="color: #006B5C;">info@mozarex.com</a>.<br>
+      &copy; 2026 Mozarex & AivekAI. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+    return { subject, textBody, htmlBody };
+  }
+
+  /**
    * Sends the admin notification email for a submitted application.
    * Ensures idempotency so retry/duplicate calls do not send multiple emails.
    */
@@ -218,23 +307,20 @@ https://mozarex.com/aivekai/admin/partners
       return {
         success: true,
         duplicate: true,
-        message: 'Notification email already sent for this application ID.'
+        message: 'Admin notification email already sent for this application ID.'
       };
     }
 
     const recipient = this.getAdminRecipient();
     const { subject, textBody, htmlBody } = this.buildEmailContent(application);
 
-    // Mock failure simulation for testing error resilience
     if (this.mockFailure) {
       throw new Error('Simulated email provider network failure');
     }
 
-    // Provider Dispatch Logic:
-    // If SendGrid/Resend or other provider is configured in environment, dispatch via HTTP API.
-    // In all environments, log and record in sentEmails.
     const emailRecord = {
-      id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      id: `email_admin_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'admin_notification',
       application_id: applicationId,
       to: recipient,
       subject,
@@ -243,7 +329,6 @@ https://mozarex.com/aivekai/admin/partners
       sent_at: new Date().toISOString()
     };
 
-    // Attempt provider dispatch if configured
     if (process.env.RESEND_API_KEY) {
       try {
         await this._dispatchViaResend(emailRecord);
@@ -258,7 +343,6 @@ https://mozarex.com/aivekai/admin/partners
       }
     }
 
-    // Mark application ID as sent in idempotency set
     this.sentApplicationIds.add(applicationId);
     this.sentEmails.push(emailRecord);
 
@@ -269,6 +353,84 @@ https://mozarex.com/aivekai/admin/partners
       recipient,
       sent_at: emailRecord.sent_at
     };
+  }
+
+  /**
+   * Sends the confirmation email to the applicant.
+   * Ensures idempotency so retry/duplicate calls do not send multiple emails.
+   */
+  async sendApplicantConfirmation(application) {
+    if (!application || !application.id || !application.email) {
+      throw new Error('Application object with a valid ID and email is required for applicant confirmation.');
+    }
+
+    const applicationId = application.id;
+
+    // Idempotency check: duplicate prevention
+    if (this.sentApplicantConfirmationIds.has(applicationId)) {
+      return {
+        success: true,
+        duplicate: true,
+        message: 'Applicant confirmation email already sent for this application ID.'
+      };
+    }
+
+    const recipient = application.email.trim().toLowerCase();
+    const { subject, textBody, htmlBody } = this.buildApplicantConfirmationContent(application);
+
+    if (this.mockFailure) {
+      throw new Error('Simulated email provider network failure');
+    }
+
+    const emailRecord = {
+      id: `email_applicant_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'applicant_confirmation',
+      application_id: applicationId,
+      to: recipient,
+      subject,
+      text: textBody,
+      html: htmlBody,
+      sent_at: new Date().toISOString()
+    };
+
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await this._dispatchViaResend(emailRecord);
+      } catch (err) {
+        console.warn('Resend API dispatch error (fallback to standard log):', err.message);
+      }
+    } else if (process.env.SENDGRID_API_KEY) {
+      try {
+        await this._dispatchViaSendGrid(emailRecord);
+      } catch (err) {
+        console.warn('SendGrid API dispatch error (fallback to standard log):', err.message);
+      }
+    }
+
+    this.sentApplicantConfirmationIds.add(applicationId);
+    this.sentEmails.push(emailRecord);
+
+    return {
+      success: true,
+      duplicate: false,
+      message_id: emailRecord.id,
+      recipient,
+      sent_at: emailRecord.sent_at
+    };
+  }
+
+  /**
+   * Dispatches both admin notification and applicant confirmation.
+   */
+  async sendAllApplicationNotifications(application) {
+    const adminResult = await this.sendApplicationNotification(application);
+    let applicantResult = null;
+    try {
+      applicantResult = await this.sendApplicantConfirmation(application);
+    } catch (e) {
+      console.warn('Applicant confirmation email dispatch warning:', e.message);
+    }
+    return { adminResult, applicantResult };
   }
 
   /**
