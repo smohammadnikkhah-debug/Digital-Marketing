@@ -1,8 +1,12 @@
 -- ==============================================================================
--- AIVEKAI PARTNER PROGRAM & PAYOUTS PRODUCTION SCHEMA BUNDLE (RECONCILED)
+-- AIVEKAI PARTNER PROGRAM & PAYOUTS PRODUCTION SCHEMA BUNDLE (HARDENED)
 -- Target Project: nrunrjfmqczeowakjnjh
 -- Preserves existing tables: profiles, weight_entries, spam_reports, usage_logs, chat_messages, openai_keys
--- Reconciled against all 6 original migration manifests
+-- Reconciled & Hardened:
+--   1. Explicit SECURITY DEFINER privileges & least privilege matrix
+--   2. Atomic row-level lock concurrency & partial unique index on active payouts
+--   3. Strict semantic naming on subscription_attribution_links
+--   4. Non-destructive financial audit history
 -- ==============================================================================
 
 -- Enable Extensions
@@ -71,17 +75,20 @@ CREATE TABLE IF NOT EXISTS public.partner_attributions (
 CREATE INDEX IF NOT EXISTS idx_partner_attributions_customer ON public.partner_attributions(customer_id);
 CREATE INDEX IF NOT EXISTS idx_partner_attributions_partner ON public.partner_attributions(partner_id);
 
--- 1.4. Subscription Attribution Links Junction & Audit Table
+-- 1.4. Subscription Attribution Links Junction & Audit Table (Semantically Corrected)
 CREATE TABLE IF NOT EXISTS public.subscription_attribution_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE RESTRICT,
     partner_id UUID NOT NULL REFERENCES public.partners(id) ON DELETE RESTRICT,
     attribution_id UUID NOT NULL REFERENCES public.partner_attributions(id) ON DELETE CASCADE,
+    attribution_source TEXT NOT NULL CHECK (attribution_source IN ('kochava_deferred_link', 'kochava_deep_link', 'manual_referral_code', 'admin')),
+    first_store_platform TEXT CHECK (first_store_platform IN ('apple', 'google', 'stripe', 'web', 'other')),
     first_transaction_id TEXT,
-    platform TEXT,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     CONSTRAINT uq_sub_attribution_customer UNIQUE (customer_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_sub_attr_links_partner ON public.subscription_attribution_links(partner_id);
 
 -- ==============================================================================
 -- 2. SUBSCRIPTION EVENTS & AUDIT (subscription_events_commission_schema.sql)
@@ -202,7 +209,6 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     IF TG_OP = 'UPDATE' THEN
-        -- Prevent mutating core financial figures on existing ledger entries
         IF OLD.commission_amount_minor != NEW.commission_amount_minor OR
            OLD.eligible_revenue_minor != NEW.eligible_revenue_minor OR
            OLD.partner_id != NEW.partner_id THEN
@@ -325,7 +331,7 @@ CREATE INDEX IF NOT EXISTS idx_partner_payouts_status ON public.partner_payouts(
 CREATE INDEX IF NOT EXISTS idx_partner_payouts_provider_batch ON public.partner_payouts(provider_batch_id);
 CREATE INDEX IF NOT EXISTS idx_partner_payouts_sender_batch ON public.partner_payouts(sender_batch_id);
 
--- 4.6. Partner Payout Items (Preserves Non-Destructive Audit History with is_released)
+-- 4.6. Partner Payout Items (With Non-Destructive Release Tracking & Active Unique Index)
 CREATE TABLE IF NOT EXISTS public.partner_payout_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     payout_id UUID NOT NULL REFERENCES public.partner_payouts(id) ON DELETE CASCADE,
@@ -335,6 +341,11 @@ CREATE TABLE IF NOT EXISTS public.partner_payout_items (
     released_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Concurrency Hardening: Partial Unique Index to guarantee 1 active payout item per commission
+CREATE UNIQUE INDEX IF NOT EXISTS uq_active_payout_commission
+ON public.partner_payout_items (commission_id)
+WHERE is_released = FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_payout_items_payout ON public.partner_payout_items(payout_id);
 CREATE INDEX IF NOT EXISTS idx_payout_items_commission ON public.partner_payout_items(commission_id);
@@ -448,10 +459,10 @@ DROP POLICY IF EXISTS "Allow public read active referral offers" ON public.refer
 CREATE POLICY "Allow public read active referral offers" ON public.referral_offers FOR SELECT USING (active = true);
 
 -- ==============================================================================
--- 5. RPC IMPLEMENTATIONS & COMPATIBILITY LAYER
+-- 5. RPC IMPLEMENTATIONS & CONCURRENCY-HARDENED FUNCTIONS
 -- ==============================================================================
 
--- 5.1. Validate and Apply Referral RPC
+-- 5.1. Validate and Apply Referral RPC (Customer-Facing)
 CREATE OR REPLACE FUNCTION public.validate_and_apply_referral(
     p_customer_id UUID,
     p_referral_code TEXT,
@@ -575,12 +586,12 @@ BEGIN
         RETURN jsonb_build_object('valid', false, 'reason', 'already_attributed', 'message', 'A referral has already been applied.');
     END IF;
 
-    -- Insert into subscription attribution links junction
+    -- Insert into subscription attribution links junction with strict attribution_source semantics
     INSERT INTO public.subscription_attribution_links (
         customer_id,
         partner_id,
         attribution_id,
-        platform
+        attribution_source
     ) VALUES (
         p_customer_id,
         v_partner.id,
@@ -607,7 +618,7 @@ BEGIN
 END;
 $$;
 
--- 5.2. Query Customer Referral Offer RPC
+-- 5.2. Query Customer Referral Offer RPC (Customer-Facing)
 CREATE OR REPLACE FUNCTION public.get_customer_referral_offer(
     p_customer_id UUID
 )
@@ -657,7 +668,7 @@ BEGIN
 END;
 $$;
 
--- 5.3. Process Verified Store Subscription Event & Record Commission Ledger
+-- 5.3. Process Verified Store Subscription Event & Record Commission Ledger (Server-Only)
 CREATE OR REPLACE FUNCTION public.process_verified_store_event(p_event_data JSONB)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -938,7 +949,7 @@ BEGIN
 END;
 $$;
 
--- 5.4. Alias Function for process_subscription_event
+-- 5.4. Alias Function for process_subscription_event (Server-Only)
 CREATE OR REPLACE FUNCTION public.process_subscription_event(p_event_data JSONB)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -950,7 +961,7 @@ BEGIN
 END;
 $$;
 
--- 5.5. Finalize Subscription Revenue RPC
+-- 5.5. Finalize Subscription Revenue RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.finalize_subscription_revenue(
     p_subscription_event_id UUID,
     p_final_net_revenue_minor INT,
@@ -1021,7 +1032,7 @@ BEGIN
 END;
 $$;
 
--- 5.6. Release Pending Commissions RPC
+-- 5.6. Release Pending Commissions RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.release_pending_commissions()
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -1047,7 +1058,7 @@ BEGIN
 END;
 $$;
 
--- 5.7. Partner Dashboard Summary RPC
+-- 5.7. Partner Dashboard Summary RPC (Guarded by auth.uid())
 CREATE OR REPLACE FUNCTION public.get_partner_dashboard_summary()
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -1138,7 +1149,7 @@ BEGIN
 END;
 $$;
 
--- 5.8. Create Partner Payout Batch RPC
+-- 5.8. Concurrency-Hardened Create Partner Payout Batch RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.create_partner_payout_batch(
     p_partner_id UUID,
     p_currency TEXT
@@ -1150,42 +1161,68 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE
     v_min_threshold_minor INT;
-    v_total_available_minor INT;
+    v_total_available_minor INT := 0;
+    v_item_count INT := 0;
     v_payout_id UUID;
     v_comm RECORD;
-    v_earliest TIMESTAMPTZ;
-    v_latest TIMESTAMPTZ;
+    v_earliest TIMESTAMPTZ := NULL;
+    v_latest TIMESTAMPTZ := NULL;
+    v_commission_ids UUID[] := '{}';
+    v_commission_amounts INT[] := '{}';
 BEGIN
+    -- 1. Look up minimum payout threshold
     SELECT minimum_payout_minor INTO v_min_threshold_minor
     FROM public.payout_settings
     WHERE currency = p_currency;
     
     IF v_min_threshold_minor IS NULL THEN
-        RETURN jsonb_build_object('success', false, 'error', 'no_payout_threshold_configured', 'currency', p_currency);
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'no_payout_threshold_configured',
+            'currency', p_currency
+        );
     END IF;
     
-    SELECT 
-        COALESCE(SUM(c.commission_amount_minor), 0),
-        MIN(c.earned_at),
-        MAX(c.earned_at)
-    INTO v_total_available_minor, v_earliest, v_latest
-    FROM public.partner_commissions c
-    LEFT JOIN public.partner_payout_items pi ON pi.commission_id = c.id AND pi.is_released = FALSE
-    WHERE c.partner_id = p_partner_id
-      AND c.currency = p_currency
-      AND c.status = 'available'
-      AND c.revenue_status = 'finalized'
-      AND pi.id IS NULL;
-      
-    IF v_total_available_minor < v_min_threshold_minor THEN
+    -- 2. Concurrency Lock: Lock all eligible, unallocated commission rows first
+    FOR v_comm IN
+        SELECT c.id, c.commission_amount_minor, c.earned_at
+        FROM public.partner_commissions c
+        WHERE c.partner_id = p_partner_id
+          AND c.currency = p_currency
+          AND c.status = 'available'
+          AND c.revenue_status = 'finalized'
+          AND NOT EXISTS (
+              SELECT 1 FROM public.partner_payout_items pi 
+              WHERE pi.commission_id = c.id AND pi.is_released = FALSE
+          )
+        ORDER BY c.earned_at ASC
+        FOR UPDATE OF c
+    LOOP
+        v_commission_ids := array_append(v_commission_ids, v_comm.id);
+        v_commission_amounts := array_append(v_commission_amounts, v_comm.commission_amount_minor);
+        v_total_available_minor := v_total_available_minor + v_comm.commission_amount_minor;
+        v_item_count := v_item_count + 1;
+        
+        IF v_earliest IS NULL OR v_comm.earned_at < v_earliest THEN
+            v_earliest := v_comm.earned_at;
+        END IF;
+        IF v_latest IS NULL OR v_comm.earned_at > v_latest THEN
+            v_latest := v_comm.earned_at;
+        END IF;
+    END LOOP;
+    
+    -- 3. Validate threshold against locked rows
+    IF v_item_count = 0 OR v_total_available_minor < v_min_threshold_minor THEN
         RETURN jsonb_build_object(
             'success', false,
             'error', 'below_minimum_threshold',
             'available_minor', v_total_available_minor,
+            'item_count', v_item_count,
             'minimum_threshold_minor', v_min_threshold_minor
         );
     END IF;
     
+    -- 4. Insert draft payout batch with exact sum of locked items
     INSERT INTO public.partner_payouts (
         partner_id, currency, amount_minor, status,
         period_start, period_end
@@ -1194,21 +1231,12 @@ BEGIN
         COALESCE(v_earliest, NOW()), COALESCE(v_latest, NOW())
     ) RETURNING id INTO v_payout_id;
     
-    FOR v_comm IN
-        SELECT c.id, c.commission_amount_minor
-        FROM public.partner_commissions c
-        LEFT JOIN public.partner_payout_items pi ON pi.commission_id = c.id AND pi.is_released = FALSE
-        WHERE c.partner_id = p_partner_id
-          AND c.currency = p_currency
-          AND c.status = 'available'
-          AND c.revenue_status = 'finalized'
-          AND pi.id IS NULL
-        FOR UPDATE OF c
-    LOOP
+    -- 5. Insert payout items linking locked commissions to this batch
+    FOR i IN 1 .. v_item_count LOOP
         INSERT INTO public.partner_payout_items (
             payout_id, commission_id, amount_minor, is_released
         ) VALUES (
-            v_payout_id, v_comm.id, v_comm.commission_amount_minor, FALSE
+            v_payout_id, v_commission_ids[i], v_commission_amounts[i], FALSE
         );
     END LOOP;
     
@@ -1218,12 +1246,13 @@ BEGIN
         'partner_id', p_partner_id,
         'currency', p_currency,
         'amount_minor', v_total_available_minor,
+        'item_count', v_item_count,
         'status', 'draft'
     );
 END;
 $$;
 
--- 5.9. Atomic Payout Acquisition RPC
+-- 5.9. Atomic Payout Acquisition RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.acquire_payout_for_submission(
     p_payout_id UUID,
     p_sender_batch_id TEXT,
@@ -1264,7 +1293,7 @@ BEGIN
 END;
 $$;
 
--- 5.10. Mark Payout Submitted RPC
+-- 5.10. Mark Payout Submitted RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.mark_payout_submitted(
     p_payout_id UUID,
     p_provider_batch_id TEXT,
@@ -1293,7 +1322,7 @@ BEGIN
 END;
 $$;
 
--- 5.11. Confirm Payout Success RPC
+-- 5.11. Confirm Payout Success RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.confirm_partner_payout_success(
     p_payout_id UUID,
     p_provider_batch_id TEXT,
@@ -1347,7 +1376,7 @@ BEGIN
 END;
 $$;
 
--- 5.12. Record Pre-Delivery Payout Failure (Non-Destructive Audit History Preservation)
+-- 5.12. Record Pre-Delivery Payout Failure (Server-Only, Non-Destructive)
 CREATE OR REPLACE FUNCTION public.record_partner_payout_failure(
     p_payout_id UUID,
     p_failure_code TEXT,
@@ -1401,7 +1430,7 @@ BEGIN
 END;
 $$;
 
--- 5.13. Record Post-Delivery Payout Reversal / Return RPC
+-- 5.13. Record Post-Delivery Payout Reversal / Return RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.record_partner_payout_reversal(
     p_payout_id UUID,
     p_reversal_code TEXT,
@@ -1444,7 +1473,7 @@ BEGIN
 END;
 $$;
 
--- 5.14. Admin Adjust Commission RPC
+-- 5.14. Admin Adjust Commission RPC (Server-Only)
 CREATE OR REPLACE FUNCTION public.create_partner_adjustment(
     p_partner_id UUID,
     p_amount_minor INT,
@@ -1500,3 +1529,41 @@ BEGIN
     );
 END;
 $$;
+
+-- ==============================================================================
+-- 6. EXPLICIT FUNCTION PRIVILEGE HARDENING (LEAST PRIVILEGE)
+-- ==============================================================================
+
+-- 6.1. Revoke default EXECUTE on all functions from PUBLIC, anon, and authenticated
+REVOKE EXECUTE ON FUNCTION public.process_verified_store_event(JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.process_subscription_event(JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.finalize_subscription_revenue(UUID, INT, JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.release_pending_commissions() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.create_partner_payout_batch(UUID, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.acquire_payout_for_submission(UUID, TEXT, TEXT, JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.mark_payout_submitted(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.confirm_partner_payout_success(UUID, TEXT, TEXT, INT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.record_partner_payout_failure(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.record_partner_payout_reversal(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.create_partner_adjustment(UUID, INT, TEXT, TEXT, UUID) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_partner_dashboard_summary() FROM PUBLIC, anon;
+
+-- 6.2. Grant server-only & financial mutation RPCs exclusively to service_role
+GRANT EXECUTE ON FUNCTION public.process_verified_store_event(JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.process_subscription_event(JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.finalize_subscription_revenue(UUID, INT, JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.release_pending_commissions() TO service_role;
+GRANT EXECUTE ON FUNCTION public.create_partner_payout_batch(UUID, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.acquire_payout_for_submission(UUID, TEXT, TEXT, JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mark_payout_submitted(UUID, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.confirm_partner_payout_success(UUID, TEXT, TEXT, INT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.record_partner_payout_failure(UUID, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.record_partner_payout_reversal(UUID, TEXT, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.create_partner_adjustment(UUID, INT, TEXT, TEXT, UUID) TO service_role;
+
+-- 6.3. Grant partner dashboard summary to authenticated (guarded by auth.uid()) & service_role
+GRANT EXECUTE ON FUNCTION public.get_partner_dashboard_summary() TO authenticated, service_role;
+
+-- 6.4. Grant customer-facing referral functions to anon, authenticated, and service_role
+GRANT EXECUTE ON FUNCTION public.validate_and_apply_referral(UUID, TEXT, TEXT, JSONB) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_customer_referral_offer(UUID) TO anon, authenticated, service_role;
