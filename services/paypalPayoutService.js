@@ -7,9 +7,9 @@ const https = require('https');
  */
 class PaypalPayoutService {
   constructor() {
-    this.clientId = process.env.PAYPAL_CLIENT_ID || 'mock_paypal_client_id';
-    this.clientSecret = process.env.PAYPAL_CLIENT_SECRET || 'mock_paypal_client_secret';
-    this.webhookId = process.env.PAYPAL_WEBHOOK_ID || 'mock_paypal_webhook_id';
+    this.clientId = process.env.PAYPAL_CLIENT_ID || '';
+    this.clientSecret = process.env.PAYPAL_CLIENT_SECRET || '';
+    this.webhookId = process.env.PAYPAL_WEBHOOK_ID || '';
     this.environment = (process.env.PAYPAL_ENVIRONMENT || 'sandbox').toLowerCase();
 
     // Base URL configuration
@@ -26,7 +26,7 @@ class PaypalPayoutService {
    * Helper HTTP request wrapper
    */
   async _request(options, postData = null) {
-    if (this.clientId.startsWith('mock_')) {
+    if (!this.clientSecret || this.clientId.startsWith('mock_')) {
       return this._handleMockRequest(options, postData);
     }
 

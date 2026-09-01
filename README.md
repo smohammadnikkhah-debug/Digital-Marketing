@@ -1,124 +1,55 @@
-# Digital Marketing SEO Platform
+# Mozarex Platform & AivekAI Backend
 
-A comprehensive AI-powered SEO analysis and content generation platform.
+Web platform and backend services for Mozarex apps, including the AivekAI Partner Program, Creator Portal, and Nutrition AI services.
 
-## 🚀 Quick Start
+---
 
-### 1. **Clone the Repository**
+## 🚀 Key Features
+
+* **AivekAI Marketing & Apps**: Public marketing pages for AivekAI, Puratryx, and StopTimetryx.
+* **AivekAI Partner Program**:
+  * Public Partner landing page and Creator application form.
+  * Partner Dashboard (multi-currency balances, referral links, commission history).
+  * Automated Creator Payout settings with PayPal account configuration.
+* **Admin Partner Management**:
+  * Creator application review & approval.
+  * Commission ledger inspection & manual adjustments.
+  * PayPal Payout batch management (approval, execution via PayPal Payouts API, status reconciliation).
+* **AivekAI Nutrition & AI Backend**:
+  * Anonymous signed session tokens with abuse prevention.
+  * OpenAI GPT-4o vision nutrition label and food plate image analysis.
+  * Scientific macro and biometric calculations with server-side usage telemetry.
+
+---
+
+## 🛠️ Environment Configuration
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+NODE_ENV=development
+PORT=3000
+SESSION_SECRET=your_session_secret
+
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+OPENAI_API_KEY=your_openai_api_key
+AIVEKAI_SESSION_SIGNING_SECRET=your_signing_secret
+
+PAYPAL_ENVIRONMENT=sandbox
+PAYPAL_CLIENT_ID=your_paypal_client_id
+PAYPAL_CLIENT_SECRET=your_paypal_client_secret
+PAYPAL_WEBHOOK_ID=your_paypal_webhook_id
+```
+
+---
+
+## 🧪 Testing
+
+Run all automated test suites:
+
 ```bash
-git clone <your-repo-url>
-cd digital-marketing-platform
+npm test
 ```
-
-### 2. **Install Dependencies**
-```bash
-npm install
-```
-
-### 3. **Environment Setup**
-```bash
-# Copy the environment template
-cp env.template .env
-
-# Edit the .env file with your actual API keys
-nano .env
-```
-
-### 4. **Required API Keys**
-You'll need to obtain API keys for:
-- **OpenAI**: Get your API key from [OpenAI Platform](https://platform.openai.com/)
-- **DataForSEO**: Sign up at [DataForSEO](https://dataforseo.com/)
-- **Supabase**: Create a project at [Supabase](https://supabase.com/)
-- **Auth0**: Set up authentication at [Auth0](https://auth0.com/)
-
-### 5. **Start the Application**
-```bash
-# Development mode
-npm start
-
-# Or directly with Node.js
-node server.js
-```
-
-## 📁 Project Structure
-
-```
-├── frontend/                 # Frontend HTML/CSS/JS files
-├── routes/                   # API route handlers
-├── services/                 # Business logic services
-├── models/                   # Database models
-├── images/                   # Static images
-├── components/               # Reusable components
-├── server.js                 # Main server file
-├── package.json              # Dependencies
-├── env.template              # Environment template
-└── .gitignore               # Git ignore rules
-```
-
-## 🔧 Environment Configuration
-
-### Development Environment
-- Uses DataForSEO Sandbox API (free)
-- Debug logging enabled
-- Social connections visible
-- Mock responses available
-
-### Production Environment
-- Uses DataForSEO Production API
-- Optimized logging
-- Social connections hidden
-- Real API responses only
-
-## 🚀 Deployment
-
-### Quick Deployment (Recommended)
-```bash
-# On your production server
-git clone <your-repo-url>
-cd digital-marketing-platform
-chmod +x deploy.sh
-./deploy.sh
-```
-
-### Manual Deployment
-1. Set up a VPS (DigitalOcean, Linode, etc.)
-2. Install Node.js 18+
-3. Install PM2 and Nginx
-4. Configure environment variables
-5. Set up SSL certificate
-
-See `PRODUCTION_DEPLOYMENT_CHECKLIST.md` for detailed instructions.
-
-## 🛡️ Security Features
-
-- Environment-based feature toggling
-- Social connections hidden in production
-- Rate limiting and CORS protection
-- Secure session management
-- SSL/HTTPS support
-
-## 📊 Features
-
-- **SEO Analysis**: Comprehensive website analysis
-- **Content Generation**: AI-powered blog and content creation
-- **Content Calendar**: Automated social media content planning
-- **Keyword Research**: Advanced keyword analysis
-- **Competitor Analysis**: Track competitor performance
-- **Backlink Analysis**: Monitor backlink profiles
-- **Technical SEO**: Identify technical issues
-
-## 🔑 API Endpoints
-
-- `GET /` - Main dashboard
-- `GET /blog` - Blog generator
-- `GET /seo-tools-content-calendar` - Content calendar
-- `POST /api/blog/generate` - Generate blog content
-- `POST /api/content-calendar/generate-seo-content` - Generate calendar content
-
-## 📝 License
-
-This project is proprietary software. All rights reserved.
-
-## 🆘 Support
-
-For support and questions, please contact the development team.
