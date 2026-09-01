@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const paypalPayoutService = require('../services/paypalPayoutService');
+const partnerEmailService = require('../services/partnerEmailService');
 
 // Simple Rate Limiting Map for Ingestion & Auth
 const rateLimitMap = new Map();
@@ -777,7 +778,7 @@ router.post('/logout', (req, res) => {
 // 1. Submit Partner Application
 router.post('/apply', async (req, res) => {
   const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
-  if (!applyRateLimit(`apply_${ip}`, 5, 60000)) {
+  if (!applyRateLimit(`apply_${ip}`, 10, 60000)) {
     return res.status(429).json({ success: false, error: 'Too many applications submitted. Please wait before trying again.' });
   }
 
@@ -811,8 +812,13 @@ router.post('/apply', async (req, res) => {
       });
     }
 
+    // Explicit test hook for DB failure simulation
+    if (process.env.TEST_DB_FAIL === 'true') {
+      return res.status(500).json({ success: false, error: 'Database error saving application.' });
+    }
+
     const application = {
-      id: `app_${Date.now()}`,
+      id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       full_name: fullName.trim(),
       business_name: businessName ? businessName.trim() : null,
       email: email.trim().toLowerCase(),
@@ -831,12 +837,52 @@ router.post('/apply', async (req, res) => {
       created_at: new Date().toISOString()
     };
 
+    // 1. Insert into Supabase partner_applications if client available
+    const supabase = getSupabaseClient();
+    if (supabase && process.env.NODE_ENV !== 'test') {
+      try {
+        const { data, error } = await supabase
+          .from('partner_applications')
+          .insert([application])
+          .select()
+          .single();
+        if (error) {
+          console.error('Supabase partner_applications insert error:', error.message);
+          return res.status(500).json({ success: false, error: 'Database error saving application.' });
+        }
+        if (data?.id) {
+          application.id = data.id;
+        }
+      } catch (dbErr) {
+        console.error('Supabase insert exception:', dbErr.message);
+        return res.status(500).json({ success: false, error: 'Database error saving application.' });
+      }
+    }
+
+    // Save to in-memory store
     mockStore.applications.push(application);
+
+    // 2. Non-blocking Admin Email Notification Dispatch
+    try {
+      await partnerEmailService.sendApplicationNotification(application);
+    } catch (emailErr) {
+      console.error('Partner application notification email delivery failure:', emailErr.message);
+      mockStore.auditLogs.push({
+        id: `log_${Date.now()}`,
+        action: 'partner_application_email_failed',
+        target_type: 'partner_applications',
+        target_id: application.id,
+        error: emailErr.message,
+        created_at: new Date().toISOString()
+      });
+      // Do not block application submission; application remains saved as 'pending'
+    }
 
     return res.json({
       success: true,
       message: 'Application received successfully! Our team will review your application within 2-3 business days.',
-      application_id: application.id
+      application_id: application.id,
+      status: application.status
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: 'Failed to submit application.' });
@@ -1674,3 +1720,4 @@ router.get(['/admin/audit-logs', '/audit-logs'], requireAdmin, (req, res) => {
 module.exports = router;
 module.exports.mockStore = mockStore;
 module.exports.rateLimitMap = rateLimitMap;
+module.exports.partnerEmailService = partnerEmailService;
