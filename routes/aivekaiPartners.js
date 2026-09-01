@@ -849,14 +849,14 @@ router.post('/apply', async (req, res) => {
           .single();
         if (error) {
           console.error('Supabase partner_applications insert error:', error.message);
-          return res.status(500).json({ success: false, error: 'Database error saving application.' });
+          return res.status(500).json({ success: false, error: `Database error: ${error.message}` });
         }
         if (data?.id) {
           application.id = data.id;
         }
       } catch (dbErr) {
         console.error('Supabase insert exception:', dbErr.message);
-        return res.status(500).json({ success: false, error: 'Database error saving application.' });
+        return res.status(500).json({ success: false, error: `Database error: ${dbErr.message}` });
       }
     }
 
