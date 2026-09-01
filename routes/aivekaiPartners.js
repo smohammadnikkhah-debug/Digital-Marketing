@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const paypalPayoutService = require('../services/paypalPayoutService');
 const partnerEmailService = require('../services/partnerEmailService');
@@ -818,7 +819,7 @@ router.post('/apply', async (req, res) => {
     }
 
     const application = {
-      id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      id: crypto.randomUUID(),
       full_name: fullName.trim(),
       business_name: businessName ? businessName.trim() : null,
       email: email.trim().toLowerCase(),
