@@ -24,6 +24,7 @@
             --card-shadow: 0 8px 24px rgba(0, 107, 92, 0.05);
             --radius-lg: 16px;
             --radius-md: 10px;
+            --radius-sm: 6px;
             --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -44,9 +45,7 @@
             display: flex;
             flex-direction: column;
             position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
+            top: 0; bottom: 0; left: 0;
             z-index: 100;
         }
 
@@ -63,6 +62,7 @@
         }
 
         .sidebar-brand img { width: 34px; height: 34px; border-radius: 8px; }
+
         .nav-list { list-style: none; padding: 20px 14px; flex: 1; }
         .nav-item { margin-bottom: 6px; }
 
@@ -92,6 +92,13 @@
             justify-content: space-between;
         }
 
+        .partner-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+        }
+
         .avatar {
             width: 36px;
             height: 36px;
@@ -113,104 +120,128 @@
             font-weight: 600;
         }
 
+        .logout-btn:hover { color: #E53E3E; }
+
         main {
             margin-left: 260px;
             flex: 1;
             padding: 32px 40px;
-            max-width: 900px;
+            max-width: 1300px;
         }
 
         .header-strip {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
-        .header-title h1 { font-size: 1.8rem; font-weight: 800; }
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
         .header-title p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
 
         .card {
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 32px;
+            padding: 24px;
             box-shadow: var(--card-shadow);
             margin-bottom: 24px;
         }
 
-        .card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 18px; }
-
-        .form-group { margin-bottom: 20px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-        label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.88rem;
-            margin-bottom: 6px;
-            color: var(--text-dark);
+        .card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
 
-        input[type="text"], input[type="email"], input[type="url"] {
-            width: 100%;
-            padding: 12px 16px;
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input {
+            padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            background: var(--bg-page);
         }
 
         .btn-save {
+            padding: 12px 24px;
             background: var(--primary);
             color: var(--white);
             border: none;
             border-radius: var(--radius-md);
-            padding: 12px 28px;
-            font-size: 0.95rem;
             font-weight: 700;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: var(--transition);
+            margin-top: 8px;
         }
 
         .btn-save:hover { background: var(--primary-dark); }
+
         .toast {
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: #10B981;
+            background: #121816;
             color: var(--white);
             padding: 12px 20px;
             border-radius: var(--radius-md);
+            font-size: 0.88rem;
             font-weight: 600;
             display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 
 <body>
     <aside>
-        <a href="/aivekai/partners/dashboard" class="sidebar-brand">
+        <a href="/aivekai/partners" class="sidebar-brand">
             <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
             <span>AivekAI Partner</span>
         </a>
 
         <ul class="nav-list">
             <li class="nav-item"><a href="/aivekai/partners/dashboard" class="nav-link">📊 Overview</a></li>
-            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link">💰 Commission Ledger</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link">💰 Commissions</a></li>
             <li class="nav-item"><a href="/aivekai/partners/payouts" class="nav-link">💳 Payouts</a></li>
             <li class="nav-item"><a href="/aivekai/partners/settings" class="nav-link active">⚙️ Settings</a></li>
         </ul>
 
         <div class="sidebar-footer">
             <div class="partner-profile">
-                <div class="avatar">J</div>
+                <div class="avatar" id="partnerAvatar">P</div>
                 <div>
-                    <strong>James Smith</strong>
+                    <strong id="partnerNavName">Partner</strong>
                     <div style="font-size: 0.75rem; color: #10B981;">● Active Partner</div>
                 </div>
             </div>
-            <button class="logout-btn" onclick="window.location.href='/aivekai/partners/login'">Sign Out</button>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
         </div>
     </aside>
 
@@ -228,33 +259,33 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Display Name</label>
-                        <input type="text" id="partnerName" value="James Smith">
+                        <input type="text" id="partnerName" placeholder="Your Name">
                     </div>
                     <div class="form-group">
                         <label>Notification Email</label>
-                        <input type="email" id="partnerEmail" value="james@example.com">
+                        <input type="email" id="partnerEmail" placeholder="email@yourdomain.com">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Website</label>
-                        <input type="url" id="partnerWebsite" value="https://jamesnutrition.com">
+                        <input type="url" id="partnerWebsite" placeholder="https://yourwebsite.com">
                     </div>
                     <div class="form-group">
                         <label>Instagram</label>
-                        <input type="text" id="partnerInsta" value="@james_fit">
+                        <input type="text" id="partnerInsta" placeholder="@yourhandle">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label>TikTok</label>
-                        <input type="text" id="partnerTikTok" value="@james_nutrition">
+                        <input type="text" id="partnerTikTok" placeholder="@yourhandle">
                     </div>
                     <div class="form-group">
                         <label>YouTube</label>
-                        <input type="text" id="partnerYouTube" value="youtube.com/@jamesfit">
+                        <input type="text" id="partnerYouTube" placeholder="youtube.com/@channel">
                     </div>
                 </div>
 
@@ -266,9 +297,9 @@
             <h3>🔒 Fixed Partner Configuration (Admin Controlled)</h3>
             <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">The following properties are governed by administrative agreement:</p>
             <div style="background: var(--bg-page); padding: 16px; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.8;">
-                <div><strong>Assigned Referral Code:</strong> <code>JAMES</code></div>
-                <div><strong>Current Commission Rate:</strong> 30% Recurring</div>
-                <div><strong>Partner Status:</strong> Active (Accepting New & Earning Recurring)</div>
+                <div><strong>Assigned Referral Code:</strong> <code id="dispReferralCode">-</code></div>
+                <div><strong>Current Commission Rate:</strong> <span id="dispCommissionRate">-</span> Recurring</div>
+                <div><strong>Partner Status:</strong> <span id="dispStatus" style="color: #00875A; font-weight: 700;">Active</span></div>
             </div>
         </div>
     </main>
@@ -276,11 +307,49 @@
     <div id="toast" class="toast">Settings updated successfully!</div>
 
     <script>
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/aivekai/partners/dashboard', {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.replace('/aivekai/partners/login');
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('partnerNavName').innerText = data.partner_name || 'Partner';
+                    document.getElementById('partnerAvatar').innerText = (data.partner_name || 'P').charAt(0);
+                    document.getElementById('partnerName').value = data.partner_name || '';
+                    document.getElementById('dispReferralCode').innerText = data.referral_code || '-';
+                    document.getElementById('dispCommissionRate').innerText = `${data.commission_rate || 0}%`;
+                }
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+
         function saveSettings() {
             const toast = document.getElementById('toast');
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
+
+        async function logout() {
+            try {
+                await fetch('/api/aivekai/partners/logout', {
+                    method: 'POST',
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+            } catch (e) {
+                console.error(e);
+            }
+            window.location.replace('/aivekai/partners/login');
+        }
+
+        window.onload = loadSettings;
     </script>
 </body>
 </html>

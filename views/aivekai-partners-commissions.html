@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AivekAI Partner Dashboard - Commission Ledger</title>
+    <title>AivekAI Partner Dashboard - Commissions Ledger</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,11 +28,7 @@
             --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -42,6 +38,7 @@
             min-height: 100vh;
         }
 
+        /* Sidebar */
         aside {
             width: 260px;
             background: var(--white);
@@ -49,9 +46,7 @@
             display: flex;
             flex-direction: column;
             position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
+            top: 0; bottom: 0; left: 0;
             z-index: 100;
         }
 
@@ -67,18 +62,9 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .sidebar-brand img {
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-        }
+        .sidebar-brand img { width: 34px; height: 34px; border-radius: 8px; }
 
-        .nav-list {
-            list-style: none;
-            padding: 20px 14px;
-            flex: 1;
-        }
-
+        .nav-list { list-style: none; padding: 20px 14px; flex: 1; }
         .nav-item { margin-bottom: 6px; }
 
         .nav-link {
@@ -94,8 +80,7 @@
             transition: var(--transition);
         }
 
-        .nav-link:hover,
-        .nav-link.active {
+        .nav-link:hover, .nav-link.active {
             background: var(--primary-light);
             color: var(--primary);
         }
@@ -136,6 +121,8 @@
             font-weight: 600;
         }
 
+        .logout-btn:hover { color: #E53E3E; }
+
         main {
             margin-left: 260px;
             flex: 1;
@@ -147,134 +134,98 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
         .header-title h1 {
             font-size: 1.8rem;
             font-weight: 800;
             color: var(--text-dark);
+            letter-spacing: -0.5px;
         }
 
-        .header-title p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-top: 4px;
-        }
+        .header-title p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
 
-        .table-card {
+        .card {
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 24px;
             box-shadow: var(--card-shadow);
-            overflow-x: auto;
+            margin-bottom: 24px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            text-align: left;
-            font-size: 0.92rem;
+            font-size: 0.9rem;
         }
 
         th {
-            padding: 14px 16px;
-            background: var(--bg-page);
+            text-align: left;
+            padding: 12px 16px;
+            background: #F8FAFA;
             color: var(--text-muted);
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.78rem;
-            letter-spacing: 0.5px;
+            font-weight: 600;
             border-bottom: 1px solid var(--border);
         }
 
         td {
-            padding: 16px;
+            padding: 14px 16px;
             border-bottom: 1px solid var(--border);
-            color: var(--text-dark);
-        }
-
-        tr:hover td {
-            background: rgba(0, 107, 92, 0.02);
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.78rem;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
         }
 
-        .badge-available { background: #D1FAE5; color: #065F46; }
-        .badge-pending { background: #FEF3C7; color: #92400E; }
-        .badge-paid { background: #E0E7FF; color: #3730A3; }
-        .badge-reversed { background: #FEE2E2; color: #991B1B; }
-
-        .privacy-note {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            border-radius: var(--radius-md);
-            padding: 14px 18px;
-            font-size: 0.88rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .badge-available { background: #E6F7F0; color: #00875A; }
+        .badge-pending { background: #FFF8E6; color: #B78103; }
+        .badge-paid { background: #E6F4F1; color: #006B5C; }
+        .badge-reversed { background: #FFEBE6; color: #DE350B; }
     </style>
 </head>
 
 <body>
     <aside>
-        <a href="/aivekai/partners/dashboard" class="sidebar-brand">
+        <a href="/aivekai/partners" class="sidebar-brand">
             <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
             <span>AivekAI Partner</span>
         </a>
 
         <ul class="nav-list">
-            <li class="nav-item">
-                <a href="/aivekai/partners/dashboard" class="nav-link">📊 Overview</a>
-            </li>
-            <li class="nav-item">
-                <a href="/aivekai/partners/commissions" class="nav-link active">💰 Commission Ledger</a>
-            </li>
-            <li class="nav-item">
-                <a href="/aivekai/partners/payouts" class="nav-link">💳 Payouts</a>
-            </li>
-            <li class="nav-item">
-                <a href="/aivekai/partners/settings" class="nav-link">⚙️ Settings</a>
-            </li>
+            <li class="nav-item"><a href="/aivekai/partners/dashboard" class="nav-link">📊 Overview</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link active">💰 Commissions</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/payouts" class="nav-link">💳 Payouts</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/settings" class="nav-link">⚙️ Settings</a></li>
         </ul>
 
         <div class="sidebar-footer">
             <div class="partner-profile">
-                <div class="avatar">J</div>
+                <div class="avatar" id="partnerAvatar">P</div>
                 <div>
-                    <strong>James Smith</strong>
-                    <div style="font-size: 0.75rem; color: #10B981;">● Active Partner</div>
+                    <strong id="partnerNavName">Partner</strong>
+                    <div style="font-size: 0.75rem; color: #10B981;">● Active</div>
                 </div>
             </div>
-            <button class="logout-btn" onclick="window.location.href='/aivekai/partners/login'">Sign Out</button>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
         </div>
     </aside>
 
     <main>
         <div class="header-strip">
             <div class="header-title">
-                <h1>Commission Ledger & Audit Trail</h1>
-                <p>Immutable history of all verified subscription purchases, renewals, and adjustments.</p>
+                <h1>Verified Commission Ledger</h1>
+                <p>Audited record of all initial subscriptions, annual renewals, and refunds.</p>
             </div>
         </div>
 
-        <div class="privacy-note">
-            <span>🔒</span>
-            <span><strong>Privacy Protection Active:</strong> Customer personal identities, UUIDs, and raw store transaction tokens are cryptographically isolated and never exposed in partner-facing reports.</span>
-        </div>
-
-        <div class="table-card">
+        <div class="card">
             <table>
                 <thead>
                     <tr>
@@ -298,22 +249,21 @@
     <script>
         async function loadCommissions() {
             try {
-                const token = localStorage.getItem('aivekai_partner_token') || 'mock_token_james';
                 const response = await fetch('/api/aivekai/partners/commissions', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
                 });
 
                 if (response.status === 401 || response.status === 403) {
-                    window.location.href = '/aivekai/partners/login';
+                    window.location.replace('/aivekai/partners/login');
                     return;
                 }
 
                 const data = await response.json();
                 const tbody = document.getElementById('commissionTableBody');
 
-                if (data.success && data.commissions.length > 0) {
+                if (data.success && data.commissions && data.commissions.length > 0) {
                     tbody.innerHTML = data.commissions.map(c => {
-                        const dateStr = new Date(c.earned_at).toLocaleDateString('en-AU', {
+                        const dateStr = new Date(c.earned_at || c.created_at).toLocaleDateString('en-AU', {
                             day: 'numeric', month: 'short', year: 'numeric'
                         });
                         const typeLabel = c.type === 'initial_purchase' ? 'Subscription' :
@@ -328,24 +278,36 @@
                             <tr>
                                 <td><strong>${dateStr}</strong></td>
                                 <td>${typeLabel}</td>
-                                <td>${c.currency} $${c.eligible_revenue_formatted}</td>
+                                <td>${c.currency} $${c.eligible_revenue_formatted || (c.net_revenue_minor/100).toFixed(2)}</td>
                                 <td>${c.commission_rate}%</td>
-                                <td style="font-weight: 700; color: var(--primary);">${c.currency} $${c.commission_amount_formatted}</td>
+                                <td style="font-weight: 700; color: var(--primary);">${c.currency} $${c.commission_amount_formatted || (c.commission_minor/100).toFixed(2)}</td>
                                 <td>${c.currency}</td>
-                                <td><span style="font-size: 0.85rem; color: var(--text-muted);">${c.revenue_status}</span></td>
+                                <td><span style="font-size: 0.85rem; color: var(--text-muted);">${c.revenue_status || 'settled'}</span></td>
                                 <td><span class="badge ${badgeClass}">${c.status}</span></td>
                             </tr>
                         `;
                     }).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No commission records yet.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No commission records found.</td></tr>';
                 }
-            } catch (err) {
-                console.error('Failed to load commissions:', err);
+            } catch (e) {
+                console.error('Failed to load commissions:', e);
             }
         }
 
-        loadCommissions();
+        async function logout() {
+            try {
+                await fetch('/api/aivekai/partners/logout', {
+                    method: 'POST',
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+            } catch (e) {
+                console.error(e);
+            }
+            window.location.replace('/aivekai/partners/login');
+        }
+
+        window.onload = loadCommissions;
     </script>
 </body>
 </html>

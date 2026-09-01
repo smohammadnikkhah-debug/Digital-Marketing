@@ -53,6 +53,24 @@ app.use(session({
 }));
 
 // ==============================================================================
+// AUTHENTICATION SESSION GUARDS
+// ==============================================================================
+
+function requireAdminSession(req, res, next) {
+  if (!req.session || !req.session.adminAuthUserId || req.session.adminRole !== 'admin') {
+    return res.redirect(302, '/aivekai/admin/login');
+  }
+  next();
+}
+
+function requirePartnerSession(req, res, next) {
+  if (!req.session || !req.session.partnerAuthUserId || !req.session.partnerId) {
+    return res.redirect(302, '/aivekai/partners/login');
+  }
+  next();
+}
+
+// ==============================================================================
 // PROTECTED ADMIN ROUTE GUARDS (Evaluated BEFORE static serving)
 // ==============================================================================
 
@@ -61,25 +79,64 @@ app.get('/aivekai/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-login.html'));
 });
 
-// Protected Admin Portal (Strict Server-Side Auth Check)
-app.get('/aivekai/admin/partners', (req, res) => {
-  if (!req.session || !req.session.adminAuthUserId || req.session.adminRole !== 'admin') {
-    return res.redirect(302, '/aivekai/admin/login');
-  }
+// Protected Admin Portal
+app.get('/aivekai/admin/partners', requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-partners.html'));
 });
 
 // Protected Wildcard Admin Pages
-app.get('/aivekai/admin/*', (req, res) => {
-  if (!req.session || !req.session.adminAuthUserId || req.session.adminRole !== 'admin') {
-    return res.redirect(302, '/aivekai/admin/login');
-  }
+app.get('/aivekai/admin/*', requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-partners.html'));
 });
 
-// Explicit redirect for any direct filename access attempts
+// Block direct filename bypass attempts for Admin
 app.get(['/aivekai-admin-partners.html', '/aivekai-admin-partners'], (req, res) => {
   return res.redirect(302, '/aivekai/admin/login');
+});
+
+// ==============================================================================
+// PROTECTED PARTNER PORTAL ROUTE GUARDS (Evaluated BEFORE static serving)
+// ==============================================================================
+
+// Partner Login Page
+app.get('/aivekai/partners/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-partners-login.html'));
+});
+
+// Protected Partner Dashboard Pages
+app.get('/aivekai/partners/dashboard', requirePartnerSession, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-partners-dashboard.html'));
+});
+
+app.get('/aivekai/partners/commissions', requirePartnerSession, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-partners-commissions.html'));
+});
+
+app.get('/aivekai/partners/payouts', requirePartnerSession, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-partners-payouts.html'));
+});
+
+app.get('/aivekai/partners/settings', requirePartnerSession, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-partners-settings.html'));
+});
+
+// Block direct filename bypass attempts for Partners
+app.get([
+  '/aivekai-partners-dashboard.html',
+  '/aivekai-partners-commissions.html',
+  '/aivekai-partners-payouts.html',
+  '/aivekai-partners-settings.html'
+], (req, res) => {
+  return res.redirect(302, '/aivekai/partners/login');
+});
+
+// Public Partner Program Landing & Application Pages
+app.get('/aivekai/partners', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners.html'));
+});
+
+app.get('/aivekai/partners/apply', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-apply.html'));
 });
 
 // Serve static images directory
@@ -128,38 +185,6 @@ app.get('/policy', (req, res) => {
 // Account & Data Deletion Information
 app.get('/data-deletion', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'data-deletion.html'));
-});
-
-// ==============================================================================
-// AIVEKAI PARTNER PROGRAM
-// ==============================================================================
-
-app.get('/aivekai/partners', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners.html'));
-});
-
-app.get('/aivekai/partners/apply', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-apply.html'));
-});
-
-app.get('/aivekai/partners/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-login.html'));
-});
-
-app.get('/aivekai/partners/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-dashboard.html'));
-});
-
-app.get('/aivekai/partners/commissions', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-commissions.html'));
-});
-
-app.get('/aivekai/partners/payouts', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-payouts.html'));
-});
-
-app.get('/aivekai/partners/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'aivekai-partners-settings.html'));
 });
 
 // ==============================================================================

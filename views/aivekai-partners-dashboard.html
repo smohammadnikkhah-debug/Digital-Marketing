@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AivekAI Partner Dashboard - Overview</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #006B5C;
+            --primary-dark: #004D42;
+            --primary-light: #E6F4F1;
+            --accent: #00C2A8;
+            --text-dark: #121816;
+            --text-muted: #5C6764;
+            --bg-page: #F4F7F6;
+            --white: #FFFFFF;
+            --border: rgba(0, 107, 92, 0.12);
+            --card-shadow: 0 8px 24px rgba(0, 107, 92, 0.05);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 260px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand img { width: 34px; height: 34px; border-radius: 8px; }
+
+        .nav-list { list-style: none; padding: 20px 14px; flex: 1; }
+        .nav-item { margin-bottom: 6px; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .partner-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover { color: #E53E3E; }
+
+        /* Main Content */
+        main {
+            margin-left: 260px;
+            flex: 1;
+            padding: 32px 40px;
+            max-width: 1300px;
+        }
+
+        .header-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .header-title p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+
+        .period-badge {
+            background: var(--white);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Primary Financial Cards */
+        .financial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .fin-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+        }
+
+        .fin-card-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .fin-card-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .fin-card-sub {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .badge-verified { background: #E6F7F0; color: #00875A; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .badge-pending { background: #FFF8E6; color: #B78103; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .badge-est { background: #EDEFF2; color: #5C6764; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+
+        /* Secondary Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .metric-tile {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+        }
+
+        .metric-tile .label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+        .metric-tile .val { font-size: 1.3rem; font-weight: 700; color: var(--text-dark); margin-top: 4px; }
+
+        /* Panels */
+        .panel-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 28px;
+        }
+
+        .panel-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .link-tool-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .link-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: var(--primary-dark);
+            background: var(--bg-page);
+        }
+
+        .btn-copy {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: var(--primary);
+            color: var(--white);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-copy:hover { background: var(--primary-dark); }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #121816;
+            color: var(--white);
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <aside>
+        <a href="/aivekai/partners" class="sidebar-brand">
+            <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+            <span>AivekAI Partner</span>
+        </a>
+
+        <ul class="nav-list">
+            <li class="nav-item"><a href="/aivekai/partners/dashboard" class="nav-link active">📊 Overview</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link">💰 Commissions</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/payouts" class="nav-link">💳 Payouts</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/settings" class="nav-link">⚙️ Settings</a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="partner-profile">
+                <div class="avatar" id="partnerAvatar">P</div>
+                <div>
+                    <strong id="partnerNavName">Partner</strong>
+                    <div style="font-size: 0.75rem; color: #10B981;">● Active</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
+        </div>
+    </aside>
+
+    <main>
+        <div class="header-strip">
+            <div class="header-title">
+                <h1>Partner Performance Dashboard</h1>
+                <p>Track verified referral commissions, payout balances, and conversion analytics.</p>
+            </div>
+            <div class="period-badge">Real-Time Ledger Status</div>
+        </div>
+
+        <!-- Four-Card Financial Accounting Grid -->
+        <div class="financial-grid">
+            <div class="fin-card">
+                <div class="fin-card-label">
+                    <span>Available Balance</span>
+                    <span class="badge-verified">Finalized</span>
+                </div>
+                <div class="fin-card-value" id="availAmount">A$0.00</div>
+                <div class="fin-card-sub">Ready for next monthly payout batch</div>
+            </div>
+
+            <div class="fin-card">
+                <div class="fin-card-label">
+                    <span>Pending Clearance</span>
+                    <span class="badge-pending">Escrow</span>
+                </div>
+                <div class="fin-card-value" id="pendingAmount">A$0.00</div>
+                <div class="fin-card-sub">Holding for refund safety window</div>
+            </div>
+
+            <div class="fin-card">
+                <div class="fin-card-label">
+                    <span>Estimated Pipeline</span>
+                    <span class="badge-est">Forecast</span>
+                </div>
+                <div class="fin-card-value" id="estAmount">A$0.00</div>
+                <div class="fin-card-sub">Active subscriptions before renewal receipt</div>
+            </div>
+
+            <div class="fin-card">
+                <div class="fin-card-label">
+                    <span>Lifetime Paid</span>
+                    <span class="badge-verified">Disbursed</span>
+                </div>
+                <div class="fin-card-value" id="paidAmount">A$0.00</div>
+                <div class="fin-card-sub">Disbursed via verified PayPal batches</div>
+            </div>
+        </div>
+
+        <!-- Performance KPIs -->
+        <div class="metrics-grid">
+            <div class="metric-tile">
+                <div class="label">Commission Rate</div>
+                <div class="val" id="kpiRate">-</div>
+            </div>
+            <div class="metric-tile">
+                <div class="label">Attributed Customers</div>
+                <div class="val" id="kpiCustomers">0</div>
+            </div>
+            <div class="metric-tile">
+                <div class="label">Paid Conversions</div>
+                <div class="val" id="kpiSubscribers">0</div>
+            </div>
+            <div class="metric-tile">
+                <div class="label">Conversion Rate</div>
+                <div class="val" id="kpiConversion">0%</div>
+            </div>
+        </div>
+
+        <!-- Referral Link & Campaign Builder -->
+        <div class="panel-card">
+            <h3>🔗 Your Primary Smart Link & Referral Code</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px;">Share this link in your social bios, descriptions, and promotions. It works seamlessly across Web, iOS, and Android.</p>
+            
+            <div class="link-tool-group">
+                <input type="text" class="link-input" id="primaryLink" readonly value="Loading link...">
+                <button class="btn-copy" onclick="copyText('primaryLink', 'Primary link copied!')">Copy Smart Link</button>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                <div><strong>Referral Promo Code:</strong></div>
+                <input type="text" id="partnerCode" readonly style="width: 140px; padding: 6px 12px; font-family: monospace; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-page);" value="-">
+                <button class="btn-copy" style="padding: 6px 14px; font-size: 0.85rem;" onclick="copyText('partnerCode', 'Referral code copied!')">Copy Code</button>
+            </div>
+        </div>
+
+        <!-- Campaign Tagging Tool -->
+        <div class="panel-card">
+            <h3>🏷️ Campaign Sub-ID Link Generator</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px;">Add campaign identifiers to track which channels (e.g. <code>youtube_march</code>, <code>instagram_bio</code>) perform best.</p>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <input type="text" id="campaignSlug" placeholder="Enter campaign tag (e.g. tiktok_video_1)" style="flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);" oninput="updateCampaignLink()">
+            </div>
+            <div class="link-tool-group">
+                <input type="text" class="link-input" id="campaignOutputLink" readonly value="">
+                <button class="btn-copy" onclick="copyText('campaignOutputLink', 'Tagged campaign link copied!')">Copy Tagged Link</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+    <script>
+        let partnerData = null;
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/aivekai/partners/dashboard', {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.replace('/aivekai/partners/login');
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    partnerData = data;
+                    document.getElementById('partnerNavName').innerText = data.partner_name || 'Partner';
+                    document.getElementById('partnerAvatar').innerText = (data.partner_name || 'P').charAt(0);
+                    document.getElementById('partnerCode').value = data.referral_code || '';
+                    document.getElementById('primaryLink').value = data.smart_link || '';
+                    document.getElementById('campaignOutputLink').value = data.smart_link || '';
+                    document.getElementById('kpiRate').innerText = `${data.commission_rate || 0}%`;
+                    document.getElementById('kpiCustomers').innerText = data.total_customers || 0;
+                    document.getElementById('kpiSubscribers').innerText = data.paid_conversions || 0;
+                    document.getElementById('kpiConversion').innerText = `${data.conversion_rate || 0}%`;
+
+                    // Populate AUD balances
+                    if (data.currency_balances && data.currency_balances['AUD']) {
+                        const aud = data.currency_balances['AUD'];
+                        document.getElementById('availAmount').innerText = `A$${aud.available_formatted || '0.00'}`;
+                        document.getElementById('pendingAmount').innerText = `A$${aud.pending_formatted || '0.00'}`;
+                        document.getElementById('estAmount').innerText = `A$${aud.estimated_formatted || '0.00'}`;
+                        document.getElementById('paidAmount').innerText = `A$${aud.paid_formatted || '0.00'}`;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load dashboard data:', e);
+            }
+        }
+
+        function updateCampaignLink() {
+            const slug = document.getElementById('campaignSlug').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+            const code = document.getElementById('partnerCode').value;
+            if (slug.length > 0) {
+                document.getElementById('campaignOutputLink').value = `https://aivekai.smart.link/referral?referral_code=${code}&campaign=${slug}`;
+            } else {
+                document.getElementById('campaignOutputLink').value = `https://aivekai.smart.link/referral?referral_code=${code}`;
+            }
+        }
+
+        function copyText(elementId, toastMessage) {
+            const input = document.getElementById(elementId);
+            input.select();
+            navigator.clipboard.writeText(input.value);
+
+            const toast = document.getElementById('toast');
+            toast.innerText = toastMessage || 'Copied to clipboard!';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/aivekai/partners/logout', {
+                    method: 'POST',
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+            } catch (e) {
+                console.error(e);
+            }
+            window.location.replace('/aivekai/partners/login');
+        }
+
+        window.onload = loadDashboard;
+    </script>
+</body>
+</html>

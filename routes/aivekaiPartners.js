@@ -106,19 +106,22 @@ const mockStore = {
       id: 'puser_james_001',
       auth_user_id: 'auth_james_123',
       partner_id: 'partner_james_123',
-      role: 'partner'
+      role: 'partner',
+      is_active: true
     },
     {
       id: 'puser_sarah_002',
       auth_user_id: 'auth_sarah_456',
       partner_id: 'partner_sarah_456',
-      role: 'partner'
+      role: 'partner',
+      is_active: true
     },
     {
       id: 'puser_admin_001',
       auth_user_id: 'auth_admin_999',
       partner_id: 'partner_james_123',
-      role: 'admin'
+      role: 'admin',
+      is_active: true
     }
   ],
   partners: {
@@ -228,17 +231,23 @@ function maskEmail(email) {
 // Authentication Middleware: Resolves auth_user_id and partner_id server-side
 async function requirePartnerAuth(req, res, next) {
   try {
-    const authHeader = req.headers.authorization;
     let authUserId = null;
+    let partnerId = null;
+    let partnerRole = 'partner';
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    // 1. Session-based partner authentication (Primary in production)
+    if (req.session && req.session.partnerAuthUserId && req.session.partnerId) {
+      authUserId = req.session.partnerAuthUserId;
+      partnerId = req.session.partnerId;
+      partnerRole = req.session.partnerRole || 'partner';
+    }
+
+    // 2. Bearer token check (Only for automated test suite when NODE_ENV === 'test' or Supabase Auth JWT)
+    const authHeader = req.headers.authorization;
+    if (!authUserId && authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      if (token === 'mock_token_james') {
-        authUserId = 'auth_james_123';
-      } else if (token === 'mock_token_sarah') {
-        authUserId = 'auth_sarah_456';
-      } else if (token === 'mock_token_admin') {
-        authUserId = 'auth_admin_999';
+      if (process.env.NODE_ENV === 'test' && (token === 'mock_token_james' || token === 'mock_token_sarah')) {
+        authUserId = token === 'mock_token_james' ? 'auth_james_123' : 'auth_sarah_456';
       } else {
         const supabase = getSupabaseClient();
         if (supabase) {
@@ -248,25 +257,42 @@ async function requirePartnerAuth(req, res, next) {
           }
         }
       }
-    } else if (req.session && req.session.partnerAuthUserId) {
-      authUserId = req.session.partnerAuthUserId;
-    } else if (req.session && req.session.adminAuthUserId) {
-      authUserId = req.session.adminAuthUserId;
     }
 
     if (!authUserId) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const partnerUser = mockStore.partnerUsers.find(pu => pu.auth_user_id === authUserId);
-    if (!partnerUser && !req.session?.adminRole) {
-      return res.status(403).json({ success: false, error: 'Partner profile not found for this account' });
+    // Lookup partner user if not already resolved from session
+    if (!partnerId) {
+      let partnerUser = mockStore.partnerUsers.find(pu => pu.auth_user_id === authUserId);
+      if (!partnerUser) {
+        const supabase = getSupabaseClient();
+        if (supabase) {
+          const { data, error } = await supabase
+            .from('partner_users')
+            .select('partner_id, role, is_active')
+            .eq('auth_user_id', authUserId)
+            .eq('is_active', true)
+            .single();
+          if (data && !error) {
+            partnerUser = data;
+          }
+        }
+      }
+
+      if (!partnerUser || !partnerUser.is_active) {
+        return res.status(403).json({ success: false, error: 'Partner account not found or inactive' });
+      }
+
+      partnerId = partnerUser.partner_id;
+      partnerRole = partnerUser.role;
     }
 
     req.partnerAuth = {
-      authUserId: partnerUser ? partnerUser.auth_user_id : authUserId,
-      partnerId: partnerUser ? partnerUser.partner_id : null,
-      role: req.session?.adminRole || (partnerUser ? partnerUser.role : 'partner')
+      authUserId,
+      partnerId,
+      role: partnerRole
     };
 
     next();
@@ -283,14 +309,14 @@ async function requireAdmin(req, res, next) {
     let adminRole = null;
 
     // 1. Session check (Primary source of truth for admin portal)
-    if (req.session && req.session.adminAuthUserId) {
+    if (req.session && req.session.adminAuthUserId && req.session.adminRole === 'admin') {
       authUserId = req.session.adminAuthUserId;
       adminRole = req.session.adminRole;
     }
 
     // 2. Bearer token check (Only for API clients / automated test suite)
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (!authUserId && authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       if (token === 'mock_token_admin' && process.env.NODE_ENV === 'test') {
         authUserId = 'auth_admin_999';
@@ -358,50 +384,47 @@ async function requireAdmin(req, res, next) {
   }
 }
 
-// ==============================================================================
-// ADMIN AUTHENTICATION ROUTES (Phase 7C)
-// ==============================================================================
-
 // POST /api/aivekai/admin/login
-router.post(['/admin/login', '/login'], async (req, res) => {
+router.post(['/admin/login', '/login'], async (req, res, next) => {
+  if (req.path === '/login' && !req.baseUrl.includes('/admin')) {
+    return next(); // Pass to partner login handler
+  }
+
   const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
   if (!applyRateLimit(`admin_login_${ip}`, 5, 60000)) {
-    return res.status(429).json({ 
-      success: false, 
-      error: 'too_many_attempts',
-      message: 'Too many admin login attempts. Please wait 1 minute before trying again.' 
-    });
+    return res.status(429).json({ success: false, error: 'too_many_attempts', message: 'Too many login attempts. Please wait 1 minute.' });
   }
 
   try {
     const { username, password } = req.body;
-
     if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Username and password are required' });
+      return res.status(401).json({ success: false, message: 'Invalid username or password.' });
     }
 
-    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedUsername = username.toLowerCase().trim();
 
-    // 1. Resolve admin record from aivekai_admin_users
+    // 1. Look up identity in aivekai_admin_users
     let adminRecord = mockStore.adminUsers.find(a => a.username.toLowerCase() === normalizedUsername);
-
     const supabase = getSupabaseClient();
+
     if (!adminRecord && supabase) {
-      const { data, error } = await supabase
-        .from('aivekai_admin_users')
-        .select('*')
-        .eq('username', normalizedUsername)
-        .single();
-      if (data && !error) {
-        adminRecord = data;
+      try {
+        const { data, error } = await supabase
+          .from('aivekai_admin_users')
+          .select('*')
+          .ilike('username', normalizedUsername)
+          .single();
+        if (data && !error) {
+          adminRecord = data;
+        }
+      } catch (e) {
+        console.warn('Supabase admin lookup error:', e.message);
       }
     }
 
-    // Generic fail-closed if username not found
     if (!adminRecord) {
       mockStore.auditLogs.push({
         id: `log_${Date.now()}`,
-        admin_user_id: null,
         action: 'admin_login_failed',
         reason: 'username_not_found',
         username_attempted: normalizedUsername,
@@ -411,7 +434,6 @@ router.post(['/admin/login', '/login'], async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid username or password.' });
     }
 
-    // Inactive admin check -> generic 401 failure to client, audit log internal reason
     if (!adminRecord.is_active) {
       mockStore.auditLogs.push({
         id: `log_${Date.now()}`,
@@ -425,7 +447,6 @@ router.post(['/admin/login', '/login'], async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid username or password.' });
     }
 
-    // Role check -> generic 401 failure to client if not admin
     if (adminRecord.role !== 'admin') {
       mockStore.auditLogs.push({
         id: `log_${Date.now()}`,
@@ -443,9 +464,9 @@ router.post(['/admin/login', '/login'], async (req, res) => {
     let authSuccess = false;
     let authUserId = adminRecord.auth_user_id;
 
-    if (password === 'ValidAdminPassword123!' || (normalizedUsername === 'aivekai_admin' && password === 'ValidPassword123!')) {
+    if (process.env.NODE_ENV === 'test' && password === 'ValidAdminPassword123!') {
       authSuccess = true;
-    } else if (supabase && process.env.NODE_ENV !== 'test') {
+    } else if (supabase) {
       try {
         const email = adminRecord.internal_email || `${normalizedUsername}@admin.aivekai.internal`;
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -520,7 +541,11 @@ router.post(['/admin/login', '/login'], async (req, res) => {
 });
 
 // POST /api/aivekai/admin/logout
-router.post(['/admin/logout', '/logout'], (req, res) => {
+router.post(['/admin/logout', '/logout'], (req, res, next) => {
+  if (req.path === '/logout' && !req.baseUrl.includes('/admin')) {
+    return next(); // Pass to partner logout handler
+  }
+
   const cookieOptions = {
     path: '/',
     httpOnly: true,
@@ -548,14 +573,200 @@ router.post(['/admin/logout', '/logout'], (req, res) => {
 });
 
 // GET /api/aivekai/admin/session
-router.get(['/admin/session', '/session'], (req, res) => {
-  const isAuthenticated = Boolean(req.session && req.session.adminAuthUserId);
-  res.json({
-    success: true,
-    authenticated: isAuthenticated,
-    username: req.session?.adminUsername || null,
-    role: req.session?.adminRole || null
+router.get(['/admin/session', '/session'], (req, res, next) => {
+  if (req.path === '/session' && !req.baseUrl.includes('/admin')) {
+    return next(); // Pass to partner session handler
+  }
+
+  if (req.session && req.session.adminAuthUserId && req.session.adminRole === 'admin') {
+    return res.json({
+      authenticated: true,
+      role: req.session.adminRole,
+      username: req.session.adminUsername || 'admin'
+    });
+  }
+  return res.json({
+    authenticated: false,
+    role: null
   });
+});
+
+// ==============================================================================
+// PARTNER AUTHENTICATION & PORTAL ENDPOINTS
+// ==============================================================================
+
+// POST /api/aivekai/partners/login and /auth/login
+router.post(['/auth/login', '/login'], async (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
+  if (!applyRateLimit(`partner_login_${ip}`, 10, 60000)) {
+    return res.status(429).json({ success: false, error: 'too_many_attempts', message: 'Too many login attempts. Please wait 1 minute.' });
+  }
+
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    let authUserId = null;
+
+    // 1. In test environment only: allow test credentials for mock store
+    if (process.env.NODE_ENV === 'test') {
+      if (normalizedEmail === 'james@example.com' && password === 'ValidPartnerPassword123!') {
+        authUserId = 'auth_james_123';
+      } else if (normalizedEmail === 'sarah@example.com' && password === 'ValidPartnerPassword123!') {
+        authUserId = 'auth_sarah_456';
+      }
+    } else if (supabase) {
+      // 2. Authenticate with Supabase Auth (Credential Authority in Production)
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password: password
+        });
+        if (data?.user && !error) {
+          authUserId = data.user.id;
+        }
+      } catch (e) {
+        console.warn('Supabase partner auth attempt error:', e.message);
+      }
+    }
+
+    if (!authUserId) {
+      mockStore.auditLogs.push({
+        id: `log_${Date.now()}`,
+        action: 'partner_login_failed',
+        reason: 'invalid_credentials',
+        email_attempted: normalizedEmail,
+        ip,
+        created_at: new Date().toISOString()
+      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // 3. Resolve partner authorization mapping in partner_users
+    let partnerUser = mockStore.partnerUsers.find(pu => pu.auth_user_id === authUserId);
+    if (!partnerUser && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('partner_users')
+          .select('*')
+          .eq('auth_user_id', authUserId)
+          .single();
+        if (data && !error) {
+          partnerUser = data;
+        }
+      } catch (e) {
+        console.warn('Supabase partner_users lookup error:', e.message);
+      }
+    }
+
+    if (!partnerUser || !partnerUser.is_active) {
+      mockStore.auditLogs.push({
+        id: `log_${Date.now()}`,
+        action: 'partner_login_failed',
+        reason: 'partner_user_deactivated_or_missing',
+        email_attempted: normalizedEmail,
+        ip,
+        created_at: new Date().toISOString()
+      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // 4. Resolve partner status in partners table
+    let partnerRecord = mockStore.partners[partnerUser.partner_id];
+    if (!partnerRecord && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('partners')
+          .select('*')
+          .eq('id', partnerUser.partner_id)
+          .single();
+        if (data && !error) {
+          partnerRecord = data;
+        }
+      } catch (e) {
+        console.warn('Supabase partners lookup error:', e.message);
+      }
+    }
+
+    if (!partnerRecord || partnerRecord.status !== 'active') {
+      mockStore.auditLogs.push({
+        id: `log_${Date.now()}`,
+        action: 'partner_login_failed',
+        reason: 'partner_status_inactive',
+        email_attempted: normalizedEmail,
+        ip,
+        created_at: new Date().toISOString()
+      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // 5. Regenerate server session upon successful login
+    if (req.session) {
+      req.session.regenerate((err) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Session generation failed' });
+        }
+
+        req.session.partnerAuthUserId = authUserId;
+        req.session.partnerId = partnerUser.partner_id;
+        req.session.partnerRole = partnerUser.role || 'partner';
+
+        mockStore.auditLogs.push({
+          id: `log_${Date.now()}`,
+          partner_id: partnerUser.partner_id,
+          action: 'partner_login_success',
+          target_type: 'partner_users',
+          created_at: new Date().toISOString()
+        });
+
+        return res.json({
+          success: true,
+          message: 'Partner authenticated successfully',
+          redirect_url: '/aivekai/partners/dashboard'
+        });
+      });
+    } else {
+      return res.json({
+        success: true,
+        message: 'Partner authenticated successfully',
+        redirect_url: '/aivekai/partners/dashboard'
+      });
+    }
+  } catch (err) {
+    console.error('Partner Login Error:', err);
+    return res.status(500).json({ success: false, message: 'Authentication error occurred' });
+  }
+});
+
+// POST /api/aivekai/partners/logout
+router.post('/logout', (req, res) => {
+  const cookieOptions = {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production' && process.env.COOKIE_INSECURE !== 'true'
+  };
+
+  if (req.session) {
+    req.session.destroy((err) => {
+      res.clearCookie('aivekai_session_id', cookieOptions);
+      return res.json({
+        success: true,
+        redirect_url: '/aivekai/partners/login',
+        message: 'Logged out successfully'
+      });
+    });
+  } else {
+    res.clearCookie('aivekai_session_id', cookieOptions);
+    return res.json({
+      success: true,
+      redirect_url: '/aivekai/partners/login',
+      message: 'Logged out successfully'
+    });
+  }
 });
 
 // ==============================================================================
@@ -628,59 +839,6 @@ router.post('/apply', async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: 'Failed to submit application.' });
-  }
-});
-
-// 2. Partner Login
-router.post('/auth/login', async (req, res) => {
-  const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
-  if (!applyRateLimit(`login_${ip}`, 10, 60000)) {
-    return res.status(429).json({ success: false, error: 'Too many login attempts. Please wait 1 minute.' });
-  }
-
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email is required' });
-    }
-
-    let partnerId = null;
-    let authUserId = null;
-    let token = null;
-
-    if (email.toLowerCase().includes('james')) {
-      partnerId = 'partner_james_123';
-      authUserId = 'auth_james_123';
-      token = 'mock_token_james';
-    } else if (email.toLowerCase().includes('sarah')) {
-      partnerId = 'partner_sarah_456';
-      authUserId = 'auth_sarah_456';
-      token = 'mock_token_sarah';
-    } else if (email.toLowerCase().includes('admin')) {
-      partnerId = 'partner_james_123';
-      authUserId = 'auth_admin_999';
-      token = 'mock_token_admin';
-    } else {
-      return res.status(401).json({ success: false, error: 'Invalid partner credentials' });
-    }
-
-    if (req.session) {
-      req.session.regenerate((err) => {
-        if (!err) {
-          req.session.partnerAuthUserId = authUserId;
-        }
-      });
-    }
-
-    return res.json({
-      success: true,
-      token,
-      authUserId,
-      partnerId,
-      partner: mockStore.partners[partnerId]
-    });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: 'Authentication failed' });
   }
 });
 
@@ -1514,3 +1672,4 @@ router.get(['/admin/audit-logs', '/audit-logs'], requireAdmin, (req, res) => {
 
 module.exports = router;
 module.exports.mockStore = mockStore;
+module.exports.rateLimitMap = rateLimitMap;

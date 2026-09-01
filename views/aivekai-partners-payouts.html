@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AivekAI Partner Dashboard - Payouts</title>
+    <title>AivekAI Partner Dashboard - Payouts & Settings</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,9 +45,7 @@
             display: flex;
             flex-direction: column;
             position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
+            top: 0; bottom: 0; left: 0;
             z-index: 100;
         }
 
@@ -64,6 +62,7 @@
         }
 
         .sidebar-brand img { width: 34px; height: 34px; border-radius: 8px; }
+
         .nav-list { list-style: none; padding: 20px 14px; flex: 1; }
         .nav-item { margin-bottom: 6px; }
 
@@ -93,6 +92,13 @@
             justify-content: space-between;
         }
 
+        .partner-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+        }
+
         .avatar {
             width: 36px;
             height: 36px;
@@ -114,6 +120,8 @@
             font-weight: 600;
         }
 
+        .logout-btn:hover { color: #E53E3E; }
+
         main {
             margin-left: 260px;
             flex: 1;
@@ -125,108 +133,91 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
         }
 
-        .header-title h1 { font-size: 1.8rem; font-weight: 800; }
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
         .header-title p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
-
-        .grid-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 28px;
-        }
 
         .card {
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 28px;
+            padding: 24px;
             box-shadow: var(--card-shadow);
+            margin-bottom: 24px;
         }
 
-        .card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
 
-        .account-box {
-            background: var(--bg-page);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 18px;
+        .payout-setting-box {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 14px;
-        }
-
-        .threshold-bar-container {
-            background: var(--bg-page);
-            border-radius: 20px;
-            height: 12px;
-            width: 100%;
-            margin: 14px 0 8px;
-            overflow: hidden;
-        }
-
-        .threshold-bar {
-            background: var(--primary);
-            height: 100%;
-            width: 27.5%;
-            border-radius: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.92rem;
-            margin-top: 10px;
-        }
-
-        th {
-            padding: 14px 16px;
-            background: var(--bg-page);
-            color: var(--text-muted);
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.78rem;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
+            padding: 20px;
+            background: #F8FAFA;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
         }
 
         .btn-action {
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
             background: var(--primary);
             color: var(--white);
-            border: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
             transition: var(--transition);
         }
 
         .btn-action:hover { background: var(--primary-dark); }
+        .btn-outline { background: var(--white); color: var(--primary); border: 1px solid var(--border); }
+        .btn-outline:hover { background: #F8FAFA; }
 
-        .btn-outline {
-            padding: 7px 14px;
-            border-radius: var(--radius-sm);
-            background: var(--white);
-            border: 1px solid var(--border);
-            color: var(--text-dark);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
         }
 
-        .btn-outline:hover { background: var(--primary-light); color: var(--primary); }
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            background: #F8FAFA;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
 
-        /* Modal */
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-paid { background: #E6F7F0; color: #00875A; }
+        .badge-processing { background: #FFF8E6; color: #B78103; }
+
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -246,16 +237,14 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
-        .modal-box h3 { margin-bottom: 12px; font-size: 1.3rem; }
-        .modal-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+        .modal-box h3 { margin-bottom: 16px; font-size: 1.3rem; }
         .modal-box input {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            font-family: inherit;
-            font-size: 0.95rem;
             margin-bottom: 20px;
+            font-size: 0.95rem;
         }
 
         .modal-actions {
@@ -268,124 +257,90 @@
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: #10B981;
+            background: #121816;
             color: var(--white);
             padding: 12px 20px;
             border-radius: var(--radius-md);
+            font-size: 0.88rem;
             font-weight: 600;
             display: none;
             z-index: 1000;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 
 <body>
     <aside>
-        <a href="/aivekai/partners/dashboard" class="sidebar-brand">
+        <a href="/aivekai/partners" class="sidebar-brand">
             <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
             <span>AivekAI Partner</span>
         </a>
 
         <ul class="nav-list">
             <li class="nav-item"><a href="/aivekai/partners/dashboard" class="nav-link">📊 Overview</a></li>
-            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link">💰 Commission Ledger</a></li>
+            <li class="nav-item"><a href="/aivekai/partners/commissions" class="nav-link">💰 Commissions</a></li>
             <li class="nav-item"><a href="/aivekai/partners/payouts" class="nav-link active">💳 Payouts</a></li>
             <li class="nav-item"><a href="/aivekai/partners/settings" class="nav-link">⚙️ Settings</a></li>
         </ul>
 
         <div class="sidebar-footer">
             <div class="partner-profile">
-                <div class="avatar">J</div>
+                <div class="avatar" id="partnerAvatar">P</div>
                 <div>
-                    <strong>James Smith</strong>
-                    <div style="font-size: 0.75rem; color: #10B981;">● Active Partner</div>
+                    <strong id="partnerNavName">Partner</strong>
+                    <div style="font-size: 0.75rem; color: #10B981;">● Active</div>
                 </div>
             </div>
-            <button class="logout-btn" onclick="window.location.href='/aivekai/partners/login'">Sign Out</button>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
         </div>
     </aside>
 
     <main>
         <div class="header-strip">
             <div class="header-title">
-                <h1>PayPal Payouts & Balances</h1>
-                <p>Manage your PayPal recipient account and review historical automated disbursements.</p>
+                <h1>PayPal Payout Destination & History</h1>
+                <p>Monthly automated payouts via secure PayPal Payouts API.</p>
             </div>
         </div>
 
-        <div class="grid-2col">
-            <!-- Payout Destination -->
-            <div class="card">
-                <h3>
-                    <span>🏦 Payout Method</span>
-                    <button class="btn-outline" onclick="openEmailModal()">Update Email</button>
-                </h3>
-                <div class="account-box">
-                    <div>
-                        <strong>PayPal Payouts (AUD)</strong>
-                        <div id="maskedEmail" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Account: ja***@example.com</div>
-                    </div>
-                    <span style="background: #D1FAE5; color: #065F46; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.78rem;">CONFIGURED</span>
-                </div>
-                <p style="font-size: 0.82rem; color: var(--text-muted);">Payouts are disbursed automatically to this PayPal account once approved. Payouts currently in progress will always use the destination snapshotted at submission time.</p>
-            </div>
-
-            <!-- Minimum Threshold Progress -->
-            <div class="card">
-                <h3>🎯 Minimum Payout Progress</h3>
-                <div style="display: flex; justify-content: space-between; font-weight: 700;">
-                    <span>Available: A$27.54</span>
-                    <span style="color: var(--text-muted);">Threshold: A$100.00</span>
-                </div>
-                <div class="threshold-bar-container">
-                    <div class="threshold-bar"></div>
-                </div>
-                <div style="font-size: 0.82rem; color: var(--text-muted);">A$72.46 remaining until next automated monthly disbursement batch.</div>
-            </div>
-        </div>
-
-        <!-- Payout History -->
         <div class="card">
-            <h3>📜 Payout Batch History</h3>
+            <h3>💳 PayPal Payout Account</h3>
+            <div class="payout-setting-box">
+                <div>
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--text-dark);" id="maskedEmail">Account: Configured PayPal Account</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Disbursements occur automatically on the 1st of every month for balances above A$20.00.</div>
+                </div>
+                <button class="btn-action btn-outline" onclick="openEmailModal()">Update Email</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📜 Disbursed Payout Batches</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Batch Date</th>
+                        <th>Date Disbursed</th>
+                        <th>Payout ID</th>
                         <th>Amount</th>
                         <th>Currency</th>
-                        <th>Method</th>
+                        <th>PayPal Batch Reference</th>
                         <th>Status</th>
-                        <th>Disbursed Date</th>
                     </tr>
                 </thead>
-                <tbody id="payoutHistoryBody">
-                    <tr>
-                        <td><strong>12 Aug 2026</strong></td>
-                        <td style="font-weight: 700; color: var(--primary);">A$215.30</td>
-                        <td>AUD</td>
-                        <td>PayPal</td>
-                        <td><span style="background: #D1FAE5; color: #065F46; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.78rem;">PAID</span></td>
-                        <td>12 Aug 2026</td>
-                    </tr>
-                    <tr>
-                        <td><strong>12 Jul 2026</strong></td>
-                        <td style="font-weight: 700; color: var(--primary);">A$140.00</td>
-                        <td>AUD</td>
-                        <td>PayPal</td>
-                        <td><span style="background: #D1FAE5; color: #065F46; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.78rem;">PAID</span></td>
-                        <td>12 Jul 2026</td>
-                    </tr>
+                <tbody id="payoutTableBody">
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading payout history...</td></tr>
                 </tbody>
             </table>
         </div>
     </main>
 
-    <!-- Update PayPal Modal -->
+    <!-- Modal for updating PayPal email -->
     <div id="emailModal" class="modal-overlay">
         <div class="modal-box">
             <h3>Update PayPal Payout Email</h3>
-            <p>Enter the PayPal email address where you would like your future monthly commission payouts sent.</p>
-            <input type="email" id="paypalEmailInput" placeholder="your-paypal@email.com" value="james@example.com">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">Enter the genuine PayPal account email where you wish to receive your monthly earnings.</p>
+            <input type="email" id="paypalEmailInput" placeholder="recipient@example.com">
             <div class="modal-actions">
                 <button class="btn-outline" onclick="closeEmailModal()">Cancel</button>
                 <button class="btn-action" onclick="savePayPalEmail()">Save Payout Email</button>
@@ -398,16 +353,42 @@
     <script>
         async function loadPayoutInfo() {
             try {
-                const token = localStorage.getItem('aivekai_partner_token') || 'mock_token_james';
                 const response = await fetch('/api/aivekai/partners/payouts', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
                 });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.replace('/aivekai/partners/login');
+                    return;
+                }
+
                 const data = await response.json();
                 if (data.success && data.payout_account) {
-                    document.getElementById('maskedEmail').innerText = `Account: ${data.payout_account.account_reference}`;
+                    document.getElementById('maskedEmail').innerText = `Account: ${data.payout_account.account_reference || 'Configured'}`;
                     if (data.payout_account.raw_email) {
                         document.getElementById('paypalEmailInput').value = data.payout_account.raw_email;
                     }
+                }
+
+                const tbody = document.getElementById('payoutTableBody');
+                if (data.success && data.payouts && data.payouts.length > 0) {
+                    tbody.innerHTML = data.payouts.map(p => {
+                        const dateStr = new Date(p.created_at).toLocaleDateString('en-AU', {
+                            day: 'numeric', month: 'short', year: 'numeric'
+                        });
+                        return `
+                            <tr>
+                                <td>${dateStr}</td>
+                                <td><code>${p.id}</code></td>
+                                <td><strong>$${(p.amount_minor/100).toFixed(2)}</strong></td>
+                                <td>${p.currency}</td>
+                                <td><code>${p.provider_batch_id || '-'}</code></td>
+                                <td><span class="badge badge-paid">${p.status}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No past payouts disbursed yet.</td></tr>';
                 }
             } catch (e) {
                 console.error('Failed to load payout details:', e);
@@ -424,7 +405,6 @@
 
         async function savePayPalEmail() {
             const paypalEmail = document.getElementById('paypalEmailInput').value.trim();
-            const token = localStorage.getItem('aivekai_partner_token') || 'mock_token_james';
 
             if (!paypalEmail || !paypalEmail.includes('@')) {
                 alert('Please enter a valid PayPal email address.');
@@ -436,7 +416,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'x-csrf-token': 'valid_csrf_token'
                     },
                     body: JSON.stringify({ paypalEmail })
                 });
@@ -449,14 +429,26 @@
                     toast.style.display = 'block';
                     setTimeout(() => { toast.style.display = 'none'; }, 2500);
                 } else {
-                    alert(data.error || 'Failed to update email.');
+                    alert(data.error || 'Failed to update PayPal email.');
                 }
             } catch (e) {
-                alert('Network error.');
+                alert('Network error. Please try again.');
             }
         }
 
-        loadPayoutInfo();
+        async function logout() {
+            try {
+                await fetch('/api/aivekai/partners/logout', {
+                    method: 'POST',
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+            } catch (e) {
+                console.error(e);
+            }
+            window.location.replace('/aivekai/partners/login');
+        }
+
+        window.onload = loadPayoutInfo;
     </script>
 </body>
 </html>
