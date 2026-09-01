@@ -610,6 +610,7 @@ router.post(['/auth/login', '/login'], async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     let authUserId = null;
+    const supabase = getSupabaseClient();
 
     // 1. In test environment only: allow test credentials for mock store
     if (process.env.NODE_ENV === 'test') {
