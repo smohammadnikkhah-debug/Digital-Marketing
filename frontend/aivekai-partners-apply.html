@@ -409,9 +409,17 @@
                     body: JSON.stringify(formData)
                 });
 
-                const result = await response.json();
+                let result = null;
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    try {
+                        result = await response.json();
+                    } catch (parseErr) {
+                        console.error('Failed to parse JSON response:', parseErr);
+                    }
+                }
 
-                if (response.ok && result.success) {
+                if (response.ok && result && result.success) {
                     alertBox.className = 'alert-box alert-success';
                     alertBox.innerText = result.message || 'Application submitted successfully! Our team will review your details.';
                     alertBox.style.display = 'block';
@@ -419,14 +427,17 @@
                     submitBtn.innerText = 'Application Submitted';
                 } else {
                     alertBox.className = 'alert-box alert-error';
-                    alertBox.innerText = result.error || 'Failed to submit application. Please check your information.';
+                    const errorMsg = result?.error || result?.message || "We couldn't submit your application right now. Please try again shortly.";
+                    alertBox.innerText = errorMsg;
                     alertBox.style.display = 'block';
                     submitBtn.disabled = false;
                     submitBtn.innerText = 'Submit Application';
+                    console.error('Application submission response error:', response.status, result || 'Non-JSON response body');
                 }
             } catch (err) {
+                console.error('Fetch exception during application submission:', err);
                 alertBox.className = 'alert-box alert-error';
-                alertBox.innerText = 'A network error occurred. Please try again.';
+                alertBox.innerText = 'Unable to connect to the server. Please check your network connection and try again.';
                 alertBox.style.display = 'block';
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Submit Application';
