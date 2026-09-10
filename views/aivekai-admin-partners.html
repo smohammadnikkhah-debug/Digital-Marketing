@@ -583,6 +583,11 @@
 
                 // Initial data load
                 await Promise.all([loadPartners(), loadApplications()]);
+
+                // Auto-open change password modal if requested via direct URL or hash
+                if (window.location.pathname.includes('change-password') || window.location.hash === '#change-password' || window.location.search.includes('change-password')) {
+                    openChangePasswordModal();
+                }
             } catch (e) {
                 console.log('Session verification error:', e);
                 window.location.replace('/aivekai/admin/login');

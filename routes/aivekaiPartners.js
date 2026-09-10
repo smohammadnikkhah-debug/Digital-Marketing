@@ -873,19 +873,7 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
     }
   }
 
-  // 5. Revoke/Regenerate Session to Invalidate Stale Session Identifiers
-  if (req.session) {
-    req.session.regenerate((err) => {
-      if (!err) {
-        req.session.adminAuthUserId = authUserId;
-        req.session.adminUsername = username;
-        req.session.adminRole = 'admin';
-        req.session.passwordLastChanged = Date.now();
-      }
-    });
-  }
-
-  // 6. Security Audit Log (Sanitized: NO passwords, NO hashes, NO tokens)
+  // 5. Security Audit Log (Sanitized: NO passwords, NO hashes, NO tokens)
   mockStore.auditLogs.push({
     id: `log_${Date.now()}`,
     admin_identity: username,
@@ -897,10 +885,35 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
     created_at: new Date().toISOString()
   });
 
-  return res.json({
-    success: true,
-    message: 'Your administrator password has been updated successfully.'
-  });
+  // 6. Revoke/Regenerate Session to Invalidate Stale Session Identifiers
+  if (req.session) {
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regeneration error after password change:', err);
+        return res.status(500).json({ success: false, message: 'Session update failed.' });
+      }
+
+      req.session.adminAuthUserId = authUserId;
+      req.session.adminUsername = username;
+      req.session.adminRole = 'admin';
+      req.session.passwordLastChanged = Date.now();
+
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('Session save error after password change:', saveErr);
+        }
+        return res.json({
+          success: true,
+          message: 'Your administrator password has been updated successfully.'
+        });
+      });
+    });
+  } else {
+    return res.json({
+      success: true,
+      message: 'Your administrator password has been updated successfully.'
+    });
+  }
 });
 
 // ==============================================================================

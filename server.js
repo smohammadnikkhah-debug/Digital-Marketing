@@ -72,9 +72,23 @@ function requirePartnerSession(req, res, next) {
 // PROTECTED ADMIN ROUTE GUARDS (Evaluated BEFORE static serving)
 // ==============================================================================
 
+// Admin Route Aliases & Direct Entry Points
+app.get(['/admin/login', '/admin/signin'], (req, res) => {
+  res.redirect(302, '/aivekai/admin/login');
+});
+
+app.get(['/admin', '/admin/partners', '/admin/dashboard'], (req, res) => {
+  res.redirect(302, '/aivekai/admin/partners');
+});
+
 // Admin Login Page
 app.get('/aivekai/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-login.html'));
+});
+
+// Admin Password Change Direct URL
+app.get(['/admin/change-password', '/aivekai/admin/change-password'], requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-partners.html'));
 });
 
 // Protected Admin Portal
