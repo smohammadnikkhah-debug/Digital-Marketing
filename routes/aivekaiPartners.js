@@ -713,6 +713,86 @@ router.get(['/admin/session', '/session'], (req, res, next) => {
   });
 });
 
+// POST /api/aivekai/admin/change-password
+router.post(['/admin/change-password', '/change-password'], requireAdmin, async (req, res, next) => {
+  if (req.path === '/change-password' && !req.baseUrl.includes('/admin')) {
+    return next();
+  }
+
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ success: false, message: 'All password fields are required.' });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 8 characters long.' });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ success: false, message: 'New password and confirmation do not match.' });
+  }
+
+  if (currentPassword === newPassword) {
+    return res.status(400).json({ success: false, message: 'New password cannot be identical to the current password.' });
+  }
+
+  const authUserId = req.session?.adminAuthUserId || req.adminAuth?.authUserId;
+  const username = req.session?.adminUsername || 'admin';
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      // 1. Resolve Auth user email from Supabase Auth
+      let authEmail = `${username}@admin.aivekai.internal`;
+      if (authUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authUserId)) {
+        const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(authUserId);
+        if (!userErr && userData?.user?.email) {
+          authEmail = userData.user.email;
+        }
+      }
+
+      // 2. Verify current password
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: currentPassword
+      });
+
+      if (signInErr || !signInData?.user) {
+        return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+      }
+
+      // 3. Update password in Supabase Auth
+      const { error: updateErr } = await supabase.auth.admin.updateUserById(authUserId, {
+        password: newPassword
+      });
+
+      if (updateErr) {
+        console.error('Failed to update admin password in Supabase Auth:', updateErr.message);
+        return res.status(500).json({ success: false, message: 'Failed to update password. Please try again.' });
+      }
+    } catch (e) {
+      console.error('Unexpected error in admin change-password:', e.message);
+      return res.status(500).json({ success: false, message: 'An error occurred while changing your password.' });
+    }
+  }
+
+  // Record audit log
+  mockStore.auditLogs.push({
+    id: `log_${Date.now()}`,
+    admin_user_id: authUserId,
+    action: 'admin_password_changed',
+    target_type: 'aivekai_admin_users',
+    target_id: authUserId,
+    created_at: new Date().toISOString()
+  });
+
+  return res.json({
+    success: true,
+    message: 'Your administrator password has been updated successfully.'
+  });
+});
+
 // ==============================================================================
 // PARTNER AUTHENTICATION & PORTAL ENDPOINTS
 // ==============================================================================
