@@ -81,6 +81,22 @@ services:
     value: "false"
   - key: ENABLE_SOCIAL_CONNECTIONS
     value: "false"
+  - key: RESEND_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: SENDGRID_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: POSTMARK_SERVER_TOKEN
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: BREVO_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: AIVEKAI_EMAIL_FROM
+    value: notifications@mozarex.com
+  - key: AIVEKAI_PARTNER_APPLICATION_ADMIN_EMAIL
+    value: info@mozarex.com
 domains:
 - domain: mozarex.com
   type: PRIMARY

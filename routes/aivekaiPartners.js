@@ -1003,7 +1003,10 @@ router.post('/apply', async (req, res) => {
 
     // 2. Non-blocking Admin Email Notification & Applicant Confirmation Dispatch
     try {
-      await partnerEmailService.sendAllApplicationNotifications(application);
+      const emailResult = await partnerEmailService.sendAllApplicationNotifications(application);
+      if (emailResult?.adminResult?.delivery_status === 'failed') {
+        console.error('[PARTNER_APPLICATION_EMAIL_FAILED] Admin notification delivery failed for application ' + application.id + ':', emailResult.adminResult.delivery_error);
+      }
     } catch (emailErr) {
       console.error('Partner application email delivery failure:', emailErr.message);
       mockStore.auditLogs.push({
@@ -2036,7 +2039,27 @@ router.get(['/admin/audit-logs', '/audit-logs'], requireAdmin, (req, res) => {
   });
 });
 
-// 23. Health Check: Deep inspection of database connectivity, program settings & rate resolver
+// 23. Admin: Send Controlled Test Notification Email
+router.post(['/admin/email/test', '/email/test'], requireAdmin, async (req, res) => {
+  const { to, note } = req.body || {};
+  try {
+    const result = await partnerEmailService.sendTestEmail({
+      to: to || partnerEmailService.getAdminRecipient(),
+      note: note || 'Admin manual test email from portal'
+    });
+    return res.json({
+      success: result.success,
+      result
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
+// 24. Health Check: Deep inspection of database connectivity, program settings, rate resolver & email service
 async function checkPartnerProgramHealth() {
   const startTime = Date.now();
   const checks = {
@@ -2044,7 +2067,13 @@ async function checkPartnerProgramHealth() {
     database_reachable: false,
     standard_commission_rate_configured: false,
     terms_version_configured: false,
-    rate_resolver_available: false
+    rate_resolver_available: false,
+    email_service: {
+      active_provider: partnerEmailService.getActiveProvider(),
+      provider_configured: partnerEmailService.getActiveProvider() !== 'none',
+      admin_recipient: partnerEmailService.getAdminRecipient(),
+      from_address: partnerEmailService.getFromAddress()
+    }
   };
 
   if (process.env.NODE_ENV === 'test') {

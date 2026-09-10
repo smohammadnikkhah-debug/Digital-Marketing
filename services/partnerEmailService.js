@@ -59,10 +59,30 @@ class PartnerEmailService {
   }
 
   /**
-   * Gets the configured recipient email from environment.
+   * Gets the configured recipient email for admin notifications.
+   * Authoritative default is info@mozarex.com.
    */
   getAdminRecipient() {
     return process.env.AIVEKAI_PARTNER_APPLICATION_ADMIN_EMAIL || 'info@mozarex.com';
+  }
+
+  /**
+   * Gets the configured sender address for outbound emails.
+   */
+  getFromAddress() {
+    return process.env.AIVEKAI_EMAIL_FROM || 'AivekAI Partner Program <notifications@mozarex.com>';
+  }
+
+  /**
+   * Identifies the active configured email provider.
+   */
+  getActiveProvider() {
+    if (process.env.RESEND_API_KEY) return 'resend';
+    if (process.env.SENDGRID_API_KEY) return 'sendgrid';
+    if (process.env.POSTMARK_SERVER_TOKEN || process.env.POSTMARK_API_KEY) return 'postmark';
+    if (process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY) return 'brevo';
+    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) return 'mailgun';
+    return 'none';
   }
 
   /**
@@ -292,6 +312,52 @@ https://mozarex.com/aivekai/partners
   }
 
   /**
+   * Universal provider dispatcher
+   */
+  async _dispatchEmail(record) {
+    if (this.mockFailure) {
+      throw new Error('Simulated email provider network failure');
+    }
+
+    const provider = this.getActiveProvider();
+    record.provider = provider;
+
+    if (provider === 'none') {
+      if (process.env.NODE_ENV === 'production') {
+        console.warn(`[PARTNER_EMAIL_WARN] No external email provider is configured in environment (RESEND_API_KEY / SENDGRID_API_KEY / POSTMARK_SERVER_TOKEN / BREVO_API_KEY). Email [${record.type}] to ${record.to} recorded in internal audit log but physical delivery skipped.`);
+      }
+      record.delivery_status = 'skipped_no_provider';
+      return { success: true, provider: 'none', status: 'skipped_no_provider' };
+    }
+
+    try {
+      let providerResponse = null;
+      if (provider === 'resend') {
+        providerResponse = await this._dispatchViaResend(record);
+      } else if (provider === 'sendgrid') {
+        providerResponse = await this._dispatchViaSendGrid(record);
+      } else if (provider === 'postmark') {
+        providerResponse = await this._dispatchViaPostmark(record);
+      } else if (provider === 'brevo') {
+        providerResponse = await this._dispatchViaBrevo(record);
+      } else if (provider === 'mailgun') {
+        providerResponse = await this._dispatchViaMailgun(record);
+      }
+
+      record.delivery_status = 'delivered';
+      record.provider_response = providerResponse;
+      console.log(`[PARTNER_EMAIL_SENT] Email [${record.type}] successfully accepted by ${provider} for ${record.to}`);
+      return { success: true, provider, status: 'delivered', response: providerResponse };
+    } catch (err) {
+      record.delivery_status = 'failed';
+      record.delivery_error = err.message;
+      console.error(`[PARTNER_EMAIL_ERROR] Delivery failure via ${provider} for ${record.to}:`, err.message);
+      // For application notification resiliency, we return the failure status
+      return { success: false, provider, status: 'failed', error: err.message };
+    }
+  }
+
+  /**
    * Sends the admin notification email for a submitted application.
    * Ensures idempotency so retry/duplicate calls do not send multiple emails.
    */
@@ -314,10 +380,6 @@ https://mozarex.com/aivekai/partners
     const recipient = this.getAdminRecipient();
     const { subject, textBody, htmlBody } = this.buildEmailContent(application);
 
-    if (this.mockFailure) {
-      throw new Error('Simulated email provider network failure');
-    }
-
     const emailRecord = {
       id: `email_admin_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       type: 'admin_notification',
@@ -329,28 +391,19 @@ https://mozarex.com/aivekai/partners
       sent_at: new Date().toISOString()
     };
 
-    if (process.env.RESEND_API_KEY) {
-      try {
-        await this._dispatchViaResend(emailRecord);
-      } catch (err) {
-        console.warn('Resend API dispatch error (fallback to standard log):', err.message);
-      }
-    } else if (process.env.SENDGRID_API_KEY) {
-      try {
-        await this._dispatchViaSendGrid(emailRecord);
-      } catch (err) {
-        console.warn('SendGrid API dispatch error (fallback to standard log):', err.message);
-      }
-    }
+    const dispatchResult = await this._dispatchEmail(emailRecord);
 
     this.sentApplicationIds.add(applicationId);
     this.sentEmails.push(emailRecord);
 
     return {
-      success: true,
+      success: dispatchResult.success,
       duplicate: false,
       message_id: emailRecord.id,
       recipient,
+      provider: emailRecord.provider,
+      delivery_status: emailRecord.delivery_status,
+      delivery_error: emailRecord.delivery_error,
       sent_at: emailRecord.sent_at
     };
   }
@@ -378,10 +431,6 @@ https://mozarex.com/aivekai/partners
     const recipient = application.email.trim().toLowerCase();
     const { subject, textBody, htmlBody } = this.buildApplicantConfirmationContent(application);
 
-    if (this.mockFailure) {
-      throw new Error('Simulated email provider network failure');
-    }
-
     const emailRecord = {
       id: `email_applicant_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       type: 'applicant_confirmation',
@@ -393,28 +442,19 @@ https://mozarex.com/aivekai/partners
       sent_at: new Date().toISOString()
     };
 
-    if (process.env.RESEND_API_KEY) {
-      try {
-        await this._dispatchViaResend(emailRecord);
-      } catch (err) {
-        console.warn('Resend API dispatch error (fallback to standard log):', err.message);
-      }
-    } else if (process.env.SENDGRID_API_KEY) {
-      try {
-        await this._dispatchViaSendGrid(emailRecord);
-      } catch (err) {
-        console.warn('SendGrid API dispatch error (fallback to standard log):', err.message);
-      }
-    }
+    const dispatchResult = await this._dispatchEmail(emailRecord);
 
     this.sentApplicantConfirmationIds.add(applicationId);
     this.sentEmails.push(emailRecord);
 
     return {
-      success: true,
+      success: dispatchResult.success,
       duplicate: false,
       message_id: emailRecord.id,
       recipient,
+      provider: emailRecord.provider,
+      delivery_status: emailRecord.delivery_status,
+      delivery_error: emailRecord.delivery_error,
       sent_at: emailRecord.sent_at
     };
   }
@@ -530,10 +570,6 @@ https://mozarex.com/aivekai/partners
     const recipient = partner.email.trim().toLowerCase();
     const { subject, textBody, htmlBody } = this.buildPartnerApprovalContent({ partner, agreedCommissionRate, portalUrl });
 
-    if (this.mockFailure) {
-      throw new Error('Simulated email provider network failure');
-    }
-
     const emailRecord = {
       id: `email_approval_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       type: 'partner_approval',
@@ -546,27 +582,17 @@ https://mozarex.com/aivekai/partners
       sent_at: new Date().toISOString()
     };
 
-    if (process.env.RESEND_API_KEY) {
-      try {
-        await this._dispatchViaResend(emailRecord);
-      } catch (err) {
-        console.warn('Resend API dispatch error:', err.message);
-      }
-    } else if (process.env.SENDGRID_API_KEY) {
-      try {
-        await this._dispatchViaSendGrid(emailRecord);
-      } catch (err) {
-        console.warn('SendGrid API dispatch error:', err.message);
-      }
-    }
-
+    const dispatchResult = await this._dispatchEmail(emailRecord);
     this.sentEmails.push(emailRecord);
 
     return {
-      success: true,
+      success: dispatchResult.success,
       message_id: emailRecord.id,
       recipient,
       agreed_commission_rate: emailRecord.agreed_commission_rate,
+      provider: emailRecord.provider,
+      delivery_status: emailRecord.delivery_status,
+      delivery_error: emailRecord.delivery_error,
       sent_at: emailRecord.sent_at
     };
   }
@@ -662,10 +688,6 @@ https://mozarex.com/aivekai/partners
     const recipient = partner.email.trim().toLowerCase();
     const { subject, textBody, htmlBody } = this.buildPartnerRateChangeContent({ partner, oldRate, newRate, effectiveDate });
 
-    if (this.mockFailure) {
-      throw new Error('Simulated email provider network failure');
-    }
-
     const emailRecord = {
       id: `email_rate_change_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
       type: 'rate_change_notification',
@@ -680,29 +702,70 @@ https://mozarex.com/aivekai/partners
       sent_at: new Date().toISOString()
     };
 
-    if (process.env.RESEND_API_KEY) {
-      try {
-        await this._dispatchViaResend(emailRecord);
-      } catch (err) {
-        console.warn('Resend API dispatch error:', err.message);
-      }
-    } else if (process.env.SENDGRID_API_KEY) {
-      try {
-        await this._dispatchViaSendGrid(emailRecord);
-      } catch (err) {
-        console.warn('SendGrid API dispatch error:', err.message);
-      }
-    }
-
+    const dispatchResult = await this._dispatchEmail(emailRecord);
     this.sentEmails.push(emailRecord);
 
     return {
-      success: true,
+      success: dispatchResult.success,
       message_id: emailRecord.id,
       recipient,
       old_rate: oldRate,
       new_rate: newRate,
       effective_date: effectiveDate,
+      provider: emailRecord.provider,
+      delivery_status: emailRecord.delivery_status,
+      delivery_error: emailRecord.delivery_error,
+      sent_at: emailRecord.sent_at
+    };
+  }
+
+  /**
+   * Sends a controlled live test email to verify production email connectivity.
+   */
+  async sendTestEmail({ to = 'info@mozarex.com', note = 'Manual diagnostic test' } = {}) {
+    const dummyApp = {
+      id: `test_diag_${Date.now()}`,
+      full_name: 'AivekAI Production Diagnostic',
+      business_name: 'Mozarex System Diagnostics',
+      email: 'diagnostic@mozarex.com',
+      country: 'AU',
+      instagram: '@mozarex',
+      tiktok: '@mozarex',
+      youtube: '@mozarex',
+      website: 'https://mozarex.com',
+      audience_size: '50k_100k',
+      audience_niche: 'Tech & Nutrition',
+      preferred_referral_code: 'TEST99',
+      promotion_plan: 'Diagnostic verification of production email pipeline to info@mozarex.com.',
+      notes: note,
+      created_at: new Date().toISOString()
+    };
+
+    const recipient = to || this.getAdminRecipient();
+    const { subject, textBody, htmlBody } = this.buildEmailContent(dummyApp);
+
+    const emailRecord = {
+      id: `email_test_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'admin_test_notification',
+      application_id: dummyApp.id,
+      to: recipient,
+      subject: `[DIAGNOSTIC TEST] ${subject}`,
+      text: textBody,
+      html: htmlBody,
+      sent_at: new Date().toISOString()
+    };
+
+    const result = await this._dispatchEmail(emailRecord);
+    this.sentEmails.push(emailRecord);
+
+    return {
+      success: result.success,
+      delivery_status: emailRecord.delivery_status,
+      provider: emailRecord.provider,
+      provider_response: emailRecord.provider_response,
+      delivery_error: emailRecord.delivery_error,
+      recipient,
+      message_id: emailRecord.id,
       sent_at: emailRecord.sent_at
     };
   }
@@ -713,7 +776,7 @@ https://mozarex.com/aivekai/partners
   _dispatchViaResend(record) {
     return new Promise((resolve, reject) => {
       const payload = JSON.stringify({
-        from: process.env.AIVEKAI_EMAIL_FROM || 'AivekAI Notifications <notifications@mozarex.com>',
+        from: this.getFromAddress(),
         to: [record.to],
         subject: record.subject,
         text: record.text,
@@ -732,7 +795,7 @@ https://mozarex.com/aivekai/partners
         res.on('data', c => data += c);
         res.on('end', () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(data);
+            try { resolve(JSON.parse(data)); } catch (e) { resolve(data); }
           } else {
             reject(new Error(`Resend HTTP ${res.statusCode}: ${data}`));
           }
@@ -750,9 +813,12 @@ https://mozarex.com/aivekai/partners
    */
   _dispatchViaSendGrid(record) {
     return new Promise((resolve, reject) => {
+      const fromAddr = process.env.AIVEKAI_EMAIL_FROM || 'notifications@mozarex.com';
+      const cleanFromEmail = fromAddr.includes('<') ? fromAddr.match(/<([^>]+)>/)?.[1] || fromAddr : fromAddr;
+
       const payload = JSON.stringify({
         personalizations: [{ to: [{ email: record.to }] }],
-        from: { email: process.env.AIVEKAI_EMAIL_FROM || 'notifications@mozarex.com', name: 'AivekAI Partner Program' },
+        from: { email: cleanFromEmail, name: 'AivekAI Partner Program' },
         subject: record.subject,
         content: [
           { type: 'text/plain', value: record.text },
@@ -772,7 +838,8 @@ https://mozarex.com/aivekai/partners
         res.on('data', c => data += c);
         res.on('end', () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(data);
+            const msgId = res.headers['x-message-id'] || 'sendgrid_delivered';
+            resolve({ messageId: msgId, status: res.statusCode });
           } else {
             reject(new Error(`SendGrid HTTP ${res.statusCode}: ${data}`));
           }
@@ -781,6 +848,134 @@ https://mozarex.com/aivekai/partners
 
       req.on('error', reject);
       req.write(payload);
+      req.end();
+    });
+  }
+
+  /**
+   * Internal Postmark API dispatcher
+   */
+  _dispatchViaPostmark(record) {
+    return new Promise((resolve, reject) => {
+      const token = process.env.POSTMARK_SERVER_TOKEN || process.env.POSTMARK_API_KEY;
+      const payload = JSON.stringify({
+        From: process.env.AIVEKAI_EMAIL_FROM || 'notifications@mozarex.com',
+        To: record.to,
+        Subject: record.subject,
+        TextBody: record.text,
+        HtmlBody: record.html,
+        MessageStream: 'outbound'
+      });
+
+      const req = https.request('https://api.postmarkapp.com/email', {
+        method: 'POST',
+        headers: {
+          'X-Postmark-Server-Token': token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try { resolve(JSON.parse(data)); } catch (e) { resolve(data); }
+          } else {
+            reject(new Error(`Postmark HTTP ${res.statusCode}: ${data}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(payload);
+      req.end();
+    });
+  }
+
+  /**
+   * Internal Brevo (Sendinblue) API dispatcher
+   */
+  _dispatchViaBrevo(record) {
+    return new Promise((resolve, reject) => {
+      const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+      const fromAddr = process.env.AIVEKAI_EMAIL_FROM || 'notifications@mozarex.com';
+      const cleanFromEmail = fromAddr.includes('<') ? fromAddr.match(/<([^>]+)>/)?.[1] || fromAddr : fromAddr;
+
+      const payload = JSON.stringify({
+        sender: { email: cleanFromEmail, name: 'AivekAI Partner Program' },
+        to: [{ email: record.to }],
+        subject: record.subject,
+        textContent: record.text,
+        htmlContent: record.html
+      });
+
+      const req = https.request('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try { resolve(JSON.parse(data)); } catch (e) { resolve(data); }
+          } else {
+            reject(new Error(`Brevo HTTP ${res.statusCode}: ${data}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(payload);
+      req.end();
+    });
+  }
+
+  /**
+   * Internal Mailgun API dispatcher
+   */
+  _dispatchViaMailgun(record) {
+    return new Promise((resolve, reject) => {
+      const apiKey = process.env.MAILGUN_API_KEY;
+      const domain = process.env.MAILGUN_DOMAIN;
+      const auth = Buffer.from(`api:${apiKey}`).toString('base64');
+      const fromAddr = process.env.AIVEKAI_EMAIL_FROM || `notifications@${domain}`;
+
+      const params = new URLSearchParams();
+      params.append('from', fromAddr);
+      params.append('to', record.to);
+      params.append('subject', record.subject);
+      params.append('text', record.text);
+      params.append('html', record.html);
+
+      const postData = params.toString();
+
+      const req = https.request(`https://api.mailgun.net/v3/${domain}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      }, (res) => {
+        let data = '';
+        res.on('data', c => data += c);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try { resolve(JSON.parse(data)); } catch (e) { resolve(data); }
+          } else {
+            reject(new Error(`Mailgun HTTP ${res.statusCode}: ${data}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(postData);
       req.end();
     });
   }
