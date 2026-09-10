@@ -86,7 +86,12 @@ app.get('/aivekai/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-login.html'));
 });
 
-// Admin Password Change Direct URL
+// Admin Password Reset Page (Public with single-use token)
+app.get(['/aivekai/admin/reset-password', '/admin/reset-password'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-reset-password.html'));
+});
+
+// Admin Password Change Direct URL (Requires Authenticated Session)
 app.get(['/admin/change-password', '/aivekai/admin/change-password'], requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'aivekai-admin-partners.html'));
 });

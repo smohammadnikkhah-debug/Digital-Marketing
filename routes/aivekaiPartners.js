@@ -8,6 +8,9 @@ const partnerEmailService = require('../services/partnerEmailService');
 // Simple Rate Limiting Map for Ingestion & Auth
 const rateLimitMap = new Map();
 
+// Admin Password Reset Token Store (hashed tokens mapped to admin metadata)
+const adminPasswordResetTokens = new Map();
+
 function applyRateLimit(key, limit = 10, windowMs = 60000) {
   const now = Date.now();
   const entry = rateLimitMap.get(key) || { count: 0, resetTime: now + windowMs };
@@ -448,20 +451,24 @@ async function requireAdmin(req, res, next) {
       return res.status(401).json({ success: false, error: 'Admin authentication required' });
     }
 
-    // Verify against admin users table / mockStore
-    let adminRecord = mockStore.adminUsers.find(a => a.auth_user_id === authUserId);
-    if (!adminRecord) {
+    // Verify against admin users table / mockStore (authoritative source of truth)
+    let adminRecord = null;
+    if (process.env.NODE_ENV === 'test') {
+      adminRecord = mockStore.adminUsers.find(a => a.auth_user_id === authUserId);
+    } else {
       const supabase = getSupabaseClient();
-      if (supabase) {
-        const { data, error } = await supabase
-          .from('aivekai_admin_users')
-          .select('*')
-          .eq('auth_user_id', authUserId)
-          .single();
-        if (data && !error) {
-          adminRecord = data;
-        }
+      if (!supabase) {
+        return res.status(503).json({ success: false, error: 'Service Unavailable: Database connection offline' });
       }
+      const { data, error } = await supabase
+        .from('aivekai_admin_users')
+        .select('*')
+        .eq('auth_user_id', authUserId)
+        .single();
+      if (error || !data) {
+        return res.status(401).json({ success: false, error: 'Admin authorization verification failed' });
+      }
+      adminRecord = data;
     }
 
     if (!adminRecord || adminRecord.role !== 'admin') {
@@ -470,6 +477,21 @@ async function requireAdmin(req, res, next) {
 
     if (!adminRecord.is_active) {
       return res.status(403).json({ success: false, error: 'Administrator account is deactivated' });
+    }
+
+    // 3. Persistent Session Invalidation Guard:
+    // If session was authenticated BEFORE the most recent password reset/change (updated_at timestamp),
+    // immediately destroy the stale session and reject with 401.
+    if (req.session && req.session.adminAuthTime) {
+      const credentialsChangedAt = new Date(adminRecord.updated_at || adminRecord.created_at || 0).getTime();
+      if (req.session.adminAuthTime < credentialsChangedAt) {
+        req.session.destroy(() => {});
+        return res.status(401).json({
+          success: false,
+          error: 'session_invalidated',
+          message: 'Admin session has been revoked due to credential update. Please sign in again.'
+        });
+      }
     }
 
     req.adminAuth = {
@@ -577,7 +599,8 @@ router.post(['/admin/login', '/login'], async (req, res, next) => {
     let authSuccess = false;
     let authUserId = adminRecord.auth_user_id;
 
-    if (process.env.NODE_ENV === 'test' && password === 'ValidAdminPassword123!') {
+    const activePassword = (mockStore.adminPasswords && mockStore.adminPasswords[adminRecord.username]) || 'ValidAdminPassword123!';
+    if (process.env.NODE_ENV === 'test' && password === activePassword) {
       authSuccess = true;
     } else if (supabase) {
       try {
@@ -618,6 +641,7 @@ router.post(['/admin/login', '/login'], async (req, res, next) => {
     }
 
     // 3. Session Regeneration upon Successful Authentication
+    const loginAuthTime = Date.now();
     if (req.session) {
       req.session.regenerate((err) => {
         if (err) {
@@ -627,6 +651,7 @@ router.post(['/admin/login', '/login'], async (req, res, next) => {
         req.session.adminAuthUserId = authUserId;
         req.session.adminUsername = adminRecord.username;
         req.session.adminRole = adminRecord.role || 'admin';
+        req.session.adminAuthTime = loginAuthTime;
 
         adminRecord.last_login_at = new Date().toISOString();
 
@@ -695,16 +720,51 @@ router.post(['/admin/logout', '/logout'], (req, res, next) => {
 });
 
 // GET /api/aivekai/admin/session
-router.get(['/admin/session', '/session'], (req, res, next) => {
+router.get(['/admin/session', '/session'], async (req, res, next) => {
   if (req.path === '/session' && !req.baseUrl.includes('/admin')) {
     return next(); // Pass to partner session handler
   }
 
   if (req.session && req.session.adminAuthUserId && req.session.adminRole === 'admin') {
+    let adminRecord = null;
+    if (process.env.NODE_ENV === 'test') {
+      adminRecord = mockStore.adminUsers.find(a => a.auth_user_id === req.session.adminAuthUserId);
+    } else {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('aivekai_admin_users')
+            .select('*')
+            .eq('auth_user_id', req.session.adminAuthUserId)
+            .single();
+          if (data && !error) {
+            adminRecord = data;
+          }
+        } catch (e) {
+          console.warn('Session admin lookup warning:', e.message);
+        }
+      }
+    }
+
+    if (!adminRecord || !adminRecord.is_active || adminRecord.role !== 'admin') {
+      if (req.session) req.session.destroy(() => {});
+      return res.json({ authenticated: false, role: null });
+    }
+
+    // Check persistent revocation timestamp
+    if (req.session.adminAuthTime) {
+      const credentialsChangedAt = new Date(adminRecord.updated_at || adminRecord.created_at || 0).getTime();
+      if (req.session.adminAuthTime < credentialsChangedAt) {
+        if (req.session) req.session.destroy(() => {});
+        return res.json({ authenticated: false, role: null, revoked: true });
+      }
+    }
+
     return res.json({
       authenticated: true,
       role: req.session.adminRole,
-      username: req.session.adminUsername || 'admin'
+      username: req.session.adminUsername || adminRecord.username
     });
   }
   return res.json({
@@ -791,7 +851,8 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
 
   // 3. Current Password Reauthentication & Invalidation
   if (process.env.NODE_ENV === 'test') {
-    if (currentPassword !== 'ValidAdminPassword123!') {
+    const activePassword = (mockStore.adminPasswords && mockStore.adminPasswords[username]) || 'ValidAdminPassword123!';
+    if (currentPassword !== activePassword) {
       mockStore.auditLogs.push({
         id: `log_${Date.now()}`,
         admin_identity: username,
@@ -805,6 +866,8 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
       });
       return res.status(401).json({ success: false, message: 'Current password verification failed.' });
     }
+    if (!mockStore.adminPasswords) mockStore.adminPasswords = {};
+    mockStore.adminPasswords[username] = newPassword;
   } else if (supabase) {
     try {
       // Resolve Auth user email from Supabase Auth / admin table
@@ -858,14 +921,14 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
         return res.status(500).json({ success: false, message: 'Failed to update password. Please try again.' });
       }
 
-      // Update password_updated_at in aivekai_admin_users if available
+      // Update updated_at in aivekai_admin_users (authoritative persistent session invalidation)
       try {
         await supabase
           .from('aivekai_admin_users')
-          .update({ updated_at: new Date().toISOString() })
+          .update({ updated_at: updateTimestamp })
           .eq('auth_user_id', authUserId);
       } catch (dbErr) {
-        // Non-blocking metadata touch
+        console.warn('Failed to update admin timestamp in DB:', dbErr.message);
       }
     } catch (e) {
       console.error('Unexpected error in admin change-password:', e.message);
@@ -886,6 +949,7 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
   });
 
   // 6. Revoke/Regenerate Session to Invalidate Stale Session Identifiers
+  const freshAuthTime = Date.now();
   if (req.session) {
     req.session.regenerate((err) => {
       if (err) {
@@ -896,7 +960,7 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
       req.session.adminAuthUserId = authUserId;
       req.session.adminUsername = username;
       req.session.adminRole = 'admin';
-      req.session.passwordLastChanged = Date.now();
+      req.session.adminAuthTime = freshAuthTime;
 
       req.session.save((saveErr) => {
         if (saveErr) {
@@ -914,6 +978,317 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
       message: 'Your administrator password has been updated successfully.'
     });
   }
+});
+
+// POST /api/aivekai/admin/forgot-password
+router.post(['/admin/forgot-password', '/forgot-password'], async (req, res, next) => {
+  if (req.path === '/forgot-password' && !req.baseUrl.includes('/admin')) {
+    return next();
+  }
+
+  const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
+
+  // Rate limiting: Max 5 password reset requests per 15 minutes per IP
+  if (!applyRateLimit(`admin_forgot_pw_${ip}`, 5, 15 * 60 * 1000)) {
+    return res.status(429).json({
+      success: false,
+      error: 'too_many_attempts',
+      message: 'Too many password reset requests. Please wait a few minutes before trying again.'
+    });
+  }
+
+  const genericResponse = {
+    success: true,
+    message: "If an eligible administrator account exists for this email address, we've sent password reset instructions."
+  };
+
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.json(genericResponse);
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    let matchedAdmin = null;
+
+    if (process.env.NODE_ENV === 'test') {
+      // In test mode: check mockStore admin users
+      matchedAdmin = (mockStore.adminUsers || []).find(u =>
+        u.is_active && u.role === 'admin' &&
+        (
+          (u.email && u.email.toLowerCase() === normalizedEmail) ||
+          (u.username && u.username.toLowerCase() === normalizedEmail) ||
+          (normalizedEmail === 'info@mozarex.com' && u.username === 'aivekai_admin') ||
+          (normalizedEmail === 'aivekai_admin@admin.aivekai.internal')
+        )
+      );
+    } else {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        // Query authorized admin users table
+        const { data: adminUsers, error: adminQueryErr } = await supabase
+          .from('aivekai_admin_users')
+          .select('id, auth_user_id, username, role, is_active, updated_at')
+          .eq('is_active', true)
+          .eq('role', 'admin');
+
+        if (!adminQueryErr && Array.isArray(adminUsers)) {
+          // 1. Direct username match if username is email
+          matchedAdmin = adminUsers.find(u => u.username && u.username.toLowerCase() === normalizedEmail);
+
+          // 2. Auth user email lookup
+          if (!matchedAdmin) {
+            try {
+              const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
+              if (!listErr && Array.isArray(users)) {
+                const authUser = users.find(u => u.email && u.email.toLowerCase() === normalizedEmail);
+                if (authUser) {
+                  matchedAdmin = adminUsers.find(u => u.auth_user_id === authUser.id);
+                  if (matchedAdmin) {
+                    matchedAdmin.auth_email = authUser.email;
+                  }
+                }
+              }
+            } catch (authErr) {
+              console.warn('Auth user lookup warning in forgot-password:', authErr.message);
+            }
+          }
+        }
+      }
+    }
+
+    if (matchedAdmin) {
+      const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.get('host') || 'mozarex.com';
+      const baseUrl = `${proto}://${host}`;
+
+      if (process.env.NODE_ENV === 'test') {
+        // In test mode: generate cryptographically random token and persist hash in mockStore
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        if (!mockStore.adminPasswordResets) mockStore.adminPasswordResets = [];
+        mockStore.adminPasswordResets.push({
+          id: `reset_${Date.now()}`,
+          admin_id: matchedAdmin.id,
+          auth_user_id: matchedAdmin.auth_user_id,
+          username: matchedAdmin.username,
+          email: normalizedEmail,
+          token_hash: tokenHash,
+          raw_token: rawToken,
+          expires_at: Date.now() + 30 * 60 * 1000,
+          created_at: new Date().toISOString(),
+          consumed_at: null
+        });
+
+        const resetLink = `${baseUrl}/aivekai/admin/reset-password?token=${rawToken}`;
+        await partnerEmailService.sendAdminPasswordResetEmail({
+          adminEmail: normalizedEmail,
+          resetLink,
+          adminUsername: matchedAdmin.username
+        });
+      } else {
+        // In production: use Supabase Auth native recovery link generation
+        const supabase = getSupabaseClient();
+        if (supabase) {
+          const authEmail = matchedAdmin.auth_email || matchedAdmin.internal_email || normalizedEmail;
+          const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: authEmail
+          });
+
+          if (!linkErr && linkData?.properties?.hashed_token) {
+            const rawToken = linkData.properties.hashed_token;
+            const resetLink = `${baseUrl}/aivekai/admin/reset-password?token=${rawToken}`;
+            await partnerEmailService.sendAdminPasswordResetEmail({
+              adminEmail: normalizedEmail,
+              resetLink,
+              adminUsername: matchedAdmin.username
+            });
+          }
+        }
+      }
+
+      // Record sanitized audit event (NO tokens, NO hashes, NO passwords)
+      mockStore.auditLogs.push({
+        id: `log_${Date.now()}`,
+        admin_identity: matchedAdmin.username,
+        admin_user_id: matchedAdmin.auth_user_id,
+        action: 'admin_password_reset_requested',
+        status: 'success',
+        mechanism: 'email_recovery',
+        ip,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    // Always return generic response to prevent user enumeration
+    return res.json(genericResponse);
+  } catch (err) {
+    console.error('Forgot password error:', err.message);
+    return res.json(genericResponse);
+  }
+});
+
+// POST /api/aivekai/admin/reset-password
+router.post(['/admin/reset-password', '/reset-password'], async (req, res, next) => {
+  if (req.path === '/reset-password' && !req.baseUrl.includes('/admin')) {
+    return next();
+  }
+
+  const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
+
+  if (!applyRateLimit(`admin_reset_pw_${ip}`, 10, 15 * 60 * 1000)) {
+    return res.status(429).json({
+      success: false,
+      error: 'too_many_attempts',
+      message: 'Too many attempts. Please try again later.'
+    });
+  }
+
+  const { token, newPassword, confirmPassword } = req.body;
+
+  if (!token || !newPassword || !confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'Reset token and new password are required.'
+    });
+  }
+
+  // Password strength validation
+  const strengthCheck = validatePasswordStrength(newPassword);
+  if (!strengthCheck.valid) {
+    return res.status(400).json({ success: false, message: strengthCheck.message });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ success: false, message: 'New password and confirmation do not match.' });
+  }
+
+  const updateTimestamp = new Date().toISOString();
+  let adminIdentity = 'admin';
+  let adminAuthUserId = null;
+
+  if (process.env.NODE_ENV === 'test') {
+    // In test mode: consume token from mockStore.adminPasswordResets atomically
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+    const resetRecord = (mockStore.adminPasswordResets || []).find(r =>
+      (r.token_hash === tokenHash || r.raw_token === token.trim()) &&
+      !r.consumed_at &&
+      r.expires_at > Date.now()
+    );
+
+    if (!resetRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password reset link is invalid or has expired. Please request a new one.'
+      });
+    }
+
+    // Mark as consumed immediately to prevent reuse
+    resetRecord.consumed_at = updateTimestamp;
+    adminIdentity = resetRecord.username;
+    adminAuthUserId = resetRecord.auth_user_id;
+
+    if (!mockStore.adminPasswords) mockStore.adminPasswords = {};
+    mockStore.adminPasswords[resetRecord.username] = newPassword;
+
+    // Update persistent updated_at in mockStore to revoke all existing sessions for this admin
+    const adminObj = (mockStore.adminUsers || []).find(u => u.auth_user_id === resetRecord.auth_user_id || u.username === resetRecord.username);
+    if (adminObj) {
+      adminObj.updated_at = updateTimestamp;
+    }
+  } else {
+    // In production: verify and consume token natively via Supabase Auth
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return res.status(503).json({ success: false, message: 'Database connection unavailable.' });
+    }
+
+    try {
+      const anonKey = process.env.AIVEKAI_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const anonSupabase = createClient(supabase['supabaseUrl'] || process.env.SUPABASE_URL, anonKey);
+      
+      const verifyRes = await anonSupabase.auth.verifyOtp({
+        token_hash: token.trim(),
+        type: 'recovery'
+      });
+
+      if (verifyRes.error || !verifyRes.data?.user) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password reset link is invalid or has expired. Please request a new one.'
+        });
+      }
+
+      adminAuthUserId = verifyRes.data.user.id;
+
+      // Authoritative Admin check against public.aivekai_admin_users
+      const { data: adminRecord, error: adminErr } = await supabase
+        .from('aivekai_admin_users')
+        .select('*')
+        .eq('auth_user_id', adminAuthUserId)
+        .eq('is_active', true)
+        .eq('role', 'admin')
+        .single();
+
+      if (adminErr || !adminRecord) {
+        return res.status(403).json({
+          success: false,
+          message: 'Account does not have administrator authorization.'
+        });
+      }
+
+      adminIdentity = adminRecord.username;
+
+      // Update password in Supabase Auth
+      const { error: updateErr } = await supabase.auth.admin.updateUserById(adminAuthUserId, {
+        password: newPassword,
+        email_confirm: true
+      });
+
+      if (updateErr) {
+        console.error('Supabase password update error during reset:', updateErr.message);
+        return res.status(500).json({ success: false, message: 'Failed to update password. Please try again.' });
+      }
+
+      // Persistently update updated_at in aivekai_admin_users to invalidate all existing sessions
+      try {
+        await supabase
+          .from('aivekai_admin_users')
+          .update({ updated_at: updateTimestamp })
+          .eq('id', adminRecord.id);
+      } catch (dbErr) {
+        console.warn('Failed to update admin timestamp after password reset:', dbErr.message);
+      }
+    } catch (e) {
+      console.error('Unexpected error during password reset:', e.message);
+      return res.status(500).json({ success: false, message: 'An error occurred while resetting your password.' });
+    }
+  }
+
+  // Invalidate any active session on the current request
+  if (req.session) {
+    req.session.destroy(() => {});
+  }
+
+  // Sanitized security audit log
+  mockStore.auditLogs.push({
+    id: `log_${Date.now()}`,
+    admin_identity: adminIdentity,
+    admin_user_id: adminAuthUserId,
+    action: 'admin_password_reset',
+    status: 'success',
+    mechanism: 'email_recovery',
+    ip,
+    created_at: new Date().toISOString()
+  });
+
+  return res.json({
+    success: true,
+    message: 'Your password has been reset. Sign in with your new password.',
+    redirect_url: '/aivekai/admin/login?reset=success'
+  });
 });
 
 // ==============================================================================
@@ -1268,8 +1643,89 @@ router.post('/paypal/webhook', async (req, res) => {
     const eventId = event.id || `evt_${Date.now()}`;
     const eventType = event.event_type;
     const resource = event.resource || {};
+    const supabase = getSupabaseClient();
 
-    // Deduplication check
+    const providerBatchId = resource.payout_batch_id || resource.batch_header?.payout_batch_id;
+    const providerItemId = resource.payout_item_id;
+    const senderItemId = resource.payout_item?.sender_item_id;
+    const senderBatchId = resource.batch_header?.sender_batch_header?.sender_batch_id;
+
+    if (process.env.NODE_ENV !== 'test' && supabase) {
+      // Deduplication check via database
+      const { data: existingEvent } = await supabase
+        .from('paypal_webhook_events')
+        .select('id')
+        .eq('paypal_event_id', eventId)
+        .maybeSingle();
+
+      if (existingEvent) {
+        return res.json({ success: true, message: 'Duplicate webhook ignored' });
+      }
+
+      await supabase.from('paypal_webhook_events').insert({
+        paypal_event_id: eventId,
+        event_type: eventType,
+        resource_type: event.resource_type || 'payouts',
+        processing_status: 'processed',
+        provider_batch_id: providerBatchId,
+        provider_item_id: providerItemId
+      });
+
+      // Resolve internal payout
+      let internalPayout = null;
+      if (providerItemId) {
+        const { data } = await supabase.from('partner_payouts').select('*').eq('provider_item_id', providerItemId).maybeSingle();
+        internalPayout = data;
+      }
+      if (!internalPayout && providerBatchId) {
+        const { data } = await supabase.from('partner_payouts').select('*').eq('provider_batch_id', providerBatchId).maybeSingle();
+        internalPayout = data;
+      }
+      if (!internalPayout && senderBatchId) {
+        const { data } = await supabase.from('partner_payouts').select('*').eq('sender_batch_id', senderBatchId).maybeSingle();
+        internalPayout = data;
+      }
+      if (!internalPayout && senderItemId) {
+        const cleanId = senderItemId.replace('ITEM-', '');
+        const { data } = await supabase.from('partner_payouts').select('*').eq('id', cleanId).maybeSingle();
+        internalPayout = data;
+      }
+
+      if (internalPayout) {
+        let feeMinor = 0;
+        let feeCurrency = internalPayout.currency;
+        if (resource.payout_item_fee?.value) {
+          feeMinor = Math.round(parseFloat(resource.payout_item_fee.value) * 100);
+          feeCurrency = resource.payout_item_fee.currency;
+        }
+
+        if (['PAYMENT.PAYOUTS-ITEM.SUCCEEDED', 'PAYMENT.PAYOUTSBATCH.SUCCESS'].includes(eventType)) {
+          await supabase.rpc('confirm_partner_payout_success', {
+            p_payout_id: internalPayout.id,
+            p_provider_batch_id: providerBatchId || internalPayout.provider_batch_id,
+            p_provider_item_id: providerItemId || internalPayout.provider_item_id,
+            p_fee_minor: feeMinor,
+            p_fee_currency: feeCurrency
+          });
+        } else if (['PAYMENT.PAYOUTS-ITEM.FAILED', 'PAYMENT.PAYOUTS-ITEM.BLOCKED', 'PAYMENT.PAYOUTSBATCH.DENIED', 'PAYMENT.PAYOUTS-ITEM.CANCELED'].includes(eventType)) {
+          await supabase.rpc('record_partner_payout_failure', {
+            p_payout_id: internalPayout.id,
+            p_failure_code: resource.errors?.name || 'PAYPAL_DENIED',
+            p_failure_message: resource.errors?.message || 'Payout rejected before delivery'
+          });
+        } else if (['PAYMENT.PAYOUTS-ITEM.RETURNED', 'PAYMENT.PAYOUTS-ITEM.REFUNDED', 'PAYMENT.PAYOUTS-ITEM.REVERSED'].includes(eventType)) {
+          await supabase.rpc('record_partner_payout_reversal', {
+            p_payout_id: internalPayout.id,
+            p_reversal_code: 'PAYPAL_REVERSAL',
+            p_reversal_message: resource.errors?.message || 'Payout returned/refunded by PayPal'
+          });
+        }
+      }
+
+      return res.json({ success: true, event_id: eventId });
+    }
+
+    // Test mode fallback
     if (mockStore.webhookEvents.some(w => w.paypal_event_id === eventId)) {
       return res.json({ success: true, message: 'Duplicate webhook ignored' });
     }
@@ -1280,16 +1736,10 @@ router.post('/paypal/webhook', async (req, res) => {
       resource_type: event.resource_type || 'payouts',
       received_at: new Date().toISOString(),
       processing_status: 'processed',
-      provider_batch_id: resource.payout_batch_id || resource.batch_header?.payout_batch_id,
-      provider_item_id: resource.payout_item_id
+      provider_batch_id: providerBatchId,
+      provider_item_id: providerItemId
     });
 
-    const providerBatchId = resource.payout_batch_id || resource.batch_header?.payout_batch_id;
-    const providerItemId = resource.payout_item_id;
-    const senderItemId = resource.payout_item?.sender_item_id;
-    const senderBatchId = resource.batch_header?.sender_batch_header?.sender_batch_id;
-
-    // Resolve internal payout by item ID, sender item ID, provider batch ID, or sender batch ID
     const payout = mockStore.payouts.find(p =>
       (providerItemId && p.provider_item_id === providerItemId) ||
       (senderItemId && p.id === senderItemId.replace('ITEM-', '')) ||
@@ -1298,13 +1748,11 @@ router.post('/paypal/webhook', async (req, res) => {
     );
 
     if (payout) {
-      // Capture provider fee separately without altering partner commission amount
       if (resource.payout_item_fee?.value) {
         payout.provider_fee_minor = Math.round(parseFloat(resource.payout_item_fee.value) * 100);
         payout.provider_fee_currency = resource.payout_item_fee.currency;
       }
 
-      // 1. Success Event
       if (['PAYMENT.PAYOUTS-ITEM.SUCCEEDED', 'PAYMENT.PAYOUTSBATCH.SUCCESS'].includes(eventType)) {
         if (payout.status !== 'paid') {
           payout.status = 'paid';
@@ -1322,9 +1770,7 @@ router.post('/paypal/webhook', async (req, res) => {
             }
           }
         }
-      }
-      // 2. Pre-delivery Failure Event (funds never left)
-      else if (['PAYMENT.PAYOUTS-ITEM.FAILED', 'PAYMENT.PAYOUTS-ITEM.BLOCKED', 'PAYMENT.PAYOUTSBATCH.DENIED', 'PAYMENT.PAYOUTS-ITEM.CANCELED'].includes(eventType)) {
+      } else if (['PAYMENT.PAYOUTS-ITEM.FAILED', 'PAYMENT.PAYOUTS-ITEM.BLOCKED', 'PAYMENT.PAYOUTSBATCH.DENIED', 'PAYMENT.PAYOUTS-ITEM.CANCELED'].includes(eventType)) {
         if (payout.status !== 'paid' && payout.status !== 'reversed') {
           payout.status = 'failed';
           payout.failed_at = new Date().toISOString();
@@ -1332,18 +1778,14 @@ router.post('/paypal/webhook', async (req, res) => {
           payout.provider_failure_code = resource.errors?.name || 'PAYPAL_DENIED';
           payout.provider_failure_message = resource.errors?.message || 'Payout rejected before delivery.';
 
-          // Release commissions back to available
           mockStore.payoutItems = mockStore.payoutItems.filter(pi => pi.payout_id !== payout.id);
         }
-      }
-      // 3. Post-Delivery Reversal / Refund / Return (funds returned after dispatch - NEVER auto-release commissions)
-      else if (['PAYMENT.PAYOUTS-ITEM.RETURNED', 'PAYMENT.PAYOUTS-ITEM.REFUNDED', 'PAYMENT.PAYOUTS-ITEM.REVERSED'].includes(eventType)) {
+      } else if (['PAYMENT.PAYOUTS-ITEM.RETURNED', 'PAYMENT.PAYOUTS-ITEM.REFUNDED', 'PAYMENT.PAYOUTS-ITEM.REVERSED'].includes(eventType)) {
         payout.status = 'reversed';
         payout.reversed_at = new Date().toISOString();
         payout.provider_status = 'RETURNED';
         payout.reversal_reason = resource.errors?.message || 'Payout returned/refunded by PayPal';
 
-        // Commissions remain linked & marked reversed for manual audit, NOT reset to available
         const items = mockStore.payoutItems.filter(pi => pi.payout_id === payout.id);
         for (const item of items) {
           const comm = mockStore.commissions.find(c => c.id === item.commission_id);
@@ -2080,10 +2522,298 @@ router.post(['/admin/partners/update-status', '/partners/update-status'], requir
   });
 });
 
-// 16. Admin: Create Payout Batch
-router.post(['/admin/payouts/create-batch', '/payouts/create-batch'], requireAdmin, (req, res) => {
+// 15D. Admin: List All Payout Batches
+router.get(['/admin/payouts', '/payouts'], requireAdmin, async (req, res) => {
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('partner_payouts')
+        .select(`
+          *,
+          partners:partner_id (id, name, email, referral_code)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching payouts from Supabase:', error.message);
+        return res.status(500).json({ success: false, error: 'Database error fetching payouts' });
+      }
+
+      const formatted = (data || []).map(p => ({
+        ...p,
+        partner_name: p.partners?.name || 'Unknown Partner',
+        partner_email: p.partners?.email || '',
+        referral_code: p.partners?.referral_code || ''
+      }));
+
+      return res.json({
+        success: true,
+        payouts: formatted
+      });
+    } catch (e) {
+      console.error('Unexpected error fetching payouts:', e.message);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  const enriched = (mockStore.payouts || []).map(p => {
+    const partner = mockStore.partners[p.partner_id];
+    return {
+      ...p,
+      partner_name: partner?.name || 'Unknown Partner',
+      partner_email: partner?.email || '',
+      referral_code: partner?.referral_code || ''
+    };
+  });
+
+  res.json({
+    success: true,
+    payouts: enriched
+  });
+});
+
+// 15E. Admin: List Payout-Eligible Partners (Informational for UI dropdown)
+router.get(['/admin/payouts/eligible-partners', '/payouts/eligible-partners'], requireAdmin, async (req, res) => {
+  const currency = req.query.currency || 'AUD';
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      // 1. Get minimum threshold for currency
+      const { data: thresholdData } = await supabase
+        .from('payout_settings')
+        .select('minimum_payout_minor')
+        .eq('currency', currency)
+        .maybeSingle();
+
+      const minimumThresholdMinor = thresholdData?.minimum_payout_minor || 10000;
+
+      // 2. Query active partners
+      const { data: partners, error: partnersErr } = await supabase
+        .from('partners')
+        .select('id, name, email, referral_code, status')
+        .eq('status', 'active');
+
+      if (partnersErr) {
+        return res.status(500).json({ success: false, error: 'Failed to fetch partners' });
+      }
+
+      // 3. Query all available finalized commissions
+      const { data: allAvailableComms, error: allCommsErr } = await supabase
+        .from('partner_commissions')
+        .select('id, partner_id, commission_amount_minor')
+        .eq('currency', currency)
+        .eq('status', 'available')
+        .eq('revenue_status', 'finalized');
+
+      if (allCommsErr) {
+        return res.status(500).json({ success: false, error: 'Failed to fetch commissions' });
+      }
+
+      // 4. Query locked payout items (active items where is_released = false)
+      const { data: activeItems } = await supabase
+        .from('partner_payout_items')
+        .select('commission_id')
+        .eq('is_released', false);
+
+      const lockedCommIds = new Set((activeItems || []).map(i => i.commission_id));
+      const partnerBalances = {};
+
+      for (const c of (allAvailableComms || [])) {
+        if (!lockedCommIds.has(c.id)) {
+          partnerBalances[c.partner_id] = (partnerBalances[c.partner_id] || 0) + c.commission_amount_minor;
+        }
+      }
+
+      const eligible = [];
+      for (const p of (partners || [])) {
+        const balance = partnerBalances[p.id] || 0;
+        if (balance >= minimumThresholdMinor) {
+          eligible.push({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            referral_code: p.referral_code,
+            available_minor: balance,
+            currency
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        minimum_threshold_minor: minimumThresholdMinor,
+        eligible_partners: eligible
+      });
+    } catch (e) {
+      console.error('Error fetching eligible partners:', e.message);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  const thresholdMinor = mockStore.payoutSettings[currency] || 10000;
+  const allocatedIds = new Set(mockStore.payoutItems.map(pi => pi.commission_id));
+  const eligible = [];
+
+  for (const p of Object.values(mockStore.partners)) {
+    if (p.status !== 'active') continue;
+    const available = mockStore.commissions
+      .filter(c => c.partner_id === p.id && c.currency === currency && c.status === 'available' && c.revenue_status === 'finalized' && !allocatedIds.has(c.id))
+      .reduce((sum, c) => sum + c.commission_amount_minor, 0);
+
+    if (available >= thresholdMinor) {
+      eligible.push({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        referral_code: p.referral_code,
+        available_minor: available,
+        currency
+      });
+    }
+  }
+
+  res.json({
+    success: true,
+    minimum_threshold_minor: thresholdMinor,
+    eligible_partners: eligible
+  });
+});
+
+// 15F. Admin: View Single Payout Details
+router.get(['/admin/payouts/:id', '/payouts/:id'], requireAdmin, async (req, res) => {
+  const payoutId = req.params.id;
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data: payout, error: payoutErr } = await supabase
+        .from('partner_payouts')
+        .select(`
+          *,
+          partners:partner_id (id, name, email, referral_code)
+        `)
+        .eq('id', payoutId)
+        .maybeSingle();
+
+      if (payoutErr || !payout) {
+        return res.status(404).json({ success: false, error: 'Payout not found' });
+      }
+
+      const { data: items } = await supabase
+        .from('partner_payout_items')
+        .select(`
+          id,
+          amount_minor,
+          is_released,
+          created_at,
+          commission:commission_id (
+            id,
+            customer_id,
+            type,
+            commission_rate,
+            eligible_revenue_minor,
+            commission_amount_minor,
+            currency,
+            status,
+            earned_at
+          )
+        `)
+        .eq('payout_id', payoutId);
+
+      return res.json({
+        success: true,
+        payout: {
+          ...payout,
+          partner_name: payout.partners?.name || 'Unknown Partner',
+          partner_email: payout.partners?.email || '',
+          referral_code: payout.partners?.referral_code || ''
+        },
+        items: items || []
+      });
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  const payout = (mockStore.payouts || []).find(p => p.id === payoutId);
+  if (!payout) {
+    return res.status(404).json({ success: false, error: 'Payout not found' });
+  }
+
+  const partner = mockStore.partners[payout.partner_id];
+  const items = (mockStore.payoutItems || [])
+    .filter(pi => pi.payout_id === payoutId)
+    .map(pi => {
+      const comm = (mockStore.commissions || []).find(c => c.id === pi.commission_id);
+      return {
+        ...pi,
+        commission: comm
+      };
+    });
+
+  res.json({
+    success: true,
+    payout: {
+      ...payout,
+      partner_name: partner?.name || 'Unknown Partner',
+      partner_email: partner?.email || '',
+      referral_code: partner?.referral_code || ''
+    },
+    items
+  });
+});
+
+// 16. Admin: Create Payout Batch (Authoritative Transactional PostgreSQL RPC)
+router.post(['/admin/payouts/create-batch', '/payouts/create-batch'], requireAdmin, async (req, res) => {
   const { partnerId, currency } = req.body;
   const curr = currency || 'AUD';
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      // 1. Transactional RPC create_partner_payout_batch (Locks rows, verifies eligibility, creates batch & items in one atomic TX)
+      const { data: rpcResult, error: rpcErr } = await supabase.rpc('create_partner_payout_batch', {
+        p_partner_id: partnerId,
+        p_currency: curr
+      });
+
+      if (rpcErr) {
+        console.error('RPC create_partner_payout_batch Error:', rpcErr.message);
+        return res.status(500).json({ success: false, error: 'Database transaction error creating payout batch', details: rpcErr.message });
+      }
+
+      if (!rpcResult || rpcResult.success === false) {
+        return res.status(400).json(rpcResult || { success: false, error: 'Failed to create payout batch' });
+      }
+
+      // 2. Fetch created payout record
+      const { data: createdPayout } = await supabase
+        .from('partner_payouts')
+        .select('*, partners(id, name, email, referral_code)')
+        .eq('id', rpcResult.payout_id)
+        .maybeSingle();
+
+      // 3. Append-only Admin Audit Log
+      await supabase.from('admin_audit_logs').insert({
+        admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId || null,
+        action: 'create_payout_batch',
+        target_type: 'partner_payouts',
+        target_id: rpcResult.payout_id,
+        new_values: rpcResult,
+        notes: `Created draft payout batch for A$${(rpcResult.amount_minor/100).toFixed(2)} (${rpcResult.item_count} commission items)`
+      });
+
+      return res.json({
+        success: true,
+        payout: createdPayout || rpcResult
+      });
+    } catch (e) {
+      console.error('Unexpected error creating payout batch:', e.message);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
 
   const thresholdMinor = mockStore.payoutSettings[curr];
   if (!thresholdMinor) {
@@ -2159,8 +2889,53 @@ router.post(['/admin/payouts/create-batch', '/payouts/create-batch'], requireAdm
 });
 
 // 17. Admin: Approve Payout Batch
-router.post(['/admin/payouts/approve', '/payouts/approve'], requireAdmin, (req, res) => {
+router.post(['/admin/payouts/approve', '/payouts/approve'], requireAdmin, async (req, res) => {
   const { payoutId } = req.body;
+  if (!payoutId) {
+    return res.status(400).json({ success: false, error: 'payoutId is required' });
+  }
+
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data: updated, error: updateErr } = await supabase
+        .from('partner_payouts')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', payoutId)
+        .eq('status', 'draft')
+        .select('*, partners(id, name, email, referral_code)');
+
+      if (updateErr) {
+        console.error('Error approving payout in Supabase:', updateErr.message);
+        return res.status(500).json({ success: false, error: 'Database error approving payout' });
+      }
+
+      if (!updated || updated.length === 0) {
+        return res.status(400).json({ success: false, error: 'payout_not_in_draft_state', message: 'Payout was not found or is not in draft status' });
+      }
+
+      const payout = updated[0];
+
+      await supabase.from('admin_audit_logs').insert({
+        admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId || null,
+        action: 'approve_payout',
+        target_type: 'partner_payouts',
+        target_id: payoutId,
+        new_values: { status: 'approved', approved_at: payout.approved_at }
+      });
+
+      return res.json({
+        success: true,
+        payout
+      });
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
   const payout = mockStore.payouts.find(p => p.id === payoutId);
   if (!payout) {
     return res.status(404).json({ success: false, error: 'Payout not found' });
@@ -2188,13 +2963,151 @@ router.post(['/admin/payouts/approve', '/payouts/approve'], requireAdmin, (req, 
 // 18. Admin: Send Approved Payout via PayPal (With Live Safety Gate & Ceilings)
 router.post(['/admin/payouts/send-paypal', '/payouts/send-paypal'], requireAdmin, async (req, res) => {
   const { payoutId } = req.body;
-  const payout = mockStore.payouts.find(p => p.id === payoutId);
+  if (!payoutId) {
+    return res.status(400).json({ success: false, error: 'payoutId is required' });
+  }
 
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      // 1. Fetch payout
+      const { data: payout, error: fetchErr } = await supabase
+        .from('partner_payouts')
+        .select('*')
+        .eq('id', payoutId)
+        .maybeSingle();
+
+      if (fetchErr || !payout) {
+        return res.status(404).json({ success: false, error: 'Payout not found' });
+      }
+
+      if (payout.status !== 'approved') {
+        return res.status(400).json({
+          success: false,
+          error: `Payout cannot be submitted. Current status: ${payout.status}. Only 'approved' payouts can be sent.`
+        });
+      }
+
+      // 2. Validate safety preconditions
+      try {
+        paypalPayoutService.validatePayoutPreconditions({
+          amountMinor: payout.amount_minor,
+          currency: payout.currency
+        });
+      } catch (err) {
+        return res.status(403).json({
+          success: false,
+          error: 'payout_safety_gate_rejected',
+          message: err.message
+        });
+      }
+
+      // 3. Query Partner payout destination
+      const { data: account } = await supabase
+        .from('partner_payout_accounts')
+        .select('*')
+        .eq('partner_id', payout.partner_id)
+        .maybeSingle();
+
+      const recipientEmail = account?.provider_account_reference;
+      if (!recipientEmail) {
+        return res.status(400).json({
+          success: false,
+          error: 'no_payout_destination_configured',
+          message: 'Partner does not have a configured PayPal payout email.'
+        });
+      }
+
+      const destinationSnapshot = {
+        provider: 'paypal',
+        recipient_email: recipientEmail,
+        snapshotted_at: new Date().toISOString()
+      };
+
+      const senderBatchId = payout.sender_batch_id || `AIVEKAI-PAYOUT-${payout.id}`;
+      const providerRequestId = `REQ-${senderBatchId}`;
+
+      // 4. Atomic Transactional Acquisition Lock via RPC
+      const { data: acqData, error: acqErr } = await supabase.rpc('acquire_payout_for_submission', {
+        p_payout_id: payoutId,
+        p_sender_batch_id: senderBatchId,
+        p_provider_request_id: providerRequestId,
+        p_destination_snapshot: destinationSnapshot
+      });
+
+      if (acqErr) {
+        console.error('acquire_payout_for_submission RPC error:', acqErr.message);
+        return res.status(500).json({ success: false, error: 'Failed to acquire payout lock', details: acqErr.message });
+      }
+
+      if (!acqData || acqData.success === false) {
+        return res.status(400).json(acqData || { success: false, error: 'payout_acquisition_failed' });
+      }
+
+      // 5. Submit to PayPal API
+      try {
+        const result = await paypalPayoutService.createPayout({
+          internalPayoutId: payout.id,
+          senderBatchId,
+          recipientEmail,
+          amountMinor: payout.amount_minor,
+          currency: payout.currency,
+          note: `AivekAI Partner Commission Payout #${payout.id}`
+        });
+
+        // 6. Transition to submitted via mark_payout_submitted RPC
+        const { error: markErr } = await supabase.rpc('mark_payout_submitted', {
+          p_payout_id: payoutId,
+          p_provider_batch_id: result.provider_batch_id,
+          p_provider_status: result.provider_status
+        });
+
+        if (markErr) {
+          console.error('mark_payout_submitted RPC Error:', markErr.message);
+        }
+
+        await supabase.from('admin_audit_logs').insert({
+          admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId || null,
+          action: 'submit_paypal_payout',
+          target_type: 'partner_payouts',
+          target_id: payout.id,
+          new_values: {
+            status: 'submitted',
+            environment: paypalPayoutService.environment,
+            provider_batch_id: result.provider_batch_id,
+            recipient_email: maskEmail(recipientEmail)
+          }
+        });
+
+        return res.json({
+          success: true,
+          message: 'Payout successfully submitted to PayPal.',
+          payout: {
+            ...payout,
+            status: 'submitted',
+            provider_batch_id: result.provider_batch_id,
+            provider_status: result.provider_status
+          }
+        });
+      } catch (err) {
+        console.error('PayPal Submission Network/API Error:', err);
+        return res.status(500).json({
+          success: false,
+          error: 'PayPal API submission error or timeout. Payout remains locked in submitting state for status reconciliation.',
+          details: err.message
+        });
+      }
+    } catch (e) {
+      console.error('Unexpected send-paypal error:', e.message);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  const payout = mockStore.payouts.find(p => p.id === payoutId);
   if (!payout) {
     return res.status(404).json({ success: false, error: 'Payout not found' });
   }
 
-  // ATOMIC ACQUISITION CHECK: Only 'approved' status can be acquired
   if (payout.status !== 'approved') {
     return res.status(400).json({
       success: false,
@@ -2202,7 +3115,6 @@ router.post(['/admin/payouts/send-paypal', '/payouts/send-paypal'], requireAdmin
     });
   }
 
-  // Check production safety preconditions (fails closed if Live is locked)
   try {
     paypalPayoutService.validatePayoutPreconditions({
       amountMinor: payout.amount_minor,
@@ -2233,7 +3145,6 @@ router.post(['/admin/payouts/send-paypal', '/payouts/send-paypal'], requireAdmin
 
   const senderBatchId = payout.sender_batch_id || `AIVEKAI-PAYOUT-${payout.id}`;
 
-  // Atomically lock status to 'submitting'
   payout.status = 'submitting';
   payout.sender_batch_id = senderBatchId;
   payout.payout_destination_snapshot = destinationSnapshot;
@@ -2249,7 +3160,6 @@ router.post(['/admin/payouts/send-paypal', '/payouts/send-paypal'], requireAdmin
       note: `AivekAI Partner Commission Payout #${payout.id}`
     });
 
-    // Update internal state to submitted
     payout.status = 'submitted';
     payout.provider = 'paypal';
     payout.provider_batch_id = result.provider_batch_id;
@@ -2279,7 +3189,7 @@ router.post(['/admin/payouts/send-paypal', '/payouts/send-paypal'], requireAdmin
     });
   } catch (err) {
     console.error('PayPal Submission Failed:', err);
-    payout.status = 'submitting'; // Retained in submitting/unknown state until reconciled
+    payout.status = 'submitting';
     payout.provider_failure_message = err.message || 'PayPal API Error';
 
     return res.status(500).json({
@@ -2290,19 +3200,114 @@ router.post(['/admin/payouts/send-paypal', '/payouts/send-paypal'], requireAdmin
   }
 });
 
-// 19. Admin: Refresh / Reconcile Status from PayPal API (With Fee Isolation)
+// 19. Admin: Refresh / Reconcile Status from PayPal API (Transactional RPC)
 router.post(['/admin/payouts/refresh-status', '/payouts/refresh-status'], requireAdmin, async (req, res) => {
   const { payoutId } = req.body;
-  const payout = mockStore.payouts.find(p => p.id === payoutId);
+  if (!payoutId) {
+    return res.status(400).json({ success: false, error: 'payoutId is required' });
+  }
 
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data: payout, error: fetchErr } = await supabase
+        .from('partner_payouts')
+        .select('*')
+        .eq('id', payoutId)
+        .maybeSingle();
+
+      if (fetchErr || !payout || !payout.provider_batch_id) {
+        return res.status(404).json({ success: false, error: 'Payout or PayPal batch ID not found' });
+      }
+
+      const batch = await paypalPayoutService.getPayoutBatch(payout.provider_batch_id);
+
+      let matchingItem = null;
+      if (batch.items && Array.isArray(batch.items)) {
+        matchingItem = batch.items.find(i =>
+          (payout.provider_item_id && i.payout_item_id === payout.provider_item_id) ||
+          (i.payout_item?.sender_item_id === `ITEM-${payout.id}`) ||
+          (payout.payout_destination_snapshot?.recipient_email && i.payout_item?.receiver === payout.payout_destination_snapshot.recipient_email)
+        );
+      }
+
+      const itemStatus = matchingItem ? matchingItem.transaction_status : batch.batch_header?.batch_status;
+      const normalized = paypalPayoutService.normalizePayPalStatus(itemStatus);
+
+      let feeMinor = 0;
+      let feeCurrency = payout.currency;
+      if (matchingItem?.payout_item_fee?.value) {
+        feeMinor = Math.round(parseFloat(matchingItem.payout_item_fee.value) * 100);
+        feeCurrency = matchingItem.payout_item_fee.currency;
+      } else if (batch.batch_header?.fees?.value) {
+        feeMinor = Math.round(parseFloat(batch.batch_header.fees.value) * 100);
+        feeCurrency = batch.batch_header.fees.currency;
+      }
+
+      let rpcResult = null;
+      if (normalized === 'paid') {
+        const { data } = await supabase.rpc('confirm_partner_payout_success', {
+          p_payout_id: payoutId,
+          p_provider_batch_id: payout.provider_batch_id,
+          p_provider_item_id: matchingItem?.payout_item_id || null,
+          p_fee_minor: feeMinor,
+          p_fee_currency: feeCurrency
+        });
+        rpcResult = data;
+      } else if (normalized === 'failed') {
+        const { data } = await supabase.rpc('record_partner_payout_failure', {
+          p_payout_id: payoutId,
+          p_failure_code: matchingItem?.errors?.name || 'FAILED',
+          p_failure_message: matchingItem?.errors?.message || 'Transaction failed'
+        });
+        rpcResult = data;
+      } else if (normalized === 'reversed') {
+        const { data } = await supabase.rpc('record_partner_payout_reversal', {
+          p_payout_id: payoutId,
+          p_reversal_code: 'PAYPAL_REVERSAL',
+          p_reversal_message: 'Transaction returned or refunded post-delivery'
+        });
+        rpcResult = data;
+      }
+
+      // Fetch refreshed payout
+      const { data: refreshedPayout } = await supabase
+        .from('partner_payouts')
+        .select('*, partners(id, name, email, referral_code)')
+        .eq('id', payoutId)
+        .maybeSingle();
+
+      await supabase.from('admin_audit_logs').insert({
+        admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId || null,
+        action: 'reconcile_paypal_payout',
+        target_type: 'partner_payouts',
+        target_id: payoutId,
+        new_values: {
+          normalized_status: normalized,
+          provider_status: itemStatus,
+          rpc_result: rpcResult
+        }
+      });
+
+      return res.json({
+        success: true,
+        payout: refreshedPayout || payout,
+        paypal_item: matchingItem,
+        paypal_batch: batch
+      });
+    } catch (err) {
+      console.error('Error refreshing PayPal payout status:', err);
+      return res.status(500).json({ success: false, error: 'Failed to refresh PayPal status', details: err.message });
+    }
+  }
+
+  const payout = mockStore.payouts.find(p => p.id === payoutId);
   if (!payout || !payout.provider_batch_id) {
     return res.status(404).json({ success: false, error: 'Payout or PayPal batch ID not found' });
   }
 
   try {
     const batch = await paypalPayoutService.getPayoutBatch(payout.provider_batch_id);
-
-    // Look for matching item in batch
     let matchingItem = null;
     if (batch.items && Array.isArray(batch.items)) {
       matchingItem = batch.items.find(i =>
@@ -2320,7 +3325,6 @@ router.post(['/admin/payouts/refresh-status', '/payouts/refresh-status'], requir
       payout.provider_item_id = matchingItem.payout_item_id;
     }
 
-    // Capture provider fee separately without altering partner commission amount
     if (matchingItem?.payout_item_fee?.value) {
       payout.provider_fee_minor = Math.round(parseFloat(matchingItem.payout_item_fee.value) * 100);
       payout.provider_fee_currency = matchingItem.payout_item_fee.currency;
@@ -2368,8 +3372,62 @@ router.post(['/admin/payouts/refresh-status', '/payouts/refresh-status'], requir
 });
 
 // 20. Admin: Cancel Payout Batch
-router.post(['/admin/payouts/cancel', '/payouts/cancel'], requireAdmin, (req, res) => {
+router.post(['/admin/payouts/cancel', '/payouts/cancel'], requireAdmin, async (req, res) => {
   const { payoutId } = req.body;
+  if (!payoutId) {
+    return res.status(400).json({ success: false, error: 'payoutId is required' });
+  }
+
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data: payout, error: fetchErr } = await supabase
+        .from('partner_payouts')
+        .select('*')
+        .eq('id', payoutId)
+        .maybeSingle();
+
+      if (fetchErr || !payout) {
+        return res.status(404).json({ success: false, error: 'Payout not found' });
+      }
+
+      if (payout.status !== 'draft' && payout.status !== 'approved') {
+        return res.status(400).json({
+          success: false,
+          error: 'payout_cannot_be_cancelled',
+          message: `Payout in '${payout.status}' status cannot be cancelled.`
+        });
+      }
+
+      // Update payout status to cancelled
+      await supabase
+        .from('partner_payouts')
+        .update({ status: 'cancelled' })
+        .eq('id', payoutId);
+
+      // Release payout items non-destructively so commissions become available again
+      await supabase
+        .from('partner_payout_items')
+        .update({ is_released: true, released_at: new Date().toISOString() })
+        .eq('payout_id', payoutId);
+
+      await supabase.from('admin_audit_logs').insert({
+        admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId || null,
+        action: 'cancel_payout',
+        target_type: 'partner_payouts',
+        target_id: payoutId,
+        new_values: { status: 'cancelled' }
+      });
+
+      return res.json({
+        success: true,
+        message: 'Payout cancelled and commissions released back to available pool.'
+      });
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
   const payout = mockStore.payouts.find(p => p.id === payoutId);
   if (!payout || (payout.status !== 'draft' && payout.status !== 'approved')) {
     return res.status(400).json({ success: false, error: 'Payout cannot be cancelled' });
@@ -2395,9 +3453,39 @@ router.post(['/admin/payouts/cancel', '/payouts/cancel'], requireAdmin, (req, re
   });
 });
 
-// 21. Admin: Create Manual Financial Adjustment
-router.post(['/admin/adjustments/create', '/adjustments/create'], requireAdmin, (req, res) => {
+// 21. Admin: Create Manual Financial Adjustment (Transactional RPC)
+router.post(['/admin/adjustments/create', '/adjustments/create'], requireAdmin, async (req, res) => {
   const { partnerId, amountMinor, currency, reason } = req.body;
+  if (!partnerId || !amountMinor || !reason) {
+    return res.status(400).json({ success: false, error: 'partnerId, amountMinor, and reason are required' });
+  }
+
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const adminUserId = req.adminAuth?.authUserId || '00000000-0000-0000-0000-000000000000';
+      const { data: rpcResult, error: rpcErr } = await supabase.rpc('create_partner_adjustment', {
+        p_partner_id: partnerId,
+        p_amount_minor: parseInt(amountMinor, 10),
+        p_currency: currency || 'AUD',
+        p_reason: reason,
+        p_admin_user_id: adminUserId
+      });
+
+      if (rpcErr) {
+        console.error('RPC create_partner_adjustment error:', rpcErr.message);
+        return res.status(500).json({ success: false, error: 'Failed to record adjustment in database', details: rpcErr.message });
+      }
+
+      return res.json({
+        success: true,
+        adjustment: rpcResult
+      });
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
   const partner = mockStore.partners[partnerId];
   if (!partner) {
     return res.status(404).json({ success: false, error: 'Partner not found' });
@@ -2440,8 +3528,30 @@ router.post(['/admin/adjustments/create', '/adjustments/create'], requireAdmin, 
   });
 });
 
-// 22. Admin: View Audit Logs
-router.get(['/admin/audit-logs', '/audit-logs'], requireAdmin, (req, res) => {
+// 22. Admin: View Audit Logs (Persisted Database Logs)
+router.get(['/admin/audit-logs', '/audit-logs'], requireAdmin, async (req, res) => {
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('admin_audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        return res.status(500).json({ success: false, error: 'Database error fetching audit logs' });
+      }
+
+      return res.json({
+        success: true,
+        audit_logs: data || []
+      });
+    } catch (e) {
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
   res.json({
     success: true,
     audit_logs: mockStore.auditLogs
@@ -2592,6 +3702,7 @@ router.get('/health', async (req, res) => {
 module.exports = router;
 module.exports.mockStore = mockStore;
 module.exports.rateLimitMap = rateLimitMap;
+module.exports.adminPasswordResetTokens = adminPasswordResetTokens;
 module.exports.partnerEmailService = partnerEmailService;
 module.exports.resolveAgreedCommissionRate = resolveAgreedCommissionRate;
 module.exports.getProgramSetting = getProgramSetting;

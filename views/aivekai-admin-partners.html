@@ -163,9 +163,10 @@
 
         .status-active, .status-paid { background: #E6F7F0; color: #00875A; }
         .status-pending, .status-submitted { background: #FFF8E6; color: #B78103; }
+        .status-submitting { background: #F3E8FF; color: #7E22CE; }
         .status-approved { background: #E6F4F1; color: #006B5C; }
-        .status-rejected, .status-failed { background: #FFEBE6; color: #DE350B; }
-        .status-draft { background: #EDEFF2; color: #5C6764; }
+        .status-rejected, .status-failed, .status-reversed { background: #FFEBE6; color: #DE350B; }
+        .status-draft, .status-cancelled { background: #EDEFF2; color: #5C6764; }
 
         .btn-action {
             padding: 6px 12px;
@@ -204,6 +205,13 @@
             max-width: 540px;
             width: 90%;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-box.modal-large {
+            max-width: 850px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-box h3 { margin-bottom: 16px; font-size: 1.3rem; }
@@ -316,13 +324,17 @@
         <!-- Payouts Tab -->
         <div id="payoutsTab" class="tab-content">
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <h3>PayPal Payout Batches</h3>
-                    <div style="display: flex; gap: 8px;">
-                        <select id="payoutPartnerSelect" style="padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                            <option value="">Loading partners...</option>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h3>PayPal Payout Batches</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Review, approve, and disburse partner commissions via PayPal Sandbox / Live.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="payoutPartnerSelect" style="padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); max-width: 320px;">
+                            <option value="">Checking eligible partners...</option>
                         </select>
-                        <button class="btn-action btn-primary" onclick="createPayoutBatch()">+ Create Payout Batch</button>
+                        <button id="btnCreatePayout" class="btn-action btn-primary" onclick="createPayoutBatch()" disabled>+ Create Payout Batch</button>
+                        <button class="btn-action" onclick="loadPayouts(); loadEligiblePayoutPartners();">↻ Refresh</button>
                     </div>
                 </div>
                 <table>
@@ -335,21 +347,12 @@
                             <th>Recipient PayPal</th>
                             <th>Batch ID</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            <th style="min-width: 200px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="payoutsTableBody">
                         <tr>
-                            <td><code>payout_sb_1001</code></td>
-                            <td>James Smith</td>
-                            <td><strong>A$107.54</strong></td>
-                            <td><span style="color: var(--text-muted);">A$2.15 (Platform)</span></td>
-                            <td><code>sb-partner-james@personal.example.com</code></td>
-                            <td><code>NFSC38SB5GHR2</code></td>
-                            <td><span class="status-badge status-paid">PAID</span></td>
-                            <td>
-                                <button class="btn-action" onclick="refreshPayoutStatus('payout_sb_1001')">View Details</button>
-                            </td>
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading payout batches...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -373,13 +376,9 @@
                             <th>Date</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="adjustmentsTableBody">
                         <tr>
-                            <td><code>comm_adj_01</code></td>
-                            <td>James Smith</td>
-                            <td>+A$50.00</td>
-                            <td>Special promotion bonus</td>
-                            <td>2026-08-15</td>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Use the Partners Overview tab to record manual adjustments.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -389,7 +388,13 @@
         <!-- Audit Trail Tab -->
         <div id="auditTab" class="tab-content">
             <div class="card">
-                <h3>Admin Security Audit Trail</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h3>Admin Security Audit Trail</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Authoritative append-only logs for all admin actions and financial operations.</p>
+                    </div>
+                    <button class="btn-action" onclick="loadAuditTrail()">↻ Refresh Audit Trail</button>
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -397,14 +402,12 @@
                             <th>Action</th>
                             <th>Target</th>
                             <th>Admin Identity</th>
+                            <th>Notes / Details</th>
                         </tr>
                     </thead>
                     <tbody id="auditTableBody">
                         <tr>
-                            <td>2026-09-01 02:40:12</td>
-                            <td><code>submit_paypal_payout</code></td>
-                            <td>payout_sb_1001 (A$107.54)</td>
-                            <td><code>aivekai_admin</code></td>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading audit logs...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -528,6 +531,83 @@
         </div>
     </div>
 
+    <!-- Payout Batch Details Modal -->
+    <div id="payoutDetailsModal" class="modal-overlay">
+        <div class="modal-box modal-large">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+                <div>
+                    <h3 id="modalPayoutTitle" style="margin-bottom: 4px;">Payout Batch Details</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);" id="modalPayoutSubtitle">Authoritative database record & reconciliation snapshot</p>
+                </div>
+                <div id="modalPayoutStatusBadge"></div>
+            </div>
+
+            <!-- Summary Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <div style="background: #F8FAF9; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">Partner</small>
+                    <strong id="modalPartnerName" style="font-size: 1rem; color: #111827;">-</strong>
+                    <div id="modalPartnerEmail" style="font-size: 0.82rem; color: var(--text-muted);">-</div>
+                    <code id="modalReferralCode" style="font-size: 0.78rem; display: inline-block; margin-top: 4px;">-</code>
+                </div>
+
+                <div style="background: #F8FAF9; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">Gross Disbursed / Fee</small>
+                    <strong id="modalPayoutAmount" style="font-size: 1.1rem; color: var(--primary);">-</strong>
+                    <div id="modalPayoutFee" style="font-size: 0.82rem; color: var(--text-muted);">Platform Fee: -</div>
+                </div>
+
+                <div style="background: #F8FAF9; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">Authoritative Payout Destination</small>
+                    <strong id="modalDestinationEmail" style="font-size: 0.95rem; color: #111827; word-break: break-all;">-</strong>
+                    <div id="modalDestinationMeta" style="font-size: 0.78rem; color: var(--text-muted);">Provider: PayPal</div>
+                </div>
+
+                <div style="background: #F8FAF9; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">Tracking Identifiers</small>
+                    <div style="font-size: 0.8rem;"><strong>Batch ID:</strong> <code id="modalBatchId">-</code></div>
+                    <div style="font-size: 0.8rem; margin-top: 2px;"><strong>Item ID:</strong> <code id="modalItemId">-</code></div>
+                    <div style="font-size: 0.8rem; margin-top: 2px;"><strong>Sender Batch:</strong> <code id="modalSenderBatchId">-</code></div>
+                </div>
+            </div>
+
+            <!-- Timestamps & Lifecycle Audit -->
+            <div style="margin-bottom: 24px; padding: 12px 16px; background: #F8FAF9; border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.82rem;">
+                <div style="display: flex; gap: 24px; flex-wrap: wrap; color: var(--text-muted);">
+                    <div><strong>Created:</strong> <span id="modalCreatedDate">-</span></div>
+                    <div><strong>Approved:</strong> <span id="modalApprovedDate">-</span></div>
+                    <div><strong>Submitted:</strong> <span id="modalSubmittedDate">-</span></div>
+                    <div><strong>Reconciled / Paid:</strong> <span id="modalPaidDate">-</span></div>
+                </div>
+            </div>
+
+            <!-- Itemized Commissions Table -->
+            <h4 style="margin-bottom: 10px; font-size: 0.95rem;">Allocated Commission Ledger Items</h4>
+            <div style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 20px;">
+                <table style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: #FAFAFA;">
+                        <tr>
+                            <th>Commission ID</th>
+                            <th>Customer / Ref</th>
+                            <th>Type</th>
+                            <th>Gross Sale</th>
+                            <th>Rate</th>
+                            <th>Commission Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalItemsTableBody">
+                        <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 14px;">No items.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions" style="border-top: 1px solid var(--border); padding-top: 14px;">
+                <button class="btn-action" onclick="closePayoutDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentEnvironment = 'sandbox';
         let currentAdjPartnerId = null;
@@ -582,7 +662,13 @@
                 }
 
                 // Initial data load
-                await Promise.all([loadPartners(), loadApplications()]);
+                await Promise.all([
+                    loadPartners(), 
+                    loadApplications(), 
+                    loadPayouts(), 
+                    loadEligiblePayoutPartners(), 
+                    loadAuditTrail()
+                ]);
 
                 // Auto-open change password modal if requested via direct URL or hash
                 if (window.location.pathname.includes('change-password') || window.location.hash === '#change-password' || window.location.search.includes('change-password')) {
@@ -606,6 +692,11 @@
 
             if (tabId === 'applicationsTab') loadApplications();
             if (tabId === 'partnersTab') loadPartners();
+            if (tabId === 'payoutsTab') {
+                loadPayouts();
+                loadEligiblePayoutPartners();
+            }
+            if (tabId === 'auditTab') loadAuditTrail();
         }
 
         // Load & Render Applications Queue
@@ -696,7 +787,6 @@
         // Load & Render Partners Table
         async function loadPartners() {
             const tbody = document.getElementById('partnersTableBody');
-            const payoutSelect = document.getElementById('payoutPartnerSelect');
             try {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Fetching partners...</td></tr>';
                 const res = await fetch('/api/aivekai/admin/partners', {
@@ -721,7 +811,6 @@
                     const rate = parseFloat(p.commission_rate || 30.0).toFixed(1) + '%';
                     const partnerId = escapeHtml(p.id);
                     const status = p.status || 'active';
-                    const isAllowed = p.accept_new_referrals !== false;
 
                     return `
                         <tr>
@@ -736,10 +825,6 @@
                         </tr>
                     `;
                 }).join('');
-
-                if (payoutSelect) {
-                    payoutSelect.innerHTML = cachedPartners.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.referral_code)})</option>`).join('');
-                }
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DE350B;">Network error fetching partners.</td></tr>`;
             }
@@ -782,7 +867,6 @@
                 return;
             }
 
-            // Immediately disable button to prevent double-click
             btn.disabled = true;
             btn.textContent = 'Approving & Sending Email...';
 
@@ -843,7 +927,6 @@
             const reason = document.getElementById('rejectReason').value.trim();
             const btn = document.getElementById('btnConfirmReject');
 
-            // Immediately disable button to prevent double-click
             btn.disabled = true;
             btn.textContent = 'Rejecting & Sending Email...';
 
@@ -916,11 +999,134 @@
                 if (data.success) {
                     alert('Financial adjustment recorded in ledger successfully!');
                     closeAdjustmentModal();
+                    await Promise.all([loadEligiblePayoutPartners(), loadAuditTrail()]);
                 } else {
                     alert('Failed: ' + (data.error || 'Unknown error'));
                 }
             } catch (e) {
                 alert('Network error.');
+            }
+        }
+
+        // ==========================================
+        // PAYPAL PAYOUT LIFECYCLE HANDLERS
+        // ==========================================
+
+        async function loadPayouts() {
+            const tbody = document.getElementById('payoutsTableBody');
+            try {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">Fetching payout batches...</td></tr>';
+                const res = await fetch('/api/aivekai/admin/payouts', {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #DE350B; padding: 20px;">Error loading payouts: ${escapeHtml(data.error || 'Unknown error')}</td></tr>`;
+                    return;
+                }
+
+                const payouts = data.payouts || [];
+                if (payouts.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">No payout batches yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = payouts.map(p => {
+                    const payoutId = escapeHtml(p.id);
+                    const safeName = escapeHtml(p.partner_name || 'Partner #' + p.partner_id);
+                    const safeCode = escapeHtml(p.referral_code || '');
+                    const amount = (p.amount_minor / 100).toFixed(2);
+                    const currency = escapeHtml(p.currency || 'AUD');
+                    const feeMinor = p.provider_fee_minor || 0;
+                    const fee = (feeMinor / 100).toFixed(2);
+                    const recipient = escapeHtml(p.payout_destination_snapshot?.recipient_email || p.recipient_email || '-');
+                    const batchId = escapeHtml(p.provider_batch_id || '-');
+                    const status = (p.status || 'draft').toLowerCase();
+
+                    let badgeClass = 'status-draft';
+                    if (status === 'approved') badgeClass = 'status-approved';
+                    else if (status === 'submitting') badgeClass = 'status-submitting';
+                    else if (status === 'submitted') badgeClass = 'status-submitted';
+                    else if (status === 'paid') badgeClass = 'status-paid';
+                    else if (status === 'failed') badgeClass = 'status-failed';
+                    else if (status === 'reversed') badgeClass = 'status-reversed';
+                    else if (status === 'cancelled') badgeClass = 'status-cancelled';
+
+                    const statusBadge = `<span class="status-badge ${badgeClass}">${status.toUpperCase()}</span>`;
+
+                    let actions = [];
+                    if (status === 'draft') {
+                        actions.push(`<button class="btn-action btn-primary" onclick="approvePayout('${payoutId}')">Approve</button>`);
+                        actions.push(`<button class="btn-action btn-danger" onclick="cancelPayout('${payoutId}')">Cancel</button>`);
+                    } else if (status === 'approved') {
+                        actions.push(`<button class="btn-action btn-paypal" onclick="sendViaPayPal('${payoutId}', '${safeName}', '${amount}', '${recipient}')">Send via PayPal</button>`);
+                        actions.push(`<button class="btn-action btn-danger" onclick="cancelPayout('${payoutId}')">Cancel</button>`);
+                    } else if (status === 'submitted' || status === 'submitting') {
+                        actions.push(`<button class="btn-action" onclick="refreshPayoutStatus('${payoutId}')">↻ Refresh Status</button>`);
+                    }
+                    actions.push(`<button class="btn-action" onclick="viewPayoutDetails('${payoutId}')">View Details</button>`);
+
+                    return `
+                        <tr>
+                            <td><code>${payoutId}</code></td>
+                            <td>
+                                <strong>${safeName}</strong><br>
+                                <code style="font-size: 0.78rem;">${safeCode}</code>
+                            </td>
+                            <td><strong style="color: var(--primary);">${currency} $${amount}</strong></td>
+                            <td><small style="color: var(--text-muted);">${currency} $${fee}</small></td>
+                            <td><code>${recipient}</code></td>
+                            <td><small>${batchId !== '-' ? `<code>${batchId}</code>` : '-'}</small></td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    ${actions.join('')}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #DE350B; padding: 20px;">Network error fetching payouts.</td></tr>`;
+            }
+        }
+
+        async function loadEligiblePayoutPartners() {
+            const select = document.getElementById('payoutPartnerSelect');
+            const btn = document.getElementById('btnCreatePayout');
+            if (!select || !btn) return;
+
+            try {
+                select.innerHTML = '<option value="">Checking eligible partners...</option>';
+                btn.disabled = true;
+
+                const res = await fetch('/api/aivekai/admin/payouts/eligible-partners?currency=AUD', {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+                const data = await res.json();
+                if (!data.success || !data.eligible_partners) {
+                    select.innerHTML = '<option value="">Failed to check eligible partners</option>';
+                    return;
+                }
+
+                const eligible = data.eligible_partners;
+                const minThreshold = ((data.minimum_threshold_minor || 10000) / 100).toFixed(2);
+
+                if (eligible.length === 0) {
+                    select.innerHTML = `<option value="">No partners with eligible balance (min A$${minThreshold})</option>`;
+                    btn.disabled = true;
+                    return;
+                }
+
+                select.innerHTML = eligible.map(p => {
+                    const balance = (p.available_minor / 100).toFixed(2);
+                    return `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.referral_code)}) — A$${balance} available</option>`;
+                }).join('');
+
+                btn.disabled = false;
+            } catch (e) {
+                select.innerHTML = '<option value="">Network error checking eligible partners</option>';
+                btn.disabled = true;
             }
         }
 
@@ -930,20 +1136,55 @@
                 alert('No partner selected.');
                 return;
             }
-            const response = await fetch('/api/aivekai/admin/payouts/create-batch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-csrf-token': 'valid_csrf_token'
-                },
-                body: JSON.stringify({ partnerId, currency: 'AUD' })
-            });
+            const btn = document.getElementById('btnCreatePayout');
+            btn.disabled = true;
+            btn.textContent = 'Creating Batch...';
 
-            const data = await response.json();
-            if (data.success) {
-                alert(`Payout batch created: ID ${data.payout.id} for A$${(data.payout.amount_minor/100).toFixed(2)}`);
-            } else {
-                alert(data.error || 'Failed to create payout batch');
+            try {
+                const response = await fetch('/api/aivekai/admin/payouts/create-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': 'valid_csrf_token'
+                    },
+                    body: JSON.stringify({ partnerId, currency: 'AUD' })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ Payout batch created: ID #${data.payout.id} for A$${((data.payout.amount_minor || 0)/100).toFixed(2)}`);
+                    await Promise.all([loadPayouts(), loadEligiblePayoutPartners(), loadAuditTrail()]);
+                } else {
+                    alert('Creation failed: ' + (data.message || data.error || 'Failed to create payout batch'));
+                }
+            } catch (e) {
+                alert('Network error creating payout batch.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '+ Create Payout Batch';
+            }
+        }
+
+        async function approvePayout(payoutId) {
+            if (!confirm('Approve this payout batch for disbursement?')) return;
+            try {
+                const res = await fetch('/api/aivekai/admin/payouts/approve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': 'valid_csrf_token'
+                    },
+                    body: JSON.stringify({ payoutId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Payout batch approved successfully.');
+                    await Promise.all([loadPayouts(), loadAuditTrail()]);
+                } else {
+                    alert('Approval failed: ' + (data.message || data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Network error approving payout.');
             }
         }
 
@@ -968,42 +1209,185 @@
 
                 const data = await response.json();
                 if (data.success) {
-                    alert('Payout submitted to PayPal successfully!');
+                    alert('✅ Payout submitted to PayPal successfully!');
+                    await Promise.all([loadPayouts(), loadAuditTrail()]);
                 } else {
-                    alert(data.message || data.error || 'Failed to submit PayPal payout');
+                    alert('Submission failed: ' + (data.message || data.error || 'Failed to submit PayPal payout'));
+                    await loadPayouts();
                 }
             } catch (e) {
-                alert('Network error.');
+                alert('Network error sending PayPal payout.');
             }
         }
 
         async function refreshPayoutStatus(payoutId) {
-            const response = await fetch('/api/aivekai/admin/payouts/refresh-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-csrf-token': 'valid_csrf_token'
-                },
-                body: JSON.stringify({ payoutId })
-            });
-            const data = await response.json();
-            if (data.success) {
-                alert(`PayPal status updated: ${data.payout.provider_status || data.payout.status}`);
+            try {
+                const response = await fetch('/api/aivekai/admin/payouts/refresh-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': 'valid_csrf_token'
+                    },
+                    body: JSON.stringify({ payoutId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`PayPal status updated: ${data.payout.provider_status || data.payout.status}`);
+                    await Promise.all([loadPayouts(), loadEligiblePayoutPartners(), loadAuditTrail()]);
+                } else {
+                    alert('Refresh failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Network error refreshing status.');
             }
         }
 
         async function cancelPayout(payoutId) {
-            if (!confirm('Cancel this payout batch and release commissions?')) return;
-            const response = await fetch('/api/aivekai/admin/payouts/cancel', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-csrf-token': 'valid_csrf_token'
-                },
-                body: JSON.stringify({ payoutId })
-            });
-            const data = await response.json();
-            if (data.success) alert('Payout batch cancelled.');
+            if (!confirm('Cancel this payout batch and release commissions back to the eligible pool?')) return;
+            try {
+                const response = await fetch('/api/aivekai/admin/payouts/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': 'valid_csrf_token'
+                    },
+                    body: JSON.stringify({ payoutId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Payout batch cancelled and commissions released.');
+                    await Promise.all([loadPayouts(), loadEligiblePayoutPartners(), loadAuditTrail()]);
+                } else {
+                    alert('Cancellation failed: ' + (data.message || data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Network error cancelling payout.');
+            }
+        }
+
+        async function viewPayoutDetails(payoutId) {
+            try {
+                const res = await fetch(`/api/aivekai/admin/payouts/${encodeURIComponent(payoutId)}`, {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+                const data = await res.json();
+                if (!data.success || !data.payout) {
+                    alert('Failed to load payout details: ' + (data.error || 'Not found'));
+                    return;
+                }
+
+                const p = data.payout;
+                const items = data.items || [];
+
+                document.getElementById('modalPayoutTitle').textContent = `Payout Batch: #${p.id}`;
+                document.getElementById('modalPartnerName').textContent = p.partner_name || `Partner #${p.partner_id}`;
+                document.getElementById('modalPartnerEmail').textContent = p.partner_email || '-';
+                document.getElementById('modalReferralCode').textContent = p.referral_code || '-';
+
+                const amount = (p.amount_minor / 100).toFixed(2);
+                const fee = ((p.provider_fee_minor || 0) / 100).toFixed(2);
+                const currency = p.currency || 'AUD';
+                document.getElementById('modalPayoutAmount').textContent = `${currency} $${amount}`;
+                document.getElementById('modalPayoutFee').textContent = `Provider Fee: ${currency} $${fee}`;
+
+                const dest = p.payout_destination_snapshot?.recipient_email || p.recipient_email || 'Not configured';
+                document.getElementById('modalDestinationEmail').textContent = dest;
+                document.getElementById('modalDestinationMeta').textContent = `Provider: ${p.provider || 'paypal'} · Environment: ${p.environment || 'sandbox'}`;
+
+                document.getElementById('modalBatchId').textContent = p.provider_batch_id || '-';
+                document.getElementById('modalItemId').textContent = p.provider_item_id || '-';
+                document.getElementById('modalSenderBatchId').textContent = p.sender_batch_id || '-';
+
+                document.getElementById('modalCreatedDate').textContent = p.created_at ? new Date(p.created_at).toLocaleString() : '-';
+                document.getElementById('modalApprovedDate').textContent = p.approved_at ? new Date(p.approved_at).toLocaleString() : '-';
+                document.getElementById('modalSubmittedDate').textContent = p.submitted_at ? new Date(p.submitted_at).toLocaleString() : '-';
+                document.getElementById('modalPaidDate').textContent = p.paid_at ? new Date(p.paid_at).toLocaleString() : (p.reconciled_at ? new Date(p.reconciled_at).toLocaleString() : '-');
+
+                const status = (p.status || 'draft').toLowerCase();
+                let badgeClass = 'status-draft';
+                if (status === 'approved') badgeClass = 'status-approved';
+                else if (status === 'submitting') badgeClass = 'status-submitting';
+                else if (status === 'submitted') badgeClass = 'status-submitted';
+                else if (status === 'paid') badgeClass = 'status-paid';
+                else if (status === 'failed') badgeClass = 'status-failed';
+                else if (status === 'reversed') badgeClass = 'status-reversed';
+                else if (status === 'cancelled') badgeClass = 'status-cancelled';
+                document.getElementById('modalPayoutStatusBadge').innerHTML = `<span class="status-badge ${badgeClass}">${status.toUpperCase()}</span>`;
+
+                const itemsTbody = document.getElementById('modalItemsTableBody');
+                if (items.length === 0) {
+                    itemsTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 14px;">No linked commission items.</td></tr>';
+                } else {
+                    itemsTbody.innerHTML = items.map(it => {
+                        const comm = it.commission || {};
+                        const commAmt = ((it.amount_minor || comm.commission_amount_minor || 0) / 100).toFixed(2);
+                        const revAmt = ((comm.eligible_revenue_minor || 0) / 100).toFixed(2);
+                        const commRate = comm.commission_rate ? `${parseFloat(comm.commission_rate).toFixed(1)}%` : '-';
+                        return `
+                            <tr>
+                                <td><code>${escapeHtml(it.commission_id || it.id)}</code></td>
+                                <td>${escapeHtml(comm.customer_id || '-')}</td>
+                                <td><small>${escapeHtml(comm.type || 'subscription')}</small></td>
+                                <td>${currency} $${revAmt}</td>
+                                <td><strong>${commRate}</strong></td>
+                                <td><strong style="color: var(--primary);">${currency} $${commAmt}</strong></td>
+                                <td><span class="status-badge status-active">${escapeHtml(comm.status || 'allocated')}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                document.getElementById('payoutDetailsModal').style.display = 'flex';
+            } catch (e) {
+                alert('Network error loading payout details.');
+            }
+        }
+
+        function closePayoutDetailsModal() {
+            document.getElementById('payoutDetailsModal').style.display = 'none';
+        }
+
+        // Load & Render Admin Audit Trail
+        async function loadAuditTrail() {
+            const tbody = document.getElementById('auditTableBody');
+            if (!tbody) return;
+            try {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Fetching audit logs...</td></tr>';
+                const res = await fetch('/api/aivekai/admin/audit-logs', {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #DE350B; padding: 20px;">Error: ${escapeHtml(data.error || 'Failed')}</td></tr>`;
+                    return;
+                }
+
+                const logs = data.logs || [];
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No audit events recorded yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(l => {
+                    const time = l.created_at ? new Date(l.created_at).toLocaleString() : '-';
+                    const action = escapeHtml(l.action || '-');
+                    const target = escapeHtml(`${l.target_type || ''} ${l.target_id ? '#' + l.target_id : ''}`);
+                    const admin = escapeHtml(l.admin_user_id || 'admin_session');
+                    const notes = escapeHtml(l.notes || JSON.stringify(l.new_values || {}));
+
+                    return `
+                        <tr>
+                            <td><small style="color: var(--text-muted);">${time}</small></td>
+                            <td><code>${action}</code></td>
+                            <td>${target}</td>
+                            <td><small>${admin}</small></td>
+                            <td><small style="color: #2D3735; max-width: 320px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${notes}">${notes}</small></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #DE350B; padding: 20px;">Network error loading audit logs.</td></tr>';
+            }
         }
 
         function openChangePasswordModal() {

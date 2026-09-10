@@ -868,6 +868,113 @@ https://mozarex.com/aivekai/partners
   }
 
   /**
+   * Generates content for Admin password reset email.
+   */
+  buildAdminPasswordResetContent({ resetLink, adminEmail, adminUsername = 'Administrator' }) {
+    const safeUsername = escapeHtml(adminUsername);
+    const safeEmail = escapeHtml(adminEmail);
+    const safeResetLink = escapeHtml(resetLink);
+
+    const subject = 'Reset your AivekAI Admin password';
+
+    const textBody = `
+Hi ${safeUsername},
+
+We received a request to reset the password for your AivekAI Administrator account (${safeEmail}).
+
+Reset your password by visiting this secure link:
+${resetLink}
+
+This link is single-use and will expire in 30 minutes. If you didn't request this password reset, please ignore this email.
+
+Security Team
+AivekAI & Mozarex
+https://mozarex.com
+`.trim();
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 20px; background-color: #f4f6f8; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .header { border-bottom: 2px solid #006B5C; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h2 { color: #006B5C; margin: 0 0 6px 0; font-size: 22px; }
+    .badge { display: inline-block; background: rgba(0, 107, 92, 0.12); color: #004D42; padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-reset { display: inline-block; background: #006B5C; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; margin: 20px 0; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e1e4e8; font-size: 13px; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Security Notice</span>
+      <h2>Reset your AivekAI Admin password</h2>
+    </div>
+
+    <p style="font-size: 15px; margin-top: 0;">Hi <strong>${safeUsername}</strong>,</p>
+    <p style="font-size: 15px; color: #2D3735;">We received a request to reset the password for your AivekAI Administrator account (<code>${safeEmail}</code>).</p>
+    <p style="font-size: 15px; color: #2D3735;">Click the button below to choose a new password:</p>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${safeResetLink}" class="btn-reset" target="_blank">Reset Password &rarr;</a>
+    </div>
+
+    <p style="font-size: 13px; color: #5C6764; margin-top: 20px;">
+      This link will expire after a limited period (30 minutes). If you didn't request this change, you can ignore this email.
+    </p>
+
+    <div class="footer">
+      This is an automated security transmission for authorized administrators.<br>
+      &copy; 2026 Mozarex & AivekAI. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+    return { subject, textBody, htmlBody };
+  }
+
+  /**
+   * Dispatches the Admin password reset email.
+   */
+  async sendAdminPasswordResetEmail({ adminEmail, resetLink, adminUsername = 'Administrator' }) {
+    if (!adminEmail || !resetLink) {
+      throw new Error('adminEmail and resetLink are required to send password reset email.');
+    }
+
+    const recipient = adminEmail.trim().toLowerCase();
+    const { subject, textBody, htmlBody } = this.buildAdminPasswordResetContent({ resetLink, adminEmail: recipient, adminUsername });
+
+    const emailRecord = {
+      id: `email_pwreset_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'admin_password_reset',
+      to: recipient,
+      subject,
+      text: textBody,
+      html: htmlBody,
+      sent_at: new Date().toISOString()
+    };
+
+    const result = await this._dispatchEmail(emailRecord);
+    this.sentEmails.push(emailRecord);
+
+    return {
+      success: result.success,
+      delivery_status: emailRecord.delivery_status,
+      provider: emailRecord.provider,
+      provider_response: emailRecord.provider_response,
+      delivery_error: emailRecord.delivery_error,
+      recipient,
+      message_id: emailRecord.id,
+      sent_at: emailRecord.sent_at
+    };
+  }
+
+  /**
    * Internal Resend API dispatcher
    */
   _dispatchViaResend(record) {

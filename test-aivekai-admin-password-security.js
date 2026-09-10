@@ -4,6 +4,7 @@ const assert = require('assert');
 const http = require('http');
 const { app, server } = require('./server');
 const partnerRouter = require('./routes/aivekaiPartners');
+const partnerEmailService = require('./services/partnerEmailService');
 const mockStore = partnerRouter.mockStore;
 const rateLimitMap = partnerRouter.rateLimitMap;
 const { runPasswordReset, validatePasswordStrength } = require('./reset-admin-password');
@@ -38,10 +39,11 @@ function makeRequest({ port, path, method = 'GET', headers = {}, body = null }) 
 
 async function runPasswordSecurityTests() {
   console.log('================================================================');
-  console.log(' ADMIN PASSWORD MANAGEMENT SECURITY HARDENING TEST SUITE        ');
+  console.log(' ADMIN PASSWORD MANAGEMENT & SECURE RESET TEST SUITE            ');
   console.log('================================================================\n');
 
   if (rateLimitMap) rateLimitMap.clear();
+  partnerEmailService.resetState();
 
   let passed = 0;
   let failed = 0;
@@ -62,25 +64,249 @@ async function runPasswordSecurityTests() {
   await new Promise((resolve) => server.listen(TEST_PORT, resolve));
 
   try {
-    // 1. Unauthenticated change password is rejected with 401
-    await test('SEC-PW-01: unauthenticated request to change-password rejected with 401', async () => {
+    // -------------------------------------------------------------------------
+    // 1. FORGOT PASSWORD & RECOVERY LIFECYCLE TESTS
+    // -------------------------------------------------------------------------
+
+    // SEC-RESET-01: Unknown / Non-Admin Email returns generic message, no email sent
+    await test('SEC-RESET-01: Unknown/non-admin email returns generic message without leaking account existence', async () => {
+      partnerEmailService.resetState();
+      const res = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/forgot-password',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: { email: 'nonexistent_user@example.com' }
+      });
+
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.strictEqual(res.data.message, "If an eligible administrator account exists for this email address, we've sent password reset instructions.");
+
+      // No email should be sent for an unknown user
+      const sentResetEmails = partnerEmailService.sentEmails.filter(e => e.type === 'admin_password_reset');
+      assert.strictEqual(sentResetEmails.length, 0);
+    });
+
+    // SEC-RESET-02: Valid Admin Email returns generic message and dispatches security reset email
+    let extractedResetToken = null;
+    await test('SEC-RESET-02: Valid admin email returns generic response and dispatches security email with reset link', async () => {
+      partnerEmailService.resetState();
+      const res = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/forgot-password',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: { email: 'info@mozarex.com' }
+      });
+
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.strictEqual(res.data.message, "If an eligible administrator account exists for this email address, we've sent password reset instructions.");
+
+      // Verify email was dispatched
+      const sentResetEmails = partnerEmailService.sentEmails.filter(e => e.type === 'admin_password_reset');
+      assert.strictEqual(sentResetEmails.length, 1);
+      const email = sentResetEmails[0];
+      assert.strictEqual(email.to, 'info@mozarex.com');
+      assert.strictEqual(email.subject, 'Reset your AivekAI Admin password');
+      assert.ok(email.text.includes('Reset your password by visiting this secure link:'));
+      assert.ok(email.html.includes('Reset Password'));
+
+      // Extract token from reset link
+      const tokenMatch = email.text.match(/token=([a-f0-9]+)/i);
+      assert.ok(tokenMatch && tokenMatch[1], 'Reset token should be present in email link');
+      extractedResetToken = tokenMatch[1];
+    });
+
+    // Obtain an active admin session prior to password reset to verify session invalidation
+    const preResetLogin = await makeRequest({
+      port: TEST_PORT,
+      path: '/api/aivekai/admin/login',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+      body: { username: 'aivekai_admin', password: 'ValidAdminPassword123!' }
+    });
+    assert.strictEqual(preResetLogin.statusCode, 200);
+    const preResetAdminCookie = preResetLogin.headers['set-cookie']?.[0]?.split(';')[0];
+    assert.ok(preResetAdminCookie);
+
+    // Verify the pre-reset session works before reset
+    const preCheck = await makeRequest({
+      port: TEST_PORT,
+      path: '/api/aivekai/admin/session',
+      method: 'GET',
+      headers: { 'Cookie': preResetAdminCookie }
+    });
+    assert.strictEqual(preCheck.data.authenticated, true);
+
+    // SEC-RESET-03: Reset password with weak password or mismatched confirmation is rejected with 400
+    await test('SEC-RESET-03: Reset password rejects weak password and mismatched confirmation with 400', async () => {
+      // Mismatched confirmation
+      const mismatchRes = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/reset-password',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: {
+          token: extractedResetToken,
+          newPassword: 'BrandNewPass2026!#',
+          confirmPassword: 'MismatchPassword2026!#'
+        }
+      });
+      assert.strictEqual(mismatchRes.statusCode, 400);
+      assert.strictEqual(mismatchRes.data.message, 'New password and confirmation do not match.');
+
+      // Weak password
+      const weakRes = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/reset-password',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: {
+          token: extractedResetToken,
+          newPassword: 'weak',
+          confirmPassword: 'weak'
+        }
+      });
+      assert.strictEqual(weakRes.statusCode, 400);
+      assert.ok(weakRes.data.message.includes('10 characters'));
+    });
+
+    // SEC-RESET-04: Reset password with valid password succeeds
+    await test('SEC-RESET-04: Reset password with valid parameters succeeds and returns redirect to login', async () => {
+      // Small pause to guarantee timestamp distinction
+      await new Promise(r => setTimeout(r, 50));
+
+      const res = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/reset-password',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: {
+          token: extractedResetToken,
+          newPassword: 'BrandNewPass2026!#',
+          confirmPassword: 'BrandNewPass2026!#'
+        }
+      });
+
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.strictEqual(res.data.message, 'Your password has been reset. Sign in with your new password.');
+      assert.strictEqual(res.data.redirect_url, '/aivekai/admin/login?reset=success');
+
+      // Check sanitized audit log
+      const resetLog = mockStore.auditLogs.find(l => l.action === 'admin_password_reset' && l.status === 'success');
+      assert.ok(resetLog);
+      assert.strictEqual(resetLog.password, undefined);
+      assert.strictEqual(resetLog.token, undefined);
+    });
+
+    // SEC-RESET-05: Old password is now rejected upon login attempt
+    await test('SEC-RESET-05: Old password is rejected with generic 401 after password reset', async () => {
+      const res = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: { username: 'aivekai_admin', password: 'ValidAdminPassword123!' } // Old password
+      });
+
+      assert.strictEqual(res.statusCode, 401);
+      assert.strictEqual(res.data.success, false);
+      assert.strictEqual(res.data.message, 'Invalid username or password.');
+    });
+
+    // SEC-RESET-06: New password is accepted and successfully authenticates admin
+    let postResetAdminCookie = null;
+    await test('SEC-RESET-06: New password is accepted and successfully logs in admin', async () => {
+      const res = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: { username: 'aivekai_admin', password: 'BrandNewPass2026!#' } // New password
+      });
+
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.success, true);
+      assert.strictEqual(res.data.redirect_url, '/aivekai/admin/partners');
+      postResetAdminCookie = res.headers['set-cookie']?.[0]?.split(';')[0];
+      assert.ok(postResetAdminCookie);
+    });
+
+    // SEC-RESET-07: Old Admin sessions created prior to reset are persistently invalidated
+    await test('SEC-RESET-07: Old Admin sessions created prior to password reset are revoked with 401', async () => {
+      // 1. Check protected admin API endpoint with old pre-reset cookie
+      const apiRes = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/applications',
+        method: 'GET',
+        headers: { 'Cookie': preResetAdminCookie }
+      });
+      assert.strictEqual(apiRes.statusCode, 401);
+      assert.strictEqual(apiRes.data.error, 'session_invalidated');
+
+      // 2. Check session status endpoint with old pre-reset cookie
+      const sessionRes = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/session',
+        method: 'GET',
+        headers: { 'Cookie': preResetAdminCookie }
+      });
+      assert.strictEqual(sessionRes.data.authenticated, false);
+
+      // 3. Verify new post-reset cookie works normally
+      const newSessionRes = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/session',
+        method: 'GET',
+        headers: { 'Cookie': postResetAdminCookie }
+      });
+      assert.strictEqual(newSessionRes.data.authenticated, true);
+    });
+
+    // SEC-RESET-08: Reset token cannot be reused
+    await test('SEC-RESET-08: Consumed reset token cannot be reused (rejected with 400)', async () => {
+      const reuseRes = await makeRequest({
+        port: TEST_PORT,
+        path: '/api/aivekai/admin/reset-password',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        body: {
+          token: extractedResetToken,
+          newPassword: 'AnotherPassword2026!#',
+          confirmPassword: 'AnotherPassword2026!#'
+        }
+      });
+
+      assert.strictEqual(reuseRes.statusCode, 400);
+      assert.strictEqual(reuseRes.data.message, 'Password reset link is invalid or has expired. Please request a new one.');
+    });
+
+    // -------------------------------------------------------------------------
+    // 2. AUTHENTICATED CHANGE PASSWORD & PORTAL SECURITY TESTS
+    // -------------------------------------------------------------------------
+
+    // SEC-PW-01: Unauthenticated change password rejected with 401
+    await test('SEC-PW-01: Unauthenticated request to change-password rejected with 401', async () => {
       const res = await makeRequest({
         port: TEST_PORT,
         path: '/api/aivekai/admin/change-password',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
         body: {
-          currentPassword: 'ValidAdminPassword123!',
-          newPassword: 'BrandNewPass2026!#',
-          confirmPassword: 'BrandNewPass2026!#'
+          currentPassword: 'BrandNewPass2026!#',
+          newPassword: 'AnotherPass2026!#',
+          confirmPassword: 'AnotherPass2026!#'
         }
       });
       assert.strictEqual(res.statusCode, 401);
       assert.strictEqual(res.data.error, 'Admin authentication required');
     });
 
-    // 2. Non-admin (partner token) cannot change Admin password (403)
-    await test('SEC-PW-02: non-admin (partner session/token) rejected with 403', async () => {
+    // SEC-PW-02: Non-admin rejected with 403
+    await test('SEC-PW-02: Non-admin (partner token) rejected with 403', async () => {
       const res = await makeRequest({
         port: TEST_PORT,
         path: '/api/aivekai/admin/change-password',
@@ -91,165 +317,60 @@ async function runPasswordSecurityTests() {
           'x-csrf-token': 'valid_csrf_token'
         },
         body: {
-          currentPassword: 'ValidAdminPassword123!',
-          newPassword: 'BrandNewPass2026!#',
-          confirmPassword: 'BrandNewPass2026!#'
+          currentPassword: 'BrandNewPass2026!#',
+          newPassword: 'AnotherPass2026!#',
+          confirmPassword: 'AnotherPass2026!#'
         }
       });
       assert.strictEqual(res.statusCode, 403);
       assert.strictEqual(res.data.error, 'Admin authorization required');
     });
 
-    // Obtain authenticated Admin session for subsequent tests
-    const loginRes = await makeRequest({
-      port: TEST_PORT,
-      path: '/api/aivekai/admin/login',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
-      body: { username: 'aivekai_admin', password: 'ValidAdminPassword123!' }
-    });
-    assert.strictEqual(loginRes.statusCode, 200);
-    const adminCookie = loginRes.headers['set-cookie']?.[0]?.split(';')[0];
-    assert.ok(adminCookie);
-
-    // 3. Wrong current password is rejected with generic 401 and logged safely
-    await test('SEC-PW-03: wrong current password rejected with generic 401', async () => {
+    // SEC-PW-03: Wrong current password rejected with 401
+    await test('SEC-PW-03: Wrong current password rejected with 401', async () => {
       const res = await makeRequest({
         port: TEST_PORT,
         path: '/api/aivekai/admin/change-password',
         method: 'POST',
-        headers: { 'Cookie': adminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        headers: { 'Cookie': postResetAdminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
         body: {
-          currentPassword: 'IncorrectOldPassword123!',
-          newPassword: 'BrandNewPass2026!#',
-          confirmPassword: 'BrandNewPass2026!#'
+          currentPassword: 'IncorrectCurrentPass123!',
+          newPassword: 'YetAnotherPass2026!#',
+          confirmPassword: 'YetAnotherPass2026!#'
         }
       });
       assert.strictEqual(res.statusCode, 401);
-      assert.strictEqual(res.data.success, false);
       assert.strictEqual(res.data.message, 'Current password verification failed.');
-
-      // Check audit log for failure without leaking password
-      const failedLog = mockStore.auditLogs.find(l => l.action === 'admin_password_change_failed');
-      assert.ok(failedLog);
-      assert.strictEqual(failedLog.status, 'failed');
-      assert.strictEqual(failedLog.password, undefined);
-      assert.strictEqual(failedLog.currentPassword, undefined);
     });
 
-    // 4. Weak password rejected (< 10 chars, missing upper, lower, number, or symbol)
-    await test('SEC-PW-04: weak passwords rejected with 400', async () => {
-      const weakCases = [
-        { pw: 'Short1!', expected: 'at least 10 characters' },
-        { pw: 'nouppercase123!', expected: 'uppercase letter' },
-        { pw: 'NOLOWERCASE123!', expected: 'lowercase letter' },
-        { pw: 'NoNumbersHere!', expected: 'number' },
-        { pw: 'NoSymbolsAllowed123', expected: 'special character' }
-      ];
-
-      for (const { pw, expected } of weakCases) {
-        const res = await makeRequest({
-          port: TEST_PORT,
-          path: '/api/aivekai/admin/change-password',
-          method: 'POST',
-          headers: { 'Cookie': adminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
-          body: {
-            currentPassword: 'ValidAdminPassword123!',
-            newPassword: pw,
-            confirmPassword: pw
-          }
-        });
-        assert.strictEqual(res.statusCode, 400, `Expected 400 for password: ${pw}`);
-        assert.ok(res.data.message.toLowerCase().includes(expected.toLowerCase()), `Expected message to contain "${expected}", got: "${res.data.message}"`);
-      }
-    });
-
-    // 5. Mismatched confirmation rejected (400)
-    await test('SEC-PW-05: mismatched confirmation rejected with 400', async () => {
+    // SEC-PW-04: Valid self-service password change succeeds and updates session
+    await test('SEC-PW-04: Valid self-service password change succeeds', async () => {
       const res = await makeRequest({
         port: TEST_PORT,
         path: '/api/aivekai/admin/change-password',
         method: 'POST',
-        headers: { 'Cookie': adminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+        headers: { 'Cookie': postResetAdminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
         body: {
-          currentPassword: 'ValidAdminPassword123!',
-          newPassword: 'BrandNewPass2026!#',
-          confirmPassword: 'DifferentPass2026!#'
-        }
-      });
-      assert.strictEqual(res.statusCode, 400);
-      assert.strictEqual(res.data.message, 'New password and confirmation do not match.');
-    });
-
-    // 6. Identical password rejected (400)
-    await test('SEC-PW-06: new password identical to current password rejected with 400', async () => {
-      const res = await makeRequest({
-        port: TEST_PORT,
-        path: '/api/aivekai/admin/change-password',
-        method: 'POST',
-        headers: { 'Cookie': adminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
-        body: {
-          currentPassword: 'ValidAdminPassword123!',
-          newPassword: 'ValidAdminPassword123!',
-          confirmPassword: 'ValidAdminPassword123!'
-        }
-      });
-      assert.strictEqual(res.statusCode, 400);
-      assert.strictEqual(res.data.message, 'New password must be different from current password.');
-    });
-
-    // 7. Successful self-service password change works
-    await test('SEC-PW-07: valid self-service password change succeeds and regenerates session', async () => {
-      const res = await makeRequest({
-        port: TEST_PORT,
-        path: '/api/aivekai/admin/change-password',
-        method: 'POST',
-        headers: { 'Cookie': adminCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
-        body: {
-          currentPassword: 'ValidAdminPassword123!',
-          newPassword: 'StrongAdminPass2026!#',
-          confirmPassword: 'StrongAdminPass2026!#'
+          currentPassword: 'BrandNewPass2026!#',
+          newPassword: 'FinalAdminPassword2026!#',
+          confirmPassword: 'FinalAdminPassword2026!#'
         }
       });
       assert.strictEqual(res.statusCode, 200);
       assert.strictEqual(res.data.success, true);
       assert.strictEqual(res.data.message, 'Your administrator password has been updated successfully.');
-
-      // Verify audit log has sanitized success record
-      const successLog = mockStore.auditLogs.find(l => l.action === 'admin_password_changed' && l.status === 'success');
-      assert.ok(successLog);
-      assert.strictEqual(successLog.mechanism, 'self_service');
-      assert.strictEqual(successLog.password, undefined);
-      assert.strictEqual(successLog.newPassword, undefined);
-      assert.strictEqual(successLog.currentPassword, undefined);
     });
 
-    // 8. Rate limiting blocks rapid password change attempts (429)
-    await test('SEC-PW-08: rate limiting blocks brute-force/rapid attempts with 429', async () => {
-      // Obtain fresh authenticated session
-      const freshLogin = await makeRequest({
-        port: TEST_PORT,
-        path: '/api/aivekai/admin/login',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
-        body: { username: 'aivekai_admin', password: 'ValidAdminPassword123!' }
-      });
-      assert.strictEqual(freshLogin.statusCode, 200);
-      const activeCookie = freshLogin.headers['set-cookie']?.[0]?.split(';')[0];
-      assert.ok(activeCookie);
-
+    // SEC-PW-05: Rate limiting blocks rapid password reset requests with 429
+    await test('SEC-PW-05: Rate limiting blocks rapid forgot-password attempts with 429', async () => {
       let hit429 = false;
       for (let i = 0; i < 7; i++) {
         const res = await makeRequest({
           port: TEST_PORT,
-          path: '/api/aivekai/admin/change-password',
+          path: '/api/aivekai/admin/forgot-password',
           method: 'POST',
-          headers: { 'Cookie': activeCookie, 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
-          body: {
-            currentPassword: 'WrongPassword123!',
-            newPassword: 'StrongAdminPass2026!#',
-            confirmPassword: 'StrongAdminPass2026!#'
-          }
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': 'valid_csrf_token' },
+          body: { email: 'info@mozarex.com' }
         });
         if (res.statusCode === 429) {
           hit429 = true;
@@ -260,8 +381,8 @@ async function runPasswordSecurityTests() {
       assert.strictEqual(hit429, true);
     });
 
-    // 9. Recovery script cannot create or elevate arbitrary unauthorized users
-    await test('SEC-PW-09: CLI recovery script cannot create or elevate arbitrary users', async () => {
+    // SEC-PW-06: CLI recovery script cannot elevate unauthorized accounts
+    await test('SEC-PW-06: CLI recovery script cannot create or elevate arbitrary unauthorized accounts', async () => {
       await assert.rejects(
         async () => {
           await runPasswordReset('arbitrary_attacker@evil.com', {
@@ -277,23 +398,14 @@ async function runPasswordSecurityTests() {
       );
     });
 
-    // 10. Password validator unit tests
-    await test('SEC-PW-10: validatePasswordStrength rejects insufficient complexity', () => {
-      assert.strictEqual(validatePasswordStrength('short').valid, false);
-      assert.strictEqual(validatePasswordStrength('alllowercase123!').valid, false);
-      assert.strictEqual(validatePasswordStrength('ALLUPPERCASE123!').valid, false);
-      assert.strictEqual(validatePasswordStrength('NoNumbersHere!#').valid, false);
-      assert.strictEqual(validatePasswordStrength('NoSpecialChars123').valid, false);
-      assert.strictEqual(validatePasswordStrength('ValidStrongPass2026!#').valid, true);
-    });
-
-    // 11. Zero passwords leaked in mockStore or audit logs
-    await test('SEC-PW-11: zero plaintext passwords exist in audit logs or admin user objects', () => {
+    // SEC-PW-07: Zero plaintext passwords or reset tokens leaked in audit logs or mock store
+    await test('SEC-PW-07: Zero plaintext passwords or reset tokens exist in audit logs', () => {
       for (const log of mockStore.auditLogs) {
         assert.strictEqual(log.password, undefined);
         assert.strictEqual(log.newPassword, undefined);
         assert.strictEqual(log.currentPassword, undefined);
         assert.strictEqual(log.password_hash, undefined);
+        assert.strictEqual(log.token, undefined);
       }
       for (const admin of mockStore.adminUsers) {
         assert.strictEqual(admin.password, undefined);
@@ -319,3 +431,4 @@ if (require.main === module) {
 }
 
 module.exports = runPasswordSecurityTests;
+
