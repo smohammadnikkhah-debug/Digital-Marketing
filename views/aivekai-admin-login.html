@@ -173,7 +173,10 @@
             </div>
 
             <div class="form-group">
-                <label for="passwordInput">Password</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label for="passwordInput" style="margin-bottom: 0;">Password</label>
+                    <a href="javascript:void(0)" onclick="openResetModal()" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; font-weight: 600;">Forgot / Reset?</a>
+                </div>
                 <input type="password" id="passwordInput" required autocomplete="current-password" placeholder="••••••••••••">
             </div>
 
@@ -185,7 +188,44 @@
         </div>
     </div>
 
+    <!-- Password Recovery Guidance Modal -->
+    <div id="recoveryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; max-width: 480px; width: 100%; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);">
+            <h3 style="color: var(--white); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <span>🔒</span> Administrator Password Reset
+            </h3>
+            <p style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 20px; line-height: 1.5;">
+                Administrator credentials can be updated through two secure channels:
+            </p>
+
+            <div style="background: #0A0F0E; border: 1px solid rgba(0, 194, 168, 0.18); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                <h4 style="color: var(--accent); font-size: 0.88rem; font-weight: 700; margin-bottom: 4px;">1. Self-Service (When Logged In)</h4>
+                <p style="font-size: 0.82rem; color: #CBD5E1; margin: 0; line-height: 1.4;">
+                    Sign in with your credentials and click the <strong>🔒 Change Password</strong> button located in the top navigation header of the Admin Portal.
+                </p>
+            </div>
+
+            <div style="background: #0A0F0E; border: 1px solid rgba(0, 194, 168, 0.18); border-radius: 10px; padding: 14px; margin-bottom: 24px;">
+                <h4 style="color: var(--accent); font-size: 0.88rem; font-weight: 700; margin-bottom: 4px;">2. Emergency Terminal Recovery</h4>
+                <p style="font-size: 0.82rem; color: #CBD5E1; margin-bottom: 8px; line-height: 1.4;">
+                    If you have forgotten your password or are locked out, run the secure interactive recovery utility on the server terminal:
+                </p>
+                <code style="display: block; background: #000; padding: 10px 12px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; color: #34D399; border: 1px solid rgba(52, 211, 153, 0.25); word-break: break-all;">npm run reset-admin-password -- info@mozarex.com</code>
+            </div>
+
+            <button type="button" onclick="closeResetModal()" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.08); color: var(--white); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: var(--transition);">Close</button>
+        </div>
+    </div>
+
     <script>
+        function openResetModal() {
+            document.getElementById('recoveryModal').style.display = 'flex';
+        }
+
+        function closeResetModal() {
+            document.getElementById('recoveryModal').style.display = 'none';
+        }
+
         async function handleAdminLogin(e) {
             e.preventDefault();
             const errorAlert = document.getElementById('errorAlert');
