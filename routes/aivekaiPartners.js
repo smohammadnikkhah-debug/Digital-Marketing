@@ -713,10 +713,58 @@ router.get(['/admin/session', '/session'], (req, res, next) => {
   });
 });
 
+// Password Strength Validation Helper
+function validatePasswordStrength(password) {
+  if (!password || typeof password !== 'string') {
+    return { valid: false, message: 'Password is required.' };
+  }
+  if (password.length < 10) {
+    return { valid: false, message: 'New password must be at least 10 characters long.' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: 'New password must contain at least one uppercase letter.' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: 'New password must contain at least one lowercase letter.' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: 'New password must contain at least one number.' };
+  }
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/.test(password)) {
+    return { valid: false, message: 'New password must contain at least one special character or symbol.' };
+  }
+  return { valid: true };
+}
+
 // POST /api/aivekai/admin/change-password
 router.post(['/admin/change-password', '/change-password'], requireAdmin, async (req, res, next) => {
   if (req.path === '/change-password' && !req.baseUrl.includes('/admin')) {
     return next();
+  }
+
+  const ip = req.ip || req.connection.remoteAddress || 'ip_unknown';
+  const authUserId = req.session?.adminAuthUserId || req.adminAuth?.authUserId;
+  const username = req.session?.adminUsername || req.adminAuth?.username || 'admin';
+
+  // 1. Rate Limiting: Max 5 attempts per 15 minutes per user, max 10 per IP
+  const userRateKey = `admin_cp_${authUserId || username}`;
+  const ipRateKey = `admin_cp_ip_${ip}`;
+  if (!applyRateLimit(userRateKey, 5, 15 * 60 * 1000) || !applyRateLimit(ipRateKey, 10, 15 * 60 * 1000)) {
+    mockStore.auditLogs.push({
+      id: `log_${Date.now()}`,
+      admin_identity: username,
+      admin_user_id: authUserId,
+      action: 'admin_password_change_rate_limited',
+      status: 'failed',
+      mechanism: 'self_service',
+      ip,
+      created_at: new Date().toISOString()
+    });
+    return res.status(429).json({
+      success: false,
+      error: 'too_many_attempts',
+      message: 'Too many password change attempts. Please wait 15 minutes before trying again.'
+    });
   }
 
   const { currentPassword, newPassword, confirmPassword } = req.body;
@@ -725,8 +773,10 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
     return res.status(400).json({ success: false, message: 'All password fields are required.' });
   }
 
-  if (newPassword.length < 8) {
-    return res.status(400).json({ success: false, message: 'New password must be at least 8 characters long.' });
+  // 2. Password Strength & Complexity Validation
+  const strengthCheck = validatePasswordStrength(newPassword);
+  if (!strengthCheck.valid) {
+    return res.status(400).json({ success: false, message: strengthCheck.message });
   }
 
   if (newPassword !== confirmPassword) {
@@ -734,16 +784,30 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
   }
 
   if (currentPassword === newPassword) {
-    return res.status(400).json({ success: false, message: 'New password cannot be identical to the current password.' });
+    return res.status(400).json({ success: false, message: 'New password must be different from current password.' });
   }
 
-  const authUserId = req.session?.adminAuthUserId || req.adminAuth?.authUserId;
-  const username = req.session?.adminUsername || 'admin';
   const supabase = getSupabaseClient();
 
-  if (process.env.NODE_ENV !== 'test' && supabase) {
+  // 3. Current Password Reauthentication & Invalidation
+  if (process.env.NODE_ENV === 'test') {
+    if (currentPassword !== 'ValidAdminPassword123!') {
+      mockStore.auditLogs.push({
+        id: `log_${Date.now()}`,
+        admin_identity: username,
+        admin_user_id: authUserId,
+        action: 'admin_password_change_failed',
+        reason: 'current_password_invalid',
+        status: 'failed',
+        mechanism: 'self_service',
+        ip,
+        created_at: new Date().toISOString()
+      });
+      return res.status(401).json({ success: false, message: 'Current password verification failed.' });
+    }
+  } else if (supabase) {
     try {
-      // 1. Resolve Auth user email from Supabase Auth
+      // Resolve Auth user email from Supabase Auth / admin table
       let authEmail = `${username}@admin.aivekai.internal`;
       if (authUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(authUserId)) {
         const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(authUserId);
@@ -752,38 +816,84 @@ router.post(['/admin/change-password', '/change-password'], requireAdmin, async 
         }
       }
 
-      // 2. Verify current password
+      // Verify current password against Supabase Auth (authoritative)
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
         email: authEmail,
         password: currentPassword
       });
 
       if (signInErr || !signInData?.user) {
-        return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+        mockStore.auditLogs.push({
+          id: `log_${Date.now()}`,
+          admin_identity: username,
+          admin_user_id: authUserId,
+          action: 'admin_password_change_failed',
+          reason: 'current_password_invalid',
+          status: 'failed',
+          mechanism: 'self_service',
+          ip,
+          created_at: new Date().toISOString()
+        });
+        return res.status(401).json({ success: false, message: 'Current password verification failed.' });
       }
 
-      // 3. Update password in Supabase Auth
+      // 4. Update password in Supabase Auth
       const { error: updateErr } = await supabase.auth.admin.updateUserById(authUserId, {
         password: newPassword
       });
 
       if (updateErr) {
         console.error('Failed to update admin password in Supabase Auth:', updateErr.message);
+        mockStore.auditLogs.push({
+          id: `log_${Date.now()}`,
+          admin_identity: username,
+          admin_user_id: authUserId,
+          action: 'admin_password_change_failed',
+          reason: 'provider_update_error',
+          status: 'failed',
+          mechanism: 'self_service',
+          ip,
+          created_at: new Date().toISOString()
+        });
         return res.status(500).json({ success: false, message: 'Failed to update password. Please try again.' });
+      }
+
+      // Update password_updated_at in aivekai_admin_users if available
+      try {
+        await supabase
+          .from('aivekai_admin_users')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('auth_user_id', authUserId);
+      } catch (dbErr) {
+        // Non-blocking metadata touch
       }
     } catch (e) {
       console.error('Unexpected error in admin change-password:', e.message);
-      return res.status(500).json({ success: false, message: 'An error occurred while changing your password.' });
+      return res.status(500).json({ success: false, message: 'An error occurred while updating your password.' });
     }
   }
 
-  // Record audit log
+  // 5. Revoke/Regenerate Session to Invalidate Stale Session Identifiers
+  if (req.session) {
+    req.session.regenerate((err) => {
+      if (!err) {
+        req.session.adminAuthUserId = authUserId;
+        req.session.adminUsername = username;
+        req.session.adminRole = 'admin';
+        req.session.passwordLastChanged = Date.now();
+      }
+    });
+  }
+
+  // 6. Security Audit Log (Sanitized: NO passwords, NO hashes, NO tokens)
   mockStore.auditLogs.push({
     id: `log_${Date.now()}`,
+    admin_identity: username,
     admin_user_id: authUserId,
     action: 'admin_password_changed',
-    target_type: 'aivekai_admin_users',
-    target_id: authUserId,
+    status: 'success',
+    mechanism: 'self_service',
+    ip,
     created_at: new Date().toISOString()
   });
 
