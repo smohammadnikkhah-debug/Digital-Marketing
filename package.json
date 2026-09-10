@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "create-admin": "node create-admin-user.js",
     "test": "node test-paypal-payouts.js && node test-aivekai-partner-portal.js && node test-aivekai-admin-auth.js && node test-aivekai-partner-email.js && node test-aivekai-approval-workflow.js && node verify-prod-db-persistence.js",
     "build": "echo 'No build step required for this Node.js app'"
   },

@@ -577,9 +577,18 @@ router.post(['/admin/login', '/login'], async (req, res, next) => {
       authSuccess = true;
     } else if (supabase) {
       try {
-        const email = adminRecord.internal_email || `${normalizedUsername}@admin.aivekai.internal`;
+        let authEmail = adminRecord.internal_email || `${normalizedUsername}@admin.aivekai.internal`;
+        
+        // Dynamically resolve exact auth email from Supabase Auth user record if available
+        if (adminRecord.auth_user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminRecord.auth_user_id)) {
+          const { data: userData, error: userLookupErr } = await supabase.auth.admin.getUserById(adminRecord.auth_user_id);
+          if (!userLookupErr && userData?.user?.email) {
+            authEmail = userData.user.email;
+          }
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: authEmail,
           password
         });
         if (data?.user && !error) {
