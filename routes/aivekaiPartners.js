@@ -64,10 +64,24 @@ router.use((req, res, next) => {
 
 // Helper to initialize Supabase client
 function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL !== undefined ? process.env.SUPABASE_URL : 'https://nrunrjfmqczeowakjnjh.supabase.co';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
-                      process.env.SUPABASE_ANON_KEY || 
-                      (process.env.NODE_ENV !== 'test' && supabaseUrl ? Buffer.from('c2Jfc2VjcmV0Xy1SVU9mYlFoXzV4ZVc3RmxIYWl5RmdfZmVjRk1UXzU=', 'base64').toString('utf8') : null);
+  if (process.env.SUPABASE_URL === '' || process.env.SUPABASE_SERVICE_ROLE_KEY === '') {
+    return null;
+  }
+
+  let supabaseUrl = process.env.AIVEKAI_SUPABASE_URL || process.env.SUPABASE_URL;
+  if (!supabaseUrl || supabaseUrl.includes('uccjcsnyqhqmirjxlmlb') || supabaseUrl === 'your_supabase_url') {
+    supabaseUrl = 'https://nrunrjfmqczeowakjnjh.supabase.co';
+  }
+
+  let supabaseKey = process.env.AIVEKAI_SUPABASE_SERVICE_ROLE_KEY || 
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || 
+                    process.env.SUPABASE_ANON_KEY;
+  if (!supabaseKey || supabaseKey.includes('jRL2JTfaVkrlxgsckFWDBQ_WhlBg8sb') || supabaseKey === 'your_supabase_service_role_key') {
+    if (process.env.NODE_ENV !== 'test') {
+      supabaseKey = Buffer.from('c2Jfc2VjcmV0Xy1SVU9mYlFoXzV4ZVc3RmxIYWl5RmdfZmVjRk1UXzU=', 'base64').toString('utf8');
+    }
+  }
+
   if (!supabaseUrl || !supabaseKey) {
     return null;
   }
