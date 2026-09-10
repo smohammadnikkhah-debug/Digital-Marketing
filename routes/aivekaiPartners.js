@@ -512,23 +512,27 @@ router.post(['/admin/login', '/login'], async (req, res, next) => {
 
     const normalizedUsername = username.toLowerCase().trim();
 
-    // 1. Look up identity in aivekai_admin_users
-    let adminRecord = mockStore.adminUsers.find(a => a.username.toLowerCase() === normalizedUsername);
+    // 1. Look up identity in aivekai_admin_users (Production: Supabase source of truth)
+    let adminRecord = null;
     const supabase = getSupabaseClient();
 
-    if (!adminRecord && supabase) {
+    if (process.env.NODE_ENV !== 'test' && supabase) {
       try {
         const { data, error } = await supabase
           .from('aivekai_admin_users')
           .select('*')
           .ilike('username', normalizedUsername)
-          .single();
+          .maybeSingle();
         if (data && !error) {
           adminRecord = data;
         }
       } catch (e) {
         console.warn('Supabase admin lookup error:', e.message);
       }
+    }
+
+    if (!adminRecord) {
+      adminRecord = mockStore.adminUsers.find(a => a.username.toLowerCase() === normalizedUsername);
     }
 
     if (!adminRecord) {
