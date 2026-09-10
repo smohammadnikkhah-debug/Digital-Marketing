@@ -208,13 +208,38 @@ app.post('/api/aivekai/paypal/webhook', (req, res, next) => {
 const aiRoutes = require('./routes/ai');
 app.use('/api/ai', aiRoutes);
 
-// Health Check Endpoint
-app.get('/health', (req, res) => {
+// Health Check Endpoints (Basic & Detailed Production Readiness)
+app.get('/health', async (req, res) => {
+  const isDetailed = req.query.detailed === 'true' || req.query.ready === 'true';
+  if (isDetailed) {
+    const partnerHealth = await aivekaiPartnersRouter.checkPartnerProgramHealth();
+    const statusCode = partnerHealth.healthy ? 200 : 503;
+    return res.status(statusCode).json({
+      status: partnerHealth.status,
+      timestamp: new Date().toISOString(),
+      service: 'Mozarex App Platform & AivekAI Backend',
+      environment: process.env.NODE_ENV || 'development',
+      partner_program: partnerHealth
+    });
+  }
+
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'Mozarex App Platform & AivekAI Backend',
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+app.get(['/health/readiness', '/health/partner-program'], async (req, res) => {
+  const partnerHealth = await aivekaiPartnersRouter.checkPartnerProgramHealth();
+  const statusCode = partnerHealth.healthy ? 200 : 503;
+  res.status(statusCode).json({
+    status: partnerHealth.status,
+    timestamp: new Date().toISOString(),
+    service: 'AivekAI Partner Program & Database Readiness',
+    environment: process.env.NODE_ENV || 'development',
+    partner_program: partnerHealth
   });
 });
 

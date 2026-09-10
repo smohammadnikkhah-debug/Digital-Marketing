@@ -2020,9 +2020,126 @@ router.get(['/admin/audit-logs', '/audit-logs'], requireAdmin, (req, res) => {
   });
 });
 
+// 23. Health Check: Deep inspection of database connectivity, program settings & rate resolver
+async function checkPartnerProgramHealth() {
+  const startTime = Date.now();
+  const checks = {
+    database_configured: false,
+    database_reachable: false,
+    standard_commission_rate_configured: false,
+    terms_version_configured: false,
+    rate_resolver_available: false
+  };
+
+  if (process.env.NODE_ENV === 'test') {
+    const stdRate = mockStore.programSettings?.standard_partner_commission_rate;
+    const termsVer = mockStore.programSettings?.current_terms_version;
+    checks.database_configured = true;
+    checks.database_reachable = true;
+    checks.standard_commission_rate_configured = stdRate !== undefined && !isNaN(Number(stdRate));
+    checks.terms_version_configured = !!termsVer;
+    checks.rate_resolver_available = true;
+    const healthy = checks.standard_commission_rate_configured && checks.terms_version_configured;
+    return {
+      status: healthy ? 'healthy' : 'unhealthy',
+      healthy,
+      latency_ms: Date.now() - startTime,
+      environment: 'test',
+      checks
+    };
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return {
+      status: 'unhealthy',
+      healthy: false,
+      latency_ms: Date.now() - startTime,
+      environment: process.env.NODE_ENV || 'production',
+      checks,
+      error: 'Database connection is not configured'
+    };
+  }
+  checks.database_configured = true;
+
+  try {
+    const { data: settings, error: settingsErr } = await supabase
+      .from('partner_program_settings')
+      .select('key, value_numeric, value_text');
+
+    if (settingsErr || !Array.isArray(settings)) {
+      return {
+        status: 'unhealthy',
+        healthy: false,
+        latency_ms: Date.now() - startTime,
+        environment: process.env.NODE_ENV || 'production',
+        checks,
+        error: 'Unable to query partner_program_settings table'
+      };
+    }
+    checks.database_reachable = true;
+
+    const stdRateSetting = settings.find(s => s.key === 'standard_partner_commission_rate');
+    if (stdRateSetting && stdRateSetting.value_numeric !== null && !isNaN(Number(stdRateSetting.value_numeric))) {
+      checks.standard_commission_rate_configured = true;
+      checks.standard_partner_commission_rate = Number(stdRateSetting.value_numeric);
+    }
+
+    const termsVersionSetting = settings.find(s => s.key === 'current_terms_version');
+    if (termsVersionSetting && termsVersionSetting.value_text && termsVersionSetting.value_text.trim().length > 0) {
+      checks.terms_version_configured = true;
+      checks.current_terms_version = termsVersionSetting.value_text.trim();
+    }
+
+    try {
+      const { error: rpcErr } = await supabase.rpc('resolve_partner_agreed_commission_rate', {
+        p_partner_id: '00000000-0000-0000-0000-000000000000',
+        p_transaction_timestamp: new Date().toISOString(),
+        p_strict_before: false
+      });
+      if (!rpcErr) {
+        checks.rate_resolver_available = true;
+      }
+    } catch (rpcEx) {
+      // RPC check failed
+    }
+
+    const healthy = checks.database_configured &&
+                    checks.database_reachable &&
+                    checks.standard_commission_rate_configured &&
+                    checks.terms_version_configured &&
+                    checks.rate_resolver_available;
+
+    return {
+      status: healthy ? 'healthy' : 'unhealthy',
+      healthy,
+      latency_ms: Date.now() - startTime,
+      environment: process.env.NODE_ENV || 'production',
+      checks
+    };
+  } catch (err) {
+    return {
+      status: 'unhealthy',
+      healthy: false,
+      latency_ms: Date.now() - startTime,
+      environment: process.env.NODE_ENV || 'production',
+      checks,
+      error: 'Health check encountered an unexpected error'
+    };
+  }
+}
+
+router.get('/health', async (req, res) => {
+  const result = await checkPartnerProgramHealth();
+  const statusCode = result.healthy ? 200 : 503;
+  res.status(statusCode).json(result);
+});
+
 module.exports = router;
 module.exports.mockStore = mockStore;
 module.exports.rateLimitMap = rateLimitMap;
 module.exports.partnerEmailService = partnerEmailService;
 module.exports.resolveAgreedCommissionRate = resolveAgreedCommissionRate;
 module.exports.getProgramSetting = getProgramSetting;
+module.exports.checkPartnerProgramHealth = checkPartnerProgramHealth;
+
