@@ -209,6 +209,8 @@ const aiRoutes = require('./routes/ai');
 app.use('/api/ai', aiRoutes);
 
 // Health Check Endpoints (Basic & Detailed Production Readiness)
+const APP_VERSION = '2026.09.10.v3-agreed-rate-hardening';
+
 app.get('/health', async (req, res) => {
   const isDetailed = req.query.detailed === 'true' || req.query.ready === 'true';
   if (isDetailed) {
@@ -216,6 +218,7 @@ app.get('/health', async (req, res) => {
     const statusCode = partnerHealth.healthy ? 200 : 503;
     return res.status(statusCode).json({
       status: partnerHealth.status,
+      version: APP_VERSION,
       timestamp: new Date().toISOString(),
       service: 'Mozarex App Platform & AivekAI Backend',
       environment: process.env.NODE_ENV || 'development',
@@ -225,6 +228,7 @@ app.get('/health', async (req, res) => {
 
   res.json({
     status: 'healthy',
+    version: APP_VERSION,
     timestamp: new Date().toISOString(),
     service: 'Mozarex App Platform & AivekAI Backend',
     environment: process.env.NODE_ENV || 'development'
@@ -236,6 +240,7 @@ app.get(['/health/readiness', '/health/partner-program'], async (req, res) => {
   const statusCode = partnerHealth.healthy ? 200 : 503;
   res.status(statusCode).json({
     status: partnerHealth.status,
+    version: APP_VERSION,
     timestamp: new Date().toISOString(),
     service: 'AivekAI Partner Program & Database Readiness',
     environment: process.env.NODE_ENV || 'development',
