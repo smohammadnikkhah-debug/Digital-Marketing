@@ -598,6 +598,103 @@ https://mozarex.com/aivekai/partners
   }
 
   /**
+   * Generates sanitized plain text and HTML partner rejection email content.
+   */
+  buildPartnerRejectionContent(application) {
+    const safeName = escapeHtml(application.full_name || application.fullName || application.name || 'there');
+
+    const subject = 'Update on your AivekAI Partner Program Application';
+
+    const textBody = `
+Hi ${application.full_name || application.fullName || application.name || 'there'},
+
+Thank you for applying to the AivekAI Partner Program. After reviewing your application, we're unable to approve your application at this time. We appreciate your interest in working with AivekAI.
+
+If you have any questions or would like to reapply in the future as your audience grows, please feel free to reach out to us at info@mozarex.com.
+
+Best regards,
+The AivekAI Partner Team
+https://mozarex.com/aivekai/partners
+`.trim();
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 20px; background-color: #f4f6f8; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .header { border-bottom: 2px solid #5C6764; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h2 { color: #121816; margin: 0 0 6px 0; font-size: 22px; }
+    .badge { display: inline-block; background: #F1F3F5; color: #495057; padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .message-box { background: #F8FAF9; border-left: 4px solid #5C6764; border-radius: 4px; padding: 18px; margin: 20px 0; font-size: 15px; color: #2D3735; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e1e4e8; font-size: 13px; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Application Status</span>
+      <h2>AivekAI Partner Program</h2>
+    </div>
+
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${safeName}</strong>,</p>
+    
+    <div class="message-box">
+      Thank you for applying to the AivekAI Partner Program. After reviewing your application, we're unable to approve your application at this time. We appreciate your interest in working with AivekAI.
+    </div>
+
+    <p style="font-size: 14px; color: #5C6764;">If you have any questions or would like to reapply in the future as your audience grows, please feel free to reach out to us at <a href="mailto:info@mozarex.com" style="color: #006B5C;">info@mozarex.com</a>.</p>
+
+    <div class="footer">
+      &copy; 2026 Mozarex & AivekAI. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+    return { subject, textBody, htmlBody };
+  }
+
+  /**
+   * Sends the rejection notification email to the applicant.
+   */
+  async sendPartnerRejectionEmail(application) {
+    if (!application || !application.email) {
+      throw new Error('Application with a valid email is required for rejection email.');
+    }
+
+    const recipient = application.email.trim().toLowerCase();
+    const { subject, textBody, htmlBody } = this.buildPartnerRejectionContent(application);
+
+    const emailRecord = {
+      id: `email_rejection_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'partner_rejection',
+      application_id: application.id || 'N/A',
+      to: recipient,
+      subject,
+      text: textBody,
+      html: htmlBody,
+      sent_at: new Date().toISOString()
+    };
+
+    const dispatchResult = await this._dispatchEmail(emailRecord);
+    this.sentEmails.push(emailRecord);
+
+    return {
+      success: dispatchResult.success,
+      message_id: emailRecord.id,
+      recipient,
+      provider: emailRecord.provider,
+      delivery_status: emailRecord.delivery_status,
+      delivery_error: emailRecord.delivery_error,
+      sent_at: emailRecord.sent_at
+    };
+  }
+
+  /**
    * Generates sanitized plain text and HTML rate change notification email content.
    */
   buildPartnerRateChangeContent({ partner, oldRate, newRate, effectiveDate }) {

@@ -1413,8 +1413,36 @@ router.get(['/admin/payouts/readiness', '/payouts/readiness'], requireAdmin, (re
 });
 
 // 12. Admin: List All Partners
-router.get(['/admin/partners', '/partners'], requireAdmin, (req, res) => {
+router.get(['/admin/partners', '/partners'], requireAdmin, async (req, res) => {
   const statusFilter = req.query.status;
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      let query = supabase
+        .from('partners')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('Error fetching partners from Supabase:', error.message);
+        return res.status(500).json({ success: false, error: 'Database error fetching partners' });
+      }
+      return res.json({
+        success: true,
+        partners: data || []
+      });
+    } catch (e) {
+      console.error('Unexpected error fetching partners:', e.message);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
   let list = Object.values(mockStore.partners);
   if (statusFilter && statusFilter !== 'all') {
     list = list.filter(p => p.status === statusFilter);
@@ -1427,30 +1455,88 @@ router.get(['/admin/partners', '/partners'], requireAdmin, (req, res) => {
 });
 
 // 13. Admin: List Pending Partner Applications
-router.get(['/admin/applications', '/applications'], requireAdmin, (req, res) => {
+router.get(['/admin/applications', '/applications'], requireAdmin, async (req, res) => {
+  const statusFilter = req.query.status;
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      let query = supabase
+        .from('partner_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('Error fetching partner applications from Supabase:', error.message);
+        return res.status(500).json({ success: false, error: 'Database error fetching applications' });
+      }
+      return res.json({
+        success: true,
+        applications: data || []
+      });
+    } catch (e) {
+      console.error('Unexpected error fetching applications:', e.message);
+      return res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+
+  let list = [...mockStore.applications];
+  if (statusFilter && statusFilter !== 'all') {
+    list = list.filter(a => a.status === statusFilter);
+  }
+
   res.json({
     success: true,
-    applications: mockStore.applications
+    applications: list
   });
 });
 
-// 14. Admin: Approve Partner Application
-router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, async (req, res) => {
+// 14. Admin: Approve Partner Application (Idempotent, Rate-Hardened)
+router.post(['/admin/partners/approve', '/partners/approve', '/admin/applications/approve', '/applications/approve'], requireAdmin, async (req, res) => {
   const { applicationId, commissionRate, referralCode } = req.body;
+  if (!applicationId) {
+    return res.status(400).json({ success: false, error: 'applicationId is required.' });
+  }
+
   const supabase = getSupabaseClient();
 
-  let app = mockStore.applications.find(a => a.id === applicationId);
-  if (!app && process.env.NODE_ENV !== 'test' && supabase) {
-    const { data } = await supabase
+  let app = null;
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    const { data, error } = await supabase
       .from('partner_applications')
       .select('*')
       .eq('id', applicationId)
       .single();
-    if (data) app = data;
+    if (data && !error) app = data;
+  }
+
+  if (!app) {
+    app = mockStore.applications.find(a => a.id === applicationId);
   }
 
   if (!app) {
     return res.status(404).json({ success: false, error: 'Application not found' });
+  }
+
+  // Idempotency check: Cannot approve an already approved application
+  if (app.status === 'approved') {
+    return res.status(409).json({
+      success: false,
+      error: 'APPLICATION_ALREADY_APPROVED: This application has already been approved.'
+    });
+  }
+
+  // Safety check: Cannot approve an already rejected application without reset
+  if (app.status === 'rejected') {
+    return res.status(409).json({
+      success: false,
+      error: 'APPLICATION_ALREADY_REJECTED: This application has been rejected and cannot be approved directly.'
+    });
   }
 
   // Explicit rate or standard rate from settings (Fail closed if neither is available)
@@ -1464,23 +1550,25 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, asyn
     });
   }
 
-  const partnerId = `partner_${Date.now()}`;
-  const code = (referralCode || app.preferred_referral_code).toUpperCase().trim();
+  const rawCode = (referralCode || app.preferred_referral_code || 'PARTNER').toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
+  const partnerId = (process.env.NODE_ENV !== 'test' && supabase) ? crypto.randomUUID() : `partner_${Date.now()}`;
 
   const newPartner = {
     id: partnerId,
     name: app.full_name,
-    referral_code: code,
+    email: app.email,
+    referral_code: rawCode,
     commission_rate: parseFloat(rateToAssign), // Baseline Agreed Commission Rate
     status: 'active',
     accept_new_referrals: true,
     earn_commission_existing_customers: true,
     holding_period_days: 30,
-    website: app.website,
-    instagram: app.instagram,
-    email: app.email,
+    website: app.website || null,
+    instagram: app.instagram || null,
     approved_at: new Date().toISOString()
   };
+
+  const adminUserId = req.adminAuth?.authUserId || 'admin_sys';
 
   if (process.env.NODE_ENV !== 'test' && supabase) {
     const { data: createdPartner, error: partnerErr } = await supabase
@@ -1489,11 +1577,20 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, asyn
       .select()
       .single();
     if (partnerErr) {
+      console.error('Supabase partner creation error:', partnerErr);
       return res.status(500).json({ success: false, error: `Failed to create partner: ${partnerErr.message}` });
+    }
+
+    const updatePayload = {
+      status: 'approved',
+      reviewed_at: new Date().toISOString()
+    };
+    if (adminUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminUserId)) {
+      updatePayload.reviewed_by = adminUserId;
     }
     await supabase
       .from('partner_applications')
-      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', applicationId);
   } else {
     mockStore.partners[partnerId] = newPartner;
@@ -1503,7 +1600,7 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, asyn
 
   mockStore.auditLogs.push({
     id: `log_${Date.now()}`,
-    admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId,
+    admin_user_id: adminUserId,
     action: 'approve_partner',
     target_type: 'partners',
     target_id: partnerId,
@@ -1512,8 +1609,9 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, asyn
   });
 
   // Non-blocking Onboarding Approval Email Dispatch with stored/agreed rate
+  let emailResult = null;
   try {
-    await partnerEmailService.sendPartnerApprovalEmail({
+    emailResult = await partnerEmailService.sendPartnerApprovalEmail({
       partner: newPartner,
       agreedCommissionRate: `${newPartner.commission_rate}%`,
       portalUrl: 'https://mozarex.com/aivekai/partners/login'
@@ -1525,7 +1623,102 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, asyn
   res.json({
     success: true,
     message: 'Partner approved successfully.',
-    partner: newPartner
+    partner: newPartner,
+    application_id: applicationId,
+    email_delivery: emailResult?.delivery_status || 'dispatched'
+  });
+});
+
+// 14b. Admin: Reject Partner Application (Idempotent, Safety-Hardened, No Partner Created)
+router.post(['/admin/partners/reject', '/partners/reject', '/admin/applications/reject', '/applications/reject'], requireAdmin, async (req, res) => {
+  const { applicationId, reason } = req.body;
+  if (!applicationId) {
+    return res.status(400).json({ success: false, error: 'applicationId is required.' });
+  }
+
+  const supabase = getSupabaseClient();
+
+  let app = null;
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    const { data, error } = await supabase
+      .from('partner_applications')
+      .select('*')
+      .eq('id', applicationId)
+      .single();
+    if (data && !error) app = data;
+  }
+
+  if (!app) {
+    app = mockStore.applications.find(a => a.id === applicationId);
+  }
+
+  if (!app) {
+    return res.status(404).json({ success: false, error: 'Application not found' });
+  }
+
+  // Idempotency check: Cannot reject an already rejected application
+  if (app.status === 'rejected') {
+    return res.status(409).json({
+      success: false,
+      error: 'APPLICATION_ALREADY_REJECTED: This application has already been rejected.'
+    });
+  }
+
+  // Safety check: Cannot reject an already approved application
+  if (app.status === 'approved') {
+    return res.status(409).json({
+      success: false,
+      error: 'APPLICATION_ALREADY_APPROVED: This application is already approved and cannot be rejected here.'
+    });
+  }
+
+  const adminUserId = req.adminAuth?.authUserId || 'admin_sys';
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    const updatePayload = {
+      status: 'rejected',
+      reviewed_at: new Date().toISOString()
+    };
+    if (adminUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(adminUserId)) {
+      updatePayload.reviewed_by = adminUserId;
+    }
+    const { error: updateErr } = await supabase
+      .from('partner_applications')
+      .update(updatePayload)
+      .eq('id', applicationId);
+    if (updateErr) {
+      console.error('Supabase application rejection update error:', updateErr);
+      return res.status(500).json({ success: false, error: `Failed to update application: ${updateErr.message}` });
+    }
+  } else {
+    app.status = 'rejected';
+    app.reviewed_at = new Date().toISOString();
+  }
+
+  mockStore.auditLogs.push({
+    id: `log_${Date.now()}`,
+    admin_user_id: adminUserId,
+    action: 'reject_partner_application',
+    target_type: 'partner_applications',
+    target_id: applicationId,
+    reason: reason || 'Application criteria not met',
+    created_at: new Date().toISOString()
+  });
+
+  // Non-blocking Rejection Email Dispatch (Professional notification, no internal notes exposed)
+  let emailResult = null;
+  try {
+    emailResult = await partnerEmailService.sendPartnerRejectionEmail(app);
+  } catch (emailErr) {
+    console.error('Partner rejection email delivery warning:', emailErr.message);
+  }
+
+  res.json({
+    success: true,
+    message: 'Partner application rejected.',
+    application_id: applicationId,
+    status: 'rejected',
+    email_delivery: emailResult?.delivery_status || 'dispatched'
   });
 });
 

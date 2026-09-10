@@ -164,8 +164,8 @@
         .status-active, .status-paid { background: #E6F7F0; color: #00875A; }
         .status-pending, .status-submitted { background: #FFF8E6; color: #B78103; }
         .status-approved { background: #E6F4F1; color: #006B5C; }
+        .status-rejected, .status-failed { background: #FFEBE6; color: #DE350B; }
         .status-draft { background: #EDEFF2; color: #5C6764; }
-        .status-failed { background: #FFEBE6; color: #DE350B; }
 
         .btn-action {
             padding: 6px 12px;
@@ -179,8 +179,11 @@
         }
 
         .btn-action:hover { background: #F8FAFA; border-color: var(--primary); }
+        .btn-action:disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
         .btn-primary { background: var(--primary); color: var(--white); border: none; }
         .btn-primary:hover { background: var(--primary-dark); }
+        .btn-danger { background: #DE350B; color: var(--white); border: none; }
+        .btn-danger:hover { background: #BF2600; }
         .btn-paypal { background: #0070BA; color: var(--white); border: none; }
         .btn-paypal:hover { background: #005EA6; }
 
@@ -247,38 +250,24 @@
         <!-- Partners Tab -->
         <div id="partnersTab" class="tab-content active">
             <div class="card">
-                <h3>Registered Partners & Commission Controls</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3>Registered Partners & Commission Controls</h3>
+                    <button class="btn-action" onclick="loadPartners()">↻ Refresh Partners</button>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Partner</th>
                             <th>Referral Code</th>
-                            <th>Commission Rate</th>
-                            <th>PayPal Payout Email</th>
-                            <th>New Referrals</th>
+                            <th>Agreed Commission Rate</th>
+                            <th>Email Address</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="partnersTableBody">
                         <tr>
-                            <td><strong>James Smith</strong><br><small style="color: var(--text-muted);">james@example.com</small></td>
-                            <td><code>JAMES</code></td>
-                            <td>30.0%</td>
-                            <td><code>james@example.com</code></td>
-                            <td><span class="status-badge status-active">Allowed</span></td>
-                            <td>
-                                <button class="btn-action" onclick="openAdjustmentModal('partner_james_123', 'James Smith')">Manual Adjustment</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>Sarah Jenkins</strong><br><small style="color: var(--text-muted);">sarah@example.com</small></td>
-                            <td><code>SARAH</code></td>
-                            <td>25.0%</td>
-                            <td><code>sarah@example.com</code></td>
-                            <td><span class="status-badge status-active">Allowed</span></td>
-                            <td>
-                                <button class="btn-action" onclick="openAdjustmentModal('partner_sarah_456', 'Sarah Jenkins')">Manual Adjustment</button>
-                            </td>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading partners...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -288,26 +277,35 @@
         <!-- Applications Tab -->
         <div id="applicationsTab" class="tab-content">
             <div class="card">
-                <h3>Pending Creator Applications</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h3>Creator Partner Applications</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Review pending applications, establish Agreed Commission Rates, and approve or reject partners.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="appStatusFilter" onchange="loadApplications()" style="padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.85rem;">
+                            <option value="pending" selected>Pending Review</option>
+                            <option value="all">All Applications</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <button class="btn-action" onclick="loadApplications()">↻ Refresh Queue</button>
+                    </div>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Applicant</th>
-                            <th>Channels</th>
-                            <th>Audience Size</th>
+                            <th>Channels & Audience</th>
                             <th>Requested Code</th>
-                            <th>Actions</th>
+                            <th>Plan / Terms</th>
+                            <th>Status</th>
+                            <th style="min-width: 170px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="appsTableBody">
                         <tr>
-                            <td><strong>Marcus Vance</strong><br><small style="color: var(--text-muted);">marcus@vancefit.com</small></td>
-                            <td>IG: @marcus_lift (50k)</td>
-                            <td>50k-100k</td>
-                            <td><code>MARCUSFIT</code></td>
-                            <td>
-                                <button class="btn-action btn-primary" onclick="alert('Applicant approved with 30.0% commission.')">Approve</button>
-                            </td>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading applications queue...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -321,7 +319,7 @@
                     <h3>PayPal Payout Batches</h3>
                     <div style="display: flex; gap: 8px;">
                         <select id="payoutPartnerSelect" style="padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                            <option value="partner_james_123">James Smith (A$27.54 Available)</option>
+                            <option value="">Loading partners...</option>
                         </select>
                         <button class="btn-action btn-primary" onclick="createPayoutBatch()">+ Create Payout Batch</button>
                     </div>
@@ -350,19 +348,6 @@
                             <td><span class="status-badge status-paid">PAID</span></td>
                             <td>
                                 <button class="btn-action" onclick="refreshPayoutStatus('payout_sb_1001')">View Details</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><code>payout_demo_02</code></td>
-                            <td>James Smith</td>
-                            <td><strong>A$27.54</strong></td>
-                            <td><span style="color: var(--text-muted);">-</span></td>
-                            <td><code>sb-partner-james@personal.example.com</code></td>
-                            <td>-</td>
-                            <td><span class="status-badge status-approved">APPROVED</span></td>
-                            <td>
-                                <button class="btn-action btn-paypal" onclick="sendViaPayPal('payout_demo_02', 'James Smith', '27.54', 'sb-partner-james@personal.example.com')">Send via PayPal</button>
-                                <button class="btn-action" onclick="cancelPayout('payout_demo_02')">Cancel</button>
                             </td>
                         </tr>
                     </tbody>
@@ -426,6 +411,65 @@
         </div>
     </div>
 
+    <!-- Approve Application Modal -->
+    <div id="approveModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Approve Partner Application</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                Approving this application will activate the Partner record, assign their baseline Agreed Commission Rate, and dispatch an onboarding welcome email.
+            </p>
+            <input type="hidden" id="approveAppId">
+            <div class="form-group">
+                <label>Applicant Name</label>
+                <input type="text" id="approveApplicantName" disabled style="background: #F8FAF9;">
+            </div>
+            <div class="form-group">
+                <label>Applicant Email</label>
+                <input type="text" id="approveApplicantEmail" disabled style="background: #F8FAF9;">
+            </div>
+            <div class="form-group">
+                <label>Assigned Referral Code</label>
+                <input type="text" id="approveReferralCode" style="text-transform: uppercase; font-family: monospace; font-weight: 700;">
+            </div>
+            <div class="form-group">
+                <label>Agreed Commission Rate (%)</label>
+                <input type="number" id="approveCommissionRate" step="0.1" min="0" max="100" value="30.0" style="font-weight: 700;">
+                <small style="color: var(--text-muted); font-size: 0.8rem;">Standard program rate is 30.0%. Custom rates establish an agreed negotiated rate.</small>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-action" onclick="closeApproveModal()">Cancel</button>
+                <button class="btn-action btn-primary" id="btnConfirmApprove" onclick="submitApprove()">Confirm Approval & Send Welcome Email</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Application Modal -->
+    <div id="rejectModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color: #DE350B;">Reject Partner Application</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                Rejecting will mark the application as rejected and send a professional status notification email to the applicant. <strong>No active Partner record will be created.</strong>
+            </p>
+            <input type="hidden" id="rejectAppId">
+            <div class="form-group">
+                <label>Applicant Name</label>
+                <input type="text" id="rejectApplicantName" disabled style="background: #F8FAF9;">
+            </div>
+            <div class="form-group">
+                <label>Applicant Email</label>
+                <input type="text" id="rejectApplicantEmail" disabled style="background: #F8FAF9;">
+            </div>
+            <div class="form-group">
+                <label>Internal Audit Reason (Optional)</label>
+                <textarea id="rejectReason" rows="2" placeholder="e.g. Audience niche does not match program criteria. (Not shown to applicant)"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-action" onclick="closeRejectModal()">Cancel</button>
+                <button class="btn-action btn-danger" id="btnConfirmReject" onclick="submitReject()">Confirm Rejection & Send Email</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Manual Adjustment Modal -->
     <div id="adjustmentModal" class="modal-overlay">
         <div class="modal-box">
@@ -459,6 +503,18 @@
     <script>
         let currentEnvironment = 'sandbox';
         let currentAdjPartnerId = null;
+        let cachedApplications = [];
+        let cachedPartners = [];
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         // Verify session authorization on page initialization
         async function initDashboard() {
@@ -496,6 +552,9 @@
                         readinessStatus.textContent = 'Sandbox Mode (Safe)';
                     }
                 }
+
+                // Initial data load
+                await Promise.all([loadPartners(), loadApplications()]);
             } catch (e) {
                 console.log('Session verification error:', e);
                 window.location.replace('/aivekai/admin/login');
@@ -508,7 +567,281 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+
+            if (tabId === 'applicationsTab') loadApplications();
+            if (tabId === 'partnersTab') loadPartners();
+        }
+
+        // Load & Render Applications Queue
+        async function loadApplications() {
+            const tbody = document.getElementById('appsTableBody');
+            const status = document.getElementById('appStatusFilter').value;
+            try {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Fetching applications...</td></tr>';
+                const res = await fetch(`/api/aivekai/admin/applications?status=${encodeURIComponent(status)}`, {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DE350B; padding: 20px;">Error loading applications: ${escapeHtml(data.error || 'Unknown error')}</td></tr>`;
+                    return;
+                }
+
+                cachedApplications = data.applications || [];
+                if (cachedApplications.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No applications found in this status.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = cachedApplications.map(app => {
+                    const safeName = escapeHtml(app.full_name);
+                    const safeEmail = escapeHtml(app.email);
+                    const safeCountry = escapeHtml(app.country || 'N/A');
+                    const safeBusiness = escapeHtml(app.business_name || '');
+                    const safeCode = escapeHtml(app.preferred_referral_code || 'N/A');
+                    const safeAudience = escapeHtml(app.audience_size || 'N/A');
+                    const safeNiche = escapeHtml(app.audience_niche || 'N/A');
+                    const safePlan = escapeHtml(app.promotion_plan || '');
+                    const safeTermsVer = escapeHtml(app.terms_version || 'v1.0');
+                    const statusVal = (app.status || 'pending').toLowerCase();
+                    const appId = escapeHtml(app.id);
+
+                    // Socials summary
+                    const socials = [];
+                    if (app.instagram) socials.push(`IG: ${escapeHtml(app.instagram)}`);
+                    if (app.tiktok) socials.push(`TT: ${escapeHtml(app.tiktok)}`);
+                    if (app.youtube) socials.push(`YT: ${escapeHtml(app.youtube)}`);
+                    if (app.website) socials.push(`Web: ${escapeHtml(app.website)}`);
+                    const socialsStr = socials.length > 0 ? socials.join('<br>') : '<span style="color:var(--text-muted)">None</span>';
+
+                    let statusBadge = `<span class="status-badge status-pending">Pending</span>`;
+                    if (statusVal === 'approved') statusBadge = `<span class="status-badge status-approved">Approved</span>`;
+                    if (statusVal === 'rejected') statusBadge = `<span class="status-badge status-rejected">Rejected</span>`;
+
+                    let actionsHtml = '';
+                    if (statusVal === 'pending') {
+                        actionsHtml = `
+                            <div style="display: flex; gap: 6px;">
+                                <button class="btn-action btn-primary" onclick="openApproveModal('${appId}')">Approve</button>
+                                <button class="btn-action btn-danger" onclick="openRejectModal('${appId}')">Reject</button>
+                            </div>
+                        `;
+                    } else {
+                        const reviewedDate = app.reviewed_at ? new Date(app.reviewed_at).toLocaleDateString() : 'Recorded';
+                        actionsHtml = `<small style="color: var(--text-muted);">Reviewed: ${reviewedDate}</small>`;
+                    }
+
+                    return `
+                        <tr>
+                            <td>
+                                <strong>${safeName}</strong><br>
+                                <small style="color: var(--text-muted);">${safeEmail}</small><br>
+                                <small style="color: var(--text-muted);">${safeCountry}${safeBusiness ? ` &middot; ${safeBusiness}` : ''}</small>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.82rem;">${socialsStr}</div>
+                                <small style="color: var(--text-muted);">${safeAudience} &middot; ${safeNiche}</small>
+                            </td>
+                            <td><code>${safeCode}</code></td>
+                            <td>
+                                <div style="max-width: 220px; font-size: 0.82rem; color: #2D3735; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${safePlan}">${safePlan || '-'}</div>
+                                <small style="color: var(--text-muted);">Terms: ${safeTermsVer}</small>
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td>${actionsHtml}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DE350B; padding: 20px;">Network error fetching applications.</td></tr>`;
+            }
+        }
+
+        // Load & Render Partners Table
+        async function loadPartners() {
+            const tbody = document.getElementById('partnersTableBody');
+            const payoutSelect = document.getElementById('payoutPartnerSelect');
+            try {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Fetching partners...</td></tr>';
+                const res = await fetch('/api/aivekai/admin/partners', {
+                    headers: { 'x-csrf-token': 'valid_csrf_token' }
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DE350B;">Error: ${escapeHtml(data.error || 'Failed')}</td></tr>`;
+                    return;
+                }
+
+                cachedPartners = data.partners || [];
+                if (cachedPartners.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No registered partners yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = cachedPartners.map(p => {
+                    const safeName = escapeHtml(p.name);
+                    const safeEmail = escapeHtml(p.email || 'N/A');
+                    const safeCode = escapeHtml(p.referral_code);
+                    const rate = parseFloat(p.commission_rate || 30.0).toFixed(1) + '%';
+                    const partnerId = escapeHtml(p.id);
+                    const status = p.status || 'active';
+                    const isAllowed = p.accept_new_referrals !== false;
+
+                    return `
+                        <tr>
+                            <td><strong>${safeName}</strong></td>
+                            <td><code>${safeCode}</code></td>
+                            <td><strong style="color: var(--primary);">${rate}</strong></td>
+                            <td><code>${safeEmail}</code></td>
+                            <td><span class="status-badge ${status === 'active' ? 'status-active' : 'status-draft'}">${status.toUpperCase()}</span></td>
+                            <td>
+                                <button class="btn-action" onclick="openAdjustmentModal('${partnerId}', '${safeName}')">Manual Adjustment</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                if (payoutSelect) {
+                    payoutSelect.innerHTML = cachedPartners.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(p.referral_code)})</option>`).join('');
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DE350B;">Network error fetching partners.</td></tr>`;
+            }
+        }
+
+        // Approve Modal Actions
+        function openApproveModal(appId) {
+            const app = cachedApplications.find(a => a.id === appId);
+            if (!app) return;
+
+            document.getElementById('approveAppId').value = appId;
+            document.getElementById('approveApplicantName').value = app.full_name || '';
+            document.getElementById('approveApplicantEmail').value = app.email || '';
+            document.getElementById('approveReferralCode').value = (app.preferred_referral_code || 'PARTNER').toUpperCase();
+            document.getElementById('approveCommissionRate').value = '30.0';
+
+            const btn = document.getElementById('btnConfirmApprove');
+            btn.disabled = false;
+            btn.textContent = 'Confirm Approval & Send Welcome Email';
+
+            document.getElementById('approveModal').style.display = 'flex';
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approveModal').style.display = 'none';
+        }
+
+        async function submitApprove() {
+            const appId = document.getElementById('approveAppId').value;
+            const referralCode = document.getElementById('approveReferralCode').value.trim().toUpperCase();
+            const commissionRate = parseFloat(document.getElementById('approveCommissionRate').value);
+            const btn = document.getElementById('btnConfirmApprove');
+
+            if (!referralCode) {
+                alert('Please provide a referral code.');
+                return;
+            }
+            if (isNaN(commissionRate) || commissionRate < 0 || commissionRate > 100) {
+                alert('Please enter a valid commission rate percentage (0 - 100).');
+                return;
+            }
+
+            // Immediately disable button to prevent double-click
+            btn.disabled = true;
+            btn.textContent = 'Approving & Sending Email...';
+
+            try {
+                const response = await fetch('/api/aivekai/admin/partners/approve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': 'valid_csrf_token'
+                    },
+                    body: JSON.stringify({
+                        applicationId: appId,
+                        referralCode,
+                        commissionRate
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ Application approved! Partner record created with ${commissionRate}% Agreed Commission Rate.\nOnboarding welcome email dispatched.`);
+                    closeApproveModal();
+                    await Promise.all([loadApplications(), loadPartners()]);
+                } else {
+                    alert(`Approval failed: ${data.error || 'Unknown error'}`);
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm Approval & Send Welcome Email';
+                }
+            } catch (e) {
+                alert('Network error submitting approval.');
+                btn.disabled = false;
+                btn.textContent = 'Confirm Approval & Send Welcome Email';
+            }
+        }
+
+        // Reject Modal Actions
+        function openRejectModal(appId) {
+            const app = cachedApplications.find(a => a.id === appId);
+            if (!app) return;
+
+            document.getElementById('rejectAppId').value = appId;
+            document.getElementById('rejectApplicantName').value = app.full_name || '';
+            document.getElementById('rejectApplicantEmail').value = app.email || '';
+            document.getElementById('rejectReason').value = '';
+
+            const btn = document.getElementById('btnConfirmReject');
+            btn.disabled = false;
+            btn.textContent = 'Confirm Rejection & Send Email';
+
+            document.getElementById('rejectModal').style.display = 'flex';
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+        }
+
+        async function submitReject() {
+            const appId = document.getElementById('rejectAppId').value;
+            const reason = document.getElementById('rejectReason').value.trim();
+            const btn = document.getElementById('btnConfirmReject');
+
+            // Immediately disable button to prevent double-click
+            btn.disabled = true;
+            btn.textContent = 'Rejecting & Sending Email...';
+
+            try {
+                const response = await fetch('/api/aivekai/admin/partners/reject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': 'valid_csrf_token'
+                    },
+                    body: JSON.stringify({
+                        applicationId: appId,
+                        reason
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Application rejected. Status notification email dispatched to applicant.');
+                    closeRejectModal();
+                    await loadApplications();
+                } else {
+                    alert(`Rejection failed: ${data.error || 'Unknown error'}`);
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm Rejection & Send Email';
+                }
+            } catch (e) {
+                alert('Network error submitting rejection.');
+                btn.disabled = false;
+                btn.textContent = 'Confirm Rejection & Send Email';
+            }
         }
 
         function openAdjustmentModal(partnerId, partnerName) {
@@ -560,6 +893,10 @@
 
         async function createPayoutBatch() {
             const partnerId = document.getElementById('payoutPartnerSelect').value;
+            if (!partnerId) {
+                alert('No partner selected.');
+                return;
+            }
             const response = await fetch('/api/aivekai/admin/payouts/create-batch', {
                 method: 'POST',
                 headers: {
