@@ -434,6 +434,280 @@ https://mozarex.com/aivekai/partners
   }
 
   /**
+   * Generates sanitized plain text and HTML partner approval onboarding email content.
+   */
+  buildPartnerApprovalContent({ partner, agreedCommissionRate, portalUrl }) {
+    const safeName = escapeHtml(partner.name || 'Partner');
+    const safeCode = escapeHtml(partner.referral_code || 'N/A');
+    const safeRate = escapeHtml(agreedCommissionRate || `${partner.commission_rate}%`);
+    const safePortalUrl = escapeHtml(portalUrl || 'https://mozarex.com/aivekai/partners/login');
+
+    const subject = 'Welcome to the AivekAI Partner Program 🎉';
+
+    const textBody = `
+Hi ${partner.name || 'there'},
+
+Welcome to the AivekAI Partner Program — your Partner account has been approved.
+
+Your current Agreed Commission Rate is ${safeRate} on eligible net subscription revenue, subject to the AivekAI Partner Program Terms.
+
+You'll earn commission on qualifying subscriptions and eligible renewals attributed to your Partner account using the rate applicable at the time of each eligible transaction.
+
+Your Partner details:
+- Agreed Commission Rate: ${safeRate}
+- Referral Code: ${partner.referral_code || 'N/A'}
+- Partner Portal: ${portalUrl || 'https://mozarex.com/aivekai/partners/login'}
+
+Please review the Partner Terms for commission eligibility, attribution, payout and rate-change conditions:
+https://mozarex.com/aivekai/partners/terms
+
+Welcome aboard,
+The AivekAI Partner Team
+https://mozarex.com/aivekai/partners
+`.trim();
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 20px; background-color: #f4f6f8; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .header { border-bottom: 2px solid #006B5C; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h2 { color: #006B5C; margin: 0 0 6px 0; font-size: 22px; }
+    .badge { display: inline-block; background: #E6F4F1; color: #004D42; padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .summary-box { background: #F8FAF9; border: 1px solid rgba(0,107,92,0.12); border-radius: 8px; padding: 18px; margin: 20px 0; }
+    .summary-item { margin-bottom: 8px; font-size: 14px; }
+    .summary-item:last-child { margin-bottom: 0; }
+    .btn-login { display: inline-block; background: #006B5C; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; margin-top: 16px; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e1e4e8; font-size: 13px; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Account Approved</span>
+      <h2>Welcome to AivekAI Partners 🎉</h2>
+    </div>
+
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${safeName}</strong>,</p>
+    <p style="font-size: 15px; color: #2D3735;">Welcome to the AivekAI Partner Program — your creator partner account has been approved.</p>
+    <p style="font-size: 15px; color: #2D3735;">Your current <strong>Agreed Commission Rate</strong> is <strong>${safeRate}</strong> on eligible net subscription revenue, subject to the <a href="https://mozarex.com/aivekai/partners/terms" style="color: #006B5C; font-weight: 600;" target="_blank">AivekAI Partner Program Terms</a>.</p>
+
+    <div class="summary-box">
+      <div class="summary-item"><strong>Agreed Commission Rate:</strong> <span style="color: #006B5C; font-weight: 700; font-size: 15px;">${safeRate}</span></div>
+      <div class="summary-item"><strong>Referral Code:</strong> <code>${safeCode}</code></div>
+      <div class="summary-item"><strong>Partner Portal:</strong> <a href="${safePortalUrl}" style="color: #006B5C;">${safePortalUrl}</a></div>
+    </div>
+
+    <p style="font-size: 14px; color: #5C6764;">You'll earn commission on qualifying subscriptions and eligible renewals attributed to your Partner account using the Agreed Commission Rate in effect at the time of each eligible transaction.</p>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${safePortalUrl}" class="btn-login" target="_blank">Log In to Partner Portal &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Review our <a href="https://mozarex.com/aivekai/partners/terms" style="color: #006B5C;">Partner Program Terms & Policy</a> for attribution, payout and rate change rules.<br>
+      &copy; 2026 Mozarex & AivekAI. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+    return { subject, textBody, htmlBody };
+  }
+
+  /**
+   * Sends the onboarding approval email to the newly approved partner.
+   */
+  async sendPartnerApprovalEmail({ partner, agreedCommissionRate, portalUrl }) {
+    if (!partner || !partner.id || !partner.email) {
+      throw new Error('Partner with valid ID and email is required for approval email.');
+    }
+
+    const recipient = partner.email.trim().toLowerCase();
+    const { subject, textBody, htmlBody } = this.buildPartnerApprovalContent({ partner, agreedCommissionRate, portalUrl });
+
+    if (this.mockFailure) {
+      throw new Error('Simulated email provider network failure');
+    }
+
+    const emailRecord = {
+      id: `email_approval_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'partner_approval',
+      partner_id: partner.id,
+      to: recipient,
+      subject,
+      text: textBody,
+      html: htmlBody,
+      agreed_commission_rate: agreedCommissionRate || `${partner.commission_rate}%`,
+      sent_at: new Date().toISOString()
+    };
+
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await this._dispatchViaResend(emailRecord);
+      } catch (err) {
+        console.warn('Resend API dispatch error:', err.message);
+      }
+    } else if (process.env.SENDGRID_API_KEY) {
+      try {
+        await this._dispatchViaSendGrid(emailRecord);
+      } catch (err) {
+        console.warn('SendGrid API dispatch error:', err.message);
+      }
+    }
+
+    this.sentEmails.push(emailRecord);
+
+    return {
+      success: true,
+      message_id: emailRecord.id,
+      recipient,
+      agreed_commission_rate: emailRecord.agreed_commission_rate,
+      sent_at: emailRecord.sent_at
+    };
+  }
+
+  /**
+   * Generates sanitized plain text and HTML rate change notification email content.
+   */
+  buildPartnerRateChangeContent({ partner, oldRate, newRate, effectiveDate }) {
+    const safeName = escapeHtml(partner.name || 'Partner');
+    const safeOldRate = escapeHtml(oldRate);
+    const safeNewRate = escapeHtml(newRate);
+    const safeEffectiveDate = escapeHtml(effectiveDate);
+
+    const subject = 'Update to your AivekAI Partner commission rate';
+
+    const textBody = `
+Hi ${partner.name || 'there'},
+
+We're writing to let you know that your AivekAI Partner Agreed Commission Rate will change from ${safeOldRate} to ${safeNewRate}, effective ${safeEffectiveDate}.
+
+Important Rate-at-Transaction Details:
+- Your previous rate (${safeOldRate}) continues to apply to eligible transactions completed before ${safeEffectiveDate}.
+- Eligible transactions and subscription renewals occurring on or after ${safeEffectiveDate} will use your new Agreed Commission Rate (${safeNewRate}).
+- Commission already validly earned before ${safeEffectiveDate} is not retrospectively affected.
+
+You can view your current Partner details in the Partner Portal:
+https://mozarex.com/aivekai/partners/login
+
+Best regards,
+The AivekAI Partner Team
+https://mozarex.com/aivekai/partners
+`.trim();
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 20px; background-color: #f4f6f8; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .header { border-bottom: 2px solid #006B5C; padding-bottom: 16px; margin-bottom: 24px; }
+    .header h2 { color: #006B5C; margin: 0 0 6px 0; font-size: 22px; }
+    .badge { display: inline-block; background: #FFF9E6; color: #8A6500; padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .notice-box { background: #FFF9E6; border-left: 4px solid #E6A100; border-radius: 4px; padding: 16px; margin: 20px 0; color: #5C4300; font-size: 14px; }
+    .btn-portal { display: inline-block; background: #006B5C; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 15px; margin-top: 16px; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e1e4e8; font-size: 13px; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="badge">Commission Rate Notice</span>
+      <h2>AivekAI Partner Commission Rate Update</h2>
+    </div>
+
+    <p style="font-size: 16px; margin-top: 0;">Hi <strong>${safeName}</strong>,</p>
+    <p style="font-size: 15px; color: #2D3735;">We're writing to notify you that your AivekAI Partner Agreed Commission Rate will change from <strong>${safeOldRate}</strong> to <strong>${safeNewRate}</strong>, effective <strong>${safeEffectiveDate}</strong>.</p>
+
+    <div class="notice-box">
+      <strong>Rate-at-Transaction Policy:</strong>
+      <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+        <li>Your previous rate (${safeOldRate}) continues to apply to eligible transactions completed before ${safeEffectiveDate}.</li>
+        <li>Eligible transactions and renewals occurring on or after ${safeEffectiveDate} will use your new rate (${safeNewRate}).</li>
+        <li>Commission already validly earned before ${safeEffectiveDate} is not retrospectively affected.</li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="https://mozarex.com/aivekai/partners/login" class="btn-portal" target="_blank">View Partner Portal &rarr;</a>
+    </div>
+
+    <div class="footer">
+      Questions? Contact our team at <a href="mailto:info@mozarex.com" style="color: #006B5C;">info@mozarex.com</a>.<br>
+      &copy; 2026 Mozarex & AivekAI. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+    return { subject, textBody, htmlBody };
+  }
+
+  /**
+   * Sends the rate change notification email to the partner.
+   */
+  async sendPartnerRateChangeEmail({ partner, oldRate, newRate, effectiveDate }) {
+    if (!partner || !partner.id || !partner.email) {
+      throw new Error('Partner with valid ID and email is required for rate change email.');
+    }
+
+    const recipient = partner.email.trim().toLowerCase();
+    const { subject, textBody, htmlBody } = this.buildPartnerRateChangeContent({ partner, oldRate, newRate, effectiveDate });
+
+    if (this.mockFailure) {
+      throw new Error('Simulated email provider network failure');
+    }
+
+    const emailRecord = {
+      id: `email_rate_change_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      type: 'rate_change_notification',
+      partner_id: partner.id,
+      to: recipient,
+      subject,
+      text: textBody,
+      html: htmlBody,
+      old_rate: oldRate,
+      new_rate: newRate,
+      effective_date: effectiveDate,
+      sent_at: new Date().toISOString()
+    };
+
+    if (process.env.RESEND_API_KEY) {
+      try {
+        await this._dispatchViaResend(emailRecord);
+      } catch (err) {
+        console.warn('Resend API dispatch error:', err.message);
+      }
+    } else if (process.env.SENDGRID_API_KEY) {
+      try {
+        await this._dispatchViaSendGrid(emailRecord);
+      } catch (err) {
+        console.warn('SendGrid API dispatch error:', err.message);
+      }
+    }
+
+    this.sentEmails.push(emailRecord);
+
+    return {
+      success: true,
+      message_id: emailRecord.id,
+      recipient,
+      old_rate: oldRate,
+      new_rate: newRate,
+      effective_date: effectiveDate,
+      sent_at: emailRecord.sent_at
+    };
+  }
+
+  /**
    * Internal Resend API dispatcher
    */
   _dispatchViaResend(record) {

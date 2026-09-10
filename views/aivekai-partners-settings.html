@@ -222,7 +222,7 @@
 <body>
     <aside>
         <a href="/aivekai/partners" class="sidebar-brand">
-            <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+            <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.onerror=null; this.src='/images/logo.png';">
             <span>AivekAI Partner</span>
         </a>
 
@@ -294,11 +294,12 @@
         </div>
 
         <div class="card">
-            <h3>🔒 Fixed Partner Configuration (Admin Controlled)</h3>
-            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">The following properties are governed by administrative agreement:</p>
+            <h3>🔒 Commercial Agreement (Admin Controlled)</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">The following properties are governed by your Partner Agreement & Terms:</p>
             <div style="background: var(--bg-page); padding: 16px; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.8;">
                 <div><strong>Assigned Referral Code:</strong> <code id="dispReferralCode">-</code></div>
-                <div><strong>Current Commission Rate:</strong> <span id="dispCommissionRate">-</span> Recurring</div>
+                <div><strong>Agreed Commission Rate:</strong> <span id="dispCommissionRate">-</span> Recurring</div>
+                <div id="dispScheduledRateRow" style="display: none; color: #B78103;"><strong>Next Scheduled Change:</strong> <span id="dispScheduledRate">-</span></div>
                 <div><strong>Partner Status:</strong> <span id="dispStatus" style="color: #00875A; font-weight: 700;">Active</span></div>
             </div>
         </div>
@@ -325,6 +326,12 @@
                     document.getElementById('partnerName').value = data.partner_name || '';
                     document.getElementById('dispReferralCode').innerText = data.referral_code || '-';
                     document.getElementById('dispCommissionRate').innerText = `${data.commission_rate || 0}%`;
+
+                    if (data.scheduled_rate_change) {
+                        const sDate = new Date(data.scheduled_rate_change.effective_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+                        document.getElementById('dispScheduledRate').innerText = `${data.scheduled_rate_change.new_rate}% effective ${sDate}`;
+                        document.getElementById('dispScheduledRateRow').style.display = 'block';
+                    }
                 }
             } catch (e) {
                 console.error('Failed to load settings:', e);

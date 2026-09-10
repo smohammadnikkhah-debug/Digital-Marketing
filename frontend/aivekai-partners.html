@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AivekAI Partner Program - Earn Recurring Commission</title>
-    <meta name="description" content="Join the AivekAI Partner Program. Earn recurring commissions introducing your audience to smarter nutrition, photo meal scanning and voice calorie tracking.">
+    <title>AivekAI Partner & Creator Network - Earn 30% Recurring Commission</title>
+    <meta name="description" content="Join the AivekAI Partner Program. Earn 30% recurring commission introducing your audience to smarter nutrition, photo meal scanning and voice calorie tracking.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,9 +132,9 @@
 
         /* Hero Section */
         .hero {
-            padding: 140px 24px 80px;
+            padding: 140px 24px 70px;
             text-align: center;
-            max-width: 900px;
+            max-width: 920px;
             margin: 0 auto;
         }
 
@@ -154,14 +154,32 @@
         .hero h1 {
             font-size: 3.2rem;
             font-weight: 800;
-            line-height: 1.15;
+            line-height: 1.18;
             color: var(--text-dark);
             margin-bottom: 20px;
             letter-spacing: -1px;
         }
 
-        .hero h1 span {
+        .hero h1 span.rate-text {
             color: var(--primary);
+        }
+
+        .rate-badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 107, 92, 0.22);
+            vertical-align: middle;
+            line-height: 1.3;
+            margin-left: 6px;
+            margin-bottom: 4px;
+            white-space: nowrap;
         }
 
         .hero p {
@@ -169,6 +187,9 @@
             color: var(--text-muted);
             margin-bottom: 36px;
             line-height: 1.6;
+            max-width: 780px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .hero-cta-group {
@@ -184,16 +205,16 @@
             border-radius: var(--radius-md);
         }
 
-        /* Stats Grid */
+        /* Stats & Value Proposition Grid */
         .stats-section {
-            max-width: 1100px;
+            max-width: 1160px;
             margin: 0 auto 80px;
             padding: 0 24px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
         }
 
@@ -201,29 +222,53 @@
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 30px 24px;
-            text-align: center;
+            padding: 28px 24px;
+            text-align: left;
             box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+
+        .stat-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
         }
 
         .stat-card h3 {
-            font-size: 2.2rem;
+            font-size: 1.2rem;
             font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 6px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            line-height: 1.3;
         }
 
         .stat-card p {
             color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.95rem;
+            font-weight: 400;
+            font-size: 0.92rem;
+            line-height: 1.55;
         }
 
         /* Features Section */
         .section-header {
             text-align: center;
-            max-width: 700px;
+            max-width: 760px;
             margin: 0 auto 50px;
+            padding: 0 20px;
         }
 
         .section-header h2 {
@@ -276,7 +321,7 @@
         }
 
         .feature-card h3 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             margin-bottom: 12px;
             color: var(--text-dark);
@@ -331,36 +376,65 @@
         .step-item p {
             color: var(--text-muted);
             font-size: 0.9rem;
+            line-height: 1.55;
         }
 
-        /* Example Callout */
+        /* Final CTA Callout */
         .example-banner {
             max-width: 1100px;
             margin: 0 auto 100px;
-            padding: 40px;
+            padding: 48px 36px;
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
             color: var(--white);
             border-radius: var(--radius-lg);
             text-align: center;
+            box-shadow: 0 16px 40px rgba(0, 107, 92, 0.2);
         }
 
         .example-banner h3 {
-            font-size: 1.8rem;
+            font-size: 2.1rem;
             font-weight: 800;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            line-height: 1.25;
         }
 
-        .example-banner p {
-            font-size: 1.05rem;
-            opacity: 0.9;
+        .example-banner p.cta-desc {
+            font-size: 1.1rem;
+            opacity: 0.92;
             max-width: 750px;
             margin: 0 auto 24px;
+            line-height: 1.6;
+        }
+
+        .cta-summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            color: var(--white);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            backdrop-filter: blur(8px);
+            margin: 0 auto;
+        }
+
+        .cta-pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: inline-block;
         }
 
         .disclaimer-text {
             font-size: 0.8rem;
-            opacity: 0.75;
-            font-style: italic;
+            opacity: 0.8;
+            max-width: 780px;
+            margin: 20px auto 0;
+            line-height: 1.5;
         }
 
         /* Footer */
@@ -379,15 +453,30 @@
             font-weight: 600;
         }
 
+        footer a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 768px) {
             .hero h1 {
-                font-size: 2.3rem;
+                font-size: 2.2rem;
             }
             .hero p {
                 font-size: 1rem;
             }
+            .rate-badge {
+                display: inline-block;
+                margin-top: 6px;
+                margin-left: 0;
+            }
             .nav-container {
                 padding: 12px 16px;
+            }
+            .example-banner h3 {
+                font-size: 1.6rem;
+            }
+            .example-banner {
+                padding: 36px 20px;
             }
         }
     </style>
@@ -399,7 +488,7 @@
     <header>
         <div class="nav-container">
             <a href="/aivekai" class="brand-logo">
-                <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+                <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.onerror=null; this.src='/images/logo.png';">
                 <span>AivekAI</span>
                 <span class="brand-badge">Partners</span>
             </a>
@@ -410,119 +499,132 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Main Content -->
     <main>
+        <!-- Hero Section -->
         <section class="hero">
             <div class="hero-tag">
                 <span>✨</span> The AivekAI Partner & Creator Network
             </div>
-            <h1>Earn recurring commission by introducing your audience to <span>smarter nutrition</span>.</h1>
-            <p>Empower your community with effortless meal scanning, voice food logging, and AI dietary coaching while building long-term recurring revenue.</p>
+            <h1>Earn <span class="rate-text">30%</span><span class="rate-badge">Current partner rate</span> recurring commission with AivekAI</h1>
+            <p>Our current partner rate is 30% recurring commission on eligible subscriptions you refer. Give your audience access to exclusive AivekAI offers while building recurring revenue from your content.</p>
             <div class="hero-cta-group">
                 <a href="/aivekai/partners/apply" class="btn-primary btn-large">Become a Partner</a>
                 <a href="/aivekai/partners/login" class="btn-outline btn-large">Access Partner Portal</a>
             </div>
         </section>
 
-        <!-- Stats Overview -->
+        <!-- 4 Hero Benefit Cards Overview -->
         <section class="stats-section">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>Recurring</h3>
-                    <p>Earn on initial purchases & ongoing yearly renewals</p>
+                    <div class="stat-card-icon">💎</div>
+                    <h3>30% Recurring Commission</h3>
+                    <p>Our current partner rate. Earn commission on eligible initial subscriptions and qualifying renewals from customers you refer.</p>
                 </div>
                 <div class="stat-card">
-                    <h3>SmartLinks</h3>
-                    <p>Automated deferred deep-link attribution via Kochava</p>
+                    <div class="stat-card-icon">🎁</div>
+                    <h3>Exclusive Audience Offers</h3>
+                    <p>Give your followers access to special AivekAI offers configured for your partner campaign.</p>
                 </div>
                 <div class="stat-card">
-                    <h3>SaaS Portal</h3>
-                    <p>Live commission ledger, campaign analytics & payouts</p>
+                    <div class="stat-card-icon">🔗</div>
+                    <h3>Your Own SmartLink</h3>
+                    <p>Get a trackable partner link powered by Kochava for sharing across TikTok, Instagram, YouTube, websites and other channels.</p>
                 </div>
                 <div class="stat-card">
-                    <h3>Special Offer</h3>
-                    <p>Exclusive introductory discounts for your audience</p>
+                    <div class="stat-card-icon">📊</div>
+                    <h3>Partner Dashboard</h3>
+                    <p>Track eligible referrals, conversions, commissions and payouts through your private partner portal.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Value Proposition Section -->
+        <!-- Why Creators & Health Professionals Choose AivekAI -->
         <section>
             <div class="section-header">
                 <h2>Why Creators & Health Professionals Choose AivekAI</h2>
-                <p>A true partnership model designed to align incentives and reward your influence.</p>
+                <p>A true partnership model designed to align incentives, reward your influence, and deliver meaningful value to your community.</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">💎</div>
-                    <h3>Recurring Annual Commission</h3>
-                    <p>Unlike one-off referral programs, you continue earning commission each year your referred subscribers renew their AivekAI annual plan.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Deterministic Attribution</h3>
-                    <p>Powered by Kochava SmartLinks. When someone clicks your link, whether they install right away or days later, the attribution is permanently mapped to your partner account.</p>
+                    <h3>Recurring Earning Potential</h3>
+                    <p>Earn recurring commission on eligible subscription renewals from customers you refer, rather than only a one-time referral reward.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🎁</div>
-                    <h3>Configured Audience Benefits</h3>
-                    <p>Give your followers a compelling introductory discount on their annual subscription, making it a win-win recommendation for your community.</p>
+                    <h3>Exclusive Audience Offers</h3>
+                    <p>Give your followers access to special AivekAI offers and partner perks configured for your campaign, making your recommendation a genuine win for your community.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Reliable Referral Attribution</h3>
+                    <p>Powered by Kochava SmartLinks with deterministic attribution. When someone clicks your link—whether they install immediately or days later—their subscription is accurately attributed to your partner account.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📊</div>
-                    <h3>Transparent Partner Portal</h3>
-                    <p>Access your private web dashboard to create custom campaign links (e.g. TikTok vs Instagram), monitor conversion rates, and audit your verified commission ledger.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Privacy-First Architecture</h3>
-                    <p>All financial reporting is aggregated and anonymized. We respect your audience's privacy while giving you full accounting visibility over every dollar earned.</p>
+                    <h3>Transparent Commission Tracking</h3>
+                    <p>Access your private partner portal to create custom campaign links (e.g., TikTok vs. Instagram vs. YouTube), monitor real-time conversion rates, and audit your verified commission ledger.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💳</div>
-                    <h3>Reliable Monthly Disbursements</h3>
-                    <p>Automatic payout batching and accounting once your commissions satisfy the standard holding period and minimum payout threshold.</p>
+                    <h3>Predictable Monthly Payouts</h3>
+                    <p>Automatic payout batching and accounting ensure dependable monthly disbursements once your verified commissions meet standard holding periods and payout thresholds.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy-Conscious Attribution</h3>
+                    <p>All financial reporting and analytics are aggregated and privacy-compliant. We respect your audience's privacy while giving you full accounting visibility over every dollar earned.</p>
                 </div>
             </div>
         </section>
 
-        <!-- How it works -->
+        <!-- How The Program Works -->
         <section class="how-it-works">
             <div class="section-header">
                 <h2>How The Program Works</h2>
-                <p>Four simple steps from application to monthly payouts.</p>
+                <p>Four simple steps from application to monthly recurring payouts.</p>
             </div>
             <div class="steps-container">
                 <div class="step-item">
                     <div class="step-num">1</div>
-                    <h4>Apply Online</h4>
-                    <p>Fill out our short application detailing your audience and promotion channels.</p>
+                    <h4>Apply</h4>
+                    <p>Tell us about yourself, your audience and your channels.</p>
                 </div>
                 <div class="step-item">
                     <div class="step-num">2</div>
-                    <h4>Get Approved</h4>
-                    <p>Our team reviews and approves your custom referral code, SmartLink, and commission terms.</p>
+                    <h4>Get Approved & Set Up</h4>
+                    <p>Once approved, we'll configure your partner account, current commission rate and audience offer.</p>
                 </div>
                 <div class="step-item">
                     <div class="step-num">3</div>
-                    <h4>Share with Your Audience</h4>
-                    <p>Use custom campaign SmartLinks across your bio, stories, videos, and newsletters.</p>
+                    <h4>Share AivekAI</h4>
+                    <p>Use your personal SmartLink and campaign materials across your content and channels.</p>
                 </div>
                 <div class="step-item">
                     <div class="step-num">4</div>
-                    <h4>Earn Recurring Revenue</h4>
-                    <p>Track verified transactions, watch your balance grow, and receive regular payouts.</p>
+                    <h4>Earn Recurring Commission</h4>
+                    <p>Track eligible subscriptions and renewals through your dashboard and receive payouts according to the Partner Terms.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Example Banner -->
+        <!-- Final CTA Banner -->
         <section style="padding: 0 24px;">
             <div class="example-banner">
-                <h3>Ready to monetize your fitness & wellness content?</h3>
-                <p>Join dietitians, personal trainers, and fitness creators who trust AivekAI to support their clients' nutritional success.</p>
-                <a href="/aivekai/partners/apply" class="btn-primary btn-large" style="background: #FFFFFF; color: var(--primary); font-weight: 700;">Apply to Partner Program</a>
-                <p class="disclaimer-text" style="margin-top: 18px; margin-bottom: 0;">*Illustrative example: Partner commission rates and customer discount offers are configured individually upon approval.</p>
+                <h3>Turn your recommendations into recurring income</h3>
+                <p class="cta-desc">Join the AivekAI Partner Network, share exclusive offers with your audience, and earn commission when eligible referrals become paying subscribers.</p>
+                
+                <div class="cta-summary-pill">
+                    <span class="cta-pill-dot"></span> Current rate: 30% recurring commission
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <a href="/aivekai/partners/apply" class="btn-primary btn-large" style="background: #FFFFFF; color: var(--primary); font-weight: 700;">Apply to Partner Program</a>
+                </div>
+
+                <p class="disclaimer-text">Commission rates and audience offers are configurable and may change over time. Current approved terms are shown in your partner account and governed by the AivekAI Partner Terms & Policy.</p>
             </div>
         </section>
     </main>

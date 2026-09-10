@@ -291,7 +291,7 @@
 <body>
     <aside>
         <a href="/aivekai/partners" class="sidebar-brand">
-            <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.src='/images/favicon.png';">
+            <img src="/images/aivekai-logo.png" alt="AivekAI Logo" onerror="this.onerror=null; this.src='/images/logo.png';">
             <span>AivekAI Partner</span>
         </a>
 
@@ -365,8 +365,9 @@
         <!-- Performance KPIs -->
         <div class="metrics-grid">
             <div class="metric-tile">
-                <div class="label">Commission Rate</div>
+                <div class="label">Agreed Commission Rate</div>
                 <div class="val" id="kpiRate">-</div>
+                <div id="scheduledRateNotice" style="display: none; font-size: 0.75rem; color: #B78103; margin-top: 4px; font-weight: 600;"></div>
             </div>
             <div class="metric-tile">
                 <div class="label">Attributed Customers</div>
@@ -439,6 +440,12 @@
                     document.getElementById('primaryLink').value = data.smart_link || '';
                     document.getElementById('campaignOutputLink').value = data.smart_link || '';
                     document.getElementById('kpiRate').innerText = `${data.commission_rate || 0}%`;
+                    if (data.scheduled_rate_change) {
+                        const sDate = new Date(data.scheduled_rate_change.effective_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                        const notice = document.getElementById('scheduledRateNotice');
+                        notice.innerText = `Scheduled: ${data.scheduled_rate_change.new_rate}% on ${sDate}`;
+                        notice.style.display = 'block';
+                    }
                     document.getElementById('kpiCustomers').innerText = data.total_customers || 0;
                     document.getElementById('kpiSubscribers').innerText = data.paid_conversions || 0;
                     document.getElementById('kpiConversion').innerText = `${data.conversion_rate || 0}%`;

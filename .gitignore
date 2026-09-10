@@ -151,3 +151,8 @@ cache/
 # Temporary files
 *.tmp
 *.temp
+
+# Audit & Diagnostic Scripts
+audit_db.js
+verify_prod_profile_audit.js
+database/backup_snapshot_*.json

@@ -116,6 +116,11 @@ const mockStore = {
       status: 'configured'
     }
   },
+  programSettings: {
+    standard_partner_commission_rate: 30.00,
+    current_terms_version: 'v1.0-2026-09'
+  },
+  rateHistory: [],
   applications: [],
   partnerUsers: [
     {
@@ -235,6 +240,73 @@ const mockStore = {
   webhookEvents: [],
   auditLogs: []
 };
+
+// Program Settings Helper: Fail-closed retrieval
+async function getProgramSetting(key) {
+  const supabase = getSupabaseClient();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('partner_program_settings')
+        .select('*')
+        .eq('key', key)
+        .single();
+      if (!error && data) {
+        return data.value_numeric !== null && data.value_numeric !== undefined ? parseFloat(data.value_numeric) : data.value_text;
+      }
+    } catch (e) {
+      console.warn(`Error fetching program setting ${key}:`, e.message);
+    }
+  }
+
+  if (mockStore.programSettings && mockStore.programSettings[key] !== undefined) {
+    return mockStore.programSettings[key];
+  }
+
+  return null;
+}
+
+// Authoritative Agreed Commission Rate Resolver (Strict-Before supported)
+async function resolveAgreedCommissionRate(partnerId, transactionTimestamp = new Date(), options = {}) {
+  const txTime = new Date(transactionTimestamp).getTime();
+  const strictBefore = options.strictBefore === true;
+  const supabase = getSupabaseClient();
+
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    try {
+      const { data, error } = await supabase.rpc('resolve_partner_agreed_commission_rate', {
+        p_partner_id: partnerId,
+        p_transaction_timestamp: new Date(transactionTimestamp).toISOString(),
+        p_strict_before: strictBefore
+      });
+      if (!error && data !== null && data !== undefined) {
+        return parseFloat(data);
+      }
+    } catch (e) {
+      console.warn('RPC resolve_partner_agreed_commission_rate error, falling back to query/store:', e.message);
+    }
+  }
+
+  // Fallback to in-memory store
+  const history = mockStore.rateHistory || [];
+  const effectiveSchedules = history.filter(h => {
+    if (h.partner_id !== partnerId || h.status === 'cancelled') return false;
+    const hTime = new Date(h.effective_at).getTime();
+    return strictBefore ? hTime < txTime : hTime <= txTime;
+  });
+
+  if (effectiveSchedules.length > 0) {
+    effectiveSchedules.sort((a, b) => {
+      const diffEffective = new Date(b.effective_at).getTime() - new Date(a.effective_at).getTime();
+      if (diffEffective !== 0) return diffEffective;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    return parseFloat(effectiveSchedules[0].new_rate);
+  }
+
+  const partner = mockStore.partners[partnerId];
+  return partner ? parseFloat(partner.commission_rate) : null;
+}
 
 // Helper: Mask email for privacy
 function maskEmail(email) {
@@ -810,6 +882,14 @@ router.post('/apply', async (req, res) => {
       });
     }
 
+    const currentTermsVersion = await getProgramSetting('current_terms_version');
+    if (!currentTermsVersion) {
+      return res.status(500).json({
+        success: false,
+        error: 'FAIL_CLOSED: Active terms version is not configured.'
+      });
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
@@ -848,6 +928,9 @@ router.post('/apply', async (req, res) => {
       promotion_plan: promotionPlan.trim(),
       preferred_referral_code: sanitizedCode,
       notes: notes ? notes.trim() : null,
+      terms_version: currentTermsVersion,
+      terms_accepted_at: new Date().toISOString(),
+      terms_acceptance_action: 'checked_checkbox_on_application',
       status: 'pending',
       created_at: new Date().toISOString()
     };
@@ -1035,12 +1118,24 @@ router.get('/me', requirePartnerAuth, (req, res) => {
 });
 
 // 5. Partner Dashboard Overview Summary
-router.get('/dashboard', requirePartnerAuth, (req, res) => {
+router.get('/dashboard', requirePartnerAuth, async (req, res) => {
   const partnerId = req.partnerAuth.partnerId;
   const partner = mockStore.partners[partnerId];
   if (!partner) {
     return res.status(404).json({ success: false, error: 'Partner not found' });
   }
+
+  // Authoritative dynamic rate resolution at NOW()
+  const currentAgreedRate = await resolveAgreedCommissionRate(partnerId, new Date());
+
+  // Find next scheduled rate change (strictly in future)
+  const nowTime = Date.now();
+  const futureSchedules = (mockStore.rateHistory || []).filter(h =>
+    h.partner_id === partnerId &&
+    h.status === 'scheduled' &&
+    new Date(h.effective_at).getTime() > nowTime
+  ).sort((a, b) => new Date(a.effective_at).getTime() - new Date(b.effective_at).getTime());
+  const nextSchedule = futureSchedules.length > 0 ? futureSchedules[0] : null;
 
   const commissions = mockStore.commissions.filter(c => c.partner_id === partnerId);
   const currencies = [...new Set(commissions.map(c => c.currency))];
@@ -1081,7 +1176,13 @@ router.get('/dashboard', requirePartnerAuth, (req, res) => {
     partner_id: partner.id,
     partner_name: partner.name,
     referral_code: partner.referral_code,
-    commission_rate: partner.commission_rate,
+    commission_rate: currentAgreedRate, // Resolved currently effective rate
+    baseline_agreed_commission_rate: partner.commission_rate,
+    current_agreed_commission_rate: currentAgreedRate,
+    scheduled_rate_change: nextSchedule ? {
+      new_rate: nextSchedule.new_rate,
+      effective_at: nextSchedule.effective_at
+    } : null,
     status: partner.status,
     total_customers: 45,
     paid_conversions: 18,
@@ -1287,11 +1388,33 @@ router.get(['/admin/applications', '/applications'], requireAdmin, (req, res) =>
 });
 
 // 14. Admin: Approve Partner Application
-router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, (req, res) => {
+router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, async (req, res) => {
   const { applicationId, commissionRate, referralCode } = req.body;
-  const app = mockStore.applications.find(a => a.id === applicationId);
+  const supabase = getSupabaseClient();
+
+  let app = mockStore.applications.find(a => a.id === applicationId);
+  if (!app && process.env.NODE_ENV !== 'test' && supabase) {
+    const { data } = await supabase
+      .from('partner_applications')
+      .select('*')
+      .eq('id', applicationId)
+      .single();
+    if (data) app = data;
+  }
+
   if (!app) {
     return res.status(404).json({ success: false, error: 'Application not found' });
+  }
+
+  // Explicit rate or standard rate from settings (Fail closed if neither is available)
+  const standardRate = await getProgramSetting('standard_partner_commission_rate');
+  const rateToAssign = commissionRate !== undefined && commissionRate !== null && commissionRate !== '' ? commissionRate : standardRate;
+
+  if (rateToAssign === undefined || rateToAssign === null || isNaN(parseFloat(rateToAssign)) || parseFloat(rateToAssign) < 0 || parseFloat(rateToAssign) > 100) {
+    return res.status(400).json({
+      success: false,
+      error: 'FAIL_CLOSED: Standard partner commission rate is not configured and no valid custom rate provided.'
+    });
   }
 
   const partnerId = `partner_${Date.now()}`;
@@ -1301,19 +1424,35 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, (req
     id: partnerId,
     name: app.full_name,
     referral_code: code,
-    commission_rate: parseFloat(commissionRate || '30.0'),
+    commission_rate: parseFloat(rateToAssign), // Baseline Agreed Commission Rate
     status: 'active',
     accept_new_referrals: true,
     earn_commission_existing_customers: true,
     holding_period_days: 30,
     website: app.website,
     instagram: app.instagram,
-    email: app.email
+    email: app.email,
+    approved_at: new Date().toISOString()
   };
 
-  mockStore.partners[partnerId] = newPartner;
-  app.status = 'approved';
-  app.reviewed_at = new Date().toISOString();
+  if (process.env.NODE_ENV !== 'test' && supabase) {
+    const { data: createdPartner, error: partnerErr } = await supabase
+      .from('partners')
+      .insert([newPartner])
+      .select()
+      .single();
+    if (partnerErr) {
+      return res.status(500).json({ success: false, error: `Failed to create partner: ${partnerErr.message}` });
+    }
+    await supabase
+      .from('partner_applications')
+      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .eq('id', applicationId);
+  } else {
+    mockStore.partners[partnerId] = newPartner;
+    app.status = 'approved';
+    app.reviewed_at = new Date().toISOString();
+  }
 
   mockStore.auditLogs.push({
     id: `log_${Date.now()}`,
@@ -1325,6 +1464,17 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, (req
     created_at: new Date().toISOString()
   });
 
+  // Non-blocking Onboarding Approval Email Dispatch with stored/agreed rate
+  try {
+    await partnerEmailService.sendPartnerApprovalEmail({
+      partner: newPartner,
+      agreedCommissionRate: `${newPartner.commission_rate}%`,
+      portalUrl: 'https://mozarex.com/aivekai/partners/login'
+    });
+  } catch (emailErr) {
+    console.error('Partner approval onboarding email delivery warning:', emailErr.message);
+  }
+
   res.json({
     success: true,
     message: 'Partner approved successfully.',
@@ -1332,9 +1482,119 @@ router.post(['/admin/partners/approve', '/partners/approve'], requireAdmin, (req
   });
 });
 
-// 15. Admin: Update Partner Status & Controls
+// 15. Admin: Schedule Agreed Commission Rate Change (Strict-Before Previous Rate Resolution)
+router.post(['/admin/partners/schedule-rate-change', '/admin/partners/update-rate', '/partners/update-rate'], requireAdmin, async (req, res) => {
+  const { partnerId, newRate, effectiveAt, reason, allowRetroactive } = req.body;
+  const partner = mockStore.partners[partnerId];
+  if (!partner) {
+    return res.status(404).json({ success: false, error: 'Partner not found' });
+  }
+
+  if (newRate === undefined || newRate === null || isNaN(parseFloat(newRate)) || parseFloat(newRate) < 0 || parseFloat(newRate) > 100) {
+    return res.status(400).json({ success: false, error: 'Invalid commission rate percentage.' });
+  }
+
+  const effectiveDate = effectiveAt ? new Date(effectiveAt) : new Date();
+
+  // Validate: Retroactive rate changes are rejected
+  if (!allowRetroactive && effectiveDate.getTime() < Date.now() - 2000) {
+    return res.status(400).json({
+      success: false,
+      error: 'RETROACTIVE_RATE_CHANGE_FORBIDDEN: Rate changes cannot take effect in the past.'
+    });
+  }
+
+  // Validate: Collision on exact effective timestamp for active/scheduled entries
+  const duplicate = (mockStore.rateHistory || []).find(h =>
+    h.partner_id === partnerId &&
+    h.status !== 'cancelled' &&
+    new Date(h.effective_at).getTime() === effectiveDate.getTime()
+  );
+  if (duplicate) {
+    return res.status(409).json({
+      success: false,
+      error: 'SCHEDULE_CONFLICT: A rate change schedule already exists for this exact effective timestamp.'
+    });
+  }
+
+  // Resolve previous_rate using strict-before resolution (effective_at < effectiveDate)
+  const previousRate = await resolveAgreedCommissionRate(partnerId, effectiveDate, { strictBefore: true });
+
+  const scheduleEntry = {
+    id: `hist_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    partner_id: partnerId,
+    previous_rate: previousRate,
+    new_rate: parseFloat(newRate),
+    effective_at: effectiveDate.toISOString(),
+    created_at: new Date().toISOString(),
+    created_by: req.adminAuth?.authUserId || 'admin_sys',
+    reason: reason || 'Commercial agreement update',
+    status: 'scheduled'
+  };
+
+  mockStore.rateHistory = mockStore.rateHistory || [];
+  mockStore.rateHistory.push(scheduleEntry);
+
+  mockStore.auditLogs.push({
+    id: `log_${Date.now()}`,
+    admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId,
+    action: 'schedule_partner_rate_change',
+    target_type: 'partner_commission_rate_history',
+    target_id: scheduleEntry.id,
+    new_values: scheduleEntry,
+    created_at: new Date().toISOString()
+  });
+
+  // Non-blocking Rate Change Notification Email Dispatch
+  try {
+    await partnerEmailService.sendPartnerRateChangeEmail({
+      partner,
+      oldRate: `${previousRate}%`,
+      newRate: `${parseFloat(newRate)}%`,
+      effectiveDate: effectiveDate.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    });
+  } catch (emailErr) {
+    console.error('Rate change notification email warning:', emailErr.message);
+  }
+
+  res.json({
+    success: true,
+    message: 'Commission rate change scheduled successfully.',
+    schedule: scheduleEntry
+  });
+});
+
+// 15B. Admin: Cancel Scheduled Rate Change
+router.post(['/admin/partners/cancel-rate-change', '/partners/cancel-rate-change'], requireAdmin, (req, res) => {
+  const { scheduleId } = req.body;
+  const entry = (mockStore.rateHistory || []).find(h => h.id === scheduleId);
+  if (!entry) {
+    return res.status(404).json({ success: false, error: 'Scheduled rate change not found' });
+  }
+
+  entry.status = 'cancelled';
+  entry.cancelled_at = new Date().toISOString();
+
+  mockStore.auditLogs.push({
+    id: `log_${Date.now()}`,
+    admin_user_id: req.adminAuth?.authUserId || req.partnerAuth?.authUserId,
+    action: 'cancel_partner_rate_change',
+    target_type: 'partner_commission_rate_history',
+    target_id: scheduleId,
+    new_values: { status: 'cancelled' },
+    created_at: new Date().toISOString()
+  });
+
+  res.json({
+    success: true,
+    message: 'Scheduled rate change cancelled successfully.',
+    schedule: entry
+  });
+});
+
+// 15C. Admin: Update Partner Status & Controls
 router.post(['/admin/partners/update-status', '/partners/update-status'], requireAdmin, (req, res) => {
-  const { partnerId, status, acceptNewReferrals, earnCommissionExisting, commissionRate } = req.body;
+  const { partnerId, status, acceptNewReferrals, earnCommissionExisting } = req.body;
   const partner = mockStore.partners[partnerId];
   if (!partner) {
     return res.status(404).json({ success: false, error: 'Partner not found' });
@@ -1345,7 +1605,6 @@ router.post(['/admin/partners/update-status', '/partners/update-status'], requir
   if (status) partner.status = status;
   if (acceptNewReferrals !== undefined) partner.accept_new_referrals = acceptNewReferrals;
   if (earnCommissionExisting !== undefined) partner.earn_commission_existing_customers = earnCommissionExisting;
-  if (commissionRate !== undefined) partner.commission_rate = parseFloat(commissionRate);
 
   mockStore.auditLogs.push({
     id: `log_${Date.now()}`,
@@ -1737,3 +1996,5 @@ module.exports = router;
 module.exports.mockStore = mockStore;
 module.exports.rateLimitMap = rateLimitMap;
 module.exports.partnerEmailService = partnerEmailService;
+module.exports.resolveAgreedCommissionRate = resolveAgreedCommissionRate;
+module.exports.getProgramSetting = getProgramSetting;
