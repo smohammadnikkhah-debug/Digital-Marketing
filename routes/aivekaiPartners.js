@@ -254,12 +254,17 @@ async function getProgramSetting(key) {
       if (!error && data) {
         return data.value_numeric !== null && data.value_numeric !== undefined ? parseFloat(data.value_numeric) : data.value_text;
       }
+      if (error) {
+        console.error(`Supabase error fetching program setting ${key}:`, error.message || error);
+        return null; // Fail closed: do not fall back to mockStore in production
+      }
     } catch (e) {
-      console.warn(`Error fetching program setting ${key}:`, e.message);
+      console.error(`Exception fetching program setting ${key}:`, e.message || e);
+      return null; // Fail closed: do not fall back to mockStore in production
     }
   }
 
-  if (mockStore.programSettings && mockStore.programSettings[key] !== undefined) {
+  if (process.env.NODE_ENV === 'test' && mockStore.programSettings && mockStore.programSettings[key] !== undefined) {
     return mockStore.programSettings[key];
   }
 
@@ -884,9 +889,16 @@ router.post('/apply', async (req, res) => {
 
     const currentTermsVersion = await getProgramSetting('current_terms_version');
     if (!currentTermsVersion) {
-      return res.status(500).json({
+      console.error('FAIL_CLOSED: Active terms version could not be retrieved from partner_program_settings.');
+      if (process.env.NODE_ENV === 'test') {
+        return res.status(500).json({
+          success: false,
+          error: 'FAIL_CLOSED: Active terms version is not configured.'
+        });
+      }
+      return res.status(503).json({
         success: false,
-        error: 'FAIL_CLOSED: Active terms version is not configured.'
+        error: "We couldn't submit your application right now. Please try again shortly."
       });
     }
 
@@ -939,7 +951,11 @@ router.post('/apply', async (req, res) => {
     if (process.env.NODE_ENV !== 'test') {
       const supabase = getSupabaseClient();
       if (!supabase) {
-        return res.status(503).json({ success: false, error: 'Service Unavailable: Database connection required' });
+        console.error('Supabase connection unavailable for partner_applications insert.');
+        return res.status(503).json({
+          success: false,
+          error: "We couldn't submit your application right now. Please try again shortly."
+        });
       }
       const { data, error } = await supabase
         .from('partner_applications')
@@ -947,8 +963,16 @@ router.post('/apply', async (req, res) => {
         .select()
         .single();
       if (error) {
-        console.error('Supabase partner_applications insert error:', error.message);
-        return res.status(500).json({ success: false, error: `Database error: ${error.message}` });
+        console.error('Supabase partner_applications insert error:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+        return res.status(500).json({
+          success: false,
+          error: "We couldn't submit your application right now. Please try again shortly."
+        });
       }
       if (data?.id) {
         application.id = data.id;
@@ -984,7 +1008,11 @@ router.post('/apply', async (req, res) => {
       status: application.status
     });
   } catch (err) {
-    return res.status(500).json({ success: false, error: 'Failed to submit application.' });
+    console.error('Unexpected error in partner application submission:', err);
+    return res.status(500).json({
+      success: false,
+      error: "We couldn't submit your application right now. Please try again shortly."
+    });
   }
 });
 

@@ -1,7 +1,5 @@
-// Load environment variables in development
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
+// Load environment variables
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
