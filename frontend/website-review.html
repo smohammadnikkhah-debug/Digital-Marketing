@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-K59VFCP8');</script>
+  <!-- End Google Tag Manager -->
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+  <!-- Strict Privacy / Search Exclusion -->
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  
+  <title>Your Free Website Review | Mozarex</title>
+  <meta name="description" content="Personalised website audit and practical improvement recommendations prepared by Mozarex Digital Agency.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/images/Logo_M.png">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/website-review.css">
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K59VFCP8"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <!-- ==============================================================================
+       1. MINIMAL BRAND HEADER
+       ============================================================================== -->
+  <header class="review-header">
+    <div class="review-container">
+      <div class="review-header-inner">
+        <a href="https://mozarex.com" class="header-brand" id="headerBrandLink">
+          <div class="logo-group">
+            <img src="/images/Logo_M.png" alt="Mozarex" class="logo-img" width="32" height="32">
+            <span class="logo-text">MOZAREX</span>
+          </div>
+          <div class="header-divider" aria-hidden="true"></div>
+          <span class="header-tagline">Web · App · AI Development for Australian Businesses</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==============================================================================
+       2. LOADING STATE (Default View)
+       ============================================================================== -->
+  <main id="mainContainer">
+    <div id="loadingState" class="state-container" aria-live="polite">
+      <div class="loading-spinner"></div>
+      <h2 class="state-title">Loading Your Website Review...</h2>
+      <p class="state-desc">Retrieving your personalised audit data and recommendations.</p>
+    </div>
+
+    <!-- ==============================================================================
+         3. ERROR / NOT FOUND STATE
+         ============================================================================== -->
+    <div id="errorState" class="state-container" style="display: none;">
+      <h2 class="state-title" id="errorTitle">Website Review Not Found</h2>
+      <p class="state-desc" id="errorDesc">We couldn't find this website review. The link may be incorrect or no longer available.</p>
+      <div class="state-actions">
+        <a href="https://mozarex.com" class="btn-state btn-state-primary">Visit Mozarex</a>
+        <a href="https://mozarex.com#contact" class="btn-state btn-state-outline">Contact Us</a>
+      </div>
+    </div>
+
+    <!-- ==============================================================================
+         4. LOADED REVIEW CONTENT
+         ============================================================================== -->
+    <div id="reviewContent" style="display: none;">
+      
+      <!-- HERO SECTION -->
+      <section class="review-hero">
+        <div class="review-container">
+          <div class="hero-grid">
+            
+            <!-- Left Hero Text -->
+            <div class="hero-content">
+              <div class="eyebrow">YOUR FREE WEBSITE REVIEW</div>
+              <h1 class="hero-title">
+                Prepared for <span class="business-highlight" id="heroBizName">Your Business</span>
+              </h1>
+              <p class="hero-description">
+                We reviewed your website and found several opportunities to improve enquiries, usability and your overall online presence.
+              </p>
+              
+              <div class="hero-cta-group">
+                <a href="#" id="heroDownloadBtn" class="btn-primary-download" download>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Download Full Report ↓</span>
+                </a>
+                <div class="cta-microcopy">
+                  <span>PDF report · Instant download · No email required</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Hero 3D Document Visual & Benefit Points -->
+            <div class="hero-visual">
+              
+              <!-- 3D CSS Document Mockup Cover -->
+              <div class="report-card-mockup" aria-hidden="true">
+                <div class="doc-top-accent"></div>
+                
+                <div class="doc-header">
+                  <img src="/images/Logo_M.png" alt="" class="doc-logo-mark" width="16" height="16">
+                  <span class="doc-brand">MOZAREX</span>
+                </div>
+
+                <div class="doc-title-group">
+                  <div class="doc-main-title">WEBSITE<br>REVIEW REPORT</div>
+                  <div class="doc-prepared-label">PREPARED FOR</div>
+                  <div class="doc-business-name" id="docBizName">Your Business</div>
+                </div>
+
+                <div class="doc-mock-illustration">
+                  <div class="doc-mock-screen-header">
+                    <div class="doc-dot"></div>
+                    <div class="doc-dot"></div>
+                    <div class="doc-dot"></div>
+                  </div>
+                  <div class="doc-mock-screen-body">
+                    <div class="doc-line-long"></div>
+                    <div class="doc-line-short"></div>
+                  </div>
+                </div>
+
+                <div class="doc-corner-slice"></div>
+              </div>
+
+              <!-- 3 Benefit Points Beside Document -->
+              <div class="hero-benefits-list">
+                <div class="benefit-item">
+                  <div class="benefit-icon-box" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                  </div>
+                  <span class="benefit-text">Personalised<br>analysis</span>
+                </div>
+
+                <div class="benefit-item">
+                  <div class="benefit-icon-box" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10"></line>
+                      <line x1="12" y1="20" x2="12" y2="4"></line>
+                      <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                  </div>
+                  <span class="benefit-text">Practical<br>recommendations</span>
+                </div>
+
+                <div class="benefit-item">
+                  <div class="benefit-icon-box" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="6 3 18 3 22 9 12 22 2 9"></polygon>
+                      <line x1="12" y1="22" x2="12" y2="9"></line>
+                      <line x1="2" y1="9" x2="22" y2="9"></line>
+                    </svg>
+                  </div>
+                  <span class="benefit-text">Tailored for<br>your business</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- KEY FINDINGS SECTION -->
+      <section class="review-findings-section" id="findingsSection">
+        <div class="review-container">
+          
+          <div class="section-header-split">
+            <div>
+              <div class="eyebrow">KEY FINDINGS</div>
+              <h2 class="section-title">Opportunities to improve<br>your website</h2>
+            </div>
+            <div>
+              <p class="section-subtitle">
+                Here are the key areas we identified that could help you generate more enquiries, better serve your customers and strengthen your online presence.
+              </p>
+            </div>
+          </div>
+
+          <!-- Dynamic Finding Cards Container -->
+          <div class="findings-list" id="findingsListContainer">
+            <!-- Populated Dynamically by JavaScript -->
+          </div>
+
+        </div>
+      </section>
+
+      <!-- RECOMMENDED WEBSITE APPROACH SECTION -->
+      <section class="review-approach-section" id="approachSection">
+        <div class="review-container">
+          <div class="approach-grid">
+            
+            <div class="approach-content">
+              <div class="eyebrow">RECOMMENDED WEBSITE APPROACH</div>
+              <h2 class="approach-title">A high-performing website<br>for your business</h2>
+              <p class="approach-description">
+                Based on our review, we recommend a modern, mobile-first website designed to generate more enquiries, showcase your services and strengthen your local presence.
+              </p>
+            </div>
+
+            <!-- Elevated Commercial / Pricing Card -->
+            <div class="pricing-card" id="pricingCard">
+              <div class="pricing-label" id="pricingLabel">Estimated fixed project price</div>
+              <div class="pricing-amount" id="pricingAmount">$1,490</div>
+              
+              <ul class="pricing-features-list">
+                <li class="feature-item">
+                  <svg class="feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Mobile-first website (works perfectly on all devices)</span>
+                </li>
+                <li class="feature-item">
+                  <svg class="feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Quote/enquiry functionality</span>
+                </li>
+                <li class="feature-item">
+                  <svg class="feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Local SEO optimisation</span>
+                </li>
+                <li class="feature-item">
+                  <svg class="feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Analytics & performance tracking</span>
+                </li>
+                <li class="feature-item">
+                  <svg class="feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Fast, secure and easy to manage</span>
+                </li>
+              </ul>
+
+              <div class="pricing-disclaimer" id="pricingDisclaimer">
+                Final scope and pricing may vary based on your specific requirements. This is an estimated fixed price for a standard business website build.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- FINAL CONVERSION SECTION (DEEP NAVY) -->
+      <section class="review-conversion-section">
+        <div class="conversion-ambient-glow" aria-hidden="true"></div>
+        <div class="review-container">
+          <div class="conversion-inner">
+            
+            <div class="conversion-eyebrow">READY TO IMPROVE YOUR WEBSITE?</div>
+            <h2 class="conversion-heading">Let's show you what's possible</h2>
+            <p class="conversion-copy">
+              We can create a personalised homepage example based on your business so you can see how your new website could look.
+            </p>
+
+            <div class="conversion-actions-wrap">
+              
+              <!-- Primary CTA: Request a Homepage Example -->
+              <button type="button" class="btn-action-primary" id="btnRequestExample">
+                <div class="btn-action-icon-box" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
+                <div class="btn-action-text-box">
+                  <span class="btn-action-main-title">Request a Homepage Example</span>
+                  <span class="btn-action-sub-title">See a mockup of your new homepage</span>
+                </div>
+              </button>
+
+              <!-- Secondary CTA: Book a Free Consultation -->
+              <button type="button" class="btn-action-secondary" id="btnBookConsultation">
+                <div class="btn-action-icon-box" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <div class="btn-action-text-box">
+                  <span class="btn-action-main-title">Book a Free Consultation</span>
+                  <span class="btn-action-sub-title">Have a quick chat with our team</span>
+                </div>
+              </button>
+
+              <!-- Friendly Callout Note -->
+              <div class="conversion-friendly-callout" aria-hidden="true">
+                <span class="callout-text">No obligation, just a friendly chat.</span>
+                <svg width="36" height="28" viewBox="0 0 40 30" fill="none" stroke="#93C5FD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 5 C 15 25, 25 25, 35 15"></path>
+                  <polyline points="30 20 35 15 35 22"></polyline>
+                </svg>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==============================================================================
+       5. MINIMAL FOOTER
+       ============================================================================== -->
+  <footer class="review-footer">
+    <div class="review-container">
+      <div class="footer-inner">
+        <div class="footer-brand-group">
+          <img src="/images/Logo_M.png" alt="" class="footer-logo-img" width="24" height="24">
+          <span class="footer-brand-name">MOZAREX</span>
+          <span class="footer-tagline">Web · App · AI Development for Australian Businesses</span>
+        </div>
+        <div class="footer-links">
+          <a href="https://mozarex.com/policy" class="footer-link">Privacy</a>
+          <a href="https://mozarex.com#contact" class="footer-link" id="footerContactLink">Contact</a>
+          <a href="https://mozarex.com" class="footer-link">mozarex.com</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==============================================================================
+       6. CONVERSATION / ENQUIRY MODAL (HOMEPAGE EXAMPLE & CONSULTATION)
+       ============================================================================== -->
+  <div class="review-modal-overlay" id="reviewEnquiryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="review-modal-box">
+      <button type="button" class="modal-close-btn" id="modalCloseBtn" aria-label="Close dialog">✕</button>
+      
+      <div class="modal-header">
+        <div class="modal-eyebrow" id="modalEyebrow">MOZAREX DIGITAL AGENCY</div>
+        <h3 class="modal-title" id="modalTitle">Request a Homepage Example</h3>
+        <p class="modal-subtitle" id="modalSubtitle">We will put together a personalised homepage concept based on your business.</p>
+      </div>
+
+      <form id="reviewEnquiryForm">
+        <!-- Pre-populated internal business context -->
+        <input type="hidden" id="inputBizName">
+
+        <div class="review-form-group">
+          <label for="inputContactName" class="review-form-label">Your Name *</label>
+          <input type="text" id="inputContactName" class="review-form-input" placeholder="e.g. Frank Bertone" required>
+        </div>
+
+        <div class="review-form-group">
+          <label for="inputEmail" class="review-form-label">Email Address *</label>
+          <input type="email" id="inputEmail" class="review-form-input" placeholder="name@business.com.au" required>
+        </div>
+
+        <div class="review-form-group">
+          <label for="inputPhone" class="review-form-label">Phone Number (Optional)</label>
+          <input type="tel" id="inputPhone" class="review-form-input" placeholder="0400 000 000">
+        </div>
+
+        <div class="review-form-group">
+          <label for="inputNotes" class="review-form-label" id="labelNotes">Any specific questions or goals? (Optional)</label>
+          <textarea id="inputNotes" class="review-form-textarea" placeholder="Tell us about any specific services or features you want to highlight..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-modal-submit" id="btnSubmitEnquiry">Send Request</button>
+        <div class="form-feedback-box" id="modalFeedbackBox"></div>
+      </form>
+
+      <!-- Clear In-Modal Success State -->
+      <div id="modalSuccessView" style="display: none; text-align: center; padding: 12px 0 8px 0;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background-color: #ECFDF5; color: #10B981; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h4 style="font-size: 1.35rem; font-weight: 800; color: #0F172A; margin-bottom: 10px;" id="modalSuccessTitle">Request Received!</h4>
+        <p style="font-size: 0.95rem; color: #475569; line-height: 1.6; margin-bottom: 24px;" id="modalSuccessDesc"></p>
+        <button type="button" class="btn-modal-submit" id="btnModalSuccessClose" style="background-color: #0F172A; max-width: 180px; margin: 0 auto; display: block;">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================================================================
+       7. CLIENT-SIDE DATA LOADER & CONTROLLER SCRIPT
+       ============================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      // State
+      let reportData = null;
+      let reviewToken = '';
+      let modalIntent = 'homepage_example';
+
+      // Extract Token from URL Path: /review/:token
+      function getReviewToken() {
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        const reviewIndex = pathSegments.indexOf('review');
+        if (reviewIndex !== -1 && pathSegments[reviewIndex + 1]) {
+          return pathSegments[reviewIndex + 1];
+        }
+        return '';
+      }
+
+      // Safe GTM Analytics Event Dispatcher (Sanitized parameters only)
+      function trackReportEvent(eventName, params) {
+        window.dataLayer = window.dataLayer || [];
+        const safeParams = Object.assign({ event: eventName }, params || {});
+        window.dataLayer.push(safeParams);
+      }
+
+      // SVG Icon Mapping for Finding Categories
+      function getCategoryIconSvg(category) {
+        const cat = (category || '').toLowerCase();
+        
+        if (cat.includes('conversion') || cat.includes('call') || cat.includes('phone') || cat.includes('contact')) {
+          return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+        }
+        
+        if (cat.includes('lead') || cat.includes('form') || cat.includes('quote') || cat.includes('enquiry')) {
+          return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
+        }
+
+        if (cat.includes('seo') || cat.includes('search') || cat.includes('visibility') || cat.includes('traffic')) {
+          return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>`;
+        }
+
+        if (cat.includes('mobile') || cat.includes('responsive') || cat.includes('device')) {
+          return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`;
+        }
+
+        if (cat.includes('speed') || cat.includes('performance') || cat.includes('fast')) {
+          return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+        }
+
+        // Default neutral insight icon
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>`;
+      }
+
+      // Safe Element Creation Helper (Prevents HTML Injection)
+      function createSafeElement(tag, className, textContent) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (textContent !== undefined && textContent !== null) el.textContent = textContent;
+        return el;
+      }
+
+      // Render Dynamic Findings List
+      function renderFindings(findings) {
+        const container = document.getElementById('findingsListContainer');
+        container.innerHTML = '';
+
+        if (!Array.isArray(findings) || findings.length === 0) {
+          const emptyCard = createSafeElement('div', 'finding-card', null);
+          const p = createSafeElement('p', 'detail-text', 'No specific issues were identified during this review.');
+          emptyCard.appendChild(p);
+          container.appendChild(emptyCard);
+          return;
+        }
+
+        findings.forEach((finding, index) => {
+          const findingNumStr = String(index + 1).padStart(2, '0');
+          const category = finding.category || 'Website Opportunity';
+          
+          const card = createSafeElement('div', 'finding-card', null);
+
+          // Indicator Side Box (Number + Category Icon)
+          const indicator = createSafeElement('div', 'finding-indicator', null);
+          const numSpan = createSafeElement('span', 'finding-number', findingNumStr);
+          const iconWrap = createSafeElement('div', 'finding-icon-wrap', null);
+          iconWrap.innerHTML = getCategoryIconSvg(category);
+          indicator.appendChild(numSpan);
+          indicator.appendChild(iconWrap);
+          card.appendChild(indicator);
+
+          // Body Content
+          const body = createSafeElement('div', 'finding-body', null);
+          
+          // Meta Pill
+          const topMeta = createSafeElement('div', 'finding-top-meta', null);
+          const pill = createSafeElement('span', 'category-pill', category.replace(/_/g, ' ').toUpperCase());
+          topMeta.appendChild(pill);
+          body.appendChild(topMeta);
+
+          // Title
+          const title = createSafeElement('h3', 'finding-title', finding.title || `Opportunity ${findingNumStr}`);
+          body.appendChild(title);
+
+          // Details Grid (What We Found vs Our Recommendation)
+          const detailsGrid = createSafeElement('div', 'finding-details-grid', null);
+
+          // Left: What We Found
+          const foundCol = createSafeElement('div', 'detail-column', null);
+          const foundLabel = createSafeElement('div', 'detail-label', 'WHAT WE FOUND');
+          const foundText = createSafeElement('p', 'detail-text', finding.description || 'Analysis completed.');
+          foundCol.appendChild(foundLabel);
+          foundCol.appendChild(foundText);
+          detailsGrid.appendChild(foundCol);
+
+          // Right: Our Recommendation
+          const recCol = createSafeElement('div', 'detail-column recommendation-col', null);
+          const recLabel = createSafeElement('div', 'detail-label label-rec', 'OUR RECOMMENDATION');
+          const recText = createSafeElement('p', 'detail-text', finding.recommendation || 'Recommendation prepared.');
+          recCol.appendChild(recLabel);
+          recCol.appendChild(recText);
+          detailsGrid.appendChild(recCol);
+
+          body.appendChild(detailsGrid);
+          card.appendChild(body);
+
+          container.appendChild(card);
+        });
+      }
+
+      // Populate Report Page UI
+      function populatePage(data) {
+        reportData = data;
+        const bizName = data.business_name || 'Your Business';
+
+        // Update Title & Meta
+        document.title = `Website Review for ${bizName} | Mozarex`;
+
+        // Hero Content
+        document.getElementById('heroBizName').textContent = bizName;
+        document.getElementById('docBizName').textContent = bizName;
+
+        // Download Action
+        const downloadUrl = data.download_url || `/review/${reviewToken}/download`;
+        const downloadBtn = document.getElementById('heroDownloadBtn');
+        downloadBtn.href = downloadUrl;
+        downloadBtn.addEventListener('click', function () {
+          trackReportEvent('website_review_pdf_download_clicked', {
+            business_type: data.business_type || 'unspecified',
+            suburb: data.suburb || 'unspecified',
+            finding_count: Array.isArray(data.findings) ? data.findings.length : 0,
+            has_proposed_price: data.proposed_price !== null
+          });
+        });
+
+        // Findings
+        renderFindings(data.findings);
+
+        // Commercial / Pricing Section
+        const priceLabel = document.getElementById('pricingLabel');
+        const priceAmount = document.getElementById('pricingAmount');
+        const priceDisclaimer = document.getElementById('pricingDisclaimer');
+
+        if (data.proposed_price && Number(data.proposed_price) > 0) {
+          const numPrice = Number(data.proposed_price);
+          priceLabel.textContent = 'Estimated fixed project price';
+          priceAmount.textContent = `$${numPrice.toLocaleString('en-AU')}`;
+          priceDisclaimer.textContent = 'Final scope and pricing may vary based on your specific requirements. This is an estimated fixed price for a standard business website build.';
+        } else {
+          priceLabel.textContent = 'Project Scope';
+          priceAmount.textContent = 'TAILORED BUILD';
+          priceAmount.style.fontSize = '2.2rem';
+          priceDisclaimer.textContent = 'Pricing will be confirmed after we understand your exact business requirements.';
+        }
+
+        // Show Content View
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorState').style.display = 'none';
+        document.getElementById('reviewContent').style.display = 'block';
+
+        // Track Page View Event
+        trackReportEvent('website_review_viewed', {
+          business_type: data.business_type || 'unspecified',
+          suburb: data.suburb || 'unspecified',
+          finding_count: Array.isArray(data.findings) ? data.findings.length : 0,
+          has_proposed_price: data.proposed_price !== null
+        });
+      }
+
+      // Show Error State
+      function showError(title, message) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('reviewContent').style.display = 'none';
+        const errorState = document.getElementById('errorState');
+        if (title) document.getElementById('errorTitle').textContent = title;
+        if (message) document.getElementById('errorDesc').textContent = message;
+        errorState.style.display = 'flex';
+      }
+
+      // Fetch Report Data from API
+      async function loadReviewData() {
+        reviewToken = getReviewToken();
+
+        if (!reviewToken) {
+          showError('Invalid Link', 'No website review token was provided in the URL.');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/review/${reviewToken}/data`);
+
+          if (response.status === 404) {
+            showError('Website Review Not Found', 'We couldn\'t find this website review. The link may be incorrect or no longer available.');
+            return;
+          }
+
+          if (!response.ok) {
+            showError('Service Unavailable', 'We\'re having trouble loading this website review right now. Please try again shortly.');
+            return;
+          }
+
+          const data = await response.json();
+
+          if (!data || !data.success) {
+            showError('Website Review Not Found', 'We couldn\'t retrieve the details for this website review.');
+            return;
+          }
+
+          populatePage(data);
+        } catch (err) {
+          showError('Connection Error', 'We\'re having trouble connecting to the server. Please check your internet connection or try again.');
+        }
+      }
+
+      // ==============================================================================
+      // MODAL & DIRECT ENQUIRY HANDLING (NO MAILTO DEPENDENCY)
+      // ==============================================================================
+      const modal = document.getElementById('reviewEnquiryModal');
+      const modalCloseBtn = document.getElementById('modalCloseBtn');
+      const form = document.getElementById('reviewEnquiryForm');
+      const feedback = document.getElementById('modalFeedbackBox');
+      const inputBiz = document.getElementById('inputBizName');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalSubtitle = document.getElementById('modalSubtitle');
+      const btnSubmit = document.getElementById('btnSubmitEnquiry');
+      const labelNotes = document.getElementById('labelNotes');
+      const inputNotes = document.getElementById('inputNotes');
+      const modalSuccessView = document.getElementById('modalSuccessView');
+      const modalSuccessTitle = document.getElementById('modalSuccessTitle');
+      const modalSuccessDesc = document.getElementById('modalSuccessDesc');
+      const btnModalSuccessClose = document.getElementById('btnModalSuccessClose');
+
+      function openModal(intent) {
+        modalIntent = intent || 'homepage_example';
+        const bizName = (reportData && reportData.business_name) ? reportData.business_name : '';
+        if (inputBiz) inputBiz.value = bizName;
+
+        // Reset views & feedback state
+        form.style.display = 'block';
+        if (modalSuccessView) modalSuccessView.style.display = 'none';
+        feedback.className = 'form-feedback-box';
+        feedback.textContent = '';
+        feedback.style.display = 'none';
+        btnSubmit.disabled = false;
+
+        if (modalIntent === 'homepage_example') {
+          modalTitle.textContent = 'Request a Homepage Example';
+          modalSubtitle.textContent = bizName
+            ? `We will create a personalised homepage design concept for ${bizName}.`
+            : 'We will create a personalised homepage design concept for your business.';
+          btnSubmit.textContent = 'Request Free Homepage Example';
+          if (labelNotes) labelNotes.textContent = 'Any specific questions or goals? (Optional)';
+          if (inputNotes) inputNotes.placeholder = 'Tell us about any specific services or features you want to highlight...';
+          trackReportEvent('website_review_homepage_example_clicked', {
+            business_type: reportData ? reportData.business_type : 'unspecified'
+          });
+        } else {
+          modalTitle.textContent = 'Book a Free Consultation';
+          modalSubtitle.textContent = bizName
+            ? `Discuss website and digital opportunities for ${bizName} directly with a Mozarex specialist.`
+            : 'Discuss your website and digital opportunities directly with a Mozarex specialist.';
+          btnSubmit.textContent = 'Request Free Consultation';
+          if (labelNotes) labelNotes.textContent = 'Project details or discussion topics (Optional)';
+          if (inputNotes) inputNotes.placeholder = 'Tell us briefly about your business goals and what you\'d like to discuss...';
+          trackReportEvent('website_review_consultation_clicked', {
+            business_type: reportData ? reportData.business_type : 'unspecified'
+          });
+        }
+
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        const nameInput = document.getElementById('inputContactName');
+        if (nameInput) nameInput.focus();
+      }
+
+      function closeModal() {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+
+      modalCloseBtn.addEventListener('click', closeModal);
+      if (btnModalSuccessClose) btnModalSuccessClose.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+      });
+
+      // Hook CTA Buttons
+      document.getElementById('btnRequestExample').addEventListener('click', () => openModal('homepage_example'));
+      document.getElementById('btnBookConsultation').addEventListener('click', () => openModal('free_consultation'));
+
+      // Footer contact click tracking
+      document.getElementById('footerContactLink').addEventListener('click', () => {
+        trackReportEvent('website_review_contact_clicked', {});
+      });
+
+      // Form Submission Handler (Direct backend ingestion, safe context, clear success/failure states)
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const bizName = (inputBiz && inputBiz.value.trim()) || ((reportData && reportData.business_name) ? reportData.business_name : 'Website Review Prospect');
+        const contactName = document.getElementById('inputContactName').value.trim();
+        const email = document.getElementById('inputEmail').value.trim();
+        const phone = document.getElementById('inputPhone').value.trim();
+        const notes = document.getElementById('inputNotes').value.trim();
+
+        if (!contactName || !email) {
+          feedback.className = 'form-feedback-box error';
+          feedback.textContent = 'Please enter your name and a valid email address.';
+          return;
+        }
+
+        // Set loading state
+        btnSubmit.disabled = true;
+        const originalBtnText = btnSubmit.textContent;
+        btnSubmit.textContent = 'Sending Request...';
+        feedback.className = 'form-feedback-box';
+        feedback.textContent = '';
+        feedback.style.display = 'none';
+
+        try {
+          const response = await fetch('/api/website-review/enquiry', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: contactName,
+              email: email,
+              phone: phone || null,
+              message: notes || null,
+              intent: modalIntent,
+              source: 'website_review',
+              business_name: bizName
+            })
+          });
+
+          const result = await response.json().catch(() => ({}));
+
+          if (response.ok && result.success) {
+            // Track analytics event (preserving existing event structure with safe params)
+            trackReportEvent(
+              modalIntent === 'homepage_example' ? 'website_review_homepage_example_submitted' : 'website_review_consultation_submitted',
+              {
+                business_type: reportData ? reportData.business_type : 'unspecified',
+                has_phone: !!phone,
+                has_message: !!notes
+              }
+            );
+
+            // Show clear success UI state
+            form.style.display = 'none';
+            if (modalSuccessTitle) {
+              modalSuccessTitle.textContent = modalIntent === 'homepage_example'
+                ? 'Homepage Example Requested!'
+                : 'Consultation Request Received!';
+            }
+            if (modalSuccessDesc) {
+              modalSuccessDesc.textContent = result.message || `Thank you, ${contactName}! We've received your request and will contact you at ${email} shortly.`;
+            }
+            if (modalSuccessView) modalSuccessView.style.display = 'block';
+
+            // Reset form fields
+            form.reset();
+          } else {
+            // Show clear failure state
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = originalBtnText;
+            feedback.className = 'form-feedback-box error';
+            feedback.textContent = result.error || 'Unable to submit your request at this moment. Please try again or email us at info@mozarex.com.';
+          }
+        } catch (err) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = originalBtnText;
+          feedback.className = 'form-feedback-box error';
+          feedback.textContent = 'Connection error. Please check your internet connection and try again.';
+        }
+      });
+
+      // Initialize on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadReviewData);
+      } else {
+        loadReviewData();
+      }
+
+    })();
+  </script>
+</body>
+</html>

@@ -10,6 +10,7 @@
 
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const {
@@ -407,6 +408,103 @@ router.get(
         error: 'Failed to retrieve website review details.'
       });
     }
+  }
+);
+
+/**
+ * GET /review/:token
+ * Customer-Facing Personalised Website Review Page (Phase 2)
+ */
+router.get(
+  '/review/:token',
+  (req, res) => {
+    const { token } = req.params;
+
+    if (!token || typeof token !== 'string' || token.length < 10) {
+      return res.status(400).sendFile(path.join(__dirname, '..', 'frontend', 'website-review.html'));
+    }
+
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.sendFile(path.join(__dirname, '..', 'frontend', 'website-review.html'));
+  }
+);
+
+// Rate limiter for customer enquiry form submissions (prevents spam/flooding)
+const enquiryLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    code: 'RATE_LIMITED',
+    error: 'Too many enquiry requests. Please try again later.'
+  }
+});
+
+/**
+ * POST /api/website-review/enquiry
+ * Direct server-side enquiry handler for Homepage Examples and Free Consultations.
+ * Does not depend on client mailto: or email client configuration.
+ */
+router.post(
+  ['/api/website-review/enquiry', '/api/enquiry'],
+  enquiryLimiter,
+  async (req, res) => {
+    const {
+      name,
+      email,
+      phone,
+      message,
+      intent = 'homepage_example',
+      source = 'website_review',
+      business_name
+    } = req.body || {};
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_INPUT',
+        error: 'Please provide your name.'
+      });
+    }
+
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_INPUT',
+        error: 'Please provide your email address.'
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_INPUT',
+        error: 'Please provide a valid email address.'
+      });
+    }
+
+    const cleanName = sanitizeText(name).slice(0, 100);
+    const cleanEmail = email.trim().toLowerCase().slice(0, 255);
+    const cleanPhone = phone ? sanitizeText(phone).slice(0, 50) : null;
+    const cleanMessage = message ? sanitizeText(message).slice(0, 2000) : null;
+    const cleanBizName = business_name ? sanitizeText(business_name).slice(0, 200) : 'Unspecified Business';
+    const cleanIntent = intent === 'free_consultation' ? 'free_consultation' : 'homepage_example';
+
+    console.log(`[WebsiteReviewEnquiry] New lead received: ${cleanName} (${cleanEmail}) for business "${cleanBizName}" (Intent: ${cleanIntent}, Source: ${source})`);
+
+    const confirmationMessage = cleanIntent === 'homepage_example'
+      ? `Thank you, ${cleanName}! We've received your request. Our team will prepare a personalised homepage concept for ${cleanBizName} and contact you at ${cleanEmail} shortly.`
+      : `Thank you, ${cleanName}! We've received your consultation request. A Mozarex specialist will contact you at ${cleanEmail} to schedule a time that works best for you.`;
+
+    return res.status(200).json({
+      success: true,
+      message: confirmationMessage,
+      intent: cleanIntent
+    });
   }
 );
 
