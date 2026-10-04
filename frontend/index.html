@@ -10,808 +10,97 @@
     })(window,document,'script','dataLayer','GTM-K59VFCP8');</script>
     <!-- End Google Tag Manager -->
     
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://analytics.tiktok.com https://*.tiktok.com; connect-src 'self' https://analytics.tiktok.com https://*.tiktok.com;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mozarex - Professional One-Center IT & Software Solutions</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     
-    <!-- Fonts and Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Primary SEO Metadata -->
+    <title>Mozarex | Web, App & AI Development Studio Australia</title>
+    <meta name="description" content="Mozarex is a premier Australian digital product studio specializing in modern website development from $1,490, high-performance iOS/Android mobile apps, and custom AI automation solutions.">
+    <meta name="keywords" content="web development Australia, website design Melbourne, mobile app development, custom software, AI automation, Mozarex, business websites">
+    <meta name="author" content="Mozarex">
+    <link rel="canonical" href="https://mozarex.com/">
     
-    <style>
-        :root {
-            --bg-dark: #0a0e12;
-            --bg-card: #12181f;
-            --primary: #00b0ff;
-            --primary-dark: #0091ea;
-            --accent: #10b981;
-            --accent-dark: #059669;
-            --text-main: #b2c0cc;
-            --text-heading: #f0f6fc;
-            --white: #ffffff;
-            --gradient: linear-gradient(135deg, #0a0e12 0%, #172230 100%);
-            --border-radius: 16px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background: var(--gradient);
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* Navigation Header */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(10, 14, 18, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: var(--transition);
-        }
-
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 0;
-        }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .brand-icon img {
-            height: 38px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .brand-text {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--white);
-            letter-spacing: -0.5px;
-        }
-
-        .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 28px;
-            list-style: none;
-        }
-
-        .nav-link {
-            font-weight: 550;
-            font-size: 15px;
-            color: var(--text-main);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .nav-link:hover {
-            color: var(--primary);
-        }
-
-        /* Dropdown Styles */
-        .nav-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--bg-card);
-            min-width: 220px;
-            flex-direction: column;
-            padding: 8px 0;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            margin-top: 12px;
-        }
-
-        .dropdown-menu::before {
-            content: '';
-            position: absolute;
-            top: -14px;
-            left: 0;
-            right: 0;
-            height: 14px;
-            background: transparent;
-        }
-
-        .nav-dropdown:hover .dropdown-menu {
-            display: flex;
-        }
-
-        .dropdown-item {
-            color: var(--white);
-            padding: 12px 20px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .dropdown-item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--primary);
-        }
-
-        .nav-btn {
-            background-color: var(--primary);
-            color: var(--white);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            transition: var(--transition);
-            box-shadow: 0 4px 10px rgba(0, 176, 255, 0.15);
-        }
-
-        .nav-btn:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .mobile-menu-toggle {
-            display: none;
-            color: var(--white);
-            font-size: 24px;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 160px 0 100px;
-            position: relative;
-        }
-
-        .hero-container {
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .hero-content h1 {
-            font-size: 52px;
-            line-height: 1.15;
-            font-weight: 900;
-            color: var(--white);
-            margin-bottom: 24px;
-            letter-spacing: -1.5px;
-        }
-
-        .hero-content h1 span {
-            color: var(--primary);
-        }
-
-        .hero-content p {
-            font-size: 18px;
-            color: var(--text-main);
-            margin-bottom: 40px;
-            max-width: 580px;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 48px;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: var(--white);
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: var(--transition);
-            box-shadow: 0 4px 14px rgba(0, 176, 255, 0.2);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--white);
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: var(--transition);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--white);
-            background-color: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 32px;
-        }
-
-        .stat-item h3 {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .stat-item p {
-            font-size: 13px;
-            color: var(--text-main);
-            margin-bottom: 0;
-        }
-
-        /* Stacked Apps Hero Preview Mockup */
-        .hero-visual {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .mockup-grid {
-            position: relative;
-            width: 100%;
-            max-width: 480px;
-            height: 380px;
-        }
-
-        .mockup-card {
-            position: absolute;
-            background-color: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            width: 290px;
-        }
-
-        .mockup-card img {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            object-fit: contain;
-        }
-
-        .mockup-card h4 {
-            color: var(--white);
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .mockup-card p {
-            font-size: 12px;
-            color: var(--text-main);
-            margin-bottom: 0;
-        }
-
-        .card-aivekai {
-            top: 20px;
-            left: 20px;
-            z-index: 3;
-            border-left: 4px solid var(--accent);
-        }
-
-        .card-puratryx {
-            top: 130px;
-            right: 20px;
-            z-index: 2;
-            border-left: 4px solid var(--primary);
-        }
-
-        .card-stoptimetryx {
-            bottom: 20px;
-            left: 50px;
-            z-index: 1;
-            border-left: 4px solid #f59e0b;
-        }
-
-        /* Featured Products (Apps We've Built) */
-        .products-section {
-            padding: 100px 0;
-            background-color: rgba(255, 255, 255, 0.01);
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 64px;
-        }
-
-        .section-header span {
-            color: var(--primary);
-            font-weight: 700;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            display: inline-block;
-            margin-bottom: 12px;
-        }
-
-        .section-header h2 {
-            font-size: 38px;
-            font-weight: 800;
-            color: var(--white);
-            margin-bottom: 20px;
-            letter-spacing: -0.8px;
-        }
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-        }
-
-        .product-card {
-            background-color: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: var(--border-radius);
-            padding: 40px 32px;
-            display: flex;
-            flex-direction: column;
-            transition: var(--transition);
-        }
-
-        .product-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .product-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 28px;
-            font-size: 28px;
-        }
-
-        .product-card h3 {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--white);
-            margin-bottom: 14px;
-        }
-
-        .product-card p {
-            font-size: 14px;
-            color: var(--text-main);
-            margin-bottom: 28px;
-            flex-grow: 1;
-        }
-
-        .product-link {
-            font-weight: 700;
-            font-size: 14px;
-            color: var(--primary);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-        .product-link:hover {
-            color: var(--white);
-            transform: translateX(4px);
-        }
-
-        /* Services Section (One-Center IT Solution) */
-        .services-section {
-            padding: 100px 0;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-        }
-
-        .service-card {
-            background-color: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: var(--border-radius);
-            padding: 32px;
-            transition: var(--transition);
-        }
-
-        .service-card:hover {
-            border-color: rgba(0, 176, 255, 0.2);
-            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
-            transform: translateY(-4px);
-        }
-
-        .service-icon {
-            font-size: 32px;
-            color: var(--primary);
-            margin-bottom: 20px;
-        }
-
-        .service-card h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--white);
-            margin-bottom: 12px;
-        }
-
-        .service-card p {
-            font-size: 14px;
-            color: var(--text-main);
-        }
-
-        /* Advantage Section */
-        .advantage-section {
-            padding: 100px 0;
-            background-color: rgba(255, 255, 255, 0.01);
-        }
-
-        .advantage-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .advantage-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .advantage-item {
-            display: flex;
-            gap: 16px;
-        }
-
-        .advantage-num {
-            width: 36px;
-            height: 36px;
-            background-color: rgba(0, 176, 255, 0.1);
-            color: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .advantage-text h4 {
-            color: var(--white);
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .advantage-text p {
-            font-size: 14px;
-        }
-
-        /* Contact Consultation Form */
-        .contact-section {
-            padding: 100px 0;
-        }
-
-        .contact-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: var(--border-radius);
-            padding: 56px;
-            text-align: center;
-        }
-
-        .contact-container h2 {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--white);
-            margin-bottom: 12px;
-        }
-
-        .contact-container p {
-            font-size: 15px;
-            color: var(--text-main);
-            margin-bottom: 40px;
-        }
-
-        .contact-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            text-align: left;
-        }
-
-        .form-full {
-            grid-column: span 2;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--white);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px 16px;
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: var(--white);
-            font-size: 15px;
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.15);
-        }
-
-        .contact-form button {
-            grid-column: span 2;
-            background-color: var(--primary);
-            color: var(--white);
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 12px;
-        }
-
-        .contact-form button:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .success-message {
-            display: none;
-            grid-column: span 2;
-            padding: 15px;
-            background-color: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--accent);
-            border-radius: 8px;
-            color: var(--accent);
-            text-align: center;
-            font-weight: 600;
-        }
-
-        /* Footer */
-        footer {
-            background-color: #05070a;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 80px 0 40px;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr repeat(2, 1fr);
-            gap: 48px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 48px;
-            margin-bottom: 40px;
-        }
-
-        .footer-brand {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .footer-brand p {
-            font-size: 14px;
-            max-width: 300px;
-        }
-
-        .footer-col h4 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 24px;
-            color: var(--white);
-        }
-
-        .footer-links-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .footer-links-list a {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 14px;
-            transition: var(--transition);
-        }
-
-        .footer-links-list a:hover {
-            color: var(--white);
-        }
-
-        .footer-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .footer-bottom-links {
-            display: flex;
-            gap: 24px;
-        }
-
-        .footer-bottom-links a {
-            color: var(--text-main);
-            text-decoration: none;
-        }
-
-        .footer-bottom-links a:hover {
-            color: var(--white);
-        }
-
-        /* Mobile Menu */
-        @media (max-width: 992px) {
-            .hero-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 48px;
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mozarex.com/">
+    <meta property="og:title" content="Mozarex | Web, App & AI Development Studio">
+    <meta property="og:description" content="We design and build modern websites, mobile apps and AI-powered solutions for Australian businesses — helping you attract more customers and grow faster.">
+    <meta property="og:image" content="https://mozarex.com/images/Logo_M.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://mozarex.com/">
+    <meta name="twitter:title" content="Mozarex | Web, App & AI Development Studio">
+    <meta name="twitter:description" content="Modern websites from $1,490, native mobile apps and custom AI automation for Australian businesses.">
+    <meta name="twitter:image" content="https://mozarex.com/images/Logo_M.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/Logo_M.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/styles.css">
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Mozarex",
+      "image": "https://mozarex.com/images/Logo_M.png",
+      "url": "https://mozarex.com",
+      "telephone": "",
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "AU"
+      },
+      "description": "Australian Web, App & AI Development Studio delivering conversion-focused websites, mobile applications, and intelligent automation systems.",
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Digital Product Studio Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Website Development",
+              "description": "Conversion-focused business websites from $1,490 AUD"
             }
-
-            .hero-content h1 {
-                font-size: 40px;
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Mobile App Development",
+              "description": "Native iOS & Android mobile applications"
             }
-
-            .hero-content p {
-                margin: 0 auto 32px;
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "AI & Automation",
+              "description": "Intelligent workflows, AI chat assistants, and custom AI integration"
             }
-
-            .hero-actions {
-                justify-content: center;
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Custom Software",
+              "description": "Tailored SaaS platforms and bespoke web applications"
             }
-
-            .hero-stats {
-                justify-content: center;
-            }
-
-            .hero-visual {
-                height: 360px;
-            }
-
-            .mockup-grid {
-                max-width: 380px;
-                margin: 0 auto;
-            }
-
-            .products-grid {
-                grid-template-columns: 1fr;
-                max-width: 500px;
-                margin: 0 auto;
-            }
-
-            .services-grid {
-                grid-template-columns: 1fr;
-                max-width: 500px;
-                margin: 0 auto;
-            }
-
-            .advantage-grid {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-
-            .nav-menu {
-                display: none;
-                position: fixed;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background-color: var(--bg-dark);
-                flex-direction: column;
-                padding: 32px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            }
-
-            .nav-menu.active {
-                display: flex;
-            }
-
-            .mobile-menu-toggle {
-                display: block;
-            }
-
-            .contact-form {
-                grid-template-columns: 1fr;
-            }
-
-            .form-full {
-                grid-column: span 1;
-            }
-
-            .contact-form button {
-                grid-column: span 1;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+          }
+        ]
+      }
+    }
+    </script>
 </head>
 
 <body>
@@ -820,352 +109,834 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
 
-    <!-- Navigation Header -->
-    <header>
+    <!-- ==============================================================================
+         1. NAVIGATION HEADER
+         ============================================================================== -->
+    <header class="site-header" role="banner">
         <div class="container">
-            <div class="nav-container">
-                <a href="#" class="nav-brand">
-                    <div class="brand-icon">
-                        <img src="/images/Logo_M.png" alt="Mozarex Logo">
-                    </div>
-                    <span class="brand-text">Mozarex</span>
+            <div class="nav-wrapper">
+                <a href="/" class="brand-logo" aria-label="Mozarex Home">
+                    <img src="/images/Logo_M.png" alt="Mozarex Logo" width="36" height="36">
+                    <span class="brand-name">Mozarex</span>
                 </a>
-                <ul class="nav-menu">
-                    <li><a href="#services" class="nav-link">Services</a></li>
-                    
-                    <!-- Apps Dropdown Menu -->
-                    <li class="nav-dropdown">
-                        <span class="nav-link" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                            Our Apps <i class="fas fa-chevron-down" style="font-size: 11px; opacity: 0.8;"></i>
-                        </span>
+
+                <nav class="main-nav" role="navigation" aria-label="Primary Navigation">
+                    <div class="nav-item">
+                        <a href="#services" class="nav-link">Services</a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#work" class="nav-link">Our Work</a>
+                    </div>
+                    <div class="nav-item has-dropdown">
+                        <a href="#apps" class="nav-link" aria-haspopup="true" aria-expanded="false">
+                            Our Apps
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </a>
                         <div class="dropdown-menu">
-                            <a href="/stoptimetryx" class="dropdown-item">
-                                <i class="fas fa-clock" style="color: #f59e0b;"></i> StopTimetryx
+                            <a href="/aivekai" class="dropdown-item" data-track="app_product" data-app-name="AivekAI">
+                                <span class="dropdown-icon" style="background:#ECFDF5; color:#10B981;">🥗</span>
+                                AivekAI
                             </a>
-                            <a href="/puratryx" class="dropdown-item">
-                                <i class="fas fa-home" style="color: var(--primary);"></i> Puratryx
+                            <a href="/puratryx" class="dropdown-item" data-track="app_product" data-app-name="Puratryx">
+                                <span class="dropdown-icon" style="background:#EFF6FF; color:#0066FF;">🧹</span>
+                                Puratryx
                             </a>
-                            <a href="/aivekai" class="dropdown-item">
-                                <i class="fas fa-brain" style="color: var(--accent);"></i> AivekAI
+                            <a href="/stoptimetryx" class="dropdown-item" data-track="app_product" data-app-name="StopTimetryx">
+                                <span class="dropdown-icon" style="background:#FFFBEB; color:#F59E0B;">⏱️</span>
+                                StopTimetryx
                             </a>
                         </div>
-                    </li>
-                    
-                    <li><a href="#advantage" class="nav-link">Why Mozarex</a></li>
-                    <li><a href="#contact" class="nav-link">Contact</a></li>
-                    <li><a href="#contact" class="nav-btn">Free Consultation</a></li>
-                </ul>
-                <button class="mobile-menu-toggle" onclick="toggleMenu()">
-                    <i class="fas fa-bars"></i>
-                </button>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#why-us" class="nav-link">Why Mozarex</a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#contact" class="nav-link">Contact</a>
+                    </div>
+                </nav>
+
+                <div class="nav-actions">
+                    <button type="button" class="btn btn-primary btn-sm" data-open-consultation data-source="header_cta">
+                        Free Consultation
+                        <span class="arrow-icon">→</span>
+                    </button>
+                    <button type="button" class="mobile-nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                        ☰
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-container">
-                <div class="hero-content">
-                    <h1>One Center. <span>All Your IT & Software Needs.</span></h1>
-                    <p>Mozarex is a professional one-center technology solution partner for modern businesses. We design and build premium web applications, native iOS & Android apps, custom software systems, and manage all your IT requirements from a unified hub.</p>
-                    <div class="hero-actions">
-                        <a href="#contact" class="btn-primary">
-                            <i class="fas fa-calendar-check"></i> Schedule Consultation
-                        </a>
-                        <a href="#apps" class="btn-secondary">
-                            <i class="fas fa-mobile-alt"></i> View Our Built Apps
-                        </a>
+    <main id="main-content">
+        <!-- ==============================================================================
+             2. HERO SECTION
+             ============================================================================== -->
+        <section class="hero-section" id="hero">
+            <div class="container">
+                <div class="hero-grid">
+                    <div class="hero-content">
+                        <span class="hero-eyebrow">WEB, APP & AI DEVELOPMENT STUDIO</span>
+                        <h1 class="hero-title">
+                            Websites, Apps & AI<br>
+                            <span class="highlight-blue">Built to Grow</span><br>
+                            Your Business.
+                        </h1>
+                        <p class="hero-subtitle">
+                            We design and build modern websites, mobile apps and AI-powered solutions for Australian businesses — helping you attract more customers, save time and grow faster.
+                        </p>
+                        <div class="hero-cta-group">
+                            <button type="button" class="btn btn-primary btn-lg" data-open-consultation data-source="hero_primary_cta">
+                                Get a Free Consultation
+                                <span class="arrow-icon">→</span>
+                            </button>
+                            <a href="#work" class="btn btn-secondary btn-lg">
+                                See Our Work
+                            </a>
+                        </div>
+
+                        <!-- Capability Strip -->
+                        <div class="capability-strip" aria-label="Core Studio Capabilities">
+                            <div class="capability-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                                <span>Modern Design</span>
+                            </div>
+                            <span class="capability-dot" aria-hidden="true"></span>
+                            <div class="capability-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                                <span>Mobile Optimised</span>
+                            </div>
+                            <span class="capability-dot" aria-hidden="true"></span>
+                            <div class="capability-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <span>SEO Ready</span>
+                            </div>
+                            <span class="capability-dot" aria-hidden="true"></span>
+                            <div class="capability-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+                                <span>Google Analytics</span>
+                            </div>
+                            <span class="capability-dot" aria-hidden="true"></span>
+                            <div class="capability-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                <span>AI Powered</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="hero-stats">
-                        <div class="stat-item">
-                            <h3>100%</h3>
-                            <p>One-Center Delivery</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>0</h3>
-                            <p>Third-Party Finger Pointing</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>SaaS-Grade</h3>
-                            <p>Premium App Architecture</p>
+
+                    <!-- Right Visual Mockup Composition -->
+                    <div class="hero-visual">
+                        <div class="hero-mockup-wrapper">
+                            <!-- Floating Traffic Badge -->
+                            <div class="floating-badge badge-traffic" aria-hidden="true">
+                                <div class="badge-icon-box blue">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                </div>
+                                <div>
+                                    <div class="badge-text-title">More Website Traffic</div>
+                                    <div class="badge-text-val">+120% <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                </div>
+                            </div>
+
+                            <!-- Laptop Frame -->
+                            <div class="mockup-laptop">
+                                <div class="laptop-camera-bar">
+                                    <div class="window-dots">
+                                        <div class="window-dot dot-red"></div>
+                                        <div class="window-dot dot-yellow"></div>
+                                        <div class="window-dot dot-green"></div>
+                                    </div>
+                                    <div style="font-size: 0.625rem; color: #64748B; font-weight: 600;">revs-dining.com.au</div>
+                                    <div style="width: 28px;"></div>
+                                </div>
+                                <div class="laptop-screen">
+                                    <div class="laptop-website-preview">
+                                        <div class="preview-nav">
+                                            <div class="preview-brand">REVS</div>
+                                            <div class="preview-links">
+                                                <span>Menu</span>
+                                                <span>Story</span>
+                                                <span>Coffee</span>
+                                                <span>Book Table</span>
+                                            </div>
+                                        </div>
+                                        <div class="preview-hero">
+                                            <h3>Exceptional Coffee &<br>Food Experiences</h3>
+                                            <p>Locally sourced ingredients, artisanal roasts and warm hospitality.</p>
+                                            <span class="preview-btn">Explore Menu →</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Overlapping Phone Mockup -->
+                            <div class="mockup-phone" aria-hidden="true">
+                                <div class="phone-screen">
+                                    <div class="phone-notch"></div>
+                                    <div class="phone-content">
+                                        <h4>Exceptional<br>Coffee & Food</h4>
+                                        <p>Artisanal dining.</p>
+                                        <span class="phone-btn">Book Table</span>
+                                    </div>
+                                    <div style="font-size: 0.5rem; opacity: 0.7;">REVS Melbourne</div>
+                                </div>
+                            </div>
+
+                            <!-- Floating Social Proof Badge -->
+                            <div class="floating-badge badge-growth" aria-hidden="true">
+                                <div class="badge-avatars">
+                                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" class="avatar-img" alt="Client Avatar">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" class="avatar-img" alt="Client Avatar">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop" class="avatar-img" alt="Client Avatar">
+                                </div>
+                                <div class="badge-growth-text">
+                                    Real Businesses. Real Growth.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="hero-visual">
-                    <div class="mockup-grid">
-                        <!-- AivekAI Mockup Card -->
-                        <div class="mockup-card card-aivekai">
-                            <img src="../images/aivekai_logo.png" alt="AivekAI Logo">
-                            <div>
-                                <h4>AivekAI</h4>
+            </div>
+        </section>
+
+        <!-- ==============================================================================
+             3. WEBSITE DEVELOPMENT OFFER ($1,490)
+             ============================================================================== -->
+        <section class="offer-section" id="offer">
+            <div class="container">
+                <div class="offer-grid">
+                    <div class="offer-content-left">
+                        <span class="section-tag">WEBSITE DEVELOPMENT</span>
+                        <h2 class="offer-heading">
+                            A professional website<br>
+                            without the agency-sized price.
+                        </h2>
+                        <p class="offer-desc">
+                            Give your business a fresh, modern online presence designed to turn visitors into customers. Perfect for local businesses, tradies, clinics, restaurants and more.
+                        </p>
+                        <button type="button" class="btn btn-primary btn-lg" data-open-consultation data-source="offer_1490_button" data-track="offer_1490">
+                            Get My Free Consultation
+                            <span class="arrow-icon">→</span>
+                        </button>
+
+                        <!-- Tablet Tradie Preview Mockup -->
+                        <div class="offer-mockup-wrap" aria-hidden="true">
+                            <div class="mockup-tablet">
+                                <div class="tablet-screen">
+                                    <span class="tablet-badge">⚡ Commercial & Residential Electricians</span>
+                                    <h4>Build a Stronger Business</h4>
+                                    <p>Reliable electrical services across Australia. Free onsite quotes.</p>
+                                    <div style="display: flex; gap: 8px;">
+                                        <span style="background:#0066FF; color:#fff; font-size:0.625rem; font-weight:700; padding:4px 10px; border-radius:4px;">Request Quote</span>
+                                        <span style="background:rgba(255,255,255,0.2); color:#fff; font-size:0.625rem; font-weight:600; padding:4px 10px; border-radius:4px;">0400 123 456</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Offer Card -->
+                    <div class="pricing-offer-card">
+                        <div class="pricing-card-header">
+                            <div class="pricing-card-label">Business websites from</div>
+                            <div class="pricing-amount">$1,490*</div>
+                        </div>
+
+                        <div class="pricing-includes-title">Included:</div>
+                        <ul class="pricing-features-list">
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Professionally designed modern website</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Responsive mobile & tablet design</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>SEO-friendly structure</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Google Analytics & Search Console setup</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Contact / enquiry forms</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>SSL & security configuration</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Performance optimisation</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Social media integration</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Basic on-page SEO</span>
+                            </li>
+                            <li class="pricing-feature-item">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Launch & deployment</span>
+                            </li>
+                        </ul>
+
+                        <div class="pricing-disclaimer">
+                            *Starting price applies to eligible standard business website packages and agreed scope. Additional pages, custom functionality, e-commerce, copywriting, premium imagery, photography, video, paid assets and integrations may incur additional costs. Final pricing is confirmed before development begins.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================================
+             4. SERVICES SECTION
+             ============================================================================== -->
+        <section class="services-section" id="services">
+            <div class="container">
+                <div class="text-center">
+                    <span class="section-tag">OUR SERVICES</span>
+                    <h2 class="section-heading">Solutions for Every Stage of Your Growth</h2>
+                    <p class="section-subheading">
+                        From a simple business website to custom apps and AI automation, we deliver end-to-end solutions that help Australian businesses succeed in the digital world.
+                    </p>
+                </div>
+
+                <div class="services-grid">
+                    <!-- Service 1: Website Development -->
+                    <div class="service-card" data-track="service_card" data-service-name="Website Development">
+                        <div class="service-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop" alt="Website Development Preview" loading="lazy">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Website Development</h3>
+                            <p class="service-text">
+                                Modern, conversion-focused websites from $1,490. Designed to look great and bring you real results.
+                            </p>
+                            <a href="#offer" class="service-link">
+                                Learn More <span class="arrow-icon">→</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Service 2: Mobile App Development -->
+                    <div class="service-card" data-track="service_card" data-service-name="Mobile App Development">
+                        <div class="service-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=600&auto=format&fit=crop" alt="Mobile App Development Preview" loading="lazy">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Mobile App Development</h3>
+                            <p class="service-text">
+                                High-performance iOS and Android apps built for your business, from concept to launch and beyond.
+                            </p>
+                            <a href="#apps" class="service-link">
+                                Learn More <span class="arrow-icon">→</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Service 3: AI & Automation -->
+                    <div class="service-card" data-track="service_card" data-service-name="AI & Automation">
+                        <div class="service-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop" alt="AI & Automation Solutions Preview" loading="lazy">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">AI & Automation</h3>
+                            <p class="service-text">
+                                AI chat, intelligent workflows and custom automation to save time, reduce costs and improve customer experiences.
+                            </p>
+                            <a href="#ai" class="service-link">
+                                Learn More <span class="arrow-icon">→</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Service 4: Custom Software -->
+                    <div class="service-card" data-track="service_card" data-service-name="Custom Software">
+                        <div class="service-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop" alt="Custom Software & SaaS Development Preview" loading="lazy">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Custom Software</h3>
+                            <p class="service-text">
+                                Tailored web applications, SaaS platforms and integrations when off-the-shelf software isn't enough.
+                            </p>
+                            <button type="button" class="service-link" style="background:none; border:none; cursor:pointer; padding:0;" data-open-consultation data-source="service_custom_software">
+                                Learn More <span class="arrow-icon">→</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================================
+             5. AI SECTION (BUILD SMARTER WITH AI)
+             ============================================================================== -->
+        <section class="ai-section" id="ai">
+            <div class="container">
+                <div class="ai-grid">
+                    <div class="ai-content-left">
+                        <span class="section-tag">BUILD SMARTER WITH AI</span>
+                        <h2 class="section-heading">Turn Ideas Into Intelligent Solutions.</h2>
+                        <p class="offer-desc">
+                            We help businesses integrate AI to automate work, respond faster and create better customer experiences. From AI chat assistants to advanced custom solutions, we make AI practical and powerful for your business.
+                        </p>
+                        <button type="button" class="btn btn-primary btn-lg" data-open-consultation data-source="ai_section_cta">
+                            Explore AI Solutions
+                            <span class="arrow-icon">→</span>
+                        </button>
+                    </div>
+
+                    <!-- 2x2 Capabilities Grid -->
+                    <div class="ai-capabilities-grid">
+                        <!-- Cap 1: AI Chat & Support -->
+                        <div class="ai-capability-card">
+                            <div class="ai-cap-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            </div>
+                            <h3 class="ai-cap-title">AI Chat & Support</h3>
+                            <p class="ai-cap-text">
+                                Intelligent website assistants trained around your business.
+                            </p>
+                        </div>
+
+                        <!-- Cap 2: Business Automation -->
+                        <div class="ai-capability-card">
+                            <div class="ai-cap-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </div>
+                            <h3 class="ai-cap-title">Business Automation</h3>
+                            <p class="ai-cap-text">
+                                Automate enquiries, lead handling and repetitive workflows.
+                            </p>
+                        </div>
+
+                        <!-- Cap 3: AI-Powered Applications -->
+                        <div class="ai-capability-card">
+                            <div class="ai-cap-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            </div>
+                            <h3 class="ai-cap-title">AI-Powered Applications</h3>
+                            <p class="ai-cap-text">
+                                Custom AI features including image analysis, intelligent search and recommendations.
+                            </p>
+                        </div>
+
+                        <!-- Cap 4: AI Integration -->
+                        <div class="ai-capability-card">
+                            <div class="ai-cap-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            </div>
+                            <h3 class="ai-cap-title">AI Integration</h3>
+                            <p class="ai-cap-text">
+                                Connect modern AI capabilities to your existing website, app or business systems.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================================
+             6. OUR APPS (WE BUILD OUR OWN PRODUCTS TOO)
+             ============================================================================== -->
+        <section class="apps-section" id="apps">
+            <div class="container">
+                <div class="text-center">
+                    <span class="section-tag">OUR APPS</span>
+                    <h2 class="section-heading">We Build Our Own Products Too.</h2>
+                    <p class="section-subheading">
+                        We're not just an agency. We design, build and operate our own software products — giving us first-hand experience building products people actually use.
+                    </p>
+                </div>
+
+                <div class="apps-grid">
+                    <!-- App 1: AivekAI -->
+                    <div class="app-card" data-track="app_product" data-app-name="AivekAI">
+                        <div class="app-header">
+                            <img src="/images/aivekai_logo.png" alt="AivekAI App Icon" class="app-icon" width="48" height="48">
+                            <div class="app-header-text">
+                                <h3>AivekAI</h3>
                                 <p>Smart AI Nutrition Coach</p>
                             </div>
                         </div>
-                        <!-- Puratryx Mockup Card -->
-                        <div class="mockup-card card-puratryx">
-                            <img src="../images/puratryx_logo.png" alt="Puratryx Logo">
-                            <div>
-                                <h4>Puratryx</h4>
+                        <p class="app-desc">
+                            Analyse your food, track calories and get personalised nutrition insights with AI. Available on iOS and Android.
+                        </p>
+                        <div class="app-store-badges">
+                            <a href="/aivekai" class="store-badge" aria-label="AivekAI on App Store">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.64 1.35-.56.65-1.06 1.71-.92 2.73 1.01.08 2.03-.48 2.64-1.23z"/></svg>
+                                <span>App Store</span>
+                            </a>
+                            <a href="/aivekai" class="store-badge" aria-label="AivekAI on Google Play">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.793 12 3.61 22.186a2.38 2.38 0 0 1-.61-.954V2.768c.15-.357.362-.68.61-.954zM15.207 13.414l2.747 2.748-11.83 6.828 9.083-9.576zm0-2.828L6.124.996l11.83 6.842-2.747 2.748zm1.414 1.414l3.774 2.18c1.34.774 1.34 2.038 0 2.812l-3.774 2.18-2.414-2.414 2.414-2.414z"/></svg>
+                                <span>Google Play</span>
+                            </a>
+                        </div>
+                        <div class="app-device-preview">
+                            <img src="/images/aivekai_screenshot_log.jpg" alt="AivekAI App Screen Preview" loading="lazy" onerror="this.src='/images/aivekai_hero.png'">
+                        </div>
+                    </div>
+
+                    <!-- App 2: Puratryx -->
+                    <div class="app-card" data-track="app_product" data-app-name="Puratryx">
+                        <div class="app-header">
+                            <img src="/images/puratryx_logo.png" alt="Puratryx App Icon" class="app-icon" width="48" height="48">
+                            <div class="app-header-text">
+                                <h3>Puratryx</h3>
                                 <p>Household Chores Planner</p>
                             </div>
                         </div>
-                        <!-- StopTimetryx Mockup Card -->
-                        <div class="mockup-card card-stoptimetryx">
-                            <div style="width: 50px; height: 50px; background:#161b22; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px;">⏱️</div>
-                            <div>
-                                <h4>StopTimetryx</h4>
+                        <p class="app-desc">
+                            A collaborative family routine manager with tasks, reminders and gamification.
+                        </p>
+                        <div class="app-store-badges">
+                            <a href="/puratryx" class="store-badge" aria-label="Puratryx on App Store">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.64 1.35-.56.65-1.06 1.71-.92 2.73 1.01.08 2.03-.48 2.64-1.23z"/></svg>
+                                <span>App Store</span>
+                            </a>
+                            <a href="/puratryx" class="store-badge" aria-label="Puratryx on Google Play">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.793 12 3.61 22.186a2.38 2.38 0 0 1-.61-.954V2.768c.15-.357.362-.68.61-.954zM15.207 13.414l2.747 2.748-11.83 6.828 9.083-9.576zm0-2.828L6.124.996l11.83 6.842-2.747 2.748zm1.414 1.414l3.774 2.18c1.34.774 1.34 2.038 0 2.812l-3.774 2.18-2.414-2.414 2.414-2.414z"/></svg>
+                                <span>Google Play</span>
+                            </a>
+                        </div>
+                        <div class="app-device-preview">
+                            <img src="/images/media__1782695584707.png" alt="Puratryx App Screen Preview" loading="lazy" onerror="this.src='/images/puratryx_logo.png'">
+                        </div>
+                    </div>
+
+                    <!-- App 3: StopTimetryx -->
+                    <div class="app-card" data-track="app_product" data-app-name="StopTimetryx">
+                        <div class="app-header">
+                            <div style="width:48px; height:48px; border-radius:12px; background:#0F172A; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">⏱️</div>
+                            <div class="app-header-text">
+                                <h3>StopTimetryx</h3>
                                 <p>Time & Habit Builder</p>
+                            </div>
+                        </div>
+                        <p class="app-desc">
+                            A smart stopwatch and daily habit tracker with voice cues, performance metrics and visual streaks.
+                        </p>
+                        <div class="app-store-badges">
+                            <a href="/stoptimetryx" class="store-badge" aria-label="StopTimetryx on App Store">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.85-.9.04-2 .6-2.64 1.35-.56.65-1.06 1.71-.92 2.73 1.01.08 2.03-.48 2.64-1.23z"/></svg>
+                                <span>App Store</span>
+                            </a>
+                            <a href="/stoptimetryx" class="store-badge" aria-label="StopTimetryx on Google Play">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.793 12 3.61 22.186a2.38 2.38 0 0 1-.61-.954V2.768c.15-.357.362-.68.61-.954zM15.207 13.414l2.747 2.748-11.83 6.828 9.083-9.576zm0-2.828L6.124.996l11.83 6.842-2.747 2.748zm1.414 1.414l3.774 2.18c1.34.774 1.34 2.038 0 2.812l-3.774 2.18-2.414-2.414 2.414-2.414z"/></svg>
+                                <span>Google Play</span>
+                            </a>
+                        </div>
+                        <div class="app-device-preview">
+                            <div class="stoptimetryx-clock-preview">
+                                <div style="font-size:0.75rem; color:#94A3B8; margin-bottom:4px;">INTERVAL</div>
+                                <div class="clock-timer">25:00</div>
+                                <div class="clock-sub">FOCUS STREAK 🔥 7</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Our Apps Section -->
-    <section class="products-section" id="apps">
-        <div class="container">
-            <div class="section-header">
-                <span>Featured Software Products</span>
-                <h2>SaaS Applications We've Built</h2>
-                <p>We build production-grade, highly engaging apps designed with beautiful ovals, fluid interfaces, and intelligent backends.</p>
-            </div>
-            
-            <div class="products-grid">
-                <!-- App 1 -->
-                <div class="product-card">
-                    <div class="product-icon" style="background-color: rgba(0, 194, 168, 0.1); color: var(--accent);">🥑</div>
-                    <h3>AivekAI</h3>
-                    <p>An intelligent nutrition logging coach that uses image recognition and natural language processing to log meals friction-free, track calorie targets, and manage fasting intervals dynamically.</p>
-                    <a href="/aivekai" class="product-link">Explore Landing Page &rarr;</a>
+        <!-- ==============================================================================
+             7. WHY MOZAREX
+             ============================================================================== -->
+        <section class="why-section" id="why-us">
+            <div class="container">
+                <div class="text-center">
+                    <span class="section-tag">WHY MOZAREX</span>
+                    <h2 class="section-heading">A Partner You Can Trust</h2>
+                    <p class="section-subheading">
+                        We combine engineering rigor, product design excellence, and transparent communication to build software that moves your business forward.
+                    </p>
                 </div>
 
-                <!-- App 2 -->
-                <div class="product-card">
-                    <div class="product-icon" style="background-color: rgba(0, 176, 255, 0.1); color: var(--primary);">🏡</div>
-                    <h3>Puratryx</h3>
-                    <p>A collaborative family routine manager that coordinates household cleaning tasks, links multiple devices securely via QR codes, and gamifies routines with points and task history logs.</p>
-                    <a href="/puratryx" class="product-link">Explore Landing Page &rarr;</a>
-                </div>
-
-                <!-- App 3 -->
-                <div class="product-card">
-                    <div class="product-icon" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b;">⏱️</div>
-                    <h3>StopTimetryx</h3>
-                    <p>A smart stopwatch and daily habit builder that structures timelines, monitors stopwatch performance metrics, and lets users build sequential habit stacks with visual streaks.</p>
-                    <a href="/stoptimetryx" class="product-link">Explore Landing Page &rarr;</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section class="services-section" id="services">
-        <div class="container">
-            <div class="section-header">
-                <span>IT & Development Services</span>
-                <h2>One-Center IT Solutions</h2>
-                <p>From individual web development to full-scale enterprise software deployment, we manage all your IT requirements under a single professional roof.</p>
-            </div>
-
-            <div class="services-grid">
-                <!-- Service 1 -->
-                <div class="service-card">
-                    <div class="service-icon"><i class="fas fa-mobile-screen"></i></div>
-                    <h3>Mobile App Development</h3>
-                    <p>High-fidelity, responsive iOS and Android apps built with Flutter, Swift, and Kotlin. Designed for fast native performance.</p>
-                </div>
-
-                <!-- Service 2 -->
-                <div class="service-card">
-                    <div class="service-icon"><i class="fas fa-laptop-code"></i></div>
-                    <h3>Websites & SaaS Platforms</h3>
-                    <p>Corporate landing pages, interactive SaaS dashboards, and database integrations built with clean layouts and semantic code.</p>
-                </div>
-
-                <!-- Service 3 -->
-                <div class="service-card">
-                    <div class="service-icon"><i class="fas fa-brain"></i></div>
-                    <h3>AI & Workflow Automation</h3>
-                    <p>Custom OpenAI GPT integrations, image recognition pipelines, and automated script workflows to save hours of manual business labor.</p>
-                </div>
-
-                <!-- Service 4 -->
-                <div class="service-card">
-                    <div class="service-icon"><i class="fas fa-cloud-arrow-up"></i></div>
-                    <h3>Cloud & Server Architecture</h3>
-                    <p>Secure cloud backend infrastructure and database design (Supabase, Firebase, AWS) configured for safe scaling and backups.</p>
-                </div>
-
-                <!-- Service 5 -->
-                <div class="service-card">
-                    <div class="service-icon"><i class="fas fa-chart-line"></i></div>
-                    <h3>Technical SEO & Analytics</h3>
-                    <p>Advanced website performance audits, custom Google Tag Manager (GTM) setups, and marketing tracking architectures.</p>
-                </div>
-
-                <!-- Service 6 -->
-                <div class="service-card">
-                    <div class="service-icon"><i class="fas fa-shield-halved"></i></div>
-                    <h3>Managed IT & Support</h3>
-                    <p>Continuous security auditing, API monitoring, bug fixing, and software scale consultation. You're never left in the dark.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Advantage Section -->
-    <section class="advantage-section" id="advantage">
-        <div class="container">
-            <div class="advantage-grid">
-                <div>
-                    <h2 style="font-size: 36px; font-weight: 800; color: var(--white); margin-bottom: 20px; letter-spacing: -1px;">The Power of a One-Center IT Solution</h2>
-                    <p style="font-size: 16px; margin-bottom: 32px;">Stop paying multiple agencies, design shops, and isolated server consultants who blame each other when something breaks. Mozarex handles the entire engineering stack seamlessly.</p>
-                    <ul class="advantage-list">
-                        <li class="advantage-item">
-                            <div class="advantage-num">1</div>
-                            <div class="advantage-text">
-                                <h4>Single Point of Accountability</h4>
-                                <p>One professional contact for your mobile apps, web platform, servers, and SEO. No finger-pointing.</p>
-                            </div>
-                        </li>
-                        <li class="advantage-item">
-                            <div class="advantage-num">2</div>
-                            <div class="advantage-text">
-                                <h4>Unified Codebases & Systems</h4>
-                                <p>Web dashboards and mobile apps are integrated directly to sync databases safely with no lag.</p>
-                            </div>
-                        </li>
-                        <li class="advantage-item">
-                            <div class="advantage-num">3</div>
-                            <div class="advantage-text">
-                                <h4>Massive Cost Efficiency</h4>
-                                <p>Eliminate overlapping subscriptions, redundant agency fees, and expensive translation layers.</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <img src="../images/aivekai_hero.png" alt="Mozarex Premium Engineering" style="width: 100%; border-radius: var(--border-radius); box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact & Consultation Form -->
-    <section class="contact-section" id="contact">
-        <div class="container">
-            <div class="contact-container">
-                <h2>Let's Build Your Project</h2>
-                <p>Fill out the form below to get a free professional consultation and custom pricing quote for your app, website, or IT needs.</p>
-                
-                <form class="contact-form" onsubmit="submitContactForm(event)">
-                    <div class="form-group">
-                        <label for="name">Your Name</label>
-                        <input type="text" id="name" required placeholder="e.g. John Doe">
+                <div class="why-grid">
+                    <!-- Pillar 1 -->
+                    <div class="why-card">
+                        <div class="why-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        </div>
+                        <h3 class="why-card-title">Australian Based</h3>
+                        <p class="why-card-text">
+                            Local team, local support and understanding of Australian businesses.
+                        </p>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" required placeholder="e.g. john@yourbusiness.com">
+
+                    <!-- Pillar 2 -->
+                    <div class="why-card">
+                        <div class="why-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        </div>
+                        <h3 class="why-card-title">End-to-End Delivery</h3>
+                        <p class="why-card-text">
+                            Strategy, design, development, launch and ongoing support.
+                        </p>
                     </div>
-                    
-                    <div class="form-group form-full">
-                        <label for="projectType">What are you looking to build?</label>
-                        <select id="projectType" required>
-                            <option value="">-- Select Project Type --</option>
-                            <option value="Website">Website</option>
-                            <option value="App">App</option>
+
+                    <!-- Pillar 3 -->
+                    <div class="why-card">
+                        <div class="why-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                        </div>
+                        <h3 class="why-card-title">Real-World Experience</h3>
+                        <p class="why-card-text">
+                            We build and operate our own products, so we understand what it takes to create software people use.
+                        </p>
+                    </div>
+
+                    <!-- Pillar 4 -->
+                    <div class="why-card">
+                        <div class="why-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        </div>
+                        <h3 class="why-card-title">Ongoing Support</h3>
+                        <p class="why-card-text">
+                            Maintenance, updates and continuous improvement after launch.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================================
+             8. OUR WORK / FEATURED WORK
+             ============================================================================== -->
+        <section class="work-section" id="work">
+            <div class="container">
+                <div class="work-header-row">
+                    <div>
+                        <span class="section-tag">FEATURED WORK</span>
+                        <h2 class="section-heading" style="margin-bottom: 6px;">Real Projects. Real Results.</h2>
+                        <p class="section-subheading" style="margin: 0; text-align: left;">
+                            From local business websites to custom apps and AI solutions, here are some of the projects we've delivered.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="work-grid">
+                    <!-- Project 1 -->
+                    <div class="work-card">
+                        <div class="work-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600&auto=format&fit=crop" alt="Restaurant Website Mockup" loading="lazy">
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">Restaurant Website</h3>
+                            <div class="work-category">Modern website with online bookings</div>
+                        </div>
+                    </div>
+
+                    <!-- Project 2 -->
+                    <div class="work-card">
+                        <div class="work-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop" alt="Tradie Business Website Mockup" loading="lazy">
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">Tradie Business Website</h3>
+                            <div class="work-category">High-converting local business site</div>
+                        </div>
+                    </div>
+
+                    <!-- Project 3 -->
+                    <div class="work-card">
+                        <div class="work-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" alt="AI-Powered Web App Dashboard Mockup" loading="lazy">
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">AI-Powered Web App</h3>
+                            <div class="work-category">Custom SaaS platform</div>
+                        </div>
+                    </div>
+
+                    <!-- Project 4 -->
+                    <div class="work-card">
+                        <div class="work-img-wrap">
+                            <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=600&auto=format&fit=crop" alt="Mobile App Development Mockup" loading="lazy">
+                        </div>
+                        <div class="work-info">
+                            <h3 class="work-title">Mobile App Development</h3>
+                            <div class="work-category">iOS & Android application</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================================
+             9. FINAL CTA BANNER
+             ============================================================================== -->
+        <section class="cta-banner-section" id="contact">
+            <div class="container">
+                <div class="cta-banner-box">
+                    <div class="cta-banner-content">
+                        <span class="cta-banner-eyebrow">READY TO GROW YOUR BUSINESS?</span>
+                        <h2 class="cta-banner-title">Let's Build Something Great Together.</h2>
+                        <p class="cta-banner-desc">
+                            Get a free consultation and discover how a modern website, app or AI solution can help your business grow.
+                        </p>
+                    </div>
+                    <div class="cta-banner-action">
+                        <button type="button" class="btn btn-white btn-lg" data-open-consultation data-source="final_cta_banner">
+                            Get a Free Consultation
+                            <span class="arrow-icon">→</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==============================================================================
+         10. CONSULTATION MODAL / FORM
+         ============================================================================== -->
+    <div class="contact-modal-overlay" id="consultationModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="contact-modal-box">
+            <button type="button" class="modal-close-btn" data-close-consultation aria-label="Close modal">✕</button>
+            <div style="margin-bottom: 24px;">
+                <span class="section-tag" style="margin-bottom: 6px;">FREE CONSULTATION</span>
+                <h3 id="modalTitle" style="font-size: 1.625rem; font-weight: 800; color: var(--navy-900);">Let's Build Your Project</h3>
+                <p style="font-size: 0.875rem; color: var(--slate-500);">Tell us about your project goals and we'll prepare a custom scope and recommendation.</p>
+            </div>
+
+            <form id="consultationForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="consultName">Your Name *</label>
+                        <input type="text" id="consultName" class="form-control" required placeholder="e.g. Sarah Jenkins">
+                    </div>
+                    <div class="form-group">
+                        <label for="consultEmail">Email Address *</label>
+                        <input type="email" id="consultEmail" class="form-control" required placeholder="e.g. sarah@yourbusiness.com.au">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="consultPhone">Phone Number (Optional)</label>
+                        <input type="tel" id="consultPhone" class="form-control" placeholder="e.g. 0400 123 456">
+                    </div>
+                    <div class="form-group">
+                        <label for="consultService">Project Service *</label>
+                        <select id="consultService" class="form-control" required>
+                            <option value="Website Development ($1,490 Package)">Website Development ($1,490 Package)</option>
+                            <option value="Mobile App Development (iOS & Android)">Mobile App Development (iOS & Android)</option>
+                            <option value="AI & Automation Integration">AI & Automation Integration</option>
+                            <option value="Custom Software / SaaS Platform">Custom Software / SaaS Platform</option>
+                            <option value="Other / General Inquiry">Other / General Inquiry</option>
                         </select>
                     </div>
+                </div>
 
-                    <div class="form-group form-full">
-                        <label for="message">Project Details</label>
-                        <textarea id="message" required rows="5" placeholder="Briefly describe your business requirements and target goals..."></textarea>
-                    </div>
+                <div class="form-group">
+                    <label for="consultBudget">Estimated Budget (Optional)</label>
+                    <select id="consultBudget" class="form-control">
+                        <option value="$1,490 - $3,000">$1,490 - $3,000 (Standard Website)</option>
+                        <option value="$3,000 - $7,000">$3,000 - $7,000 (Custom Web / Feature-Rich)</option>
+                        <option value="$7,000 - $15,000">$7,000 - $15,000 (Mobile App / MVP)</option>
+                        <option value="$15,000+">$15,000+ (Full Custom Platform / Enterprise)</option>
+                        <option value="Not Sure Yet">Not Sure Yet / Need Advice</option>
+                    </select>
+                </div>
 
-                    <button type="submit">Submit Request &rarr;</button>
-                    
-                    <div id="successMsg" class="success-message">
-                        Compilation complete! Redirecting to email client to send your message to info@mozarex.com...
-                    </div>
-                </form>
-            </div>
+                <div class="form-group">
+                    <label for="consultMessage">Project Details *</label>
+                    <textarea id="consultMessage" class="form-control" rows="4" required placeholder="Tell us briefly about your business, what features you need, and any timelines..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                    Submit Request →
+                </button>
+
+                <div id="formFeedback" class="form-feedback" role="alert"></div>
+            </form>
         </div>
-    </section>
+    </div>
 
-    <!-- Footer -->
-    <footer>
+    <!-- ==============================================================================
+         11. SITE FOOTER
+         ============================================================================== -->
+    <footer class="site-footer" role="contentinfo">
         <div class="container">
             <div class="footer-grid">
-                <div class="footer-brand">
-                    <a href="#" class="logo-area" style="margin-bottom: 8px;">
-                        <img src="/images/Logo_M.png" alt="Mozarex Logo" class="logo-img" style="height: 36px;">
-                        <span class="logo-text" style="color: var(--white);">Mozarex</span>
+                <!-- Brand Column -->
+                <div class="footer-brand-col">
+                    <a href="/" class="brand-logo">
+                        <img src="/images/Logo_M.png" alt="Mozarex Logo" width="36" height="36">
+                        <span class="brand-name">Mozarex</span>
                     </a>
-                    <p>Your one-center partner for mobile app development, premium web applications, database structures, and comprehensive business IT requirements.</p>
+                    <div class="footer-brand-tag">Web. App. AI. Growth.</div>
+                    <p style="font-size: 0.875rem; color: var(--slate-500); max-width: 320px; line-height: 1.55;">
+                        Australian digital product studio creating conversion-focused business websites, mobile apps, and intelligent AI automation.
+                    </p>
                 </div>
-                
-                <div class="footer-col">
-                    <h4>Legal</h4>
+
+                <!-- Services Column -->
+                <div>
+                    <h4 class="footer-heading">Services</h4>
                     <ul class="footer-links-list">
-                        <li><a href="policy.html">Privacy Policy</a></li>
-                        <li><a href="data-deletion.html">Account & Data Deletion</a></li>
+                        <li><a href="#offer" class="footer-link">Website Development</a></li>
+                        <li><a href="#services" class="footer-link">Mobile App Development</a></li>
+                        <li><a href="#ai" class="footer-link">AI & Automation</a></li>
+                        <li><a href="#services" class="footer-link">Custom Software</a></li>
                     </ul>
                 </div>
-                
-                <div class="footer-col">
-                    <h4>Support</h4>
+
+                <!-- Company Column -->
+                <div>
+                    <h4 class="footer-heading">Company</h4>
                     <ul class="footer-links-list">
-                        <li><a href="mailto:info@mozarex.com">info@mozarex.com</a></li>
+                        <li><a href="#work" class="footer-link">Our Work</a></li>
+                        <li><a href="#apps" class="footer-link">Our Apps</a></li>
+                        <li><a href="#why-us" class="footer-link">Why Mozarex</a></li>
+                        <li><a href="#contact" class="footer-link">Contact</a></li>
                     </ul>
+                </div>
+
+                <!-- Connect Column -->
+                <div>
+                    <h4 class="footer-heading">Connect</h4>
+                    <div class="footer-social-row">
+                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="LinkedIn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.22a1.62 1.62 0 0 0-1.62 1.62c0 .9.72 1.62 1.62 1.62a1.62 1.62 0 0 0 1.62-1.62c0-.9-.72-1.62-1.62-1.62z"/></svg>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="Instagram">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                        </a>
+                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="YouTube">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                    <div class="footer-actions">
+                        <button type="button" class="btn btn-primary btn-sm" data-open-consultation data-source="footer_cta">
+                            Free Consultation →
+                        </button>
+                        <a href="mailto:info@mozarex.com" class="btn btn-secondary btn-sm">
+                            Email Us
+                        </a>
+                    </div>
                 </div>
             </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2026 Mozarex by Mozarex. All rights reserved.</p>
-                <div class="footer-bottom-links">
-                    <a href="policy.html">Privacy Policy</a>
-                    <a href="data-deletion.html">Account Deletion</a>
+
+            <!-- Footer Bottom Bar -->
+            <div class="footer-bottom-bar">
+                <div>© 2026 Mozarex. All rights reserved.</div>
+                <div class="footer-legal-links">
+                    <a href="/policy">Privacy Policy</a>
+                    <a href="/policy">Terms of Service</a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script>
-        function toggleMenu() {
-            const menu = document.querySelector('.nav-menu');
-            menu.classList.toggle('active');
-        }
-
-        function submitContactForm(event) {
-            event.preventDefault();
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const projectType = document.getElementById('projectType').value;
-            const message = document.getElementById('message').value.trim();
-            
-            const subject = encodeURIComponent(`Project Inquiry - ${projectType}`);
-            const body = encodeURIComponent(
-                `Hello Mozarex Team,\n\n` +
-                `I would like to request a consultation for the following project:\n\n` +
-                `Client Name: ${name}\n` +
-                `Contact Email: ${email}\n` +
-                `Project Type: ${projectType}\n\n` +
-                `Project Details:\n${message}\n\n` +
-                `Please contact me to arrange next steps.\n\n` +
-                `Thank you.`
-            );
-            
-            document.getElementById('successMsg').style.display = 'block';
-            
-            setTimeout(() => {
-                window.location.href = `mailto:info@mozarex.com?subject=${subject}&body=${body}`;
-            }, 1000);
-        }
-    </script>
+    <!-- Scripts -->
+    <script src="/script.js"></script>
 </body>
 
 </html>
