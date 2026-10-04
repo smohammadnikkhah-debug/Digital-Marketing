@@ -227,6 +227,11 @@ app.post('/api/aivekai/paypal/webhook', (req, res, next) => {
 const aiRoutes = require('./routes/ai');
 app.use('/api/ai', aiRoutes);
 
+// Mozarex Website Review & Grokbot Audit Infrastructure Router (Phase 1)
+const websiteReviewRouter = require('./routes/websiteReview');
+app.use('/', websiteReviewRouter);
+app.use('/api/website-review', websiteReviewRouter);
+
 // Health Check Endpoints (Basic & Detailed Production Readiness)
 const APP_VERSION = '2026.09.10.v3-agreed-rate-hardening';
 

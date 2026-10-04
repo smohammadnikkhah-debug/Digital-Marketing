@@ -25,9 +25,11 @@
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^2.7.0",
-    "openai": "^4.104.0"
+    "openai": "^4.104.0",
+    "pdfkit": "^0.20.2"
   },
   "devDependencies": {
+    "js-yaml": "^5.4.2",
     "nodemon": "^3.0.1"
   },
   "keywords": [
