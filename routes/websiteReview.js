@@ -61,7 +61,7 @@ function requireGrokbotApiKey(req, res, next) {
   const authHeader = req.headers.authorization;
   const configuredSecret = process.env.MOZAREX_GROKBOT_API_KEY;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
       code: 'INVALID_AUTH',
@@ -69,12 +69,12 @@ function requireGrokbotApiKey(req, res, next) {
     });
   }
 
-  const providedKey = authHeader.slice(7).trim();
+  const rawProvidedKey = authHeader.slice(7).trim();
 
   // In test environment without explicit secret, permit testing key or validate
-  const effectiveExpectedKey = configuredSecret || (process.env.NODE_ENV === 'test' ? 'test_grokbot_api_key_valid_12345' : null);
+  const rawExpectedKey = configuredSecret || (process.env.NODE_ENV === 'test' ? 'test_grokbot_api_key_valid_12345' : null);
 
-  if (!effectiveExpectedKey) {
+  if (!rawExpectedKey) {
     console.error('[CRITICAL] MOZAREX_GROKBOT_API_KEY is not configured on the server.');
     return res.status(500).json({
       success: false,
@@ -83,12 +83,36 @@ function requireGrokbotApiKey(req, res, next) {
     });
   }
 
+  // Sanitize expected secret (strip whitespace, outer quotes, or accidental Bearer prefix)
+  let cleanExpected = rawExpectedKey.trim();
+  if ((cleanExpected.startsWith('"') && cleanExpected.endsWith('"')) ||
+      (cleanExpected.startsWith("'") && cleanExpected.endsWith("'"))) {
+    cleanExpected = cleanExpected.slice(1, -1).trim();
+  }
+  if (cleanExpected.startsWith('Bearer ')) {
+    cleanExpected = cleanExpected.slice(7).trim();
+  }
+
+  // Sanitize provided key (strip whitespace, outer quotes)
+  let cleanProvided = rawProvidedKey.trim();
+  if ((cleanProvided.startsWith('"') && cleanProvided.endsWith('"')) ||
+      (cleanProvided.startsWith("'") && cleanProvided.endsWith("'"))) {
+    cleanProvided = cleanProvided.slice(1, -1).trim();
+  }
+
+  const expectedHash = crypto.createHash('sha256').update(cleanExpected).digest('hex').slice(0, 12);
+  const providedHash = crypto.createHash('sha256').update(cleanProvided).digest('hex').slice(0, 12);
+
   // Constant-time comparison to protect against timing attacks
   try {
-    const providedBuf = Buffer.from(providedKey, 'utf8');
-    const expectedBuf = Buffer.from(effectiveExpectedKey, 'utf8');
+    const providedBuf = Buffer.from(cleanProvided, 'utf8');
+    const expectedBuf = Buffer.from(cleanExpected, 'utf8');
 
-    if (providedBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(providedBuf, expectedBuf)) {
+    const matches = providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf);
+
+    console.log(`[GrokbotAuthAudit] Present=${!!configuredSecret} ExpLen=${cleanExpected.length} ProvLen=${cleanProvided.length} ExpFP=${expectedHash} ProvFP=${providedHash} Match=${matches}`);
+
+    if (!matches) {
       return res.status(401).json({
         success: false,
         code: 'INVALID_AUTH',
@@ -96,6 +120,7 @@ function requireGrokbotApiKey(req, res, next) {
       });
     }
   } catch (err) {
+    console.error(`[GrokbotAuthAudit] Error during comparison:`, err.message);
     return res.status(401).json({
       success: false,
       code: 'INVALID_AUTH',
