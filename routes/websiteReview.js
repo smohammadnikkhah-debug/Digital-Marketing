@@ -648,6 +648,7 @@ router.post(
       email,
       phone,
       message,
+      package_choice,
       intent = 'homepage_example',
       source = 'website_review',
       business_name
@@ -682,19 +683,21 @@ router.post(
     const cleanEmail = email.trim().toLowerCase().slice(0, 255);
     const cleanPhone = phone ? sanitizeText(phone).slice(0, 50) : null;
     const cleanMessage = message ? sanitizeText(message).slice(0, 2000) : null;
+    const cleanPackage = package_choice ? sanitizeText(package_choice).slice(0, 100) : null;
     const cleanBizName = business_name ? sanitizeText(business_name).slice(0, 200) : 'Unspecified Business';
-    const cleanIntent = intent === 'free_consultation' ? 'free_consultation' : 'homepage_example';
+    const cleanIntent = intent === 'free_consultation' ? 'free_consultation' : 'website_upgrade';
 
-    console.log(`[WebsiteReviewEnquiry] New lead received: ${cleanName} (${cleanEmail}) for business "${cleanBizName}" (Intent: ${cleanIntent}, Source: ${source})`);
+    console.log(`[WebsiteReviewEnquiry] New lead received: ${cleanName} (${cleanEmail}) for business "${cleanBizName}" (Intent: ${cleanIntent}, Package: ${cleanPackage || 'unspecified'}, Source: ${source})`);
 
-    const confirmationMessage = cleanIntent === 'homepage_example'
-      ? `Thank you, ${cleanName}! We've received your request. Our team will prepare a personalised homepage concept for ${cleanBizName} and contact you at ${cleanEmail} shortly.`
-      : `Thank you, ${cleanName}! We've received your consultation request. A Mozarex specialist will contact you at ${cleanEmail} to schedule a time that works best for you.`;
+    const confirmationMessage = cleanIntent === 'free_consultation'
+      ? `Thank you, ${cleanName}! We've received your consultation request. A Mozarex specialist will contact you at ${cleanEmail} to schedule a time that works best for you.`
+      : `Thank you, ${cleanName}! We've received your website upgrade request${cleanPackage ? ` for ${cleanPackage}` : ''}. Our team will review your requirements for ${cleanBizName} and contact you at ${cleanEmail} shortly.`;
 
     return res.status(200).json({
       success: true,
       message: confirmationMessage,
-      intent: cleanIntent
+      intent: cleanIntent,
+      package_choice: cleanPackage
     });
   }
 );
