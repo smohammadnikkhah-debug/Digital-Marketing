@@ -125,6 +125,10 @@ function requireGrokbotApiKey(req, res, next) {
     } catch (e) {}
   }
 
+  const expectedHash = configuredSecret ? crypto.createHash('sha256').update(configuredSecret.trim()).digest('hex').slice(0, 12) : 'none';
+  const providedHash = crypto.createHash('sha256').update(cleanProvided).digest('hex').slice(0, 12);
+  console.log(`[GrokbotAuthAudit] Present=${!!configuredSecret} ExpLen=${configuredSecret ? configuredSecret.trim().length : 0} ProvLen=${cleanProvided.length} ExpFP=${expectedHash} ProvFP=${providedHash} Match=${authenticated}`);
+
   if (!authenticated) {
     return res.status(401).json({
       success: false,
