@@ -1,11 +1,16 @@
 /**
  * ==============================================================================
- * Mozarex Automated Website Review Router & Controller (Phase 1)
+ * Mozarex Automated Website Review Router & Controller (Phase 1 & Phase 2)
  * ==============================================================================
  * Exposes:
- *   - POST /create-website-review (Grokbot automated audit submission)
+ *   - POST /create-website-review (Grokbot automated audit submission with optional PDF)
+ *   - PUT  /website-review/:audit_id/report (Attach or replace PDF report on existing audit)
+ *   - PATCH /website-review/:audit_id/report (Alias for PUT)
+ *   - DELETE /website-review/:audit_id/report (Optional: revert to generated PDF)
  *   - GET  /review/:token/download (Secure PDF streaming & download analytics)
  *   - GET  /review/:token/data     (Sanitized review data & view analytics)
+ *   - GET  /review/:token          (Customer-facing personalized review landing page)
+ *   - POST /api/website-review/enquiry (Contact & Homepage example direct lead capture)
  */
 
 const express = require('express');
@@ -15,9 +20,13 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const {
   canonicalizeDomain,
+  validateAndDecodePdf,
   findActiveAuditByDomain,
+  findAuditById,
   findAuditByPublicToken,
   createWebsiteAudit,
+  attachOrReplaceReportPdf,
+  deleteReportPdf,
   getAuditPdfForDownload,
   recordAuditView
 } = require('../services/websiteReviewService');
@@ -44,7 +53,7 @@ const grokbotSubmissionLimiter = rateLimit({
 // Download limiter (prevents scraping or excessive automated downloads)
 const downloadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 60,
+  max: 120,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -64,33 +73,27 @@ function requireGrokbotApiKey(req, res, next) {
   if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
-      code: 'INVALID_AUTH',
+      code: 'UNAUTHORIZED',
       error: 'Unauthorized: Missing or malformed Authorization header. Expected Bearer <token>'
     });
   }
 
   const rawProvidedKey = authHeader.slice(7).trim();
 
-  // In test environment without explicit secret, permit testing key or validate
-  const rawExpectedKey = configuredSecret || (process.env.NODE_ENV === 'test' ? 'test_grokbot_api_key_valid_12345' : null);
+  // Permitted keys (in test mode, also accept test key)
+  const candidateKeys = [];
+  if (configuredSecret) candidateKeys.push(configuredSecret);
+  if (process.env.NODE_ENV === 'test') {
+    candidateKeys.push('test_grokbot_api_key_valid_12345');
+  }
 
-  if (!rawExpectedKey) {
+  if (candidateKeys.length === 0) {
     console.error('[CRITICAL] MOZAREX_GROKBOT_API_KEY is not configured on the server.');
     return res.status(500).json({
       success: false,
       code: 'SERVER_MISCONFIGURED',
       error: 'Internal authentication configuration error.'
     });
-  }
-
-  // Sanitize expected secret (strip whitespace, outer quotes, or accidental Bearer prefix)
-  let cleanExpected = rawExpectedKey.trim();
-  if ((cleanExpected.startsWith('"') && cleanExpected.endsWith('"')) ||
-      (cleanExpected.startsWith("'") && cleanExpected.endsWith("'"))) {
-    cleanExpected = cleanExpected.slice(1, -1).trim();
-  }
-  if (cleanExpected.startsWith('Bearer ')) {
-    cleanExpected = cleanExpected.slice(7).trim();
   }
 
   // Sanitize provided key (strip whitespace, outer quotes)
@@ -100,30 +103,32 @@ function requireGrokbotApiKey(req, res, next) {
     cleanProvided = cleanProvided.slice(1, -1).trim();
   }
 
-  const expectedHash = crypto.createHash('sha256').update(cleanExpected).digest('hex').slice(0, 12);
-  const providedHash = crypto.createHash('sha256').update(cleanProvided).digest('hex').slice(0, 12);
+  const providedBuf = Buffer.from(cleanProvided, 'utf8');
 
-  // Constant-time comparison to protect against timing attacks
-  try {
-    const providedBuf = Buffer.from(cleanProvided, 'utf8');
-    const expectedBuf = Buffer.from(cleanExpected, 'utf8');
-
-    const matches = providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf);
-
-    console.log(`[GrokbotAuthAudit] Present=${!!configuredSecret} ExpLen=${cleanExpected.length} ProvLen=${cleanProvided.length} ExpFP=${expectedHash} ProvFP=${providedHash} Match=${matches}`);
-
-    if (!matches) {
-      return res.status(401).json({
-        success: false,
-        code: 'INVALID_AUTH',
-        error: 'Unauthorized: Invalid API key'
-      });
+  let authenticated = false;
+  for (const expectedKey of candidateKeys) {
+    let cleanExpected = expectedKey.trim();
+    if ((cleanExpected.startsWith('"') && cleanExpected.endsWith('"')) ||
+        (cleanExpected.startsWith("'") && cleanExpected.endsWith("'"))) {
+      cleanExpected = cleanExpected.slice(1, -1).trim();
     }
-  } catch (err) {
-    console.error(`[GrokbotAuthAudit] Error during comparison:`, err.message);
+    if (cleanExpected.startsWith('Bearer ')) {
+      cleanExpected = cleanExpected.slice(7).trim();
+    }
+
+    try {
+      const expectedBuf = Buffer.from(cleanExpected, 'utf8');
+      if (providedBuf.length === expectedBuf.length && crypto.timingSafeEqual(providedBuf, expectedBuf)) {
+        authenticated = true;
+        break;
+      }
+    } catch (e) {}
+  }
+
+  if (!authenticated) {
     return res.status(401).json({
       success: false,
-      code: 'INVALID_AUTH',
+      code: 'UNAUTHORIZED',
       error: 'Unauthorized: Invalid API key'
     });
   }
@@ -132,7 +137,24 @@ function requireGrokbotApiKey(req, res, next) {
 }
 
 // ==============================================================================
-// 3. INPUT VALIDATION HELPER
+// 3. MEDIA TYPE VALIDATION MIDDLEWARE
+// ==============================================================================
+function requireJsonContentType(req, res, next) {
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    const contentType = req.headers['content-type'] || '';
+    if (!contentType.includes('application/json')) {
+      return res.status(415).json({
+        success: false,
+        code: 'UNSUPPORTED_MEDIA_TYPE',
+        error: 'Content-Type must be application/json'
+      });
+    }
+  }
+  next();
+}
+
+// ==============================================================================
+// 4. INPUT VALIDATION HELPER
 // ==============================================================================
 function validateAuditPayload(body) {
   const errors = [];
@@ -230,18 +252,24 @@ function validateAuditPayload(body) {
   return errors;
 }
 
+// 12 MB json body parser for review routes (accommodates 8 MB PDF base64 ~10.7 MB)
+const json12MbParser = express.json({ limit: '12mb' });
+
 // ==============================================================================
-// 4. API ENDPOINTS
+// 5. API ENDPOINTS
 // ==============================================================================
 
 /**
  * POST /create-website-review (or /api/website-review/create)
  * Authenticated submission endpoint for Grokbot.
+ * Accepts standard audit payload plus optional inline report_pdf_* fields.
  */
 router.post(
   ['/create-website-review', '/api/website-review/create'],
   grokbotSubmissionLimiter,
   requireGrokbotApiKey,
+  requireJsonContentType,
+  json12MbParser,
   async (req, res) => {
     const requestId = crypto.randomUUID();
     const startTime = Date.now();
@@ -257,6 +285,22 @@ router.post(
         });
       }
 
+      // 2. Validate PDF fields if present before any DB operations
+      let pdfValidation;
+      try {
+        pdfValidation = validateAndDecodePdf({
+          report_pdf_base64: req.body.report_pdf_base64,
+          report_pdf_filename: req.body.report_pdf_filename,
+          report_pdf_sha256: req.body.report_pdf_sha256
+        }, req.body.business_name);
+      } catch (pdfErr) {
+        return res.status(pdfErr.statusCode || 400).json({
+          success: false,
+          code: pdfErr.code || 'INVALID_INPUT',
+          error: pdfErr.message
+        });
+      }
+
       const {
         business_name,
         business_type,
@@ -265,14 +309,15 @@ router.post(
         contact_email,
         findings,
         proposed_price,
-        currency = 'AUD'
+        currency = 'AUD',
+        report_pdf_base64,
+        report_pdf_filename,
+        report_pdf_sha256
       } = req.body;
 
       const canonicalDomain = canonicalizeDomain(website_url);
 
-      console.log(`[WebsiteReview] [Req:${requestId}] Processing audit for domain: ${canonicalDomain}`);
-
-      // 2. Duplicate Check
+      // 3. Duplicate Check
       const existingAudit = await findActiveAuditByDomain(canonicalDomain);
       if (existingAudit) {
         console.log(`[WebsiteReview] [Req:${requestId}] Duplicate audit detected for domain: ${canonicalDomain} (AuditID: ${existingAudit.id})`);
@@ -281,12 +326,12 @@ router.post(
           code: 'AUDIT_ALREADY_EXISTS',
           message: 'An active website audit already exists for this domain.',
           existing_audit_id: existingAudit.id,
-          existing_report_url: `https://mozarex.com/review/${existingAudit.public_token}`
+          existing_report_url: `https://mozarex.com/review/${existingAudit.public_token}`,
+          existing_download_url: `https://mozarex.com/review/${existingAudit.public_token}/download`
         });
       }
 
-      // 3. Create Audit Record, Generate PDF, and Upload to Supabase Private Storage
-      // IMPORTANT: Status advances to 'ready'. No email is dispatched.
+      // 4. Create Audit Record, handle PDF, and advance status to 'ready'
       const result = await createWebsiteAudit({
         business_name,
         business_type,
@@ -295,11 +340,16 @@ router.post(
         contact_email,
         findings,
         proposed_price,
-        currency
+        currency,
+        report_pdf_base64,
+        report_pdf_filename,
+        report_pdf_sha256
       });
 
       const durationMs = Date.now() - startTime;
-      console.log(`[WebsiteReview] [Req:${requestId}] Audit created successfully. ID: ${result.audit_id}, Duration: ${durationMs}ms`);
+      const pdfBytes = result.report_pdf && result.report_pdf.bytes ? result.report_pdf.bytes : 0;
+      const pdfSha = result.report_pdf && result.report_pdf.sha256 ? result.report_pdf.sha256.slice(0, 12) : 'none';
+      console.log(`[WebsiteReview] [Req:${requestId}] Audit created successfully. ID: ${result.audit_id}, PDF_Source: ${result.report_pdf.source}, Bytes: ${pdfBytes}, SHA: ${pdfSha}, Duration: ${durationMs}ms`);
 
       return res.status(201).json({
         success: true,
@@ -307,21 +357,127 @@ router.post(
         status: result.status,
         business_name: result.business_name,
         report_url: result.report_url,
-        download_url: result.download_url
+        download_url: result.download_url,
+        report_pdf: result.report_pdf
       });
 
     } catch (err) {
       const durationMs = Date.now() - startTime;
       console.error(`[WebsiteReview] [Req:${requestId}] Failed after ${durationMs}ms. Error:`, err.message);
 
-      const statusCode = err.code === 'DATABASE_ERROR' ? 500 :
-                         err.code === 'STORAGE_UPLOAD_FAILED' ? 502 :
-                         err.code === 'PDF_GENERATION_FAILED' ? 500 : 500;
+      const statusCode = err.statusCode || (err.code === 'STORAGE_ERROR' ? 500 : 500);
 
       return res.status(statusCode).json({
         success: false,
+        code: err.code || 'STORAGE_ERROR',
+        error: err.message || 'Failed to process website review request.'
+      });
+    }
+  }
+);
+
+/**
+ * PUT /website-review/:audit_id/report (and PATCH alias)
+ * Attaches or replaces the PDF report on an existing website audit.
+ */
+const handleAttachOrReplaceReportPdf = async (req, res) => {
+  const { audit_id } = req.params;
+  const requestId = crypto.randomUUID();
+  const startTime = Date.now();
+
+  if (!audit_id || typeof audit_id !== 'string') {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_INPUT',
+      error: 'audit_id is required'
+    });
+  }
+
+  try {
+    const { report_pdf_base64, report_pdf_filename, report_pdf_sha256 } = req.body || {};
+
+    if (!report_pdf_base64) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_BASE64',
+        error: 'report_pdf_base64 is required'
+      });
+    }
+
+    const result = await attachOrReplaceReportPdf(audit_id, {
+      report_pdf_base64,
+      report_pdf_filename,
+      report_pdf_sha256
+    });
+
+    const durationMs = Date.now() - startTime;
+    const pdfBytes = result.report_pdf && result.report_pdf.bytes ? result.report_pdf.bytes : 0;
+    const pdfSha = result.report_pdf && result.report_pdf.sha256 ? result.report_pdf.sha256.slice(0, 12) : 'none';
+    console.log(`[WebsiteReviewAttach] [Req:${requestId}] PDF processed for Audit ID: ${result.audit_id}, Replaced: ${result.report_pdf.replaced}, Unchanged: ${result.report_pdf.unchanged}, Bytes: ${pdfBytes}, SHA: ${pdfSha}, Duration: ${durationMs}ms`);
+
+    return res.status(200).json({
+      success: true,
+      audit_id: result.audit_id,
+      status: result.status,
+      business_name: result.business_name,
+      report_url: result.report_url,
+      download_url: result.download_url,
+      report_pdf: result.report_pdf
+    });
+
+  } catch (err) {
+    const durationMs = Date.now() - startTime;
+    console.error(`[WebsiteReviewAttach] [Req:${requestId}] Failed after ${durationMs}ms. Error:`, err.message);
+
+    const statusCode = err.statusCode || (err.code === 'AUDIT_NOT_FOUND' ? 404 :
+                                          err.code === 'PDF_TOO_LARGE' ? 413 :
+                                          err.code === 'INVALID_PDF' || err.code === 'PDF_CHECKSUM_MISMATCH' ? 422 :
+                                          err.code === 'INVALID_BASE64' ? 400 : 500);
+
+    return res.status(statusCode).json({
+      success: false,
+      code: err.code || 'STORAGE_ERROR',
+      error: err.message || 'Failed to attach report PDF.'
+    });
+  }
+};
+
+router.put(
+  ['/website-review/:audit_id/report', '/api/website-review/:audit_id/report'],
+  grokbotSubmissionLimiter,
+  requireGrokbotApiKey,
+  requireJsonContentType,
+  json12MbParser,
+  handleAttachOrReplaceReportPdf
+);
+
+router.patch(
+  ['/website-review/:audit_id/report', '/api/website-review/:audit_id/report'],
+  grokbotSubmissionLimiter,
+  requireGrokbotApiKey,
+  requireJsonContentType,
+  json12MbParser,
+  handleAttachOrReplaceReportPdf
+);
+
+/**
+ * DELETE /website-review/:audit_id/report
+ * Optional endpoint to revert to generated PDF.
+ */
+router.delete(
+  ['/website-review/:audit_id/report', '/api/website-review/:audit_id/report'],
+  requireGrokbotApiKey,
+  async (req, res) => {
+    const { audit_id } = req.params;
+    try {
+      const result = await deleteReportPdf(audit_id);
+      return res.status(200).json(result);
+    } catch (err) {
+      const statusCode = err.statusCode || (err.code === 'AUDIT_NOT_FOUND' ? 404 : 500);
+      return res.status(statusCode).json({
+        success: false,
         code: err.code || 'INTERNAL_ERROR',
-        error: 'Failed to process website review request.'
+        error: err.message
       });
     }
   }
@@ -330,6 +486,7 @@ router.post(
 /**
  * GET /review/:token/download
  * Public secure download endpoint that streams the PDF and tracks download metrics.
+ * Supports ?inline=1 for viewing in browser.
  */
 router.get(
   '/review/:token/download',
@@ -348,10 +505,16 @@ router.get(
     try {
       const { pdfBuffer, fileName } = await getAuditPdfForDownload(token);
 
+      const disposition = req.query.inline === '1' ? 'inline' : 'attachment';
+      const asciiName = fileName.replace(/[^\x20-\x7E]/g, '_').replace(/"/g, '\\"');
+      const encodedName = encodeURIComponent(fileName);
+
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${asciiName}"; filename*=UTF-8''${encodedName}`);
       res.setHeader('Content-Length', pdfBuffer.length);
-      res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+      res.setHeader('Cache-Control', 'private, max-age=300');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Robots-Tag', 'noindex');
 
       return res.send(pdfBuffer);
     } catch (err) {
@@ -382,7 +545,7 @@ router.get(
 
 /**
  * GET /review/:token/data
- * Data retrieval endpoint for future report UI and view analytics tracking.
+ * Data retrieval endpoint for report UI and view analytics tracking.
  */
 router.get(
   '/review/:token/data',
@@ -409,7 +572,7 @@ router.get(
         });
       }
 
-      // Strict Public DTO Allowlist (Excludes all internal IDs, emails, storage paths, metrics, and workflows)
+      // Strict Public DTO Allowlist (Excludes internal IDs, emails, storage paths, metrics, and workflows)
       const publicReportDto = {
         success: true,
         business_name: audit.business_name,
@@ -471,7 +634,6 @@ const enquiryLimiter = rateLimit({
 /**
  * POST /api/website-review/enquiry
  * Direct server-side enquiry handler for Homepage Examples and Free Consultations.
- * Does not depend on client mailto: or email client configuration.
  */
 router.post(
   ['/api/website-review/enquiry', '/api/enquiry'],

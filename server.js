@@ -272,6 +272,25 @@ app.get(['/health/readiness', '/health/partner-program'], async (req, res) => {
   });
 });
 
+// Global Error Handler (Interceptors for JSON parser errors & Payload Too Large)
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.too.large' || err.status === 413)) {
+    return res.status(413).json({
+      success: false,
+      code: 'PDF_TOO_LARGE',
+      error: 'Payload exceeds size limit. Maximum allowed is 12 MB for JSON body.'
+    });
+  }
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_INPUT',
+      error: 'Malformed JSON payload.'
+    });
+  }
+  next(err);
+});
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'frontend', 'index.html'));
