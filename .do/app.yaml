@@ -18,6 +18,8 @@ services:
     value: production
   - key: PORT
     value: "3000"
+  - key: STOCKANALYSIS_API_URL
+    value: http://stockanalysis-api:8000
   - key: SUPABASE_URL
     value: https://nrunrjfmqczeowakjnjh.supabase.co
   - key: SUPABASE_ANON_KEY
@@ -97,6 +99,35 @@ services:
     value: notifications@mozarex.com
   - key: AIVEKAI_PARTNER_APPLICATION_ADMIN_EMAIL
     value: info@mozarex.com
+- name: stockanalysis-api
+  source_dir: stockanalysis/web_app/backend
+  github:
+    repo: smohammadnikkhah-debug/Digital-Marketing
+    branch: master
+    deploy_on_push: true
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  internal_ports:
+  - 8000
+  run_command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 15
+    period_seconds: 30
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: PORT
+    value: "8000"
+  - key: PYTHON_VERSION
+    value: "3.12"
+  - key: SEC_USER_AGENT
+    value: "MozarexPlatform/1.0 (info@mozarex.com)"
+  - key: SECRET_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
 domains:
 - domain: mozarex.com
   type: PRIMARY

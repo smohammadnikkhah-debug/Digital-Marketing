@@ -1,0 +1,371 @@
+{
+  "_cached_at": 1792020971.7348888,
+  "data": {
+    "ticker": "GOOGL",
+    "frequency": "quarterly_ttm",
+    "time_range": "5y",
+    "currency": "USD",
+    "coverage_status": "FULL",
+    "series": {
+      "revenue": {
+        "title": "Total Revenue",
+        "unit": "USD",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 422499000000.0,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 445867000000.0,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2027-01-13",
+            "period": "Q+1 Consensus Forecast",
+            "value": 142216910330.0,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
+          }
+        ]
+      },
+      "eps": {
+        "title": "Diluted EPS",
+        "unit": "USD/Share",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "UNAVAILABLE",
+            "coverage_status": "INCOMPLETE_SHARE_HISTORY",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true,
+            "na_reason": "Fewer than 4 valid quarterly diluted weighted-average share observations"
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 13.11,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 19.94,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2027-01-13",
+            "period": "Q+1 Consensus Forecast",
+            "value": 3.35,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
+          }
+        ]
+      },
+      "fcf": {
+        "title": "Free Cash Flow",
+        "unit": "USD",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 64429000000.0,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 53273000000.0,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "operating_margin": {
+        "title": "Operating Margin",
+        "unit": "%",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 32.69,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 33.11,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "net_profit_margin": {
+        "title": "Net Profit Margin",
+        "unit": "%",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 37.92,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 54.77,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "historical_pe": {
+        "title": "Historical P/E Ratio (Point-in-Time)",
+        "unit": "x",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "UNAVAILABLE",
+            "coverage_status": "EPS_UNAVAILABLE",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true,
+            "na_reason": "TTM diluted EPS unavailable or non-positive"
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 29.37,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 16.02,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "historical_ev_ebitda": {
+        "title": "Historical EV/EBITDA",
+        "unit": "x",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "UNAVAILABLE",
+            "coverage_status": "EBITDA_UNAVAILABLE",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true,
+            "na_reason": "EV or EBITDA unavailable or non-positive"
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 28.18,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 22.28,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "shares_outstanding": {
+        "title": "Diluted Shares Outstanding",
+        "unit": "Shares",
+        "data": [
+          {
+            "date": "2026-02-05",
+            "period": "TTM (2025-03 to 2025-12)",
+            "value": 12088000000.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-02-05",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-30",
+            "period": "TTM (2025-06 to 2026-03)",
+            "value": 12116000000.0,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-23",
+            "period": "TTM (2025-09 to 2026-06)",
+            "value": 12229934831.0,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-23",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      }
+    }
+  }
+}

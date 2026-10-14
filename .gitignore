@@ -12,6 +12,19 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.pytest_cache/
+*.egg-info/
+
+
 # Runtime data
 pids
 *.pid
@@ -117,7 +130,11 @@ Thumbs.db
 
 # Build outputs
 build/
+/dist/
 dist/
+!stockanalysis/
+!stockanalysis/dist/
+!stockanalysis/dist/**
 
 # PM2 logs
 .pm2/

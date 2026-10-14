@@ -1,0 +1,466 @@
+{
+  "_cached_at": 1792021081.431856,
+  "data": {
+    "ticker": "INTC",
+    "frequency": "annually",
+    "time_range": "5y",
+    "currency": "USD",
+    "coverage_status": "FULL",
+    "series": {
+      "revenue": {
+        "title": "Total Revenue",
+        "unit": "USD",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 63054000000.0,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 54228000000.0,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": 53101000000.0,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": 52853000000.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2027-10-15",
+            "period": "FY+1 Consensus Forecast",
+            "value": 72525005090.0,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
+          }
+        ]
+      },
+      "eps": {
+        "title": "Diluted EPS",
+        "unit": "USD/Share",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 1.94,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 0.4,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": -4.38,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": -0.06,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2027-10-15",
+            "period": "FY+1 Consensus Forecast",
+            "value": 2.09,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
+          }
+        ]
+      },
+      "fcf": {
+        "title": "Free Cash Flow",
+        "unit": "USD",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": -9411000000.0,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": -14279000000.0,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": -15656000000.0,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": -4949000000.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          }
+        ]
+      },
+      "operating_margin": {
+        "title": "Operating Margin",
+        "unit": "%",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 3.7,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 0.17,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": -21.99,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": -4.19,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          }
+        ]
+      },
+      "net_profit_margin": {
+        "title": "Net Profit Margin",
+        "unit": "%",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 12.71,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 3.11,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": -35.32,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": -0.51,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          }
+        ]
+      },
+      "historical_pe": {
+        "title": "Historical P/E Ratio (Point-in-Time)",
+        "unit": "x",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 13.89,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 117.92,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": null,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "UNAVAILABLE",
+            "coverage_status": "EPS_UNAVAILABLE",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false,
+            "na_reason": "Effective EPS unavailable or non-positive"
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": null,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "UNAVAILABLE",
+            "coverage_status": "EPS_UNAVAILABLE",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false,
+            "na_reason": "Effective EPS unavailable or non-positive"
+          }
+        ]
+      },
+      "historical_ev_ebitda": {
+        "title": "Historical EV/EBITDA",
+        "unit": "x",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 8.88,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 21.69,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": 14.89,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": 18.31,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          }
+        ]
+      },
+      "shares_outstanding": {
+        "title": "Diluted Shares Outstanding",
+        "unit": "Shares",
+        "data": [
+          {
+            "date": "2023-01-27",
+            "period": "2022-12-31",
+            "value": 4137000000.0,
+            "fiscal_period_end": "2022-12-31",
+            "filing_date": "2023-01-27",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2023-12-31",
+            "period": "2023-12-31",
+            "value": 4228000000.0,
+            "fiscal_period_end": "2023-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2024-12-31",
+            "period": "2024-12-31",
+            "value": 4330000000.0,
+            "fiscal_period_end": "2024-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          },
+          {
+            "date": "2025-12-31",
+            "period": "2025-12-31",
+            "value": 4994000000.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": null,
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "UNVERIFIED",
+            "is_pit_verified": false
+          }
+        ]
+      }
+    }
+  }
+}

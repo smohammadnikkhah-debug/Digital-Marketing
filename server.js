@@ -198,6 +198,29 @@ app.get('/stoptimetryx', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'stoptimetryx.html'));
 });
 
+// StockAnalysis (Adaptive Trading V4.0) App Landing Page
+app.get(['/stockanalysis', '/stockanalysis/overview'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'stockanalysis.html'));
+});
+
+// StockAnalysis React SPA App Routes & Static Assets
+const stockanalysisDistPath = path.join(__dirname, 'stockanalysis', 'dist');
+
+// Static assets for SPA (both under /stockanalysis/app/assets and /stockanalysis/assets)
+app.use('/stockanalysis/app/assets', express.static(path.join(stockanalysisDistPath, 'assets')));
+app.use('/stockanalysis/assets', express.static(path.join(stockanalysisDistPath, 'assets')));
+app.use('/stockanalysis/app', express.static(stockanalysisDistPath));
+
+// Ensure clean trailing-slash resolution for relative assets in SPA
+app.get('/stockanalysis/app', (req, res) => {
+  res.redirect(301, '/stockanalysis/app/');
+});
+
+// SPA Fallback: Any subpath under /stockanalysis/app/* serves the built index.html
+app.get(['/stockanalysis/app/*', '/stockanalysis/app/'], (req, res) => {
+  res.sendFile(path.join(stockanalysisDistPath, 'index.html'));
+});
+
 // Privacy Policy
 app.get('/policy', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'policy.html'));
@@ -211,6 +234,10 @@ app.get('/data-deletion', (req, res) => {
 // ==============================================================================
 // BACKEND API ROUTERS
 // ==============================================================================
+
+// StockAnalysis Quantitative Engine Reverse Proxy Router
+const stockanalysisProxyRouter = require('./routes/stockanalysisProxy');
+app.use('/stockanalysis/api', stockanalysisProxyRouter);
 
 // AivekAI Partner Program & Admin API Router
 const aivekaiPartnersRouter = require('./routes/aivekaiPartners');
