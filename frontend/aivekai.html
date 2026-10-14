@@ -1469,6 +1469,108 @@
                 text-align: center;
             }
         }
+
+        /* Referral Invitation Dynamic Banner */
+        .referral-invite-card {
+            display: none;
+            background: linear-gradient(135deg, rgba(0, 107, 92, 0.08) 0%, rgba(0, 194, 168, 0.12) 100%);
+            border: 1.5px solid rgba(0, 107, 92, 0.25);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(0, 107, 92, 0.09);
+            animation: fadeInDown 0.4s ease-out;
+        }
+        .referral-invite-card.active {
+            display: block;
+        }
+        .referral-invite-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #006B5C;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            margin-bottom: 10px;
+        }
+        .referral-invite-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+        .referral-invite-desc {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+            margin-bottom: 14px;
+        }
+        .referral-code-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1.5px dashed #006B5C;
+            border-radius: var(--radius-sm);
+            padding: 8px 14px;
+            gap: 12px;
+            max-width: 360px;
+            margin-bottom: 12px;
+        }
+        .referral-code-value {
+            font-family: monospace, ui-monospace, SFMono-Regular, Consolas;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #006B5C;
+        }
+        .referral-copy-btn {
+            background: #006B5C;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .referral-copy-btn:hover {
+            background: var(--primary-dark);
+        }
+        .referral-copy-btn.copied {
+            background: #10B981;
+        }
+        .referral-step-hint {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .store-btn.platform-highlight {
+            border: 2px solid #00C2A8 !important;
+            box-shadow: 0 0 16px rgba(0, 194, 168, 0.45) !important;
+            transform: scale(1.03);
+        }
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -1497,7 +1599,7 @@
             </ul>
 
             <div style="display: flex; align-items: center; gap: 12px;">
-                <a href="https://apps.apple.com/app/id6741707943" class="nav-cta" id="headerDownloadBtn" onclick="trackAppDownload('ios', 'header')">Download App</a>
+                <a href="https://apps.apple.com/au/app/aivekai-food-calorie-tracker/id6797833631" target="_blank" rel="noopener" class="nav-cta" id="headerDownloadBtn" onclick="trackAppDownload('ios', 'header')">Download App</a>
                 <button class="mobile-menu-btn" id="mobileMenuToggle" aria-label="Toggle navigation menu">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
@@ -1511,6 +1613,29 @@
             <div class="hero-container">
                 <!-- Left Hero Text -->
                 <div class="hero-content">
+                    <!-- Dynamic Referral Invitation Card -->
+                    <div id="referralInviteCard" class="referral-invite-card" role="region" aria-label="Referral invitation details">
+                        <div class="referral-invite-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6M12 3v13m-5-5 5-5 5 5"/></svg>
+                            Special Invitation
+                        </div>
+                        <h2 class="referral-invite-title">You've been invited to join AivekAI!</h2>
+                        <p class="referral-invite-desc">
+                            Claim <strong>5 BONUS AI food analyses</strong> (22 total) by entering this referral code during onboarding:
+                        </p>
+                        <div class="referral-code-box">
+                            <span id="referralCodeDisplay" class="referral-code-value">------</span>
+                            <button id="referralCopyBtn" class="referral-copy-btn" type="button" aria-label="Copy referral code">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                <span id="copyBtnText">Copy Code</span>
+                            </button>
+                        </div>
+                        <div class="referral-step-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                            <span>Download the app below, then paste or enter this code on the welcome screen.</span>
+                        </div>
+                    </div>
+
                     <div class="pill-badge">
                         <span>AI POWERED NUTRITION TRACKER</span>
                     </div>
@@ -1525,7 +1650,7 @@
                     </p>
 
                     <div class="store-buttons-wrap">
-                        <a href="https://apps.apple.com/app/id6741707943" class="store-btn" id="heroAppStoreBtn" onclick="trackAppDownload('ios', 'hero')">
+                        <a href="https://apps.apple.com/au/app/aivekai-food-calorie-tracker/id6797833631" target="_blank" rel="noopener" class="store-btn" id="heroAppStoreBtn" onclick="trackAppDownload('ios', 'hero')">
                             <svg viewBox="0 0 384 512">
                                 <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
                             </svg>
@@ -2011,7 +2136,7 @@
                 <p>Join thousands of people making smarter food choices with AivekAI.</p>
 
                 <div class="store-buttons-wrap">
-                    <a href="https://apps.apple.com/app/id6741707943" class="store-btn" id="footerAppStoreBtn" onclick="trackAppDownload('ios', 'cta_banner')">
+                    <a href="https://apps.apple.com/au/app/aivekai-food-calorie-tracker/id6797833631" target="_blank" rel="noopener" class="store-btn" id="footerAppStoreBtn" onclick="trackAppDownload('ios', 'cta_banner')">
                         <svg viewBox="0 0 384 512">
                             <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
                         </svg>
@@ -2103,7 +2228,7 @@
                 platform: platform,
                 cta_location: location,
                 target_url: platform === 'ios' 
-                    ? 'https://apps.apple.com/app/id6741707943' 
+                    ? 'https://apps.apple.com/au/app/aivekai-food-calorie-tracker/id6797833631' 
                     : 'https://play.google.com/store/apps/details?id=com.mozarex.aivekai'
             });
         }
@@ -2161,6 +2286,72 @@
                 }
             });
         });
+
+        // Universal Referral Invitation Handler (?ref=CODE or ?code=CODE)
+        (function initReferralInvite() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const referralCode = params.get('ref') || params.get('code');
+                if (!referralCode) return;
+
+                const cleanCode = referralCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (!cleanCode) return;
+
+                const inviteCard = document.getElementById('referralInviteCard');
+                const codeDisplay = document.getElementById('referralCodeDisplay');
+                const copyBtn = document.getElementById('referralCopyBtn');
+                const copyText = document.getElementById('copyBtnText');
+
+                if (inviteCard && codeDisplay) {
+                    codeDisplay.textContent = cleanCode;
+                    inviteCard.classList.add('active');
+
+                    // OS detection to highlight appropriate app store button
+                    const userAgent = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+                    const isIOS = /ipad|iphone|ipod/.test(userAgent) && !window.MSStream;
+                    const isAndroid = /android/.test(userAgent);
+
+                    const appStoreBtn = document.getElementById('heroAppStoreBtn');
+                    const googlePlayBtn = document.getElementById('heroGooglePlayBtn');
+
+                    if (isIOS && appStoreBtn) {
+                        appStoreBtn.classList.add('platform-highlight');
+                    } else if (isAndroid && googlePlayBtn) {
+                        googlePlayBtn.classList.add('platform-highlight');
+                    }
+
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', async () => {
+                            try {
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    await navigator.clipboard.writeText(cleanCode);
+                                } else {
+                                    const input = document.createElement('input');
+                                    input.value = cleanCode;
+                                    document.body.appendChild(input);
+                                    input.select();
+                                    document.execCommand('copy');
+                                    document.body.removeChild(input);
+                                }
+                                copyBtn.classList.add('copied');
+                                if (copyText) copyText.textContent = 'Copied! ✓';
+                                if (typeof trackEvent === 'function') {
+                                    trackEvent('referral_code_copied', { code: cleanCode });
+                                }
+                                setTimeout(() => {
+                                    copyBtn.classList.remove('copied');
+                                    if (copyText) copyText.textContent = 'Copy Code';
+                                }, 2500);
+                            } catch (e) {
+                                console.warn('Clipboard copy error:', e);
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('Referral initialization error:', err);
+            }
+        })();
 
         // Initial Pageview Telemetry
         document.addEventListener('DOMContentLoaded', () => {
