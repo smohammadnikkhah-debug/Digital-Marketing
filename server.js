@@ -174,6 +174,11 @@ app.use(express.static(path.join(__dirname, 'frontend'), {
   }
 }));
 
+// Favicon handler
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'favicon.ico'));
+});
+
 // ==============================================================================
 // PUBLIC WEBSITE ROUTES (MOZAREX & APPS)
 // ==============================================================================
