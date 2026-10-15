@@ -30,6 +30,7 @@ const proxyRateLimiter = rateLimit({
 
 // 2. Allowlisted Endpoint Prefixes
 const ALLOWED_PATH_PREFIXES = [
+  '/api/health',
   '/api/dashboard',
   '/api/signals',
   '/api/stocks',

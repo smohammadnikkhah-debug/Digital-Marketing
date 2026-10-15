@@ -7,13 +7,26 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 WEB_APP_DIR = BACKEND_DIR.parent
 PROJECT_ROOT = WEB_APP_DIR.parent
 
-V41_ENGINE_DIR = PROJECT_ROOT / "adaptive_trading_v41"
-V40_ENGINE_DIR = PROJECT_ROOT / "adaptive_trading_v40"
-ACTIVE_ENGINE_DIR = V41_ENGINE_DIR if V41_ENGINE_DIR.exists() else V40_ENGINE_DIR
+# Engine discovery: prioritize self-contained engine_core for container deployments
+LOCAL_ENGINE_CORE = BACKEND_DIR / "engine_core"
+if LOCAL_ENGINE_CORE.exists() and (LOCAL_ENGINE_CORE / "engine.py").exists():
+    ACTIVE_ENGINE_DIR = LOCAL_ENGINE_CORE
+    V41_ENGINE_DIR = LOCAL_ENGINE_CORE
+    V40_ENGINE_DIR = LOCAL_ENGINE_CORE
+    PRICE_CACHE_DIR = LOCAL_ENGINE_CORE / "price_cache"
+    DEFAULT_UNIVERSE_PATH = LOCAL_ENGINE_CORE / "Stock_Universe.xlsx"
+    BASELINE_EXCEL_PATH = LOCAL_ENGINE_CORE / "results_v40" / "Adaptive_Trading_Research_V40.xlsx"
+else:
+    V41_ENGINE_DIR = PROJECT_ROOT / "adaptive_trading_v41"
+    V40_ENGINE_DIR = PROJECT_ROOT / "adaptive_trading_v40"
+    ACTIVE_ENGINE_DIR = V41_ENGINE_DIR if V41_ENGINE_DIR.exists() else V40_ENGINE_DIR
+    PRICE_CACHE_DIR = V40_ENGINE_DIR / "price_cache"
+    DEFAULT_UNIVERSE_PATH = V40_ENGINE_DIR / "Stock_Universe.xlsx"
+    BASELINE_EXCEL_PATH = V40_ENGINE_DIR / "results_v40" / "Adaptive_Trading_Research_V40.xlsx"
 
-PRICE_CACHE_DIR = V40_ENGINE_DIR / "price_cache"
-DEFAULT_UNIVERSE_PATH = V40_ENGINE_DIR / "Stock_Universe.xlsx"
-BASELINE_EXCEL_PATH = V40_ENGINE_DIR / "results_v40" / "Adaptive_Trading_Research_V40.xlsx"
+import sys
+if str(ACTIVE_ENGINE_DIR) not in sys.path:
+    sys.path.insert(0, str(ACTIVE_ENGINE_DIR))
 EXPORTS_DIR = BACKEND_DIR / "exports"
 EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
