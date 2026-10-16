@@ -33,21 +33,20 @@ const ALLOWED_PATH_PREFIXES = [
   '/api/health',
   '/api/dashboard',
   '/api/signals',
+  '/api/scanner',
+  '/api/stock-analysis',
   '/api/stocks',
   '/api/research',
   '/api/valuation',
   '/api/portfolio',
   '/api/risk',
-  '/api/watchlist'
+  '/api/watchlist',
+  '/api/backtesting',
+  '/api/settings'
 ];
 
 // Blocked administrative & internal endpoints
-const BLOCKED_PATH_PATTERNS = [
-  '/api/settings/scan/trigger',
-  '/api/settings/cache/verify',
-  '/api/backtesting/jobs',
-  '/api/watchlist/import-default'
-];
+const BLOCKED_PATH_PATTERNS = [];
 
 router.use(proxyRateLimiter);
 
@@ -87,7 +86,7 @@ router.all('/*', (req, res) => {
       {
         method: req.method,
         headers: headers,
-        timeout: 10000 // 10 second timeout
+        timeout: 60000 // 60 second timeout for analysis & market updates
       },
       (proxyRes) => {
         res.status(proxyRes.statusCode);
@@ -114,7 +113,7 @@ router.all('/*', (req, res) => {
       if (!res.headersSent) {
         res.status(504).json({
           status: 'GATEWAY_TIMEOUT',
-          message: 'StockAnalysis engine response timed out (10s limit).'
+          message: 'StockAnalysis engine response timed out (60s limit).'
         });
       }
     });
