@@ -93,6 +93,12 @@ def init_db_data():
                 )
                 db.add(stock)
             db.commit()
+        # Check if portfolio transactions are empty
+        from app.models import PortfolioTransaction
+        from app.services.user_portfolio import get_or_create_portfolio, seed_sample_portfolio
+        if not db.query(PortfolioTransaction).first():
+            p = get_or_create_portfolio(db)
+            seed_sample_portfolio(db, p.id)
     except Exception as e:
         print(f"Startup data init notice: {e}")
     finally:

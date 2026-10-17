@@ -59,3 +59,50 @@ class SystemSetting(Base):
     key = Column(String(50), primary_key=True)
     value = Column(Text, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Portfolio(Base):
+    __tablename__ = "portfolios"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)  # Scoped to authenticated User.id (or None for default demo)
+    name = Column(String(100), default="Primary Portfolio")
+    base_currency = Column(String(10), default="USD")
+    cash_balance = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PortfolioTransaction(Base):
+    __tablename__ = "portfolio_transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    portfolio_id = Column(Integer, nullable=False, index=True)
+    ticker = Column(String(20), nullable=False, index=True)
+    exchange = Column(String(30), default="NASDAQ")
+    transaction_type = Column(String(20), nullable=False)  # BUY, SELL, DEPOSIT, WITHDRAWAL, DIVIDEND
+    quantity = Column(Float, default=0.0)
+    price_per_share = Column(Float, default=0.0)
+    fee = Column(Float, default=0.0)
+    amount = Column(Float, default=0.0)  # Total cash impact
+    currency = Column(String(10), default="USD")
+    trade_date = Column(String(20), nullable=False, index=True)  # YYYY-MM-DD
+    notes = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PortfolioLot(Base):
+    __tablename__ = "portfolio_lots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    portfolio_id = Column(Integer, nullable=False, index=True)
+    buy_transaction_id = Column(Integer, nullable=False, index=True)
+    ticker = Column(String(20), nullable=False, index=True)
+    exchange = Column(String(30), default="NASDAQ")
+    initial_quantity = Column(Float, nullable=False)
+    remaining_quantity = Column(Float, nullable=False)
+    cost_per_share = Column(Float, nullable=False)
+    fee_allocated = Column(Float, default=0.0)
+    purchase_date = Column(String(20), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+

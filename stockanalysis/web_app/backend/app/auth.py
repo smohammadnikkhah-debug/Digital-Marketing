@@ -59,3 +59,19 @@ def require_user(user: Optional[User] = Depends(get_current_user)) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+def get_current_user_or_default(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Retrieve authenticated user from JWT token, or fallback to admin user for single-user local web sessions."""
+    user = get_current_user(credentials, db)
+    if user:
+        return user
+    # Fallback to local admin user or create one
+    admin_user = db.query(User).filter(User.username == "admin").first()
+    if not admin_user:
+        admin_user = db.query(User).first()
+    return admin_user
+
