@@ -40,14 +40,15 @@ class SnapshotService:
         """Seed initial database records from universe_registry.json if database is empty."""
         db: Session = SessionLocal()
         try:
-            # Check if monitored_stocks table is empty
+            from app.config import IS_PRODUCTION
+            # Check if monitored_stocks table is empty (local dev only; production universe seeding is explicit via SQL)
             count = db.query(MonitoredStock).count()
-            if count == 0:
+            if count == 0 and not IS_PRODUCTION:
                 self._migrate_from_json_registry(db)
 
             # Check if an active snapshot exists
             active = db.query(ScreenerSnapshot).filter(ScreenerSnapshot.is_active == True).first()
-            if not active:
+            if not active and not IS_PRODUCTION:
                 self._create_initial_snapshot(db)
 
             # Recover any orphaned jobs from server restart
@@ -187,25 +188,40 @@ class SnapshotService:
         print(f"[SnapshotService] Created initial active snapshot: {snap_id}")
 
     def recover_orphaned_jobs(self, db: Optional[Session] = None):
-        """Mark any jobs left in RUNNING or QUEUED status from a past crash as FAILED."""
+        """Mark any jobs left in RUNNING status from a past crash as FAILED.
+        Preserves QUEUED jobs so legitimate pending tasks are not discarded on restart.
+        """
         should_close = False
         if db is None:
             db = SessionLocal()
             should_close = True
 
         try:
-            stuck_jobs = db.query(RefreshJob).filter(
-                RefreshJob.status.in_(["RUNNING", "QUEUED"])
+            # 1. Transition interrupted RUNNING jobs to FAILED
+            interrupted_jobs = db.query(RefreshJob).filter(
+                RefreshJob.status == "RUNNING"
             ).all()
 
-            for job in stuck_jobs:
+            for job in interrupted_jobs:
                 job.status = "FAILED"
                 job.finish_time = datetime.utcnow()
                 job.error_message = "Server restarted or worker stopped while job was in progress."
-                job.message = "Failed: Server restart detected."
-            if stuck_jobs:
+                job.message = "Failed: Server restart detected during execution."
+            if interrupted_jobs:
                 db.commit()
-                print(f"[SnapshotService] Cleaned up {len(stuck_jobs)} orphaned refresh jobs.")
+                print(f"[SnapshotService] Cleaned up {len(interrupted_jobs)} interrupted RUNNING refresh jobs.")
+
+            # 2. Preserve QUEUED jobs; reset any transient claim text
+            queued_jobs = db.query(RefreshJob).filter(
+                RefreshJob.status == "QUEUED"
+            ).all()
+            for job in queued_jobs:
+                if job.message and "Claimed" in job.message:
+                    job.message = "Job queued (restored after restart)"
+            if queued_jobs:
+                db.commit()
+                print(f"[SnapshotService] Preserved {len(queued_jobs)} legitimate QUEUED refresh jobs.")
+
         except Exception as ex:
             db.rollback()
             print(f"[SnapshotService] Error recovering orphaned jobs: {ex}")

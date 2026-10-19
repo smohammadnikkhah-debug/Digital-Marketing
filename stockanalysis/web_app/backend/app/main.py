@@ -1,14 +1,15 @@
-"""FastAPI backend server for Adaptive Trading V4.0 Research Application."""
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from sqlalchemy import text
 import pandas as pd
 
-from app.database import engine, Base, SessionLocal
+from app.database import engine, Base, SessionLocal, is_sqlite
 from app.models import WatchlistStock, User
 from app.auth import hash_password
-from app.config import DEFAULT_UNIVERSE_PATH, EXPORTS_DIR, WEB_APP_DIR
+from app.config import DEFAULT_UNIVERSE_PATH, EXPORTS_DIR, WEB_APP_DIR, IS_PRODUCTION, DB_SCHEMA
 from app.routers import (
     dashboard,
     signals,
@@ -93,12 +94,13 @@ def init_db_data():
                 )
                 db.add(stock)
             db.commit()
-        # Check if portfolio transactions are empty
+        # Check if portfolio transactions are empty (local SQLite dev only when explicitly requested; NEVER in production)
         from app.models import PortfolioTransaction
         from app.services.user_portfolio import get_or_create_portfolio, seed_sample_portfolio
-        if not db.query(PortfolioTransaction).first():
-            p = get_or_create_portfolio(db)
-            seed_sample_portfolio(db, p.id)
+        if is_sqlite and not IS_PRODUCTION and os.getenv("SEED_SAMPLE_PORTFOLIO", "false").lower() in ("true", "1"):
+            if not db.query(PortfolioTransaction).first():
+                p = get_or_create_portfolio(db)
+                seed_sample_portfolio(db, p.id)
     except Exception as e:
         print(f"Startup data init notice: {e}")
     finally:
@@ -114,12 +116,34 @@ def init_db_data():
 
 
 @app.get("/api/health")
-def health_check():
-    return {
-        "status": "healthy",
+def health_check(response: Response):
+    """Liveness and readiness probe verifying application runtime and real database connectivity."""
+    db_status = "healthy"
+    db_error = None
+    db_type = "sqlite" if is_sqlite else "postgresql"
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1;"))
+    except Exception as e:
+        db_status = "unhealthy"
+        db_error = str(e)
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    payload = {
+        "status": db_status,
         "engine": "Adaptive Trading V4.0 Baseline",
-        "research_only": True
+        "research_only": True,
+        "database": {
+            "type": db_type,
+            "schema": DB_SCHEMA,
+            "status": db_status,
+        }
     }
+    if db_error:
+        payload["database"]["error"] = db_error
+
+    return payload
 
 
 @app.get("/")

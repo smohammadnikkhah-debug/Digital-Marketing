@@ -39,10 +39,33 @@ FINANCIALS_CACHE_DIR = DATA_CACHE_DIR / "financials"
 VALUATION_CACHE_DIR = DATA_CACHE_DIR / "valuation_runs"
 VALUATION_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-# Database: SQLite default with auto-switch to PostgreSQL / Supabase
-_raw_db_url = os.getenv("DATABASE_URL", f"sqlite:///{BACKEND_DIR / 'adaptive_platform.db'}")
+# Environment & Production Guards
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
+IS_PRODUCTION = ENVIRONMENT == "production"
+
+# Database: SQLite default for local development, mandatory PostgreSQL for production
+_raw_db_url = os.getenv("DATABASE_URL")
+
+if IS_PRODUCTION:
+    if not _raw_db_url or not _raw_db_url.strip():
+        raise RuntimeError(
+            "FATAL CONFIGURATION ERROR: ENVIRONMENT is 'production' but DATABASE_URL is not set. "
+            "Silent fallback to SQLite in production is strictly prohibited."
+        )
+    if _raw_db_url.strip().startswith("sqlite"):
+        raise RuntimeError(
+            "FATAL CONFIGURATION ERROR: Production cannot use SQLite DATABASE_URL. "
+            "A PostgreSQL connection string pointing to Supabase schema 'stockanalysis' is required."
+        )
+else:
+    if not _raw_db_url:
+        _raw_db_url = f"sqlite:///{BACKEND_DIR / 'adaptive_platform.db'}"
+
+_raw_db_url = _raw_db_url.strip()
 if _raw_db_url.startswith("postgres://"):
-    DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif _raw_db_url.startswith("postgresql://") and not _raw_db_url.startswith("postgresql+"):
+    DATABASE_URL = _raw_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 else:
     DATABASE_URL = _raw_db_url
 

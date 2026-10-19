@@ -16,6 +16,7 @@ from datetime import datetime
 from app.database import Base, engine, SessionLocal
 from app.models import DailyBar
 from app.services.scanner_service import scanner_service, ROLLING_PRICE_CACHE_DIR, PRICE_CACHE_DIR
+from app.services.snapshot_service import snapshot_service
 from app.config import BASELINE_EXCEL_PATH
 import strategy_core_v38 as v38_core
 import engine as v41_engine
@@ -23,10 +24,9 @@ import engine as v41_engine
 
 @pytest.fixture(autouse=True)
 def setup_db():
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    snapshot_service._ensure_tables_and_seed()
     yield
-    Base.metadata.drop_all(bind=engine)
 
 
 TARGET_CACHE = ROLLING_PRICE_CACHE_DIR if (ROLLING_PRICE_CACHE_DIR / "AAPL.csv").exists() else PRICE_CACHE_DIR

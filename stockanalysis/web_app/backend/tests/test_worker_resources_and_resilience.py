@@ -26,10 +26,9 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup_db():
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    snapshot_service._ensure_tables_and_seed()
     yield
-    Base.metadata.drop_all(bind=engine)
 
 
 class TestWorkerResourcesAndResilience:

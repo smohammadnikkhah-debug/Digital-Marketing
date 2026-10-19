@@ -1,16 +1,18 @@
 """Database setup supporting SQLite by default and PostgreSQL / Supabase via DATABASE_URL."""
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
-from app.config import DATABASE_URL, DB_SCHEMA
+from app.config import DATABASE_URL, DB_SCHEMA, IS_PRODUCTION
 
 # Setup Base with isolated PostgreSQL schema
 Base = declarative_base()
 Base.metadata.schema = DB_SCHEMA
 
 def normalize_db_url(url: str) -> str:
-    """Normalizes postgres:// to postgresql:// and ensures proper driver dialect."""
+    """Normalizes postgres:// and postgresql:// to postgresql+psycopg2:// for reliable driver dialect."""
     if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql://", 1)
+        return url.replace("postgres://", "postgresql+psycopg2://", 1)
+    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
     return url
 
 
@@ -32,7 +34,17 @@ else:
         pool_recycle=1800,
         pool_pre_ping=True,
     )
-    # Ensure dedicated schema exists before table creation
+    # When in production, verify connectivity immediately on boot
+    if IS_PRODUCTION:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1;"))
+        except Exception as e:
+            raise RuntimeError(
+                f"FATAL DATABASE ERROR: Could not establish connection to production PostgreSQL database: {e}"
+            ) from e
+
+    # Ensure dedicated schema exists before table creation (non-fatal if permissions already restricted)
     try:
         with engine.connect() as conn:
             conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DB_SCHEMA}"))

@@ -88,7 +88,7 @@ class TestPostgreSQLSemantics:
         from app.database import normalize_db_url
         raw_supabase_url = "postgres://stockanalysis_app:placeholder_test_password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require"
         normalized = normalize_db_url(raw_supabase_url)
-        assert normalized.startswith("postgresql://")
+        assert normalized.startswith("postgresql://") or normalized.startswith("postgresql+psycopg2://")
         assert "sslmode=require" in normalized
 
     def test_05_atomic_snapshot_activation_transaction_sql(self):

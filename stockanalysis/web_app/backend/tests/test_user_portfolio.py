@@ -20,8 +20,9 @@ from app.services.user_portfolio import (
 
 @pytest.fixture
 def db_session():
-    """Create in-memory SQLite database session for testing."""
-    engine = create_engine("sqlite:///:memory:", echo=False)
+    engine = create_engine("sqlite:///:memory:", echo=False).execution_options(
+        schema_translate_map={"stockanalysis": None}
+    )
     Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
