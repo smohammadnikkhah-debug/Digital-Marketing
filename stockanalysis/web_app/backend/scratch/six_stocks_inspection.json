@@ -1,0 +1,473 @@
+{
+  "SPY": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "WATCH",
+      "latest_price": 766.48,
+      "as_of": "2026-10-19",
+      "selected_entry": "ROC20_AT_CROSS",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Above MA250 setup.",
+      "shariah_status": "NOT VERIFIED",
+      "bars_count": 2714,
+      "indicators": {
+        "ma30": 767.41,
+        "ma50": 767.3,
+        "ma250": 712.18,
+        "roc20": -0.91,
+        "atr14": 7.07
+      },
+      "delayed_breakdown": {
+        "is_delayed_rule": false,
+        "rule_type": "Immediate Close Trigger",
+        "close_above_ma250": true,
+        "three_consecutive_closes_above": true,
+        "ma50_bullish": true,
+        "stack_aligned": true,
+        "current_stage": "Immediate rule evaluation on completed closes"
+      },
+      "stock_vs_bh_vs_spy": {
+        "buy_and_hold_return_pct": 354.6,
+        "buy_and_hold_cagr_pct": 15.07,
+        "buy_and_hold_max_dd_pct": -33.72,
+        "strategy_total_pnl": 0.0,
+        "strategy_trades_count": 0
+      }
+    },
+    "fundamentals": {
+      "status": "AVAILABLE",
+      "is_sec_verified": false,
+      "sec_cik": "0000884394",
+      "latest_sec_filing_date": null,
+      "latest_sec_accession": null,
+      "currency": "USD",
+      "market_cap": "N/A",
+      "trailing_pe": "24.33x",
+      "forward_pe": "N/A",
+      "revenue_ttm": null,
+      "net_income_ttm": null,
+      "operating_cash_flow": null,
+      "free_cash_flow": null,
+      "total_cash": "N/A",
+      "total_debt": "N/A",
+      "gross_margin": null,
+      "operating_margin": null,
+      "net_margin": null,
+      "dividend_yield": "N/A"
+    },
+    "financial_series": {
+      "status": "ERROR",
+      "error": "'str' object has no attribute 'get'"
+    },
+    "risk": {
+      "status": "AVAILABLE",
+      "overall_score": null,
+      "overall_level": null,
+      "sections": {}
+    },
+    "valuation": {
+      "status": "ERROR",
+      "error": "unsupported operand type(s) for -: 'NoneType' and 'NoneType'"
+    }
+  },
+  "AAPL": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "BUY CANDIDATE",
+      "latest_price": 342.94,
+      "as_of": "2026-10-19",
+      "selected_entry": "DELAYED_STACK",
+      "selected_exit": "MA250_ATR3",
+      "explanation": "Valid long setup.",
+      "shariah_status": "NOT VERIFIED",
+      "bars_count": 1256,
+      "indicators": {
+        "ma30": 335.06,
+        "ma50": 326.29,
+        "ma250": 288.37,
+        "roc20": 1.17,
+        "atr14": 6.42
+      },
+      "delayed_breakdown": {
+        "is_delayed_rule": true,
+        "rule_type": "Delayed Confirmation",
+        "close_above_ma250": true,
+        "three_consecutive_closes_above": true,
+        "ma50_bullish": true,
+        "stack_aligned": true,
+        "current_stage": "Conditions satisfied; active buy trigger on cross confirmation"
+      },
+      "stock_vs_bh_vs_spy": {
+        "buy_and_hold_return_pct": 145.1,
+        "buy_and_hold_cagr_pct": 19.63,
+        "buy_and_hold_max_dd_pct": -33.36,
+        "strategy_total_pnl": 0.0,
+        "strategy_trades_count": 0
+      }
+    },
+    "fundamentals": {
+      "status": "AVAILABLE",
+      "is_sec_verified": true,
+      "sec_cik": "0000320193",
+      "latest_sec_filing_date": "2026-07-31",
+      "latest_sec_accession": "0000320193-26-000020",
+      "currency": "USD",
+      "market_cap": "$5.00T",
+      "trailing_pe": "39.33x",
+      "forward_pe": "35.81x",
+      "revenue_ttm": null,
+      "net_income_ttm": null,
+      "operating_cash_flow": null,
+      "free_cash_flow": null,
+      "total_cash": "$62.40B",
+      "total_debt": "$84.34B",
+      "gross_margin": null,
+      "operating_margin": null,
+      "net_margin": null,
+      "dividend_yield": "0.31%"
+    },
+    "financial_series": {
+      "status": "ERROR",
+      "error": "'str' object has no attribute 'get'"
+    },
+    "risk": {
+      "status": "AVAILABLE",
+      "overall_score": null,
+      "overall_level": null,
+      "sections": {}
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": null,
+      "base_iv": null,
+      "base_mos_pct": null,
+      "base_decision": null,
+      "bear_iv": null,
+      "bull_iv": null,
+      "wacc": null,
+      "cost_of_equity": null,
+      "provenance_rows": 0,
+      "historical_matrix_rows": 10
+    }
+  },
+  "MSFT": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "WATCH",
+      "latest_price": 533.52,
+      "as_of": "2026-10-19",
+      "selected_entry": "ROC20_AT_CROSS",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Above MA250 setup.",
+      "shariah_status": "NOT VERIFIED",
+      "bars_count": 1261,
+      "indicators": {
+        "ma30": 513.2,
+        "ma50": 506.05,
+        "ma250": 446.03,
+        "roc20": 6.36,
+        "atr14": 11.44
+      },
+      "delayed_breakdown": {
+        "is_delayed_rule": false,
+        "rule_type": "Immediate Close Trigger",
+        "close_above_ma250": true,
+        "three_consecutive_closes_above": true,
+        "ma50_bullish": true,
+        "stack_aligned": true,
+        "current_stage": "Immediate rule evaluation on completed closes"
+      },
+      "stock_vs_bh_vs_spy": {
+        "buy_and_hold_return_pct": 89.78,
+        "buy_and_hold_cagr_pct": 13.61,
+        "buy_and_hold_max_dd_pct": -37.15,
+        "strategy_total_pnl": 0.0,
+        "strategy_trades_count": 0
+      }
+    },
+    "fundamentals": {
+      "status": "AVAILABLE",
+      "is_sec_verified": true,
+      "sec_cik": "0000789019",
+      "latest_sec_filing_date": "2026-07-29",
+      "latest_sec_accession": "0001193125-26-323660",
+      "currency": "USD",
+      "market_cap": "$3.96T",
+      "trailing_pe": "29.72x",
+      "forward_pe": "22.49x",
+      "revenue_ttm": null,
+      "net_income_ttm": null,
+      "operating_cash_flow": null,
+      "free_cash_flow": null,
+      "total_cash": "$76.84B",
+      "total_debt": "$128.81B",
+      "gross_margin": null,
+      "operating_margin": null,
+      "net_margin": null,
+      "dividend_yield": "0.73%"
+    },
+    "financial_series": {
+      "status": "ERROR",
+      "error": "'str' object has no attribute 'get'"
+    },
+    "risk": {
+      "status": "AVAILABLE",
+      "overall_score": null,
+      "overall_level": null,
+      "sections": {}
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": null,
+      "base_iv": null,
+      "base_mos_pct": null,
+      "base_decision": null,
+      "bear_iv": null,
+      "bull_iv": null,
+      "wacc": null,
+      "cost_of_equity": null,
+      "provenance_rows": 0,
+      "historical_matrix_rows": 10
+    }
+  },
+  "GOOGL": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "WATCH",
+      "latest_price": 344.18,
+      "as_of": "2026-10-19",
+      "selected_entry": "DELAYED_STACK",
+      "selected_exit": "MA250_ATR3",
+      "explanation": "Above MA250; monitor for stock-specific entry confirmation",
+      "shariah_status": "NOT VERIFIED",
+      "bars_count": 2714,
+      "indicators": {
+        "ma30": 344.89,
+        "ma50": 344.29,
+        "ma250": 331.75,
+        "roc20": -3.04,
+        "atr14": 9.04
+      },
+      "delayed_breakdown": {
+        "is_delayed_rule": true,
+        "rule_type": "Delayed Confirmation",
+        "close_above_ma250": true,
+        "three_consecutive_closes_above": true,
+        "ma50_bullish": true,
+        "stack_aligned": true,
+        "current_stage": "Conditions satisfied; active buy trigger on cross confirmation"
+      },
+      "stock_vs_bh_vs_spy": {
+        "buy_and_hold_return_pct": 811.72,
+        "buy_and_hold_cagr_pct": 22.73,
+        "buy_and_hold_max_dd_pct": -44.32,
+        "strategy_total_pnl": 39615.09,
+        "strategy_trades_count": 4
+      }
+    },
+    "fundamentals": {
+      "status": "AVAILABLE",
+      "is_sec_verified": true,
+      "sec_cik": "0001652044",
+      "latest_sec_filing_date": "2026-07-23",
+      "latest_sec_accession": "0001652044-26-000071",
+      "currency": "USD",
+      "market_cap": "$4.21T",
+      "trailing_pe": "17.27x",
+      "forward_pe": "22.51x",
+      "revenue_ttm": null,
+      "net_income_ttm": null,
+      "operating_cash_flow": null,
+      "free_cash_flow": null,
+      "total_cash": "$55.91B",
+      "total_debt": "$112.76B",
+      "gross_margin": null,
+      "operating_margin": null,
+      "net_margin": null,
+      "dividend_yield": "0.26%"
+    },
+    "financial_series": {
+      "status": "ERROR",
+      "error": "'str' object has no attribute 'get'"
+    },
+    "risk": {
+      "status": "AVAILABLE",
+      "overall_score": null,
+      "overall_level": null,
+      "sections": {}
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": null,
+      "base_iv": null,
+      "base_mos_pct": null,
+      "base_decision": null,
+      "bear_iv": null,
+      "bull_iv": null,
+      "wacc": null,
+      "cost_of_equity": null,
+      "provenance_rows": 0,
+      "historical_matrix_rows": 10
+    }
+  },
+  "NVDA": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "HOLD",
+      "latest_price": 217.09,
+      "as_of": "2026-10-19",
+      "selected_entry": "ROC20_AT_CROSS",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Simulated portfolio position; exit rule evaluated on latest close",
+      "shariah_status": "NOT VERIFIED",
+      "bars_count": 2714,
+      "indicators": {
+        "ma30": 224.83,
+        "ma50": 222.83,
+        "ma250": 199.43,
+        "roc20": -4.53,
+        "atr14": 5.74
+      },
+      "delayed_breakdown": {
+        "is_delayed_rule": false,
+        "rule_type": "Immediate Close Trigger",
+        "close_above_ma250": true,
+        "three_consecutive_closes_above": true,
+        "ma50_bullish": true,
+        "stack_aligned": true,
+        "current_stage": "Immediate rule evaluation on completed closes"
+      },
+      "stock_vs_bh_vs_spy": {
+        "buy_and_hold_return_pct": 27526.71,
+        "buy_and_hold_cagr_pct": 68.37,
+        "buy_and_hold_max_dd_pct": -66.34,
+        "strategy_total_pnl": 53549.48,
+        "strategy_trades_count": 2
+      }
+    },
+    "fundamentals": {
+      "status": "AVAILABLE",
+      "is_sec_verified": true,
+      "sec_cik": "0001045810",
+      "latest_sec_filing_date": "2026-08-26",
+      "latest_sec_accession": "0001045810-26-000075",
+      "currency": "USD",
+      "market_cap": "$5.24T",
+      "trailing_pe": "27.45x",
+      "forward_pe": "13.64x",
+      "revenue_ttm": null,
+      "net_income_ttm": null,
+      "operating_cash_flow": null,
+      "free_cash_flow": null,
+      "total_cash": "$62.47B",
+      "total_debt": "$38.86B",
+      "gross_margin": null,
+      "operating_margin": null,
+      "net_margin": null,
+      "dividend_yield": "0.46%"
+    },
+    "financial_series": {
+      "status": "ERROR",
+      "error": "'str' object has no attribute 'get'"
+    },
+    "risk": {
+      "status": "AVAILABLE",
+      "overall_score": null,
+      "overall_level": null,
+      "sections": {}
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": null,
+      "base_iv": null,
+      "base_mos_pct": null,
+      "base_decision": null,
+      "bear_iv": null,
+      "bull_iv": null,
+      "wacc": null,
+      "cost_of_equity": null,
+      "provenance_rows": 0,
+      "historical_matrix_rows": 10
+    }
+  },
+  "QCOM": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "WATCH",
+      "latest_price": 173.53,
+      "as_of": "2026-10-19",
+      "selected_entry": "MA50_AT_CROSS",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Above MA250; monitor for stock-specific entry confirmation",
+      "shariah_status": "NOT VERIFIED",
+      "bars_count": 2714,
+      "indicators": {
+        "ma30": 182.52,
+        "ma50": 174.8,
+        "ma250": 168.5,
+        "roc20": -10.66,
+        "atr14": 5.89
+      },
+      "delayed_breakdown": {
+        "is_delayed_rule": false,
+        "rule_type": "Immediate Close Trigger",
+        "close_above_ma250": true,
+        "three_consecutive_closes_above": true,
+        "ma50_bullish": true,
+        "stack_aligned": true,
+        "current_stage": "Immediate rule evaluation on completed closes"
+      },
+      "stock_vs_bh_vs_spy": {
+        "buy_and_hold_return_pct": 372.58,
+        "buy_and_hold_cagr_pct": 15.48,
+        "buy_and_hold_max_dd_pct": -44.29,
+        "strategy_total_pnl": -36416.13,
+        "strategy_trades_count": 5
+      }
+    },
+    "fundamentals": {
+      "status": "AVAILABLE",
+      "is_sec_verified": true,
+      "sec_cik": "0000804328",
+      "latest_sec_filing_date": "2026-07-29",
+      "latest_sec_accession": "0000804328-26-000086",
+      "currency": "USD",
+      "market_cap": "$185.30B",
+      "trailing_pe": "20.08x",
+      "forward_pe": "17.03x",
+      "revenue_ttm": null,
+      "net_income_ttm": null,
+      "operating_cash_flow": null,
+      "free_cash_flow": null,
+      "total_cash": "$8.30B",
+      "total_debt": "$15.27B",
+      "gross_margin": null,
+      "operating_margin": null,
+      "net_margin": null,
+      "dividend_yield": "2.12%"
+    },
+    "financial_series": {
+      "status": "ERROR",
+      "error": "'str' object has no attribute 'get'"
+    },
+    "risk": {
+      "status": "AVAILABLE",
+      "overall_score": null,
+      "overall_level": null,
+      "sections": {}
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": null,
+      "base_iv": null,
+      "base_mos_pct": null,
+      "base_decision": null,
+      "bear_iv": null,
+      "bull_iv": null,
+      "wacc": null,
+      "cost_of_equity": null,
+      "provenance_rows": 0,
+      "historical_matrix_rows": 10
+    }
+  }
+}

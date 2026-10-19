@@ -1,0 +1,79 @@
+{
+  "_cached_at": 1792445602.9860594,
+  "data": {
+    "ticker": "QCOM",
+    "trend_risk": {
+      "title": "Trend & Technical Risk",
+      "current_price": 173.53,
+      "ma250": 168.15,
+      "price_vs_ma250_pct": 3.2,
+      "roc20_pct": -4.64,
+      "atr14": 6.86,
+      "atr14_pct": 3.95,
+      "technical_signal": "EXIT",
+      "rule_name": "V4.0 Baseline Trend & Volatility Exit",
+      "exit_threshold_price": 185.28,
+      "distance_to_exit_pct": -6.77,
+      "methodology": "Compares current price to 250-day simple moving average (long-term regime), 20-day rate of change (ROC20 momentum), and distance to 3.0x ATR14 trailing volatility stop.",
+      "evidence": "Close=$173.53, MA250=$168.15 (diff: +3.2%), ROC20=-4.6%, ATR14=$6.86 (4.0%). Trailing Stop=$185.28.",
+      "data_date": "2026-10-20",
+      "explanation": "The stock is trading 3.2% above its 250-day moving average. Technical signal is EXIT with a 6.8% buffer before triggering trailing stop rules."
+    },
+    "valuation_risk": {
+      "title": "Valuation & Compression Risk",
+      "current_pe": 20.08,
+      "pe_percentile_5y": null,
+      "historical_pe_distribution": {
+        "observations_count": 8,
+        "required_count": 12,
+        "date_range": "2022-09-30 to 2026-06-30",
+        "status": "INSUFFICIENT_HISTORY",
+        "warning": "Insufficient historical observations: 8 of 12 required quarterly observations available (2022-09-30 to 2026-06-30). Historical valuation percentile requires at least 12 valid quarterly observations.",
+        "min": 9.42,
+        "median": 16.11,
+        "max": 32.55
+      },
+      "fcf_yield_pct": 5.53,
+      "us_treasury_10y_yield_pct": 4.25,
+      "peg_ratio": 0.78,
+      "multiple_compression_sensitivity": {
+        "median_reversion_impact_pct": -19.8,
+        "p25_reversion_impact_pct": null
+      },
+      "methodology": "Calculates percentile ranking of current trailing P/E against the genuine empirical historical distribution (minimum 12 observations required), Free Cash Flow yield relative to risk-free benchmark (10Y US Treasury at 4.25%), and price vulnerability under multiple compression.",
+      "evidence": "P/E=20.08449x (Historical Median: 16.11x, Range: 9.42x to 32.55x, n=8, Date Range: 2022-09-30 to 2026-06-30). FCF Yield=5.526648420487875%, PEG=0.78.",
+      "data_date": "2026-10-20",
+      "explanation": "Insufficient historical observations: 8 of 12 required quarterly observations available (2022-09-30 to 2026-06-30). Historical valuation percentile requires at least 12 valid quarterly observations. Empirical percentile and multiple compression sensitivity are N/A."
+    },
+    "financial_risk": {
+      "title": "Financial Health & Balance Sheet Risk",
+      "cash_and_equivalents": 8304000000,
+      "total_debt": 15269999616,
+      "net_debt": 6965999616,
+      "net_debt_to_ebitda": 0.58,
+      "interest_coverage": 18.61,
+      "fcf_stability_cv": 0.52,
+      "earnings_quality_ratio": 1.34,
+      "share_dilution_yoy_pct": -3.5,
+      "methodology": "Evaluates solvency leverage (Net Debt/EBITDA), debt service buffer (Interest Coverage), organic cash conversion (Operating Cash Flow / Net Income > 1.0 signifies high earnings quality), and 1-year share dilution rate.",
+      "evidence": "Net Debt=$6.97B, Net Debt/EBITDA=0.5805483687045312x, Interest Coverage=18.606927710843372x, Earnings Quality (OCF/NI)=1.3392008752877511x, Dilution YoY=-3.5040431266846306%.",
+      "data_date": "2026-10-20",
+      "explanation": "Net debt of $7.0B. Earnings quality of 1.34x indicates net income is strongly supported by real operating cash flows."
+    },
+    "market_risk": {
+      "title": "Market & Macroeconomic Risk",
+      "max_drawdown_5y_pct": -45.08,
+      "beta_vs_spy_252d": 2.11,
+      "realized_volatility_annualized_pct": 54.4,
+      "downside_capture_vs_spy_pct": 130.6,
+      "stress_period_performance": {
+        "covid_2020_crash_drawdown_pct": -32.21,
+        "tech_bear_2022_drawdown_pct": -41.55
+      },
+      "methodology": "Calculates 5-year maximum peak-to-trough drawdown, 252-day covariance Beta relative to SPY, annualized realized volatility (std * sqrt(252)), downside capture ratio during negative market days, and stress drawdowns during COVID-19 (Feb-Mar 2020) and 2022 Tech Bear market.",
+      "evidence": "Beta=2.1116342660138074, Volatility=54.39911616577396%, 5Y MaxDD=-45.079220828926324%, Downside Capture=130.5975053691022%, COVID 2020 Crash=-32.205683593938986%, 2022 Bear=-41.5534184280365%.",
+      "data_date": "2026-10-20",
+      "explanation": "The stock has a beta of 2.11 relative to the S&P 500 with realized volatility of 54.4%. Historical 5-year peak drawdown was -45.1%. Downside capture is 131%, indicating higher sensitivity on negative market days."
+    }
+  }
+}

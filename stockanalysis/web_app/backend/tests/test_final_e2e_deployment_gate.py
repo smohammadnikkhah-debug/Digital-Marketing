@@ -562,7 +562,7 @@ class TestFinalE2EDeploymentGate:
             },
             method="GET",
         )
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             assert data["id"] == SUPABASE_BACKUP_BUCKET
             assert data["public"] is False, "CRITICAL: Bucket must be private (public: False)"
@@ -577,7 +577,7 @@ class TestFinalE2EDeploymentGate:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(anon_req) as resp:
+            with urllib.request.urlopen(anon_req, timeout=10) as resp:
                 pytest.fail("Anonymous access should have been rejected by Supabase Storage.")
         except urllib.error.HTTPError as err:
             assert err.code in (400, 401, 403), f"Expected 400/401/403 for anonymous access, got {err.code}"

@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792021078.9190116,
+  "_cached_at": 1792445514.121706,
   "data": {
     "ticker": "INTC",
     "frequency": "quarterly",
@@ -72,9 +72,9 @@
             "is_pit_verified": false
           },
           {
-            "date": "2027-01-13",
+            "date": "2027-01-18",
             "period": "Q+1 Consensus Forecast",
-            "value": 17025416200.0,
+            "value": 17017974530.0,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",
@@ -148,9 +148,9 @@
             "is_pit_verified": false
           },
           {
-            "date": "2027-01-13",
+            "date": "2027-01-18",
             "period": "Q+1 Consensus Forecast",
-            "value": 0.43,
+            "value": 0.44,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",

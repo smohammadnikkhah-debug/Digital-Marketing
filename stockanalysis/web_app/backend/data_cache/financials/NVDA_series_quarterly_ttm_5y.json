@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792021064.3051543,
+  "_cached_at": 1792445491.1890883,
   "data": {
     "ticker": "NVDA",
     "frequency": "quarterly_ttm",
@@ -34,16 +34,6 @@
             "coverage_status": "FULL",
             "sec_verification_status": "UNVERIFIED",
             "is_pit_verified": false
-          },
-          {
-            "date": "2027-01-13",
-            "period": "Q+1 Consensus Forecast",
-            "value": 124482697730.0,
-            "is_forecast": true,
-            "status": "ESTIMATED",
-            "coverage_status": "FULL",
-            "filing_date": null,
-            "fiscal_period_end": null
           }
         ]
       },
@@ -74,16 +64,6 @@
             "coverage_status": "FULL",
             "sec_verification_status": "UNVERIFIED",
             "is_pit_verified": false
-          },
-          {
-            "date": "2027-01-13",
-            "period": "Q+1 Consensus Forecast",
-            "value": 2.75,
-            "is_forecast": true,
-            "status": "ESTIMATED",
-            "coverage_status": "FULL",
-            "filing_date": null,
-            "fiscal_period_end": null
           }
         ]
       },

@@ -1,0 +1,560 @@
+{
+  "_cached_at": 1792445583.2601147,
+  "data": {
+    "ticker": "MSFT",
+    "frequency": "quarterly",
+    "time_range": "5y",
+    "currency": "USD",
+    "coverage_status": "FULL",
+    "series": {
+      "revenue": {
+        "title": "Total Revenue",
+        "unit": "USD",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 76441000000.0,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 77673000000.0,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 81273000000.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 82886000000.0,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 90007000000.0,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2027-01-18",
+            "period": "Q+1 Consensus Forecast",
+            "value": 95665490370.0,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
+          }
+        ]
+      },
+      "eps": {
+        "title": "Diluted EPS",
+        "unit": "USD/Share",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 3.65,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 3.72,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 5.16,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 4.27,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 4.81,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2027-01-18",
+            "period": "Q+1 Consensus Forecast",
+            "value": 4.82,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
+          }
+        ]
+      },
+      "fcf": {
+        "title": "Free Cash Flow",
+        "unit": "USD",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 25568000000.0,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 25663000000.0,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 5882000000.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 15803000000.0,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 19639000000.0,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "operating_margin": {
+        "title": "Operating Margin",
+        "unit": "%",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 44.9,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 48.87,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 47.09,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 46.33,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 45.11,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "net_profit_margin": {
+        "title": "Net Profit Margin",
+        "unit": "%",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 35.63,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 35.72,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 47.32,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 38.34,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 39.74,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "historical_pe": {
+        "title": "Historical P/E Ratio (Point-in-Time)",
+        "unit": "x",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 36.18,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 35.04,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 20.87,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 23.78,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 23.4,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "historical_ev_ebitda": {
+        "title": "Historical EV/EBITDA",
+        "unit": "x",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 22.27,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 20.75,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 13.97,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 15.58,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 15.95,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      },
+      "shares_outstanding": {
+        "title": "Diluted Shares Outstanding",
+        "unit": "Shares",
+        "data": [
+          {
+            "date": "2025-07-30",
+            "period": "Q 2025-06",
+            "value": 7434158655.0,
+            "fiscal_period_end": "2025-06-30",
+            "filing_date": "2025-07-30",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2025-10-29",
+            "period": "Q 2025-09",
+            "value": 7433087554.0,
+            "fiscal_period_end": "2025-09-30",
+            "filing_date": "2025-10-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-01-28",
+            "period": "Q 2025-12",
+            "value": 7428838066.0,
+            "fiscal_period_end": "2025-12-31",
+            "filing_date": "2026-01-28",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-04-29",
+            "period": "Q 2026-03",
+            "value": 7429000000.0,
+            "fiscal_period_end": "2026-03-31",
+            "filing_date": "2026-04-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          },
+          {
+            "date": "2026-07-29",
+            "period": "Q 2026-06",
+            "value": 7427000000.0,
+            "fiscal_period_end": "2026-06-30",
+            "filing_date": "2026-07-29",
+            "is_forecast": false,
+            "status": "REPORTED",
+            "coverage_status": "FULL",
+            "sec_verification_status": "REGULATORY_FILING_FOUND",
+            "is_pit_verified": true
+          }
+        ]
+      }
+    }
+  }
+}

@@ -13,6 +13,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import os
 import sys
 import time
+import json
 import uuid
 import threading
 from datetime import datetime, date, timedelta
@@ -183,32 +184,88 @@ class ScannerService:
         return None
 
     def _persist_bars_to_db(self, ticker: str, df: pd.DataFrame, full: bool = False):
-        """Persists daily OHLCV bars into durable Supabase DailyBar table with atomic upserts."""
+        """Persists daily OHLCV bars into durable Supabase DailyBar table with atomic batch upserts."""
         if df is None or df.empty:
             return
-        from app.database import SessionLocal
+        from app.database import SessionLocal, is_sqlite
         from app.models import DailyBar
         db = SessionLocal()
         try:
             target_slice = df.tail(2520) if full else df.tail(30)
+            records = []
             for idx, row in target_slice.iterrows():
                 date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
-                bar = DailyBar(
-                    ticker=ticker,
-                    bar_date=date_str,
-                    open=float(row["Open"]),
-                    high=float(row["High"]),
-                    low=float(row["Low"]),
-                    close=float(row["Close"]),
-                    volume=float(row.get("Volume", 0.0)) if pd.notna(row.get("Volume", 0.0)) else 0.0,
-                )
-                db.merge(bar)
-            db.commit()
+                records.append({
+                    "ticker": ticker,
+                    "bar_date": date_str,
+                    "open": float(row["Open"]),
+                    "high": float(row["High"]),
+                    "low": float(row["Low"]),
+                    "close": float(row["Close"]),
+                    "volume": float(row.get("Volume", 0.0)) if pd.notna(row.get("Volume", 0.0)) else 0.0,
+                })
+            if records:
+                CHUNK_SIZE = 500
+                for i in range(0, len(records), CHUNK_SIZE):
+                    chunk = records[i:i + CHUNK_SIZE]
+                    if is_sqlite:
+                        from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+                        stmt = sqlite_insert(DailyBar).values(chunk)
+                        stmt = stmt.on_conflict_do_update(
+                            index_elements=["ticker", "bar_date"],
+                            set_={
+                                "open": stmt.excluded.open,
+                                "high": stmt.excluded.high,
+                                "low": stmt.excluded.low,
+                                "close": stmt.excluded.close,
+                                "volume": stmt.excluded.volume,
+                            }
+                        )
+                        db.execute(stmt)
+                    else:
+                        from sqlalchemy.dialects.postgresql import insert as pg_insert
+                        stmt = pg_insert(DailyBar).values(chunk)
+                        stmt = stmt.on_conflict_do_update(
+                            index_elements=["ticker", "bar_date"],
+                            set_={
+                                "open": stmt.excluded.open,
+                                "high": stmt.excluded.high,
+                                "low": stmt.excluded.low,
+                                "close": stmt.excluded.close,
+                                "volume": stmt.excluded.volume,
+                            }
+                        )
+                        db.execute(stmt)
+                db.commit()
         except Exception as ex:
             db.rollback()
             print(f"[ScannerService] Error persisting daily bars to DB for {ticker}: {ex}")
         finally:
             db.close()
+
+    def _download_yahoo_bars(self, ticker: str, kwargs: dict, max_retries: int = 3, base_delay: float = 1.0) -> Optional[pd.DataFrame]:
+        """Downloads adjusted bars from Yahoo Finance with bounded exponential backoff on HTTP 429 and rate limits."""
+        import yfinance as yf
+        import random
+        for attempt in range(1, max_retries + 1):
+            try:
+                bars = yf.download(ticker, **kwargs)
+                if bars is not None and not bars.empty:
+                    return bars
+                if attempt < max_retries:
+                    time.sleep(base_delay)
+            except Exception as ex:
+                err_str = str(ex).lower()
+                is_rate_limit = "429" in err_str or "too many requests" in err_str or "rate limit" in err_str
+                if is_rate_limit:
+                    backoff = min(base_delay * (2 ** (attempt - 1)) + random.uniform(0.1, 0.5), 8.0)
+                    print(f"[ScannerService] HTTP 429 rate limit for {ticker}. Backing off {backoff:.2f}s (attempt {attempt}/{max_retries})...")
+                    time.sleep(backoff)
+                elif attempt < max_retries:
+                    time.sleep(base_delay)
+                else:
+                    print(f"[ScannerService] Download error for {ticker} after {max_retries} attempts: {ex}")
+        return None
 
     def fetch_or_update_stock(self, ticker: str, force_full: bool = False) -> Tuple[Optional[pd.DataFrame], bool]:
         """Fetches or incrementally updates stock OHLCV data using Yahoo Finance.
@@ -216,8 +273,6 @@ class ScannerService:
         """
         ticker = ticker.strip().upper()
         existing_df = self.get_price_df(ticker)
-
-        import yfinance as yf
 
         is_stale = False
         try:
@@ -230,13 +285,15 @@ class ScannerService:
 
                 # Incremental fetch: from 7 days before last_dt to ensure splits/adjustments overlap
                 start_fetch = (last_dt - timedelta(days=7)).strftime("%Y-%m-%d")
-                new_bars = yf.download(
+                new_bars = self._download_yahoo_bars(
                     ticker,
-                    start=start_fetch,
-                    auto_adjust=True,
-                    progress=False,
-                    multi_level_index=False,
-                    timeout=10,
+                    {
+                        "start": start_fetch,
+                        "auto_adjust": True,
+                        "progress": False,
+                        "multi_level_index": False,
+                        "timeout": 10,
+                    }
                 )
 
                 if new_bars is not None and not new_bars.empty:
@@ -255,13 +312,15 @@ class ScannerService:
                     return existing_df, True
             else:
                 # Full backfill for new or small stock: 5-10 years of data
-                bars = yf.download(
+                bars = self._download_yahoo_bars(
                     ticker,
-                    period="5y",
-                    auto_adjust=True,
-                    progress=False,
-                    multi_level_index=False,
-                    timeout=12,
+                    {
+                        "period": "5y",
+                        "auto_adjust": True,
+                        "progress": False,
+                        "multi_level_index": False,
+                        "timeout": 12,
+                    }
                 )
 
                 if bars is not None and not bars.empty:
@@ -275,7 +334,6 @@ class ScannerService:
                     if existing_df is not None:
                         return existing_df, True
                     return None, False
-
 
         except Exception as e:
             print(f"[ScannerService] Error fetching {ticker}: {e}")
@@ -599,8 +657,13 @@ class ScannerService:
                 "status": "SUCCESS" if data_status == "READY" else data_status,
             }
 
-    def start_refresh_async(self, force_all: bool = False, job_type: str = "MANUAL_REFRESH") -> Dict[str, Any]:
-        """Initiates a durable screener refresh as a background job."""
+    def start_refresh_async(
+        self,
+        force_all: bool = False,
+        tickers: Optional[List[str]] = None,
+        job_type: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Initiates a durable screener refresh as a background job across all or selected stocks."""
         from app.database import SessionLocal
         from app.models import RefreshJob
 
@@ -620,24 +683,62 @@ class ScannerService:
                         "progress": self._format_job_dict(existing_job),
                     }
 
-                stocks = universe_manager.get_all(include_inactive=False)
+                declared_full = bool(job_type and str(job_type).strip().upper() == "FULL")
+                declared_partial = bool(job_type and str(job_type).strip().upper().startswith("PARTIAL"))
+                has_tickers = bool(tickers is not None and len(tickers) > 0)
+
+                if declared_full and has_tickers:
+                    raise ValueError("Contradictory request: job_type is FULL but tickers were provided.")
+
+                if not has_tickers and not declared_full:
+                    raise ValueError("Full-universe refresh requires explicit job_type='FULL'.")
+
+                is_partial = has_tickers or declared_partial
+
+                if declared_partial and not has_tickers:
+                    raise ValueError("Cannot initiate a partial refresh job without a valid list of tickers.")
+
+                if is_partial:
+                    if not tickers or len(tickers) == 0:
+                        raise ValueError("Partial refresh requested without specifying tickers.")
+                    norm_tickers = [str(t).strip().upper() for t in tickers]
+                    if len(norm_tickers) != len(set(norm_tickers)):
+                        raise ValueError("Duplicate tickers detected in partial refresh request.")
+                    resolved_stocks = []
+                    for t in norm_tickers:
+                        st = universe_manager.get_stock(t)
+                        if not st:
+                            raise ValueError(f"Unknown ticker '{t}' in partial refresh request (not in universe).")
+                        is_active = st.get("is_active", True) if isinstance(st, dict) else getattr(st, "is_active", True)
+                        if not is_active:
+                            raise ValueError(f"Inactive ticker '{t}' in partial refresh request.")
+                        resolved_stocks.append(st)
+                    actual_type = "PARTIAL_REFRESH"
+                    msg = f"Partial refresh queued for {len(resolved_stocks)} symbols: {', '.join(norm_tickers[:5])}..."
+                    initial_meta = json.dumps({"requested_tickers": norm_tickers, "errors": []})
+                else:
+                    resolved_stocks = universe_manager.get_all(include_inactive=False)
+                    actual_type = job_type or "MANUAL_REFRESH"
+                    msg = f"Refresh queued for {len(resolved_stocks)} symbols..."
+                    initial_meta = "[]"
+
                 job_id = f"job_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
                 self._cancel_flag = False
 
                 new_job = RefreshJob(
                     id=job_id,
-                    job_type=job_type,
+                    job_type=actual_type,
                     status="QUEUED",
                     force_all=force_all,
-                    total_stocks=len(stocks),
+                    total_stocks=len(resolved_stocks),
                     completed_stocks=0,
-                    remaining_stocks=len(stocks),
+                    remaining_stocks=len(resolved_stocks),
                     failed_stocks=0,
                     stale_stocks=0,
                     current_ticker="",
                     start_time=datetime.utcnow(),
-                    message=f"Refresh queued for {len(stocks)} symbols...",
-                    errors_json="[]",
+                    message=msg,
+                    errors_json=initial_meta,
                 )
                 db.add(new_job)
                 db.commit()
@@ -652,14 +753,14 @@ class ScannerService:
                     return {
                         "status": "QUEUED",
                         "job_id": job_id,
-                        "message": f"Refresh job {job_id} queued for standalone worker across {len(stocks)} symbols.",
+                        "message": f"Refresh job {job_id} queued for standalone worker across {len(resolved_stocks)} symbols.",
                         "progress": job_info,
                     }
 
                 # Embedded worker thread
                 self._refresh_thread = threading.Thread(
                     target=self._run_refresh_worker,
-                    args=(job_id, stocks, force_all),
+                    args=(job_id, resolved_stocks, force_all, is_partial),
                     daemon=True,
                     name=f"RefreshWorker-{job_id}",
                 )
@@ -668,7 +769,7 @@ class ScannerService:
                 return {
                     "status": "STARTED",
                     "job_id": job_id,
-                    "message": f"Refresh job {job_id} initiated for {len(stocks)} symbols.",
+                    "message": f"Refresh job {job_id} initiated for {len(resolved_stocks)} symbols.",
                     "progress": job_info,
                 }
             finally:
@@ -678,6 +779,19 @@ class ScannerService:
     def _format_job_dict(self, job) -> Dict[str, Any]:
         """Format a RefreshJob SQLAlchemy model into a clean API dictionary."""
         summary = universe_manager.get_summary_counts()
+        requested_tickers = None
+        errors_list = []
+        if job.errors_json:
+            try:
+                parsed = json.loads(job.errors_json)
+                if isinstance(parsed, dict):
+                    requested_tickers = parsed.get("requested_tickers")
+                    errors_list = parsed.get("errors", [])
+                elif isinstance(parsed, list):
+                    errors_list = parsed
+            except Exception:
+                pass
+
         return {
             "job_id": job.id,
             "job_type": job.job_type,
@@ -693,11 +807,13 @@ class ScannerService:
             "finish_time": job.finish_time.strftime("%Y-%m-%d %H:%M:%S UTC") if job.finish_time else None,
             "message": job.message or "",
             "error_message": job.error_message or "",
+            "errors": errors_list,
+            "requested_tickers": requested_tickers,
             "snapshot_id": job.snapshot_id,
             "summary": summary,
         }
 
-    def _run_refresh_worker(self, job_id: str, stocks: List[Dict[str, Any]], force_all: bool):
+    def _run_refresh_worker(self, job_id: str, stocks: List[Dict[str, Any]], force_all: bool, is_partial: bool = False):
         """Worker executing incremental daily updates and publishing an atomic screener snapshot."""
         from app.database import SessionLocal
         from app.models import RefreshJob
@@ -744,7 +860,6 @@ class ScannerService:
                         staged_signals.append(sig_data)
                     else:
                         job.failed_stocks += 1
-                        # If existing signal exists in universe, attach as stale
                         existing_sig = stock.get("latest_signal") or self.evaluate_stock_signal(ticker, None)
                         existing_sig["data_freshness"] = "STALE"
                         staged_signals.append(existing_sig)
@@ -758,18 +873,20 @@ class ScannerService:
                 job.completed_stocks = i + 1
                 job.remaining_stocks = len(stocks) - (i + 1)
                 db.commit()
-                time.sleep(0.04)
+                # Pacing delay between stock downloads to respect Yahoo rate limits
+                time.sleep(0.5)
 
             # Determine dominant market date
             valid_dates = [s["as_of"] for s in staged_signals if s.get("as_of")]
             market_as_of = max(valid_dates) if valid_dates else datetime.now().strftime("%Y-%m-%d")
 
-            # ATOMIC SNAPSHOT PUBLICATION
+            # ATOMIC SNAPSHOT PUBLICATION (preserves all untouched stocks if is_partial is True)
             new_snap = snapshot_service.publish_new_snapshot(
                 staged_signals=staged_signals,
                 market_as_of_date=market_as_of,
                 refresh_job_id=job_id,
                 db=db,
+                is_partial=is_partial,
             )
 
             job.status = "COMPLETED"
@@ -777,7 +894,10 @@ class ScannerService:
             job.snapshot_id = new_snap["snapshot_id"]
             job.message = f"Refresh completed successfully ({len(staged_signals)} securities analyzed)."
             job.current_ticker = ""
-            job.errors_json = json.dumps(errors)
+            job.errors_json = json.dumps({
+                "requested_tickers": [s["ticker"] for s in stocks] if is_partial else None,
+                "errors": errors,
+            })
             db.commit()
 
         except Exception as ex:

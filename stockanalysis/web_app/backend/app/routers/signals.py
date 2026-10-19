@@ -49,7 +49,9 @@ def get_today_signals(
             if ticker in shariah_map:
                 sig["shariah_status"] = shariah_map[ticker]["status"]
             stock_info = universe_manager.get_stock(ticker) or {}
-            sig["company_name"] = stock_info.get("name", sig.get("name", ticker))
+            stock_name = stock_info.get("name", sig.get("name", ticker))
+            sig["name"] = sig.get("name") or stock_name
+            sig["company_name"] = stock_name
             sig["sector"] = stock_info.get("sector", sig.get("sector", "Technology"))
             sig["exchange"] = stock_info.get("exchange", sig.get("exchange", "NASDAQ"))
             sig["data_status"] = stock_info.get("data_status", sig.get("data_status", "READY"))

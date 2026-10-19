@@ -99,6 +99,14 @@ class FinancialDataService:
     def __init__(self):
         self._memory_cache: Dict[str, Dict[str, Any]] = {}
 
+    @staticmethod
+    def is_etf_ticker(ticker: str) -> bool:
+        t = ticker.strip().upper()
+        if t in {"SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", "IVV", "XLK", "XLF", "XLE", "XLV", "XLY", "XLP", "XLI", "XLU", "XLB", "XLRE", "XLC"}:
+            return True
+        return False
+
+
     def _get_cache_path(self, ticker: str, category: str) -> Path:
         return FINANCIAL_CACHE_DIR / f"{ticker.upper()}_{category}.json"
 
@@ -129,6 +137,13 @@ class FinancialDataService:
         if not refresh:
             cached = self._read_disk_cache(ticker, "overview")
             if cached:
+                if "is_etf" not in cached:
+                    is_etf = self.is_etf_ticker(ticker) or cached.get("profile", {}).get("sector") in ("ETFs", "ETF")
+                    cached["is_etf"] = is_etf
+                    cached["asset_type"] = "ETF" if is_etf else "Common Stock"
+                    if "profile" in cached and isinstance(cached["profile"], dict):
+                        cached["profile"]["is_etf"] = is_etf
+                        cached["profile"]["asset_type"] = cached["asset_type"]
                 return cached
 
         t = yf.Ticker(ticker)
@@ -153,6 +168,14 @@ class FinancialDataService:
         analyst_consensus_source = "Yahoo Finance (Analyst Consensus Model)"
         corporate_actions_source = "Yahoo Finance (Corporate Action Feed)"
 
+        is_etf = (
+            self.is_etf_ticker(ticker)
+            or str(info.get("sector", "")).upper() in ("ETFS", "ETF", "BENCHMARK")
+            or "ETF" in str(info.get("shortName", "")).upper()
+            or "TRUST, SERIES" in str(info.get("shortName", "")).upper()
+            or "INDEX FUND" in str(info.get("shortName", "")).upper()
+        )
+
         # Company Profile
         profile = {
             "symbol": ticker,
@@ -170,6 +193,8 @@ class FinancialDataService:
             "sec_cik": sec_verif.get("cik"),
             "latest_sec_filing_date": latest_sec_filing_date,
             "latest_sec_accession": sec_accn,
+            "is_etf": is_etf,
+            "asset_type": "ETF" if is_etf else "Common Stock",
         }
 
         # Retrieve statements for exact TTM rolling sums and underlying recalculations
@@ -572,7 +597,7 @@ class FinancialDataService:
             ),
             "net_debt": _build_metric(
                 value=net_debt,
-                formatted=(_format_currency(net_debt) + " (Net Cash Positive)") if (net_debt is not None and net_debt < 0) else _format_currency(net_debt),
+                formatted=(f"{_format_currency(abs(net_debt))} Net Cash") if (net_debt is not None and net_debt < 0) else _format_currency(net_debt),
                 period="Latest Quarter",
                 currency=currency,
                 units="USD",
@@ -829,6 +854,8 @@ class FinancialDataService:
         }
 
         result = {
+            "is_etf": is_etf,
+            "asset_type": "ETF" if is_etf else "Common Stock",
             "profile": profile,
             "valuation": valuation,
             "cash_flow": cash_flow,
@@ -1182,6 +1209,8 @@ class FinancialDataService:
         if not refresh:
             cached = self._read_disk_cache(ticker, "risk")
             if cached:
+                if self.is_etf_ticker(ticker) and "financial_risk" in cached:
+                    cached["financial_risk"]["explanation"] = "Balance sheet leverage and corporate debt service ratios are not applicable for index ETFs."
                 return cached
 
         t = yf.Ticker(ticker)
@@ -1330,6 +1359,8 @@ class FinancialDataService:
             "data_date": data_date,
             "explanation": f"{'Net cash balance sheet ($' + str(abs(round((net_debt or 0)/1e9, 1))) + 'B net cash)' if (net_debt and net_debt < 0) else ('Net debt of $' + str(round((net_debt or 0)/1e9, 1)) + 'B' if net_debt is not None else 'Balance sheet leverage unavailable')}. {'Earnings quality of ' + str(round(earnings_quality, 2)) + 'x indicates net income is strongly supported by real operating cash flows.' if earnings_quality is not None else 'Earnings quality ratio unavailable.'}",
         }
+        if self.is_etf_ticker(ticker):
+            financial_risk["explanation"] = "Balance sheet leverage and corporate debt service ratios are not applicable for index ETFs."
 
         # --- D. Market Risk ---
         max_dd_5y, beta, vol, downside_capture, covid_dd, tech_dd = self._calculate_market_risk_metrics(price_df, spy_df)
@@ -1548,7 +1579,7 @@ class FinancialDataService:
         # Snapshot items strictly from latest matching balance sheet (no current-period leakage or zero conversion)
         latest_bs_col = self._find_matching_col(bs, latest_period_end) if not bs.empty else None
         latest_shares = self._get_cell_num(bs, ["Ordinary Shares Number", "Share Issued"], latest_bs_col) if latest_bs_col is not None else None
-        latest_cash = self._get_cell_num(bs, ["Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments"], latest_bs_col) if latest_bs_col is not None else None
+        latest_cash = self._get_cell_num(bs, ["Cash Cash Equivalents And Short Term Investments", "Cash And Cash Equivalents"], latest_bs_col) if latest_bs_col is not None else None
         latest_debt = self._get_cell_num(bs, "Total Debt", latest_bs_col) if latest_bs_col is not None else None
 
         # Recalculated margins (not averaged)

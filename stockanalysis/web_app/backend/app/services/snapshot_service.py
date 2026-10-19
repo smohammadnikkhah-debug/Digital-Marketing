@@ -320,8 +320,10 @@ class SnapshotService:
         data_provider: str = "Yahoo Finance (Auto-Adjusted OHLCV)",
         strategy_version: str = "Adaptive Trading V4.0 Baseline",
         db: Optional[Session] = None,
+        is_partial: bool = False,
     ) -> Dict[str, Any]:
         """Atomically publishes a new completed screener snapshot.
+        For partial refreshes, merges refreshed signals into the existing universe, preserving untouched stocks.
         Replaces previous active snapshot transactionally."""
         should_close = False
         if db is None:
@@ -330,7 +332,99 @@ class SnapshotService:
 
         with _snapshot_lock:
             try:
-                # 1. Calculate summary metrics
+                refreshed_tickers = {sig["ticker"] for sig in staged_signals if "ticker" in sig}
+                active_snap = db.query(ScreenerSnapshot).filter(
+                    ScreenerSnapshot.is_active == True,
+                    ScreenerSnapshot.status == "COMPLETED"
+                ).order_by(desc(ScreenerSnapshot.saved_at)).first()
+
+                if is_partial:
+                    # 1. Fetch current active snapshot signals as base
+                    base_signals = []
+                    if active_snap and active_snap.signals_json:
+                        try:
+                            base_signals = json.loads(active_snap.signals_json)
+                        except Exception:
+                            base_signals = []
+
+                    if not base_signals:
+                        # Fallback to MonitoredStock table or universe_manager for stocks with existing valid signals
+                        stocks_in_db = db.query(MonitoredStock).filter(
+                            MonitoredStock.is_active == True,
+                            MonitoredStock.latest_signal_json.isnot(None)
+                        ).all()
+                        for s in stocks_in_db:
+                            try:
+                                parsed = json.loads(s.latest_signal_json)
+                                if parsed and isinstance(parsed, dict):
+                                    base_signals.append(parsed)
+                            except Exception:
+                                pass
+
+                        if not base_signals:
+                            from app.services.universe_manager import universe_manager
+                            base_signals = [
+                                s.get("latest_signal") for s in universe_manager.get_all(include_inactive=False)
+                                if s.get("latest_signal")
+                            ]
+
+                    refreshed_map = {s["ticker"]: s for s in staged_signals if "ticker" in s}
+                    merged_signals = []
+                    merged_tickers = set()
+
+                    for sig in base_signals:
+                        t = sig.get("ticker")
+                        if t in refreshed_map:
+                            merged_signals.append({**sig, **refreshed_map[t]})
+                            merged_tickers.add(t)
+                        else:
+                            merged_signals.append(sig)
+                            merged_tickers.add(t)
+
+                    for t, sig in refreshed_map.items():
+                        if t not in merged_tickers:
+                            merged_signals.append(sig)
+
+                    from app.services.universe_manager import universe_manager
+                    standard_defaults = {
+                        "name": "",
+                        "as_of": market_as_of_date,
+                        "close": None,
+                        "ma30": None,
+                        "ma50": None,
+                        "ma250": None,
+                        "roc20_pct": None,
+                        "atr14": None,
+                        "entry_rule": "N/A",
+                        "exit_rule": "N/A",
+                        "entry_type": "NONE",
+                        "delayed_stage": "",
+                        "order_notice": "Research observation",
+                        "signal": "WATCH",
+                        "shariah_status": "NOT VERIFIED",
+                        "explanation": "",
+                        "is_simulated_position": False,
+                        "data_freshness": "FRESH",
+                        "color_bg": "#FFF2CC",
+                        "color_text": "#7F6000",
+                    }
+                    cleaned_signals = []
+                    for s in merged_signals:
+                        item = {**standard_defaults, **s}
+                        if not item.get("name"):
+                            m = universe_manager.get_stock(item.get("ticker", ""))
+                            if m:
+                                item["name"] = m.get("name", item.get("ticker", ""))
+                        cleaned_signals.append(item)
+
+                    final_signals = cleaned_signals
+                    universe_count = db.query(MonitoredStock).filter(MonitoredStock.is_active == True).count()
+                    total_stocks_count = universe_count if universe_count > 0 else (active_snap.total_stocks if active_snap and active_snap.total_stocks else len(final_signals))
+                else:
+                    final_signals = staged_signals
+                    total_stocks_count = len(final_signals)
+
+                # 2. Calculate summary metrics across all final_signals
                 refreshed = 0
                 stale = 0
                 insufficient = 0
@@ -344,7 +438,7 @@ class SnapshotService:
                     "INSUFFICIENT_DATA": 0,
                 }
 
-                for sig in staged_signals:
+                for sig in final_signals:
                     sig_type = sig.get("signal", "").upper()
                     if sig_type in ("BUY", "BUY CANDIDATE"):
                         signal_counts["BUY CANDIDATE"] += 1
@@ -362,17 +456,30 @@ class SnapshotService:
                         stale += 1
                     elif freshness == "INSUFFICIENT_DATA":
                         insufficient += 1
-                    else:
+                    elif freshness in ("FRESH", "READY"):
                         refreshed += 1
 
                 signal_counts["INSUFFICIENT_DATA"] = insufficient
                 calc_time = datetime.utcnow()
 
+                frozen_baseline_count = sum(1 for s in final_signals if s.get("data_freshness") == "FROZEN_BASELINE")
+                unscanned_count = max(0, total_stocks_count - len(final_signals))
+
+                if is_partial:
+                    if unscanned_count > 0:
+                        badge = f"Audited V4.0 Universe ({len(refreshed_tickers)} Refreshed, {frozen_baseline_count} Baseline, {unscanned_count} Unscanned)"
+                    else:
+                        badge = f"Audited V4.0 Universe ({len(refreshed_tickers)} Refreshed, {frozen_baseline_count} Baseline)"
+                else:
+                    badge = f"Expanded Screener Universe ({len(final_signals)} Monitored)"
+
                 summary = {
-                    "total_universe": len(staged_signals),
-                    "active_monitored": len(staged_signals),
+                    "total_universe": total_stocks_count,
+                    "active_monitored": total_stocks_count,
                     "refreshed_count": refreshed,
-                    "analysed_count": len(staged_signals),
+                    "frozen_baseline_count": frozen_baseline_count,
+                    "unscanned_count": unscanned_count,
+                    "analysed_count": len(final_signals),
                     "stale_count": stale,
                     "insufficient_data_count": insufficient,
                     "signals": signal_counts,
@@ -382,20 +489,23 @@ class SnapshotService:
                     "last_refresh_time": calc_time.strftime("%Y-%m-%d %H:%M:%S UTC"),
                     "data_provenance": {
                         **DATA_PROVENANCE,
-                        "badge_text": f"Expanded Screener Universe ({len(staged_signals)} Monitored)",
-                        "is_refreshed": True,
+                        "badge_text": badge,
+                        "is_refreshed": not is_partial,
                         "as_of_date": market_as_of_date,
+                        "refreshed_tickers": sorted(list(refreshed_tickers)),
+                        "frozen_baseline_count": frozen_baseline_count,
+                        "unscanned_count": unscanned_count,
                     },
                 }
 
                 snap_id = f"snap_{calc_time.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
 
-                # 2. Deactivate previous active snapshots
+                # 3. Deactivate previous active snapshots
                 db.query(ScreenerSnapshot).filter(
                     ScreenerSnapshot.is_active == True
                 ).update({"is_active": False})
 
-                # 3. Insert new active snapshot
+                # 4. Insert new active snapshot
                 new_snap = ScreenerSnapshot(
                     id=snap_id,
                     status="COMPLETED",
@@ -406,18 +516,19 @@ class SnapshotService:
                     data_provider=data_provider,
                     strategy_version=strategy_version,
                     refresh_job_id=refresh_job_id,
-                    total_stocks=len(staged_signals),
+                    total_stocks=total_stocks_count,
                     refreshed_count=refreshed,
                     stale_count=stale,
                     insufficient_count=insufficient,
                     buy_candidates_count=signal_counts["BUY CANDIDATE"],
                     summary_json=json.dumps(summary),
-                    signals_json=json.dumps(staged_signals),
+                    signals_json=json.dumps(final_signals),
                 )
                 db.add(new_snap)
 
-                # 4. Synchronize MonitoredStock records
-                for sig in staged_signals:
+                # 5. Synchronize MonitoredStock records ONLY for refreshed tickers
+                target_update_signals = staged_signals if is_partial else final_signals
+                for sig in target_update_signals:
                     ticker = sig.get("ticker", "").strip().upper()
                     stock_rec = db.query(MonitoredStock).filter(MonitoredStock.ticker == ticker).first()
                     if stock_rec:
@@ -427,6 +538,17 @@ class SnapshotService:
                         stock_rec.last_scanned_at = calc_time.isoformat()
 
                 db.commit()
+
+                # 6. Update in-memory universe manager records for refreshed stocks
+                from app.services.universe_manager import universe_manager
+                for sig in target_update_signals:
+                    ticker = sig.get("ticker", "").strip().upper()
+                    universe_manager.update_stock(ticker, {
+                        "latest_signal": sig,
+                        "latest_price_date": sig.get("as_of"),
+                        "data_status": "STALE" if sig.get("data_freshness") == "STALE" else "INSUFFICIENT_DATA" if sig.get("data_freshness") == "INSUFFICIENT_DATA" else "READY",
+                        "last_scanned_at": calc_time.isoformat(),
+                    }, sync_db=False)
 
                 # 5. Mirror save JSON file atomically (write to .tmp and rename)
                 self._mirror_save_json(db)
@@ -443,7 +565,7 @@ class SnapshotService:
                     "snapshot_id": snap_id,
                     "market_as_of_date": market_as_of_date,
                     "calculated_at": calc_time.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                    "total_stocks": len(staged_signals),
+                    "total_stocks": total_stocks_count,
                     "summary": summary,
                 }
             except Exception as ex:

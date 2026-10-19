@@ -66,7 +66,7 @@ class TestSupabaseAndScheduling:
         try:
             # Test standalone mode
             monkeypatch.setattr("app.services.scanner_service.WORKER_MODE", "standalone")
-            res = scanner_service.start_refresh_async(force_all=False, job_type="STANDALONE_TEST")
+            res = scanner_service.start_refresh_async(force_all=False, job_type="FULL")
             assert res["status"] in ("QUEUED", "ALREADY_RUNNING")
             job_id = res.get("job_id")
 

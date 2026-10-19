@@ -41,6 +41,23 @@ class ValuationService:
     def __init__(self):
         self._cache: Dict[str, Dict[str, Any]] = {}
 
+    def is_etf_ticker(self, ticker: str) -> bool:
+        """Detect whether a ticker represents an Exchange Traded Fund (ETF) or benchmark trust."""
+        t = ticker.strip().upper()
+        if t in {"SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", "IVV", "XLK", "XLF", "XLE", "XLV", "XLY", "XLP", "XLI", "XLU", "XLB", "XLRE", "XLC"}:
+            return True
+        try:
+            overview = financial_data_service.get_company_overview(t)
+            prof = overview.get("profile", {})
+            sector = str(prof.get("sector", "")).upper()
+            name = str(prof.get("name", "")).upper()
+            if sector in ("ETFS", "ETF", "BENCHMARK") or "ETF" in name or "TRUST, SERIES" in name or "INDEX FUND" in name:
+                return True
+        except Exception:
+            pass
+        return False
+
+
     def get_market_quote(self, ticker: str) -> Dict[str, Any]:
         """Retrieve latest closing market price, timestamp, and currency from audited price cache or overview."""
         ticker = ticker.strip().upper()
@@ -1124,6 +1141,14 @@ class ValuationService:
     def get_peer_comparison(self, ticker: str, peer_tickers: Optional[List[str]] = None) -> Dict[str, Any]:
         """Perform side-by-side institutional peer valuation comparison between GOOGL and META (extensible)."""
         ticker = ticker.strip().upper()
+        if self.is_etf_ticker(ticker):
+            return {
+                "primary_ticker": ticker,
+                "is_etf": True,
+                "peers": [],
+                "comparative_narrative": f"Peer DCF valuation is not applicable to index ETFs or benchmark trusts ({ticker}).",
+            }
+
         if not peer_tickers:
             peer_tickers = ["GOOGL", "META"] if ticker in ("GOOGL", "META") else [ticker, "GOOGL", "META"]
 
@@ -1143,10 +1168,12 @@ class ValuationService:
             prof = overview.get("profitability", {})
 
             price = quote.get("current_price") or 0.0
-            fv = dcf_res["fair_value_per_share"]
+            fv = (dcf_res.get("fair_value_per_share") or 0.0) if isinstance(dcf_res, dict) else 0.0
             mos = ((fv - price) / fv * 100.0) if fv > 0 else 0.0
 
-            sbc_val = cf.get("free_cash_flow", {}).get("value", 0.0) - cf.get("sbc_adjusted_fcf", {}).get("value", 0.0)
+            fcf_val = cf.get("free_cash_flow", {}).get("value") or 0.0
+            sbc_adj_val = cf.get("sbc_adjusted_fcf", {}).get("value") or 0.0
+            sbc_val = fcf_val - sbc_adj_val
 
             peers_data.append({
                 "ticker": sym,
@@ -1209,6 +1236,20 @@ class ValuationService:
     def get_input_provenance_table(self, ticker: str) -> List[Dict[str, Any]]:
         """Construct a complete provenance audit table of all financial inputs used in the valuation."""
         ticker = ticker.strip().upper()
+        if self.is_etf_ticker(ticker):
+            return [
+                {
+                    "input_parameter": "Asset Type",
+                    "value": "Exchange Traded Fund (ETF) / Index Benchmark",
+                    "source": "Security Master & Market Data Provider",
+                    "period_or_date": "Active",
+                    "filing_availability": "N/A",
+                    "currency_units": "USD",
+                    "status": "REPORTED",
+                    "sec_status": "NOT_APPLICABLE",
+                }
+            ]
+
         overview = financial_data_service.get_company_overview(ticker)
         profile = overview.get("profile", {})
         val = overview.get("valuation", {})
@@ -1365,32 +1406,62 @@ class ValuationService:
         - Provides transparent calculation methods, filing dates, and explicit UNAVAILABLE states where history < 10Y.
         """
         ticker = ticker.strip().upper()
+        if self.is_etf_ticker(ticker):
+            return {
+                "ticker": ticker,
+                "is_etf": True,
+                "as_of_period": "N/A",
+                "years_found": 0,
+                "fiscal_years": [],
+                "provenance_summary": f"Historical financial assumptions matrix is not applicable for index ETFs ({ticker}).",
+                "rows": [],
+            }
+
         facts = sec_edgar_adapter.get_company_facts(ticker)
         us_gaap = facts.get("facts", {}).get("us-gaap", {}) if facts else {}
 
-        def get_annual_sec(concepts: List[str], unit: str = "USD") -> Dict[int, float]:
+        def get_annual_sec(concepts: List[str], unit: str = "USD", is_flow: bool = True) -> Dict[int, float]:
             by_fy = {}
             for c in concepts:
                 if c in us_gaap:
                     items = us_gaap[c].get("units", {}).get(unit, [])
+                    concept_fy = {}
+                    concept_dur = {}
                     for it in items:
-                        if it.get("form") in ("10-K", "10-K/A") and it.get("fp") == "FY" and it.get("fy") and it.get("val") is not None:
+                        if it.get("form") in ("10-K", "10-K/A") and it.get("fp") == "FY" and it.get("val") is not None:
                             try:
-                                by_fy[int(it["fy"])] = float(it["val"])
+                                end_str = it.get("end")
+                                if not end_str:
+                                    continue
+                                e_dt = datetime.strptime(end_str, "%Y-%m-%d")
+                                fy = e_dt.year
+                                duration = 0
+                                if is_flow and it.get("start"):
+                                    s_dt = datetime.strptime(it["start"], "%Y-%m-%d")
+                                    duration = (e_dt - s_dt).days
+                                    if duration < 300:
+                                        # Skip quarterly segment disclosures embedded in Form 10-K
+                                        continue
+                                if duration >= concept_dur.get(fy, -1):
+                                    concept_fy[fy] = float(it["val"])
+                                    concept_dur[fy] = duration
                             except (ValueError, TypeError):
                                 pass
+                    for fy, val in concept_fy.items():
+                        if fy not in by_fy:
+                            by_fy[fy] = val
             return by_fy
 
-        revs = get_annual_sec(["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet"])
-        ebit = get_annual_sec(["OperatingIncomeLoss"])
-        taxes = get_annual_sec(["IncomeTaxExpenseBenefit"])
-        sbc = get_annual_sec(["ShareBasedCompensation", "AllocatedShareBasedCompensationExpense"])
-        ocf = get_annual_sec(["NetCashProvidedByUsedInOperatingActivities"])
-        capex = get_annual_sec(["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"])
-        equity = get_annual_sec(["StockholdersEquity"])
-        lt_debt = get_annual_sec(["LongTermDebtNoncurrent", "LongTermDebt"])
-        cash = get_annual_sec(["CashAndCashEquivalentsAtCarryingValue"])
-        sh_raw = get_annual_sec(["WeightedAverageNumberOfDilutedSharesOutstanding", "CommonStockSharesOutstanding"], unit="shares")
+        revs = get_annual_sec(["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet"], is_flow=True)
+        ebit = get_annual_sec(["OperatingIncomeLoss"], is_flow=True)
+        taxes = get_annual_sec(["IncomeTaxExpenseBenefit"], is_flow=True)
+        sbc = get_annual_sec(["ShareBasedCompensation", "AllocatedShareBasedCompensationExpense"], is_flow=True)
+        ocf = get_annual_sec(["NetCashProvidedByUsedInOperatingActivities"], is_flow=True)
+        capex = get_annual_sec(["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"], is_flow=True)
+        equity = get_annual_sec(["StockholdersEquity"], is_flow=False)
+        lt_debt = get_annual_sec(["LongTermDebtNoncurrent", "LongTermDebt"], is_flow=False)
+        cash = get_annual_sec(["CashAndCashEquivalentsAtCarryingValue"], is_flow=False)
+        sh_raw = get_annual_sec(["WeightedAverageNumberOfDilutedSharesOutstanding", "CommonStockSharesOutstanding"], unit="shares", is_flow=False)
 
         # Fallback to financial_data_service if SEC company facts are absent
         if not revs:
@@ -1733,6 +1804,71 @@ class ValuationService:
         """
         ticker = ticker.strip().upper()
         quote = self.get_market_quote(ticker)
+
+        if self.is_etf_ticker(ticker):
+            empty_dcf = {
+                "fair_value_per_share": None,
+                "formatted_fair_value": "N/A",
+                "enterprise_value": None,
+                "equity_value": None,
+                "pv_explicit_forecast": None,
+                "pv_terminal_value": None,
+                "net_debt": None,
+                "target_entry_price": None,
+                "forecast_table": [],
+            }
+            empty_scenario_assump = {
+                "name": "N/A",
+                "description": "DCF intrinsic valuation is not applicable to index ETFs",
+                "revenue_growth": None,
+                "operating_margin": None,
+                "effective_tax_rate": None,
+                "reinvestment_rate": None,
+                "working_capital_pct": None,
+                "sbc_pct_of_revenue": None,
+                "annual_share_dilution_rate": None,
+                "discount_rate": None,
+                "cost_of_equity": None,
+                "pre_tax_cost_of_debt": None,
+                "terminal_growth_rate": None,
+                "sbc_treatment": "NOT_APPLICABLE",
+                "status": "NOT_APPLICABLE",
+                "source": "Index Benchmark / ETF",
+            }
+            return {
+                "ticker": ticker,
+                "quote": quote,
+                "is_etf": True,
+                "asset_type": "ETF",
+                "etf_notice": (
+                    f"{ticker} is an Exchange Traded Fund (ETF) / Index Benchmark. "
+                    "DCF intrinsic cash flow modeling and individual operating company ratios are not applicable to diversified index funds. "
+                    "Use Technical Analysis and Benchmark tracking for evaluation."
+                ),
+                "base_financials": {},
+                "scenarios": {"bear": empty_scenario_assump, "base": empty_scenario_assump, "bull": empty_scenario_assump},
+                "scenario_results": {"bear": empty_dcf, "base": empty_dcf, "bull": empty_dcf},
+                "active_scenario": "base",
+                "active_dcf": empty_dcf,
+                "sensitivity_heatmap": {"matrix": [], "discount_rates": [], "terminal_growth_rates": []},
+                "margin_of_safety": {
+                    "margin_of_safety_pct": None,
+                    "estimated_intrinsic_value": None,
+                    "status": "NOT_APPLICABLE",
+                    "recommendation": "ETF Index Benchmark - DCF Not Applicable",
+                    "decision_support_summary": "Valuation metrics are not applicable to diversified index funds.",
+                    "threshold_targets": [],
+                },
+                "relative_valuation": {"peers": [], "narrative": "Relative valuation not applicable for ETFs."},
+                "sbc_analysis": {"ttm_sbc_expense": None, "sbc_as_pct_of_revenue": None, "sbc_as_pct_of_fcf": None, "sbc_per_share_bridge": []},
+                "peer_comparison": {"primary_ticker": ticker, "is_etf": True, "peers": [], "comparative_narrative": "Peer DCF comparison not applicable for index benchmarks."},
+                "provenance_table": [],
+                "historical_matrix": {"ticker": ticker, "is_etf": True, "years_found": 0, "fiscal_years": [], "rows": []},
+                "forecast_years": forecast_years,
+                "required_return_pct": required_return_pct,
+                "timestamp": datetime.now().isoformat(),
+            }
+
         defaults = self.get_default_assumptions(ticker)
         base_fin = defaults["base_financials"]
         scenarios_cfg = defaults["scenarios"]
@@ -1803,6 +1939,19 @@ class ValuationService:
     ) -> Dict[str, Any]:
         """Recalculate DCF, forecast, bridge, sensitivity heatmap, and margin of safety with customized assumptions."""
         ticker = ticker.strip().upper()
+        if self.is_etf_ticker(ticker):
+            return {
+                "ticker": ticker,
+                "is_etf": True,
+                "notice": "DCF recalculation is not applicable for index ETFs.",
+                "scenario_name": scenario_name,
+                "assumptions": assumptions,
+                "dcf_result": {"fair_value_per_share": None, "formatted_fair_value": "N/A"},
+                "sensitivity_heatmap": {"matrix": [], "discount_rates": [], "terminal_growth_rates": []},
+                "margin_of_safety": {"margin_of_safety_pct": None, "status": "NOT_APPLICABLE"},
+                "sbc_analysis": {"ttm_sbc_expense": None},
+            }
+
         if "forecast_years" in assumptions:
             try:
                 forecast_years = int(assumptions["forecast_years"])
@@ -1857,6 +2006,24 @@ class ValuationService:
     ) -> Dict[str, Any]:
         """Recalculate Bear, Base, and Bull independently using their respective customized assumptions."""
         ticker = ticker.strip().upper()
+        if self.is_etf_ticker(ticker):
+            empty_dcf = {"fair_value_per_share": None, "formatted_fair_value": "N/A", "forecast_table": []}
+            return {
+                "ticker": ticker,
+                "is_etf": True,
+                "notice": "Multi-scenario recalculation is not applicable for index ETFs.",
+                "scenarios": scenarios,
+                "scenario_results": {"bear": empty_dcf, "base": empty_dcf, "bull": empty_dcf},
+                "active_scenario": active_scenario,
+                "active_dcf": empty_dcf,
+                "sensitivity_heatmap": {"matrix": [], "discount_rates": [], "terminal_growth_rates": []},
+                "margin_of_safety": {"margin_of_safety_pct": None, "status": "NOT_APPLICABLE"},
+                "sbc_analysis": {"ttm_sbc_expense": None},
+                "historical_matrix": {"ticker": ticker, "years_found": 0, "fiscal_years": [], "rows": []},
+                "forecast_years": forecast_years,
+                "required_return_pct": required_return_pct,
+            }
+
         defaults = self.get_default_assumptions(ticker)
         base_fin = defaults["base_financials"]
 

@@ -81,13 +81,13 @@ class TestDurableScreenerPersistence:
         time.sleep(0.2)
 
         # 3a. Unauthenticated refresh request must be rejected (401 Unauthorized)
-        res_unauth = client.post("/api/scanner/refresh", json={"force_all": False})
+        res_unauth = client.post("/api/scanner/refresh", json={"force_all": False, "job_type": "FULL"})
         assert res_unauth.status_code == 401
 
         # 3b. Request with invalid key must be rejected (401 Unauthorized)
         res_bad_key = client.post(
             "/api/scanner/refresh",
-            json={"force_all": False},
+            json={"force_all": False, "job_type": "FULL"},
             headers={"Authorization": "Bearer invalid_secret_key"}
         )
         assert res_bad_key.status_code == 401
@@ -96,8 +96,8 @@ class TestDurableScreenerPersistence:
         res_cancel_unauth = client.post("/api/scanner/cancel-refresh")
         assert res_cancel_unauth.status_code == 401
 
-        # 3d. Valid administrator X-Admin-Key succeeds
-        res = client.post("/api/scanner/refresh", json={"force_all": False}, headers=headers)
+        # 3d. Valid administrator X-Admin-Key with explicit job_type='FULL' succeeds
+        res = client.post("/api/scanner/refresh", json={"force_all": False, "job_type": "FULL"}, headers=headers)
         assert res.status_code == 200
         data = res.json()
         assert data["status"] in ("STARTED", "ALREADY_RUNNING")
@@ -123,7 +123,7 @@ class TestDurableScreenerPersistence:
                 db.commit()
 
             headers = {"X-Admin-Key": STOCKANALYSIS_ADMIN_KEY}
-            res = client.post("/api/scanner/refresh", json={"force_all": False}, headers=headers)
+            res = client.post("/api/scanner/refresh", json={"force_all": False, "job_type": "FULL"}, headers=headers)
             assert res.status_code == 409
             data = res.json()["detail"]
             assert data["status"] == "ALREADY_RUNNING"

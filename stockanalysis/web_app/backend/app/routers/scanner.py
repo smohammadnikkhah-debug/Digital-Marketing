@@ -68,6 +68,9 @@ class AddStockRequest(BaseModel):
 
 class RefreshRequest(BaseModel):
     force_all: bool = False
+    tickers: Optional[List[str]] = None
+    selected_tickers: Optional[List[str]] = None
+    job_type: Optional[str] = None
 
 
 @router.get("/universe")
@@ -144,9 +147,128 @@ def trigger_screener_refresh(
     payload: Optional[RefreshRequest] = None,
     _auth: bool = Depends(verify_admin_authorization),
 ):
-    """Initiates a manual daily data refresh across all monitored stocks."""
-    force = payload.force_all if payload else False
-    result = scanner_service.start_refresh_async(force_all=force)
+    """Initiates a manual daily data refresh across all or specifically selected monitored stocks."""
+    if payload is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing request body: full-universe refresh requires explicit 'job_type': 'FULL'. Empty or omitted request bodies are rejected."
+        )
+
+    force = payload.force_all
+    requested_tickers: Optional[List[str]] = None
+    explicit_job_type: Optional[str] = None
+
+    has_tickers = payload.tickers is not None
+    has_selected = payload.selected_tickers is not None
+
+    # Validate job_type if provided
+    if payload.job_type is not None:
+        jt_raw = str(payload.job_type).strip()
+        jt_upper = jt_raw.upper()
+        if jt_upper not in ("FULL", "PARTIAL", "PARTIAL_REFRESH"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid job_type '{payload.job_type}'. Must be 'FULL' or 'PARTIAL'."
+            )
+        explicit_job_type = "FULL" if jt_upper == "FULL" else "PARTIAL"
+    elif has_tickers or has_selected:
+        explicit_job_type = "PARTIAL"
+    else:
+        # Neither job_type nor tickers provided
+        raise HTTPException(
+            status_code=400,
+            detail="Missing explicit job_type: full-universe refresh requires explicit 'job_type': 'FULL'. Empty or unclassified request bodies are rejected."
+        )
+
+    # Check for contradictory payload: job_type is FULL but tickers provided
+    if explicit_job_type == "FULL" and (has_tickers or has_selected):
+        raise HTTPException(
+            status_code=400,
+            detail="Contradictory payload: job_type is FULL but specific tickers were provided. Omit tickers for a full-universe refresh."
+        )
+
+    # Check for conflicting tickers and selected_tickers fields
+    if has_tickers and has_selected:
+        raw_t = [str(x).strip().upper() for x in payload.tickers]
+        raw_s = [str(x).strip().upper() for x in payload.selected_tickers]
+        if raw_t != raw_s:
+            raise HTTPException(
+                status_code=400,
+                detail="Contradictory payload: both 'tickers' and 'selected_tickers' were provided but contain conflicting values."
+            )
+
+    # Check for contradictory payload: job_type is PARTIAL but tickers omitted
+    if explicit_job_type == "PARTIAL" and not has_tickers and not has_selected:
+        raise HTTPException(
+            status_code=400,
+            detail="Silent full-universe refresh prevented: Contradictory payload: job_type is PARTIAL but no tickers were specified. Provide a non-empty list in 'tickers' or 'selected_tickers'."
+        )
+
+    # If tickers are specified, perform strict fail-closed validation
+    raw_list = payload.tickers if has_tickers else payload.selected_tickers
+    if raw_list is not None:
+        if not isinstance(raw_list, list) or len(raw_list) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Tickers list cannot be empty when specified."
+            )
+
+        if len(raw_list) > 50:
+            raise HTTPException(
+                status_code=400,
+                detail="Partial refresh exceeds 50 ticker limit. Use full-universe refresh for larger scopes."
+            )
+
+        # Check for duplicates unexpectedly
+        if len(raw_list) != len(set(raw_list)):
+            raise HTTPException(
+                status_code=400,
+                detail="Duplicate tickers detected in requested tickers list."
+            )
+
+        upper_set = set()
+        cleaned: List[str] = []
+        for item in raw_list:
+            if not isinstance(item, str):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Malformed ticker symbol: {item}. Ticker must be a string."
+                )
+            t_str = item.strip()
+            if not t_str or len(t_str) > 10 or not t_str.replace('.', '').replace('-', '').isalnum():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Malformed ticker symbol: '{item}'. Must be 1-10 alphanumeric characters."
+                )
+            t_upper = t_str.upper()
+            if t_upper in upper_set:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Duplicate ticker '{t_upper}' detected in requested tickers list."
+                )
+            upper_set.add(t_upper)
+            cleaned.append(t_upper)
+
+        # Strict validation against universe: fail closed if ANY ticker is unknown or inactive
+        for t in cleaned:
+            stock = universe_manager.get_stock(t)
+            if not stock:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Requested ticker '{t}' is not in monitored universe. Please add it to screener first."
+                )
+            is_active = stock.get("is_active", True) if isinstance(stock, dict) else getattr(stock, "is_active", True)
+            if not is_active:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Requested ticker '{t}' is inactive in monitored universe."
+                )
+
+        requested_tickers = cleaned
+        explicit_job_type = "PARTIAL"
+
+    kwargs = {"force_all": force, "tickers": requested_tickers, "job_type": explicit_job_type}
+    result = scanner_service.start_refresh_async(**kwargs)
     if result.get("status") == "ALREADY_RUNNING":
         raise HTTPException(
             status_code=409,

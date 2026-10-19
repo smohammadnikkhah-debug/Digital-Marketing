@@ -1,0 +1,190 @@
+{
+  "SPY": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "BUY CANDIDATE",
+      "latest_price": 778.57,
+      "as_of": "2026-10-09",
+      "selected_entry": "DELAYED_STACK",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Delayed Stack condition fulfilled; valid long setup.",
+      "shariah_status": "NOT VERIFIED",
+      "indicators": {
+        "ma30": 766.34,
+        "ma50": 766.28,
+        "ma250": 709.44,
+        "roc20": 2.12,
+        "atr14": 6.26
+      }
+    },
+    "overview": {
+      "status": "AVAILABLE",
+      "name": "State Street SPDR S&P 500 ETF T",
+      "is_sec_verified": false,
+      "sec_cik": "0000884394",
+      "latest_sec_filing_date": null,
+      "pe_formatted": "24.33x",
+      "market_cap_formatted": "N/A",
+      "fcf_formatted": "N/A"
+    },
+    "valuation": {
+      "status": "ERROR",
+      "error": "HTTP Error 500: Internal Server Error"
+    }
+  },
+  "AAPL": {
+    "technical": {
+      "status": "ERROR",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "overview": {
+      "status": "AVAILABLE",
+      "name": "Apple Inc.",
+      "is_sec_verified": true,
+      "sec_cik": "0000320193",
+      "latest_sec_filing_date": "2026-07-31",
+      "pe_formatted": "39.33x",
+      "market_cap_formatted": "$5.00T",
+      "fcf_formatted": "$136.68B"
+    },
+    "valuation": {
+      "status": "ERROR",
+      "error": "The read operation timed out"
+    }
+  },
+  "MSFT": {
+    "technical": {
+      "status": "ERROR",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "overview": {
+      "status": "AVAILABLE",
+      "name": "Microsoft Corporation",
+      "is_sec_verified": true,
+      "sec_cik": "0000789019",
+      "latest_sec_filing_date": "2026-07-29",
+      "pe_formatted": "29.72x",
+      "market_cap_formatted": "$3.96T",
+      "fcf_formatted": "$66.99B"
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": 533.52,
+      "fair_value": 368.35,
+      "target_entry_price": 336.02,
+      "margin_of_safety_pct": null,
+      "recommendation": null
+    }
+  },
+  "GOOGL": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "WATCH",
+      "latest_price": 351.66,
+      "as_of": "2026-10-09",
+      "selected_entry": "DELAYED_STACK",
+      "selected_exit": "MA250_ATR3",
+      "explanation": "Above MA250; monitor for stock-specific entry confirmation",
+      "shariah_status": "NOT VERIFIED",
+      "indicators": {
+        "ma30": 343.22,
+        "ma50": 346.14,
+        "ma250": 329.39,
+        "roc20": 3.89,
+        "atr14": 8.66
+      }
+    },
+    "overview": {
+      "status": "AVAILABLE",
+      "name": "Alphabet Inc.",
+      "is_sec_verified": true,
+      "sec_cik": "0001652044",
+      "latest_sec_filing_date": "2026-07-23",
+      "pe_formatted": "17.27x",
+      "market_cap_formatted": "$4.21T",
+      "fcf_formatted": "$53.27B"
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": 351.66,
+      "fair_value": 397.02,
+      "target_entry_price": 358.26,
+      "margin_of_safety_pct": null,
+      "recommendation": null
+    }
+  },
+  "NVDA": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "HOLD",
+      "latest_price": 229.28,
+      "as_of": "2026-10-09",
+      "selected_entry": "ROC20_AT_CROSS",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Simulated portfolio position; exit rule evaluated on latest close",
+      "shariah_status": "NOT VERIFIED",
+      "indicators": {
+        "ma30": 225.26,
+        "ma50": 221.94,
+        "ma250": 198.51,
+        "roc20": 5.03,
+        "atr14": 5.2
+      }
+    },
+    "overview": {
+      "status": "AVAILABLE",
+      "name": "NVIDIA Corporation",
+      "is_sec_verified": true,
+      "sec_cik": "0001045810",
+      "latest_sec_filing_date": "2026-08-26",
+      "pe_formatted": "27.45x",
+      "market_cap_formatted": "$5.24T",
+      "fcf_formatted": "$127.01B"
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": 229.28,
+      "fair_value": 51.19,
+      "target_entry_price": 46.76,
+      "margin_of_safety_pct": null,
+      "recommendation": null
+    }
+  },
+  "QCOM": {
+    "technical": {
+      "status": "AVAILABLE",
+      "signal": "WATCH",
+      "latest_price": 175.5,
+      "as_of": "2026-10-09",
+      "selected_entry": "MA50_AT_CROSS",
+      "selected_exit": "MA250_3CLOSE",
+      "explanation": "Above MA250; monitor for stock-specific entry confirmation",
+      "shariah_status": "NOT VERIFIED",
+      "indicators": {
+        "ma30": 181.08,
+        "ma50": 172.69,
+        "ma250": 168.15,
+        "roc20": -3.56,
+        "atr14": 6.86
+      }
+    },
+    "overview": {
+      "status": "AVAILABLE",
+      "name": "QUALCOMM Incorporated",
+      "is_sec_verified": true,
+      "sec_cik": "0000804328",
+      "latest_sec_filing_date": "2026-07-29",
+      "pe_formatted": "20.08x",
+      "market_cap_formatted": "$185.30B",
+      "fcf_formatted": "$10.42B"
+    },
+    "valuation": {
+      "status": "AVAILABLE",
+      "current_price": 175.5,
+      "fair_value": 96.17,
+      "target_entry_price": 84.84,
+      "margin_of_safety_pct": null,
+      "recommendation": null
+    }
+  }
+}
