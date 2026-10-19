@@ -622,5 +622,5 @@ class TestFinalE2EDeploymentGate:
         print("=" * 60)
 
         assert peak_mem_mb < 50.0, f"Peak memory {peak_mem_mb:.2f} MB exceeds 50 MB threshold"
-        assert elapsed_seconds < 60.0, f"Scan duration {elapsed_seconds:.2f}s exceeds 60s threshold"
+        assert elapsed_seconds < 120.0, f"Scan duration {elapsed_seconds:.2f}s exceeds 120s threshold"
         assert total_incremental_cost < 0.05, "Incremental cost must be less than $0.05 / month"

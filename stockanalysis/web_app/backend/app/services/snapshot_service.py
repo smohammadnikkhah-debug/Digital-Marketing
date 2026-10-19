@@ -50,6 +50,15 @@ class SnapshotService:
             active = db.query(ScreenerSnapshot).filter(ScreenerSnapshot.is_active == True).first()
             if not active and not IS_PRODUCTION:
                 self._create_initial_snapshot(db)
+            elif active and not IS_PRODUCTION:
+                try:
+                    sigs = json.loads(active.signals_json) if active.signals_json else []
+                    if len(sigs) < 28:
+                        active.is_active = False
+                        db.commit()
+                        self._create_initial_snapshot(db)
+                except Exception:
+                    pass
 
             # Recover any orphaned jobs from server restart
             self.recover_orphaned_jobs(db)
@@ -125,6 +134,12 @@ class SnapshotService:
                     sig = json.loads(s.latest_signal_json)
                 except Exception:
                     sig = None
+
+            if not sig:
+                from app.services.universe_manager import universe_manager
+                mem_stock = universe_manager.get_stock(s.ticker)
+                if mem_stock and mem_stock.get("latest_signal"):
+                    sig = mem_stock.get("latest_signal")
 
             if sig:
                 sig_type = sig.get("signal", "").upper()

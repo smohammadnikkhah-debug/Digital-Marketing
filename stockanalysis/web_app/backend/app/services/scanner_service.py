@@ -124,7 +124,7 @@ class ScannerService:
                             "data_status": "READY",
                             "latest_signal": sig_dict,
                             "optimal_rule": {"entry": entry_rule, "exit": exit_rule},
-                        })
+                        }, sync_db=False)
         except Exception as e:
             print(f"[ScannerService] Error loading baseline TodayTrade: {e}")
 

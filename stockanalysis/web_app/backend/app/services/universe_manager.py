@@ -20,6 +20,7 @@ from app.config import (
     BASELINE_EXCEL_PATH,
     SIGNAL_PALETTE,
     DATA_PROVENANCE,
+    IS_PRODUCTION,
 )
 
 _lock = threading.Lock()
@@ -369,15 +370,23 @@ class UniverseManager:
 
             self._save_registry_locked()
 
-    def _save_registry_locked(self):
+    def _save_registry_locked(self, sync_db: bool = True):
         """Save registry atomically to persistent JSON file and synchronize DB."""
-        UNIVERSE_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
-        tmp_file = UNIVERSE_REGISTRY_PATH.with_suffix(".tmp")
-        with open(tmp_file, "w", encoding="utf-8") as f:
-            json.dump(self.registry, f, indent=2)
-        os.replace(tmp_file, UNIVERSE_REGISTRY_PATH)
+        try:
+            UNIVERSE_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+            tmp_file = UNIVERSE_REGISTRY_PATH.with_suffix(".tmp")
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(self.registry, f, indent=2)
+            os.replace(tmp_file, UNIVERSE_REGISTRY_PATH)
+        except Exception as e:
+            print(f"[UniverseManager] JSON registry file write notice: {e}")
 
-        # Synchronize database MonitoredStock table
+        # In production, Supabase PostgreSQL is the authoritative universe.
+        # Bypass legacy sequential 231-row table synchronization to eliminate startup bottleneck.
+        if IS_PRODUCTION or not sync_db:
+            return
+
+        # Synchronize database MonitoredStock table (local development SQLite only)
         try:
             from app.database import SessionLocal
             from app.models import MonitoredStock
@@ -424,6 +433,54 @@ class UniverseManager:
                 db.close()
         except Exception as e:
             print(f"[UniverseManager] DB sync warning: {e}")
+
+    def _sync_single_stock_to_db(self, ticker: str, r: Dict[str, Any]):
+        """Synchronize a single stock directly to PostgreSQL without scanning or updating other records."""
+        try:
+            from app.database import SessionLocal
+            from app.models import MonitoredStock
+            db = SessionLocal()
+            try:
+                opt = json.dumps(r.get("optimal_rule")) if r.get("optimal_rule") else None
+                sig = json.dumps(r.get("latest_signal")) if r.get("latest_signal") else None
+                stock_rec = db.query(MonitoredStock).filter(MonitoredStock.ticker == ticker).first()
+                if stock_rec:
+                    stock_rec.name = r.get("name", ticker)
+                    stock_rec.exchange = r.get("exchange", "NASDAQ")
+                    stock_rec.sector = r.get("sector", "Technology")
+                    stock_rec.industry = r.get("industry", "Equity")
+                    stock_rec.is_active = r.get("is_active", True)
+                    stock_rec.is_benchmark = r.get("is_benchmark", False)
+                    stock_rec.data_status = r.get("data_status", "READY")
+                    stock_rec.latest_price_date = r.get("latest_price_date")
+                    stock_rec.v40_eligible = r.get("v40_eligible", True)
+                    stock_rec.optimal_rule_json = opt
+                    stock_rec.latest_signal_json = sig
+                    stock_rec.last_scanned_at = r.get("last_scanned_at")
+                else:
+                    new_stock = MonitoredStock(
+                        ticker=ticker,
+                        name=r.get("name", ticker),
+                        exchange=r.get("exchange", "NASDAQ"),
+                        sector=r.get("sector", "Technology"),
+                        industry=r.get("industry", "Equity"),
+                        is_active=r.get("is_active", True),
+                        is_benchmark=r.get("is_benchmark", False),
+                        inclusion_date=r.get("inclusion_date", datetime.now().strftime("%Y-%m-%d")),
+                        source=r.get("source", "user_added"),
+                        data_status=r.get("data_status", "READY"),
+                        latest_price_date=r.get("latest_price_date"),
+                        v40_eligible=r.get("v40_eligible", True),
+                        optimal_rule_json=opt,
+                        latest_signal_json=sig,
+                        last_scanned_at=r.get("last_scanned_at"),
+                    )
+                    db.add(new_stock)
+                db.commit()
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"[UniverseManager] Single stock DB sync notice for {ticker}: {e}")
 
     def save(self):
         """Public thread-safe save method."""
@@ -520,7 +577,10 @@ class UniverseManager:
                 if latest_price_date: existing["latest_price_date"] = latest_price_date
                 existing["v40_eligible"] = v40_eligible
                 existing["last_scanned_at"] = now_iso
-                self._save_registry_locked()
+                if IS_PRODUCTION:
+                    self._sync_single_stock_to_db(ticker, existing)
+                else:
+                    self._save_registry_locked()
                 return existing
 
             record = {
@@ -541,17 +601,24 @@ class UniverseManager:
                 "last_scanned_at": now_iso,
             }
             self.registry[ticker] = record
-            self._save_registry_locked()
+            if IS_PRODUCTION:
+                self._sync_single_stock_to_db(ticker, record)
+            else:
+                self._save_registry_locked()
             return record
 
-    def update_stock(self, ticker: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def update_stock(self, ticker: str, updates: Dict[str, Any], sync_db: bool = True) -> Optional[Dict[str, Any]]:
         """Update fields on an existing stock record."""
         ticker = ticker.strip().upper()
         with _lock:
             if ticker not in self.registry:
                 return None
             self.registry[ticker].update(updates)
-            self._save_registry_locked()
+            if sync_db:
+                if IS_PRODUCTION:
+                    self._sync_single_stock_to_db(ticker, self.registry[ticker])
+                else:
+                    self._save_registry_locked()
             return self.registry[ticker]
 
     def remove_stock(self, ticker: str) -> bool:
@@ -560,7 +627,10 @@ class UniverseManager:
         with _lock:
             if ticker in self.registry:
                 self.registry[ticker]["is_active"] = False
-                self._save_registry_locked()
+                if IS_PRODUCTION:
+                    self._sync_single_stock_to_db(ticker, self.registry[ticker])
+                else:
+                    self._save_registry_locked()
                 return True
             return False
 

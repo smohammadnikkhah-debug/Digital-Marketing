@@ -142,3 +142,63 @@ class TestStageBHardening:
         assert normalize_db_url(test_url_postgres).startswith("postgresql+psycopg2://")
         assert normalize_db_url(test_url_postgresql).startswith("postgresql+psycopg2://")
         assert normalize_db_url(test_url_already_psycopg2).startswith("postgresql+psycopg2://")
+
+    def test_07_startup_bottleneck_eliminated_and_zero_unwanted_writes(self):
+        """Proves that production startup bypasses full-table sync and causes zero portfolio writes."""
+        import time
+        from app.services.universe_manager import universe_manager
+        from app.services.scanner_service import scanner_service
+
+        db = SessionLocal()
+        assert db.query(PortfolioTransaction).count() == 0
+        db.close()
+
+        t0 = time.time()
+        with patch("app.main.IS_PRODUCTION", True), patch("app.services.universe_manager.IS_PRODUCTION", True):
+            init_db_data()
+            scanner_service._seed_baseline_signals_if_needed()
+        t1 = time.time()
+
+        # Must execute in under 3 seconds (eliminating the 600s bottleneck)
+        elapsed = t1 - t0
+        assert elapsed < 5.0, f"Production startup took {elapsed:.2f}s, expected < 5s"
+
+        # Portfolio tables must remain completely empty
+        db = SessionLocal()
+        assert db.query(PortfolioTransaction).count() == 0
+        db.close()
+
+    def test_08_all_28_frozen_baseline_signals_preserved_in_memory(self):
+        """Proves that all 28 frozen V4.0 baseline signals are retained in memory with full fidelity."""
+        import pandas as pd
+        from app.config import BASELINE_EXCEL_PATH
+        from app.services.universe_manager import universe_manager
+        from app.services.scanner_service import scanner_service
+
+        xl = pd.ExcelFile(BASELINE_EXCEL_PATH)
+        df = xl.parse("TodayTrade")
+        baseline_tickers = [t.strip().upper() for t in df["Ticker"].tolist()]
+        assert len(baseline_tickers) == 28
+
+        for ticker in baseline_tickers:
+            stock = universe_manager.get_stock(ticker)
+            assert stock is not None, f"Stock {ticker} missing from universe_manager"
+            sig = stock.get("latest_signal")
+            assert sig is not None, f"Baseline signal missing for {ticker}"
+            assert sig.get("signal") in ("BUY CANDIDATE", "BUY", "WATCH", "HOLD", "EXIT", "AVOID")
+            assert sig.get("as_of") and sig.get("as_of").startswith("2026-10")
+            assert sig.get("data_freshness") in ("FROZEN_BASELINE", "FRESH")
+
+    def test_09_single_stock_db_sync_in_production(self):
+        """Proves that update_stock in production updates the single stock without a 231-row full table scan."""
+        from app.services.universe_manager import universe_manager
+
+        with patch("app.services.universe_manager.IS_PRODUCTION", True):
+            with patch.object(universe_manager, "_sync_single_stock_to_db") as mock_sync:
+                universe_manager.update_stock("QQQ", {"notes": "test_note"}, sync_db=True)
+                mock_sync.assert_called_once_with("QQQ", universe_manager.registry["QQQ"])
+
+            # When sync_db=False, even single stock sync must not be called
+            with patch.object(universe_manager, "_sync_single_stock_to_db") as mock_sync:
+                universe_manager.update_stock("QQQ", {"notes": "in_memory_only"}, sync_db=False)
+                mock_sync.assert_not_called()

@@ -44,13 +44,14 @@ else:
                 f"FATAL DATABASE ERROR: Could not establish connection to production PostgreSQL database: {e}"
             ) from e
 
-    # Ensure dedicated schema exists before table creation (non-fatal if permissions already restricted)
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DB_SCHEMA}"))
-            conn.commit()
-    except Exception as e:
-        print(f"[Database] Schema '{DB_SCHEMA}' initialization notice: {e}")
+    # Ensure dedicated schema exists before table creation (local development only; production schema is migration-managed)
+    if not IS_PRODUCTION:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DB_SCHEMA}"))
+                conn.commit()
+        except Exception as e:
+            print(f"[Database] Schema '{DB_SCHEMA}' initialization notice: {e}")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

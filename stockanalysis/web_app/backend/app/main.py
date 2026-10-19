@@ -24,8 +24,9 @@ from app.routers import (
     scanner,
 )
 
-# Initialize database schema
-Base.metadata.create_all(bind=engine)
+# Initialize database schema (local development only; production schema is migration-managed)
+if not IS_PRODUCTION:
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Adaptive Trading V4.0 Platform API",
