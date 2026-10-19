@@ -104,6 +104,10 @@ def init_db_data():
     finally:
         db.close()
 
+    # Initialize screener snapshot and monitored stocks in database
+    from app.services.snapshot_service import snapshot_service
+    snapshot_service._ensure_tables_and_seed()
+
     # Start the automated nightly scan scheduler
     from app.jobs import scheduler
     scheduler.start()

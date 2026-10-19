@@ -13,14 +13,14 @@ if LOCAL_ENGINE_CORE.exists() and (LOCAL_ENGINE_CORE / "engine.py").exists():
     ACTIVE_ENGINE_DIR = LOCAL_ENGINE_CORE
     V41_ENGINE_DIR = LOCAL_ENGINE_CORE
     V40_ENGINE_DIR = LOCAL_ENGINE_CORE
-    PRICE_CACHE_DIR = LOCAL_ENGINE_CORE / "price_cache"
+    PRICE_CACHE_DIR = LOCAL_ENGINE_CORE / "price_cache" if (LOCAL_ENGINE_CORE / "price_cache").exists() else (BACKEND_DIR / "data_cache" / "price_cache")
     DEFAULT_UNIVERSE_PATH = LOCAL_ENGINE_CORE / "Stock_Universe.xlsx"
     BASELINE_EXCEL_PATH = LOCAL_ENGINE_CORE / "results_v40" / "Adaptive_Trading_Research_V40.xlsx"
 else:
     V41_ENGINE_DIR = PROJECT_ROOT / "adaptive_trading_v41"
     V40_ENGINE_DIR = PROJECT_ROOT / "adaptive_trading_v40"
     ACTIVE_ENGINE_DIR = V41_ENGINE_DIR if V41_ENGINE_DIR.exists() else V40_ENGINE_DIR
-    PRICE_CACHE_DIR = V40_ENGINE_DIR / "price_cache"
+    PRICE_CACHE_DIR = V40_ENGINE_DIR / "price_cache" if (V40_ENGINE_DIR / "price_cache").exists() else (BACKEND_DIR / "data_cache" / "price_cache")
     DEFAULT_UNIVERSE_PATH = V40_ENGINE_DIR / "Stock_Universe.xlsx"
     BASELINE_EXCEL_PATH = V40_ENGINE_DIR / "results_v40" / "Adaptive_Trading_Research_V40.xlsx"
 
@@ -40,10 +40,20 @@ VALUATION_CACHE_DIR = DATA_CACHE_DIR / "valuation_runs"
 VALUATION_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Database: SQLite default with auto-switch to PostgreSQL / Supabase
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BACKEND_DIR / 'adaptive_platform.db'}")
+_raw_db_url = os.getenv("DATABASE_URL", f"sqlite:///{BACKEND_DIR / 'adaptive_platform.db'}")
+if _raw_db_url.startswith("postgres://"):
+    DATABASE_URL = _raw_db_url.replace("postgres://", "postgresql://", 1)
+else:
+    DATABASE_URL = _raw_db_url
+
+DB_SCHEMA = os.getenv("DB_SCHEMA", "stockanalysis")
+WORKER_MODE = os.getenv("WORKER_MODE", "embedded")  # "embedded" (web runs in-process worker) or "standalone" (decoupled worker container)
+SNAPSHOT_RETENTION_COUNT = int(os.getenv("SNAPSHOT_RETENTION_COUNT", "30"))
+JOB_RETENTION_COUNT = int(os.getenv("JOB_RETENTION_COUNT", "50"))
 
 # Security & Auth
 SECRET_KEY = os.getenv("SECRET_KEY", "adaptive-trading-v40-super-secret-key-2026")
+STOCKANALYSIS_ADMIN_KEY = os.getenv("STOCKANALYSIS_ADMIN_KEY", "stockanalysis-admin-key-dev-local-2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

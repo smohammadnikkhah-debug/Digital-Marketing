@@ -7,6 +7,7 @@ Provides:
 4. Summary metrics and filtering by sector, signal, freshness, and status.
 """
 from typing import Dict, List, Any, Optional
+import os
 import json
 import threading
 from datetime import datetime
@@ -294,9 +295,45 @@ class UniverseManager:
         self._load_or_initialize_registry()
 
     def _load_or_initialize_registry(self):
-        """Loads from disk or initializes with seed universe and audited baseline signals."""
+        """Loads from database or JSON disk, or initializes with seed universe."""
         with _lock:
             DATA_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            # 1. Try loading from database first (Durable Storage)
+            try:
+                from app.database import SessionLocal
+                from app.models import MonitoredStock
+                db = SessionLocal()
+                try:
+                    db_stocks = db.query(MonitoredStock).all()
+                    if len(db_stocks) >= 28:
+                        self.registry = {}
+                        for s in db_stocks:
+                            opt = json.loads(s.optimal_rule_json) if s.optimal_rule_json else None
+                            sig = json.loads(s.latest_signal_json) if s.latest_signal_json else None
+                            self.registry[s.ticker] = {
+                                "ticker": s.ticker,
+                                "name": s.name,
+                                "exchange": s.exchange,
+                                "sector": s.sector,
+                                "industry": s.industry,
+                                "is_active": s.is_active,
+                                "is_benchmark": s.is_benchmark,
+                                "inclusion_date": s.inclusion_date,
+                                "source": s.source,
+                                "latest_price_date": s.latest_price_date,
+                                "data_status": s.data_status,
+                                "v40_eligible": s.v40_eligible,
+                                "optimal_rule": opt,
+                                "latest_signal": sig,
+                                "last_scanned_at": s.last_scanned_at,
+                            }
+                        return
+                finally:
+                    db.close()
+            except Exception as e:
+                print(f"[UniverseManager] DB load notice: {e}")
+
+            # 2. Fallback to JSON registry
             if UNIVERSE_REGISTRY_PATH.exists():
                 try:
                     with open(UNIVERSE_REGISTRY_PATH, "r", encoding="utf-8") as f:
@@ -306,7 +343,7 @@ class UniverseManager:
                 except Exception:
                     pass
 
-            # Initialize from SEED_UNIVERSE
+            # 3. Initialize from SEED_UNIVERSE
             now_iso = datetime.now().isoformat()
             self.registry = {}
             for item in SEED_UNIVERSE:
@@ -333,10 +370,60 @@ class UniverseManager:
             self._save_registry_locked()
 
     def _save_registry_locked(self):
-        """Save registry to persistent JSON file."""
+        """Save registry atomically to persistent JSON file and synchronize DB."""
         UNIVERSE_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(UNIVERSE_REGISTRY_PATH, "w", encoding="utf-8") as f:
+        tmp_file = UNIVERSE_REGISTRY_PATH.with_suffix(".tmp")
+        with open(tmp_file, "w", encoding="utf-8") as f:
             json.dump(self.registry, f, indent=2)
+        os.replace(tmp_file, UNIVERSE_REGISTRY_PATH)
+
+        # Synchronize database MonitoredStock table
+        try:
+            from app.database import SessionLocal
+            from app.models import MonitoredStock
+            db = SessionLocal()
+            try:
+                for ticker, r in self.registry.items():
+                    opt = json.dumps(r.get("optimal_rule")) if r.get("optimal_rule") else None
+                    sig = json.dumps(r.get("latest_signal")) if r.get("latest_signal") else None
+                    stock_rec = db.query(MonitoredStock).filter(MonitoredStock.ticker == ticker).first()
+                    if stock_rec:
+                        stock_rec.name = r.get("name", ticker)
+                        stock_rec.exchange = r.get("exchange", "NASDAQ")
+                        stock_rec.sector = r.get("sector", "Technology")
+                        stock_rec.industry = r.get("industry", "Equity")
+                        stock_rec.is_active = r.get("is_active", True)
+                        stock_rec.is_benchmark = r.get("is_benchmark", False)
+                        stock_rec.data_status = r.get("data_status", "READY")
+                        stock_rec.latest_price_date = r.get("latest_price_date")
+                        stock_rec.v40_eligible = r.get("v40_eligible", True)
+                        stock_rec.optimal_rule_json = opt
+                        stock_rec.latest_signal_json = sig
+                        stock_rec.last_scanned_at = r.get("last_scanned_at")
+                    else:
+                        new_stock = MonitoredStock(
+                            ticker=ticker,
+                            name=r.get("name", ticker),
+                            exchange=r.get("exchange", "NASDAQ"),
+                            sector=r.get("sector", "Technology"),
+                            industry=r.get("industry", "Equity"),
+                            is_active=r.get("is_active", True),
+                            is_benchmark=r.get("is_benchmark", False),
+                            inclusion_date=r.get("inclusion_date", datetime.now().strftime("%Y-%m-%d")),
+                            source=r.get("source", "user_added"),
+                            data_status=r.get("data_status", "READY"),
+                            latest_price_date=r.get("latest_price_date"),
+                            v40_eligible=r.get("v40_eligible", True),
+                            optimal_rule_json=opt,
+                            latest_signal_json=sig,
+                            last_scanned_at=r.get("last_scanned_at"),
+                        )
+                        db.add(new_stock)
+                db.commit()
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"[UniverseManager] DB sync warning: {e}")
 
     def save(self):
         """Public thread-safe save method."""
@@ -478,7 +565,19 @@ class UniverseManager:
             return False
 
     def get_summary_counts(self) -> Dict[str, Any]:
-        """Compute broad market dashboard metrics."""
+        """Compute broad market dashboard metrics backed by the persistent active snapshot."""
+        try:
+            from app.services.snapshot_service import snapshot_service
+            active_snap = snapshot_service.get_active_snapshot()
+            if active_snap and active_snap.get("summary"):
+                summary = dict(active_snap["summary"])
+                summary["last_refresh_time"] = active_snap.get("calculated_at") or summary.get("last_refresh_time")
+                summary["latest_market_date"] = active_snap.get("market_as_of_date") or summary.get("latest_market_date")
+                summary["active_snapshot_id"] = active_snap.get("snapshot_id")
+                return summary
+        except Exception as e:
+            print(f"[UniverseManager] Snapshot summary read fallback: {e}")
+
         total = len(self.registry)
         active = sum(1 for s in self.registry.values() if s.get("is_active", True))
         refreshed = sum(1 for s in self.registry.values() if s.get("data_status") == "READY")
@@ -497,6 +596,7 @@ class UniverseManager:
 
         analysed = 0
         latest_market_date = "2026-10-09"
+        latest_scan_time = None
 
         for s in self.registry.values():
             if not s.get("is_active", True):
@@ -518,6 +618,9 @@ class UniverseManager:
                 as_of = sig_obj.get("as_of")
                 if as_of and as_of > latest_market_date:
                     latest_market_date = as_of
+            scan_at = s.get("last_scanned_at")
+            if scan_at and (not latest_scan_time or scan_at > latest_scan_time):
+                latest_scan_time = scan_at
 
         return {
             "total_universe": total,
@@ -530,7 +633,7 @@ class UniverseManager:
             "short_candidates_validated": 0,
             "short_status_notice": "RESEARCH ONLY — Audited V4.0 strategy is long-only. No short strategy validated.",
             "latest_market_date": latest_market_date,
-            "last_refresh_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "last_refresh_time": latest_scan_time or "2026-10-14 16:30:00 UTC",
             "data_provenance": DATA_PROVENANCE,
         }
 

@@ -30,7 +30,50 @@ def get_today_signals(
     if mode == "baseline":
         return bridge.get_today_signals(custom_shariah=shariah_map)
 
-    # Expanded Market Universe Signals
+    # Expanded Market Universe Signals: Read from persistent active ScreenerSnapshot
+    from app.services.snapshot_service import snapshot_service
+    active_snap = snapshot_service.get_active_snapshot(db)
+
+    if active_snap:
+        signals_source = active_snap.get("signals")
+        if not signals_source:
+            active_stocks = universe_manager.get_all(include_inactive=False)
+            signals_source = [s.get("latest_signal") or scanner_service.evaluate_stock_signal(s["ticker"]) for s in active_stocks]
+
+        signals_list = []
+        for s in signals_source:
+            if not s:
+                continue
+            sig = dict(s)
+            ticker = sig.get("ticker", "")
+            if ticker in shariah_map:
+                sig["shariah_status"] = shariah_map[ticker]["status"]
+            stock_info = universe_manager.get_stock(ticker) or {}
+            sig["company_name"] = stock_info.get("name", sig.get("name", ticker))
+            sig["sector"] = stock_info.get("sector", sig.get("sector", "Technology"))
+            sig["exchange"] = stock_info.get("exchange", sig.get("exchange", "NASDAQ"))
+            sig["data_status"] = stock_info.get("data_status", sig.get("data_status", "READY"))
+            signals_list.append(sig)
+
+        summary = active_snap.get("summary") or universe_manager.get_summary_counts()
+        return {
+            "snapshot_id": active_snap.get("snapshot_id"),
+            "as_of_date": active_snap.get("market_as_of_date", "2026-10-14"),
+            "last_refresh_time": active_snap.get("calculated_at"),
+            "total_stocks": len(signals_list),
+            "counts": summary.get("signals", {}),
+            "summary": summary,
+            "signals": signals_list,
+            "data_provenance": {
+                **DATA_PROVENANCE,
+                "badge_text": f"Expanded Screener Universe ({len(signals_list)} Monitored)",
+                "is_refreshed": True,
+                "as_of_date": active_snap.get("market_as_of_date"),
+                "description": "Adaptive Trading V4.0 quantitative signal engine across expanded liquid US market.",
+            },
+        }
+
+    # Fallback if no snapshot created yet
     active_stocks = universe_manager.get_all(include_inactive=False)
     signals_list = []
     
@@ -55,6 +98,7 @@ def get_today_signals(
     summary = universe_manager.get_summary_counts()
 
     return {
+        "snapshot_id": None,
         "as_of_date": summary.get("latest_market_date", "2026-10-09"),
         "last_refresh_time": summary.get("last_refresh_time"),
         "total_stocks": len(signals_list),
@@ -68,3 +112,5 @@ def get_today_signals(
             "description": "Adaptive Trading V4.0 quantitative signal engine across expanded liquid US market.",
         },
     }
+
+

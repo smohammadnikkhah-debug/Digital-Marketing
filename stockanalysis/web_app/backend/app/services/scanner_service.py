@@ -13,6 +13,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import os
 import sys
 import time
+import uuid
 import threading
 from datetime import datetime, date, timedelta
 from pathlib import Path
@@ -29,8 +30,10 @@ from app.config import (
     DEFAULT_FEE_BPS,
     DEFAULT_TRAIN_YEARS,
     DEFAULT_MIN_BUYS,
+    WORKER_MODE,
 )
 from app.services.universe_manager import universe_manager
+
 
 # Ensure engine directory is in sys.path
 if str(ACTIVE_ENGINE_DIR) not in sys.path:
@@ -126,9 +129,9 @@ class ScannerService:
             print(f"[ScannerService] Error loading baseline TodayTrade: {e}")
 
     def get_price_df(self, ticker: str) -> Optional[pd.DataFrame]:
-        """Loads price data, prioritizing the rolling research cache, then falling back to frozen baseline cache."""
+        """Loads price data, prioritizing the rolling research cache, then database DailyBar table, then frozen baseline."""
         ticker = ticker.strip().upper()
-        # 1. Check Rolling Research Cache
+        # 1. Check Rolling Research Cache (Local L1 File Cache)
         rolling_file = ROLLING_PRICE_CACHE_DIR / f"{ticker}.csv"
         if rolling_file.exists():
             try:
@@ -139,7 +142,34 @@ class ScannerService:
             except Exception:
                 pass
 
-        # 2. Check Frozen Baseline Cache
+        # 2. Check Database DailyBar Table (Durable Supabase L2 Storage - Survives container restarts)
+        try:
+            from app.database import SessionLocal
+            from app.models import DailyBar
+            db = SessionLocal()
+            try:
+                bars = db.query(DailyBar).filter(DailyBar.ticker == ticker).order_by(DailyBar.bar_date.asc()).all()
+                if bars and len(bars) >= 20:
+                    records = [{
+                        "Date": b.bar_date,
+                        "Open": b.open,
+                        "High": b.high,
+                        "Low": b.low,
+                        "Close": b.close,
+                        "Volume": b.volume,
+                    } for b in bars]
+                    df = pd.DataFrame(records).set_index("Date")
+                    df.index = pd.to_datetime(df.index)
+                    # Cache to disk for instant next access in this container
+                    rolling_file.parent.mkdir(parents=True, exist_ok=True)
+                    df.to_csv(rolling_file, index_label="Date")
+                    return df
+            finally:
+                db.close()
+        except Exception:
+            pass
+
+        # 3. Check Frozen Baseline Cache
         baseline_file = PRICE_CACHE_DIR / f"{ticker.replace('^', 'IDX_')}.csv"
         if baseline_file.exists():
             try:
@@ -151,6 +181,34 @@ class ScannerService:
                 pass
 
         return None
+
+    def _persist_bars_to_db(self, ticker: str, df: pd.DataFrame, full: bool = False):
+        """Persists daily OHLCV bars into durable Supabase DailyBar table with atomic upserts."""
+        if df is None or df.empty:
+            return
+        from app.database import SessionLocal
+        from app.models import DailyBar
+        db = SessionLocal()
+        try:
+            target_slice = df.tail(2520) if full else df.tail(30)
+            for idx, row in target_slice.iterrows():
+                date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, "strftime") else str(idx)[:10]
+                bar = DailyBar(
+                    ticker=ticker,
+                    bar_date=date_str,
+                    open=float(row["Open"]),
+                    high=float(row["High"]),
+                    low=float(row["Low"]),
+                    close=float(row["Close"]),
+                    volume=float(row.get("Volume", 0.0)) if pd.notna(row.get("Volume", 0.0)) else 0.0,
+                )
+                db.merge(bar)
+            db.commit()
+        except Exception as ex:
+            db.rollback()
+            print(f"[ScannerService] Error persisting daily bars to DB for {ticker}: {ex}")
+        finally:
+            db.close()
 
     def fetch_or_update_stock(self, ticker: str, force_full: bool = False) -> Tuple[Optional[pd.DataFrame], bool]:
         """Fetches or incrementally updates stock OHLCV data using Yahoo Finance.
@@ -190,6 +248,7 @@ class ScannerService:
                     # Save to rolling cache (Never mutate frozen baseline!)
                     target_file = ROLLING_PRICE_CACHE_DIR / f"{ticker}.csv"
                     combined.to_csv(target_file, index_label="Date")
+                    self._persist_bars_to_db(ticker, combined, full=False)
                     return combined, False
                 else:
                     # Failed to get new bars; preserve existing data and flag as stale
@@ -210,11 +269,13 @@ class ScannerService:
                     bars = bars[~bars.index.duplicated(keep="last")]
                     target_file = ROLLING_PRICE_CACHE_DIR / f"{ticker}.csv"
                     bars.to_csv(target_file, index_label="Date")
+                    self._persist_bars_to_db(ticker, bars, full=True)
                     return bars, False
                 else:
                     if existing_df is not None:
                         return existing_df, True
                     return None, False
+
 
         except Exception as e:
             print(f"[ScannerService] Error fetching {ticker}: {e}")
@@ -471,163 +532,350 @@ class ScannerService:
         }
 
     def add_stock_to_screener(self, ticker: str, name: Optional[str] = None, exchange: Optional[str] = None, sector: Optional[str] = None) -> Dict[str, Any]:
-        """Dynamically ingests, optimizes, analyzes and persists a stock into the screener universe."""
+        """Dynamically ingests, optimizes, analyzes, and persists a stock into the screener universe and active snapshot."""
         ticker = ticker.strip().upper()
 
-        # 1. Fetch historical data into rolling cache
-        df, is_stale = self.fetch_or_update_stock(ticker, force_full=True)
-
-        data_status = "READY"
-        if df is None or len(df) < 250:
-            data_status = "INSUFFICIENT_DATA"
-        elif is_stale:
-            data_status = "STALE"
-
-        # 2. Evaluate V4.0 signal & indicators
-        signal_data = self.evaluate_stock_signal(ticker, df)
-        if is_stale:
-            signal_data["data_freshness"] = "STALE"
-
-        optimal_rule = {
-            "entry": signal_data.get("entry_rule"),
-            "exit": signal_data.get("exit_rule"),
-        }
-
-        # 3. Persist in universe registry
-        record = universe_manager.add_stock(
-            ticker=ticker,
-            name=name or ticker,
-            exchange=exchange or "NASDAQ",
-            sector=sector or "Technology",
-            data_status=data_status,
-            optimal_rule=optimal_rule,
-            latest_signal=signal_data,
-            latest_price_date=signal_data.get("as_of"),
-            v40_eligible=len(df) >= 250 if df is not None else False,
-        )
-
-        return {
-            "stock": record,
-            "signal": signal_data,
-            "bars_count": len(df) if df is not None else 0,
-            "status": "SUCCESS" if data_status == "READY" else data_status,
-        }
-
-    def start_refresh_async(self, force_all: bool = False) -> Dict[str, Any]:
-        """Initiates a manual screener refresh in a background thread."""
         with self._refresh_lock:
-            if self.refresh_state["is_running"]:
-                return {
-                    "status": "ALREADY_RUNNING",
-                    "message": "A screener refresh is already in progress.",
-                    "progress": self.get_refresh_status(),
-                }
+            # 1. Fetch historical data into rolling cache
+            df, is_stale = self.fetch_or_update_stock(ticker, force_full=True)
 
-            stocks = universe_manager.get_all(include_inactive=False)
-            self._cancel_flag = False
-            self.refresh_state = {
-                "is_running": True,
-                "total": len(stocks),
-                "completed": 0,
-                "remaining": len(stocks),
-                "failed": 0,
-                "stale": 0,
-                "current_ticker": "",
-                "start_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "finish_time": None,
-                "errors": [],
-                "message": f"Starting refresh for {len(stocks)} stocks...",
+            data_status = "READY"
+            if df is None or len(df) < 250:
+                data_status = "INSUFFICIENT_DATA"
+            elif is_stale:
+                data_status = "STALE"
+
+            # 2. Evaluate V4.0 signal & indicators
+            signal_data = self.evaluate_stock_signal(ticker, df)
+            if is_stale:
+                signal_data["data_freshness"] = "STALE"
+
+            optimal_rule = {
+                "entry": signal_data.get("entry_rule"),
+                "exit": signal_data.get("exit_rule"),
             }
 
-            self._refresh_thread = threading.Thread(
-                target=self._run_refresh_worker,
-                args=(stocks, force_all),
-                daemon=True,
+            # 3. Persist in universe registry & MonitoredStock table
+            record = universe_manager.add_stock(
+                ticker=ticker,
+                name=name or ticker,
+                exchange=exchange or "NASDAQ",
+                sector=sector or "Technology",
+                data_status=data_status,
+                optimal_rule=optimal_rule,
+                latest_signal=signal_data,
+                latest_price_date=signal_data.get("as_of"),
+                v40_eligible=len(df) >= 250 if df is not None else False,
             )
-            self._refresh_thread.start()
+
+            # 4. Safely update active snapshot if one exists so stock appears immediately
+            try:
+                from app.services.snapshot_service import snapshot_service
+                from app.database import SessionLocal
+                from app.models import ScreenerSnapshot
+                db = SessionLocal()
+                try:
+                    active_snap = db.query(ScreenerSnapshot).filter(
+                        ScreenerSnapshot.is_active == True,
+                        ScreenerSnapshot.status == "COMPLETED"
+                    ).first()
+                    if active_snap:
+                        signals = json.loads(active_snap.signals_json) if active_snap.signals_json else []
+                        # Replace if ticker exists, otherwise append
+                        filtered_signals = [s for s in signals if s.get("ticker") != ticker]
+                        filtered_signals.append(signal_data)
+                        active_snap.signals_json = json.dumps(filtered_signals)
+                        active_snap.total_stocks = len(filtered_signals)
+                        db.commit()
+                finally:
+                    db.close()
+            except Exception as e:
+                print(f"[ScannerService] Active snapshot append notice: {e}")
 
             return {
-                "status": "STARTED",
-                "message": f"Refresh initiated for {len(stocks)} symbols.",
-                "progress": self.get_refresh_status(),
+                "stock": record,
+                "signal": signal_data,
+                "bars_count": len(df) if df is not None else 0,
+                "status": "SUCCESS" if data_status == "READY" else data_status,
             }
 
-    def _run_refresh_worker(self, stocks: List[Dict[str, Any]], force_all: bool):
-        """Worker thread executing incremental daily updates and signal recalculations."""
+    def start_refresh_async(self, force_all: bool = False, job_type: str = "MANUAL_REFRESH") -> Dict[str, Any]:
+        """Initiates a durable screener refresh as a background job."""
+        from app.database import SessionLocal
+        from app.models import RefreshJob
+
+        with self._refresh_lock:
+            db = SessionLocal()
+            try:
+                # Check for active existing job
+                existing_job = db.query(RefreshJob).filter(
+                    RefreshJob.status.in_(["QUEUED", "RUNNING"])
+                ).order_by(RefreshJob.created_at.desc()).first()
+
+                if existing_job:
+                    return {
+                        "status": "ALREADY_RUNNING",
+                        "job_id": existing_job.id,
+                        "message": "A screener refresh is already in progress.",
+                        "progress": self._format_job_dict(existing_job),
+                    }
+
+                stocks = universe_manager.get_all(include_inactive=False)
+                job_id = f"job_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+                self._cancel_flag = False
+
+                new_job = RefreshJob(
+                    id=job_id,
+                    job_type=job_type,
+                    status="QUEUED",
+                    force_all=force_all,
+                    total_stocks=len(stocks),
+                    completed_stocks=0,
+                    remaining_stocks=len(stocks),
+                    failed_stocks=0,
+                    stale_stocks=0,
+                    current_ticker="",
+                    start_time=datetime.utcnow(),
+                    message=f"Refresh queued for {len(stocks)} symbols...",
+                    errors_json="[]",
+                )
+                db.add(new_job)
+                db.commit()
+                db.refresh(new_job)
+
+                job_info = self._format_job_dict(new_job)
+
+                # Check worker mode: in 'standalone' mode (e.g. production worker container),
+                # the web service queues the job and lets the external worker daemon process it.
+                # In 'embedded' mode (local dev / single-container), run in-process thread.
+                if WORKER_MODE == "standalone":
+                    return {
+                        "status": "QUEUED",
+                        "job_id": job_id,
+                        "message": f"Refresh job {job_id} queued for standalone worker across {len(stocks)} symbols.",
+                        "progress": job_info,
+                    }
+
+                # Embedded worker thread
+                self._refresh_thread = threading.Thread(
+                    target=self._run_refresh_worker,
+                    args=(job_id, stocks, force_all),
+                    daemon=True,
+                    name=f"RefreshWorker-{job_id}",
+                )
+                self._refresh_thread.start()
+
+                return {
+                    "status": "STARTED",
+                    "job_id": job_id,
+                    "message": f"Refresh job {job_id} initiated for {len(stocks)} symbols.",
+                    "progress": job_info,
+                }
+            finally:
+                db.close()
+
+
+    def _format_job_dict(self, job) -> Dict[str, Any]:
+        """Format a RefreshJob SQLAlchemy model into a clean API dictionary."""
+        summary = universe_manager.get_summary_counts()
+        return {
+            "job_id": job.id,
+            "job_type": job.job_type,
+            "status": job.status,
+            "is_running": job.status in ("QUEUED", "RUNNING"),
+            "total": job.total_stocks,
+            "completed": job.completed_stocks,
+            "remaining": job.remaining_stocks,
+            "failed": job.failed_stocks,
+            "stale": job.stale_stocks,
+            "current_ticker": job.current_ticker or "",
+            "start_time": job.start_time.strftime("%Y-%m-%d %H:%M:%S UTC") if job.start_time else None,
+            "finish_time": job.finish_time.strftime("%Y-%m-%d %H:%M:%S UTC") if job.finish_time else None,
+            "message": job.message or "",
+            "error_message": job.error_message or "",
+            "snapshot_id": job.snapshot_id,
+            "summary": summary,
+        }
+
+    def _run_refresh_worker(self, job_id: str, stocks: List[Dict[str, Any]], force_all: bool):
+        """Worker executing incremental daily updates and publishing an atomic screener snapshot."""
+        from app.database import SessionLocal
+        from app.models import RefreshJob
+        from app.services.snapshot_service import snapshot_service
+
+        db = SessionLocal()
+        staged_signals: List[Dict[str, Any]] = []
+        errors = []
+
         try:
+            job = db.query(RefreshJob).filter(RefreshJob.id == job_id).first()
+            if not job:
+                return
+            job.status = "RUNNING"
+            job.start_time = datetime.utcnow()
+            job.message = f"Starting analysis across {len(stocks)} securities..."
+            db.commit()
+
             for i, stock in enumerate(stocks):
                 if self._cancel_flag:
-                    self.refresh_state["message"] = "Refresh cancelled by user."
-                    break
+                    job.status = "CANCELLED"
+                    job.finish_time = datetime.utcnow()
+                    job.message = "Refresh cancelled by user."
+                    db.commit()
+                    return
 
                 ticker = stock["ticker"]
-                self.refresh_state["current_ticker"] = ticker
-                self.refresh_state["message"] = f"Refreshing {ticker} ({i+1}/{len(stocks)})..."
+                job.current_ticker = ticker
+                job.message = f"Refreshing {ticker} ({i+1}/{len(stocks)})..."
+                db.commit()
 
                 try:
-                    # Incremental update
                     df, is_stale = self.fetch_or_update_stock(ticker, force_full=force_all)
-
                     if df is not None and len(df) >= 250:
                         sig_data = self.evaluate_stock_signal(ticker, df)
-                        data_status = "STALE" if is_stale else "READY"
                         if is_stale:
                             sig_data["data_freshness"] = "STALE"
-                            self.refresh_state["stale"] += 1
-
-                        universe_manager.update_stock(ticker, {
-                            "data_status": data_status,
-                            "latest_price_date": sig_data.get("as_of"),
-                            "latest_signal": sig_data,
-                            "optimal_rule": {
-                                "entry": sig_data.get("entry_rule"),
-                                "exit": sig_data.get("exit_rule"),
-                            },
-                        })
+                            job.stale_stocks += 1
+                        staged_signals.append(sig_data)
                     elif df is not None and len(df) < 250:
                         sig_data = self.evaluate_stock_signal(ticker, df)
-                        universe_manager.update_stock(ticker, {
-                            "data_status": "INSUFFICIENT_DATA",
-                            "latest_price_date": sig_data.get("as_of"),
-                            "latest_signal": sig_data,
-                        })
-                        self.refresh_state["failed"] += 1
+                        sig_data["data_freshness"] = "INSUFFICIENT_DATA"
+                        job.failed_stocks += 1
+                        staged_signals.append(sig_data)
                     else:
-                        self.refresh_state["failed"] += 1
-                        universe_manager.update_stock(ticker, {
-                            "data_status": "STALE",
-                        })
+                        job.failed_stocks += 1
+                        # If existing signal exists in universe, attach as stale
+                        existing_sig = stock.get("latest_signal") or self.evaluate_stock_signal(ticker, None)
+                        existing_sig["data_freshness"] = "STALE"
+                        staged_signals.append(existing_sig)
                 except Exception as ex:
-                    self.refresh_state["failed"] += 1
-                    self.refresh_state["errors"].append({"ticker": ticker, "error": str(ex)})
+                    job.failed_stocks += 1
+                    errors.append({"ticker": ticker, "error": str(ex)})
+                    existing_sig = stock.get("latest_signal") or self.evaluate_stock_signal(ticker, None)
+                    existing_sig["data_freshness"] = "STALE"
+                    staged_signals.append(existing_sig)
 
-                self.refresh_state["completed"] += 1
-                self.refresh_state["remaining"] = len(stocks) - self.refresh_state["completed"]
-                # Slight throttle to avoid provider throttling
-                time.sleep(0.05)
+                job.completed_stocks = i + 1
+                job.remaining_stocks = len(stocks) - (i + 1)
+                db.commit()
+                time.sleep(0.04)
 
-            self.refresh_state["finish_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
-            self.refresh_state["message"] = "Refresh completed successfully."
+            # Determine dominant market date
+            valid_dates = [s["as_of"] for s in staged_signals if s.get("as_of")]
+            market_as_of = max(valid_dates) if valid_dates else datetime.now().strftime("%Y-%m-%d")
+
+            # ATOMIC SNAPSHOT PUBLICATION
+            new_snap = snapshot_service.publish_new_snapshot(
+                staged_signals=staged_signals,
+                market_as_of_date=market_as_of,
+                refresh_job_id=job_id,
+                db=db,
+            )
+
+            job.status = "COMPLETED"
+            job.finish_time = datetime.utcnow()
+            job.snapshot_id = new_snap["snapshot_id"]
+            job.message = f"Refresh completed successfully ({len(staged_signals)} securities analyzed)."
+            job.current_ticker = ""
+            job.errors_json = json.dumps(errors)
+            db.commit()
+
+        except Exception as ex:
+            print(f"[ScannerService] Error during refresh worker execution: {ex}")
+            try:
+                job = db.query(RefreshJob).filter(RefreshJob.id == job_id).first()
+                if job:
+                    job.status = "FAILED"
+                    job.finish_time = datetime.utcnow()
+                    job.error_message = str(ex)
+                    job.message = f"Refresh failed: {str(ex)[:100]}"
+                    db.commit()
+            except Exception:
+                pass
         finally:
-            self.refresh_state["is_running"] = False
-            self.refresh_state["current_ticker"] = ""
+            db.close()
 
     def cancel_refresh(self) -> Dict[str, Any]:
         """Cancels an ongoing refresh operation."""
+        from app.database import SessionLocal
+        from app.models import RefreshJob
+
         with self._refresh_lock:
-            if self.refresh_state["is_running"]:
-                self._cancel_flag = True
-                return {"status": "CANCELLING", "message": "Cancellation signal sent."}
-            return {"status": "NOT_RUNNING", "message": "No refresh is currently running."}
+            self._cancel_flag = True
+            db = SessionLocal()
+            try:
+                active_job = db.query(RefreshJob).filter(
+                    RefreshJob.status.in_(["QUEUED", "RUNNING"])
+                ).first()
+                if active_job:
+                    active_job.status = "CANCELLED"
+                    active_job.finish_time = datetime.utcnow()
+                    active_job.message = "Cancelled by user."
+                    db.commit()
+                    return {"status": "CANCELLED", "message": f"Job {active_job.id} cancelled."}
+                return {"status": "NOT_RUNNING", "message": "No active refresh job is currently running."}
+            finally:
+                db.close()
 
     def get_refresh_status(self) -> Dict[str, Any]:
-        """Returns the current state and summary metrics of the scanner."""
-        summary = universe_manager.get_summary_counts()
-        return {
-            **self.refresh_state,
-            "summary": summary,
-        }
+        """Returns the current state and progress of the active or latest refresh job."""
+        from app.database import SessionLocal
+        from app.models import RefreshJob
+
+        db = SessionLocal()
+        try:
+            # First check for currently running / queued job
+            job = db.query(RefreshJob).filter(
+                RefreshJob.status.in_(["QUEUED", "RUNNING"])
+            ).order_by(RefreshJob.created_at.desc()).first()
+
+            if not job:
+                # Return most recently completed / failed job
+                job = db.query(RefreshJob).order_by(RefreshJob.created_at.desc()).first()
+
+            if job:
+                return self._format_job_dict(job)
+
+            # Fallback if no jobs exist yet
+            summary = universe_manager.get_summary_counts()
+            return {
+                "job_id": None,
+                "job_type": "MANUAL_REFRESH",
+                "status": "IDLE",
+                "is_running": False,
+                "total": summary.get("total_universe", 0),
+                "completed": summary.get("analysed_count", 0),
+                "remaining": 0,
+                "failed": 0,
+                "stale": summary.get("stale_count", 0),
+                "current_ticker": "",
+                "start_time": None,
+                "finish_time": None,
+                "message": "Idle",
+                "error_message": "",
+                "snapshot_id": None,
+                "summary": summary,
+            }
+        finally:
+            db.close()
+
+    def get_active_job(self) -> Optional[Dict[str, Any]]:
+        """Retrieve currently running job if one exists, else None."""
+        from app.database import SessionLocal
+        from app.models import RefreshJob
+
+        db = SessionLocal()
+        try:
+            job = db.query(RefreshJob).filter(
+                RefreshJob.status.in_(["QUEUED", "RUNNING"])
+            ).order_by(RefreshJob.created_at.desc()).first()
+            if job:
+                return self._format_job_dict(job)
+            return None
+        finally:
+            db.close()
 
 
 # Singleton instance
 scanner_service = ScannerService()
+

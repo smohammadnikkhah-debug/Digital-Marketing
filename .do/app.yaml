@@ -5,7 +5,7 @@ services:
   github:
     repo: smohammadnikkhah-debug/Digital-Marketing
     branch: master
-    deploy_on_push: true
+    deploy_on_push: false
   run_command: npm start
   environment_slug: node-js
   instance_count: 1
@@ -20,6 +20,9 @@ services:
     value: "3000"
   - key: STOCKANALYSIS_API_URL
     value: http://stockanalysis-api:8000
+  - key: STOCKANALYSIS_ADMIN_KEY
+    scope: RUN_TIME
+    type: SECRET
   - key: SUPABASE_URL
     value: https://nrunrjfmqczeowakjnjh.supabase.co
   - key: SUPABASE_ANON_KEY
@@ -104,13 +107,13 @@ services:
   github:
     repo: smohammadnikkhah-debug/Digital-Marketing
     branch: master
-    deploy_on_push: true
+    deploy_on_push: false
   environment_slug: python
   instance_count: 1
   instance_size_slug: basic-xxs
   internal_ports:
   - 8000
-  run_command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  run_command: python -m app.supervisor
   health_check:
     http_path: /api/health
     initial_delay_seconds: 15
@@ -128,6 +131,90 @@ services:
   - key: SECRET_KEY
     scope: RUN_AND_BUILD_TIME
     type: SECRET
+  - key: STOCKANALYSIS_ADMIN_KEY
+    scope: RUN_TIME
+    type: SECRET
+  - key: DATABASE_URL
+    scope: RUN_TIME
+    type: SECRET
+  - key: DB_SCHEMA
+    scope: RUN_TIME
+    value: "stockanalysis"
+  - key: SUPABASE_URL
+    scope: RUN_TIME
+    value: "https://nrunrjfmqczeowakjnjh.supabase.co"
+
+# ==============================================================================
+# Scheduled Jobs: Deferred until Phase 3 (Post-Deployment Verification)
+# To be activated only after successful 231-stock scan and Mozarex health checks.
+# ==============================================================================
+# jobs:
+#   # Market Open (9:45 AM America/New_York)
+#   - name: scheduled-market-open
+#     kind: SCHEDULED
+#     environment_slug: python
+#     instance_size_slug: basic-xxs
+#     source_dir: stockanalysis/web_app/backend
+#     github:
+#       repo: smohammadnikkhah-debug/Digital-Marketing
+#       branch: master
+#       deploy_on_push: false
+#     schedule:
+#       cron: "45 9 * * 1-5"
+#       time_zone: America/New_York
+#     build_command: pip install -r requirements.txt
+#     run_command: python -m app.cli run-market-open
+#     envs:
+#       - key: DATABASE_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: DB_SCHEMA
+#         scope: RUN_TIME
+#         value: "stockanalysis"
+#       - key: PYTHON_VERSION
+#         value: "3.12"
+#       - key: SEC_USER_AGENT
+#         value: "MozarexPlatform/1.0 (info@mozarex.com)"
+#       - key: SUPABASE_URL
+#         scope: RUN_TIME
+#         value: "https://nrunrjfmqczeowakjnjh.supabase.co"
+#       - key: SUPABASE_SERVICE_ROLE_KEY
+#         scope: RUN_TIME
+#         type: SECRET
+#
+#   # Market Close (1:30 PM & 4:30 PM America/New_York)
+#   - name: scheduled-market-close
+#     kind: SCHEDULED
+#     environment_slug: python
+#     instance_size_slug: basic-xxs
+#     source_dir: stockanalysis/web_app/backend
+#     github:
+#       repo: smohammadnikkhah-debug/Digital-Marketing
+#       branch: master
+#       deploy_on_push: false
+#     schedule:
+#       cron: "30 13,16 * * 1-5"
+#       time_zone: America/New_York
+#     build_command: pip install -r requirements.txt
+#     run_command: python -m app.cli run-market-close
+#     envs:
+#       - key: DATABASE_URL
+#         scope: RUN_TIME
+#         type: SECRET
+#       - key: DB_SCHEMA
+#         scope: RUN_TIME
+#         value: "stockanalysis"
+#       - key: PYTHON_VERSION
+#         value: "3.12"
+#       - key: SEC_USER_AGENT
+#         value: "MozarexPlatform/1.0 (info@mozarex.com)"
+#       - key: SUPABASE_URL
+#         scope: RUN_TIME
+#         value: "https://nrunrjfmqczeowakjnjh.supabase.co"
+#       - key: SUPABASE_SERVICE_ROLE_KEY
+#         scope: RUN_TIME
+#         type: SECRET
+
 domains:
 - domain: mozarex.com
   type: PRIMARY

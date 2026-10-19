@@ -10,6 +10,7 @@
  */
 const express = require('express');
 const http = require('http');
+const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
@@ -27,6 +28,26 @@ const proxyRateLimiter = rateLimit({
     message: 'Too many requests to StockAnalysis engine from this IP. Please try again in a minute.'
   }
 });
+
+// Dedicated Rate Limiter for Screener Commands (max 5 requests per 15 min per IP)
+const refreshRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 'RATE_LIMITED',
+    message: 'Too many screener trigger requests from this IP. Manual refreshes are rate-limited to prevent excessive job submissions.'
+  }
+});
+
+function timingSafeCompare(provided, expected) {
+  if (typeof provided !== 'string' || typeof expected !== 'string') return false;
+  const bufA = Buffer.from(provided);
+  const bufB = Buffer.from(expected);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 // 2. Allowlisted Endpoint Prefixes
 const ALLOWED_PATH_PREFIXES = [
@@ -49,10 +70,61 @@ const ALLOWED_PATH_PREFIXES = [
 const BLOCKED_PATH_PATTERNS = [];
 
 router.use(proxyRateLimiter);
+router.use([
+  '/scanner/refresh',
+  '/api/scanner/refresh',
+  '/scanner/cancel-refresh',
+  '/api/scanner/cancel-refresh'
+], refreshRateLimiter);
 
 router.all('/*', (req, res) => {
   // Original target path inside FastAPI (e.g., req.url is '/valuation/GOOGL/workspace')
   const incomingPath = req.url.startsWith('/api') ? req.url : `/api${req.url}`;
+
+  // Read client authentication credentials before stripping
+  const clientAdminKey = req.headers['x-admin-key'] || '';
+  const clientAuthHeader = req.headers['authorization'] || '';
+
+  // Security Check: Restrict sensitive screener trigger endpoints (refresh and cancel-refresh)
+  const isProtectedEndpoint = (
+    incomingPath.startsWith('/api/scanner/refresh') ||
+    incomingPath.startsWith('/api/scanner/cancel-refresh')
+  ) && req.method === 'POST';
+
+  let validatedAdminInternalKey = null;
+
+  if (isProtectedEndpoint) {
+    const expectedAdminKey = process.env.STOCKANALYSIS_ADMIN_KEY || '';
+
+    // 1. Verify validated administrator identity from authenticated web session
+    const isAdminSession = !!(
+      req.session &&
+      req.session.adminAuthUserId &&
+      req.session.adminRole === 'admin'
+    );
+
+    // 2. Or verify authorized API token with timing-safe comparison against dedicated STOCKANALYSIS_ADMIN_KEY
+    let isAuthorizedToken = false;
+    if (expectedAdminKey) {
+      const bearerToken = clientAuthHeader.startsWith('Bearer ') ? clientAuthHeader.slice(7).trim() : '';
+      const provided = bearerToken || clientAdminKey;
+      if (provided && timingSafeCompare(provided, expectedAdminKey)) {
+        isAuthorizedToken = true;
+      }
+    }
+
+    if (!isAdminSession && !isAuthorizedToken) {
+      return res.status(401).json({
+        status: 'UNAUTHORIZED',
+        message: 'Scanner execution commands require a validated administrator identity or authorized API key.'
+      });
+    }
+
+    // Prepare trusted internal credential for backend injection
+    if (expectedAdminKey) {
+      validatedAdminInternalKey = expectedAdminKey;
+    }
+  }
 
   // Security Check: Block dangerous administrative triggers
   for (const blocked of BLOCKED_PATH_PATTERNS) {
@@ -80,6 +152,18 @@ router.all('/*', (req, res) => {
     delete headers['host'];
     delete headers['connection'];
     delete headers['cookie'];
+    delete headers['x-admin-key']; // Unconditionally strip client-supplied X-Admin-Key
+
+    // For protected scanner commands: strip client-supplied credentials and inject ONLY trusted internal admin key
+    if (isProtectedEndpoint) {
+      delete headers['authorization'];
+      delete headers['x-admin-key'];
+
+      // Inject ONLY the trusted internal STOCKANALYSIS_ADMIN_KEY header for FastAPI verification
+      if (validatedAdminInternalKey) {
+        headers['x-admin-key'] = validatedAdminInternalKey;
+      }
+    }
 
     const proxyReq = http.request(
       targetUrl,

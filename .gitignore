@@ -173,3 +173,10 @@ cache/
 audit_db.js
 verify_prod_profile_audit.js
 database/backup_snapshot_*.json
+
+# StockAnalysis Local Backups, Exports & Caches
+stockanalysis/web_app/backend/exports/
+stockanalysis/web_app/backend/data_cache/price_cache/
+*.json.gz
+*.sql.gz
+
