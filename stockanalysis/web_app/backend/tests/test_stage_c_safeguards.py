@@ -706,3 +706,57 @@ class TestStageCSafeguards:
         with pytest.raises(ValueError, match="Full-universe refresh requires explicit job_type='FULL'"):
             scanner_service.start_refresh_async(tickers=None, job_type="MANUAL_REFRESH")
 
+    def test_24_refresh_screener_button_partial_payload_contract(self):
+        """Verifies the Refresh Screener button contract: job_type='PARTIAL' with ['SPY', 'AAPL', 'MSFT']."""
+        headers = {"X-Admin-Key": "test_admin_key"}
+        payload = {
+            "job_type": "PARTIAL",
+            "selected_tickers": ["SPY", "AAPL", "MSFT"]
+        }
+        with patch("app.routers.scanner.STOCKANALYSIS_ADMIN_KEY", "test_admin_key"):
+            with patch.object(scanner_service, "start_refresh_async") as mock_start:
+                mock_start.return_value = {
+                    "status": "QUEUED",
+                    "job_id": "test_partial_button_job",
+                    "target_tickers": ["SPY", "AAPL", "MSFT"]
+                }
+                resp = client.post("/api/scanner/refresh", json=payload, headers=headers)
+                assert resp.status_code == 200
+                data = resp.json()
+                assert data["status"] == "QUEUED"
+                mock_start.assert_called_with(
+                    force_all=False,
+                    tickers=["SPY", "AAPL", "MSFT"],
+                    job_type="PARTIAL"
+                )
+
+    def test_25_unauthenticated_scanner_request_rejected_with_http_401(self):
+        """Verifies unauthenticated scanner refresh requests are strictly rejected with HTTP 401."""
+        with patch("app.routers.scanner.STOCKANALYSIS_ADMIN_KEY", "test_admin_key"):
+            with patch.object(scanner_service, "start_refresh_async") as mock_start:
+                # 1. No headers provided
+                resp1 = client.post("/api/scanner/refresh", json={"job_type": "PARTIAL", "selected_tickers": ["SPY"]})
+                assert resp1.status_code == 401
+                assert "Unauthorized: Valid administrator credentials required." in resp1.json()["detail"]
+                mock_start.assert_not_called()
+
+                # 2. Invalid key provided
+                resp2 = client.post(
+                    "/api/scanner/refresh",
+                    json={"job_type": "PARTIAL", "selected_tickers": ["SPY"]},
+                    headers={"X-Admin-Key": "wrong_key"}
+                )
+                assert resp2.status_code == 401
+                assert "Unauthorized: Valid administrator credentials required." in resp2.json()["detail"]
+                mock_start.assert_not_called()
+
+    def test_26_obsolete_force_all_payload_rejected_no_accidental_full_refresh(self):
+        """Verifies obsolete payload {'force_all': false} is rejected with HTTP 400 and cannot trigger full refresh."""
+        headers = {"X-Admin-Key": "test_admin_key"}
+        with patch("app.routers.scanner.STOCKANALYSIS_ADMIN_KEY", "test_admin_key"):
+            with patch.object(scanner_service, "start_refresh_async") as mock_start:
+                resp = client.post("/api/scanner/refresh", json={"force_all": False}, headers=headers)
+                assert resp.status_code == 400
+                assert "Missing explicit job_type" in resp.json()["detail"]
+                mock_start.assert_not_called()
+
