@@ -25,6 +25,19 @@ from app.config import (
 
 _lock = threading.Lock()
 
+# Synthetic test tickers excluded from all scanner execution paths and eligible universe
+SYNTHETIC_EXCLUDED_TICKERS = {"NEWIPO"}
+
+# Reconciled frozen V4.0 quantitative baseline research universe (28 tickers from TodayTrade)
+FROZEN_RESEARCH_TICKERS = [
+    "QQQ", "AMZN", "NVDA", "GOOGL", "META", "AMD", "MA", "ELF", "IONQ", "NOW",
+    "INTC", "NKE", "ORCL", "AVGO", "QCOM", "UBER", "CRWD", "ANET", "APP", "ASTS",
+    "FICO", "MRVL", "COHR", "TSLA", "CELH", "ULTA", "GRAB", "RDDT",
+]
+
+# Benchmark index ETF (not in 28 research tickers)
+BENCHMARK_TICKER = "SPY"
+
 # Curated seed universe covering original 28, ADBE, CRM, S&P 500 constituents, and major liquid sectors
 SEED_UNIVERSE = [
     # --- Original V4.0 Baseline Stocks & Benchmarks ---
@@ -500,9 +513,12 @@ class UniverseManager:
         search: Optional[str] = None,
         sort_by: Optional[str] = None,
         ascending: bool = True,
+        exclude_synthetic: bool = True,
     ) -> List[Dict[str, Any]]:
         """Retrieve filtered, sorted universe list."""
         stocks = list(self.registry.values())
+        if exclude_synthetic:
+            stocks = [s for s in stocks if s.get("ticker", "").upper() not in SYNTHETIC_EXCLUDED_TICKERS]
         if not include_inactive:
             stocks = [s for s in stocks if s.get("is_active", True)]
 
@@ -546,6 +562,10 @@ class UniverseManager:
             )
 
         return stocks
+
+    def get_eligible_universe(self) -> List[Dict[str, Any]]:
+        """Returns the authoritative 230 eligible securities, excluding synthetic test tickers and inactive stocks."""
+        return self.get_all(include_inactive=False, exclude_synthetic=True)
 
     def add_stock(
         self,
@@ -648,11 +668,11 @@ class UniverseManager:
         except Exception as e:
             print(f"[UniverseManager] Snapshot summary read fallback: {e}")
 
-        total = len(self.registry)
-        active = sum(1 for s in self.registry.values() if s.get("is_active", True))
-        refreshed = sum(1 for s in self.registry.values() if s.get("data_status") == "READY")
-        stale = sum(1 for s in self.registry.values() if s.get("data_status") == "STALE")
-        insufficient = sum(1 for s in self.registry.values() if s.get("data_status") == "INSUFFICIENT_DATA")
+        total = sum(1 for s in self.registry.values() if s.get("ticker", "").upper() not in SYNTHETIC_EXCLUDED_TICKERS)
+        active = sum(1 for s in self.registry.values() if s.get("is_active", True) and s.get("ticker", "").upper() not in SYNTHETIC_EXCLUDED_TICKERS)
+        refreshed = sum(1 for s in self.registry.values() if s.get("data_status") == "READY" and s.get("ticker", "").upper() not in SYNTHETIC_EXCLUDED_TICKERS)
+        stale = sum(1 for s in self.registry.values() if s.get("data_status") == "STALE" and s.get("ticker", "").upper() not in SYNTHETIC_EXCLUDED_TICKERS)
+        insufficient = sum(1 for s in self.registry.values() if s.get("data_status") == "INSUFFICIENT_DATA" and s.get("ticker", "").upper() not in SYNTHETIC_EXCLUDED_TICKERS)
 
         signal_counts = {
             "BUY CANDIDATE": 0,

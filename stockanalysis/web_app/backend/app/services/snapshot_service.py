@@ -202,9 +202,13 @@ class SnapshotService:
         db.commit()
         print(f"[SnapshotService] Created initial active snapshot: {snap_id}")
 
-    def recover_orphaned_jobs(self, db: Optional[Session] = None):
-        """Mark any jobs left in RUNNING status from a past crash as FAILED.
-        Preserves QUEUED jobs so legitimate pending tasks are not discarded on restart.
+    def recover_orphaned_jobs(self, db: Optional[Session] = None, lease_timeout_seconds: int = 180):
+        """Mark genuinely orphaned jobs left in RUNNING status from a past crash as INTERRUPTED.
+        
+        Safeguards:
+        1. Checks worker lease age: does NOT interrupt jobs owned by a healthy worker actively updating timestamps (<180s).
+        2. Preserves completed work and records remaining tickers in errors_json for administrator-controlled retry.
+        3. Preserves legitimate QUEUED jobs.
         """
         should_close = False
         if db is None:
@@ -212,19 +216,65 @@ class SnapshotService:
             should_close = True
 
         try:
-            # 1. Transition interrupted RUNNING jobs to FAILED
-            interrupted_jobs = db.query(RefreshJob).filter(
-                RefreshJob.status == "RUNNING"
+            now_utc = datetime.utcnow()
+            active_jobs = db.query(RefreshJob).filter(
+                RefreshJob.status.in_(["RUNNING", "CANCEL_REQUESTED"])
             ).all()
 
-            for job in interrupted_jobs:
-                job.status = "FAILED"
-                job.finish_time = datetime.utcnow()
-                job.error_message = "Server restarted or worker stopped while job was in progress."
-                job.message = "Failed: Server restart detected during execution."
-            if interrupted_jobs:
+            interrupted_count = 0
+            for job in active_jobs:
+                if job.start_time is None:
+                    # Abandoned without starting worker
+                    ref_time = job.created_at
+                    lease_age = 999999
+                elif job.updated_at and job.created_at and abs((job.updated_at - job.created_at).total_seconds()) < 2.0:
+                    ref_time = job.start_time
+                    lease_age = (now_utc - ref_time).total_seconds() if ref_time else 999999
+                else:
+                    ref_time = job.updated_at or job.start_time or job.created_at
+                    lease_age = (now_utc - ref_time).total_seconds() if ref_time else 999999
+
+                # If lease is fresh, a live worker thread/process is actively updating it; do not interrupt
+                if lease_age <= lease_timeout_seconds:
+                    continue
+
+                # Parse existing metadata to determine completed vs remaining tickers
+                requested_tickers = []
+                completed_tickers = []
+                failed_tickers = []
+                meta_dict = {}
+                if job.errors_json:
+                    try:
+                        parsed = json.loads(job.errors_json)
+                        if isinstance(parsed, dict):
+                            meta_dict = parsed
+                            requested_tickers = parsed.get("requested_tickers") or []
+                            completed_tickers = parsed.get("completed_tickers") or []
+                            failed_tickers = parsed.get("failed_tickers") or []
+                    except Exception:
+                        pass
+
+                remaining_tickers = [t for t in requested_tickers if t not in set(completed_tickers)]
+
+                if job.status == "CANCEL_REQUESTED":
+                    job.status = "CANCELLED"
+                    job.finish_time = now_utc
+                    job.message = f"Refresh cancelled by administrator (confirmed on recovery after {job.completed_stocks} securities)."
+                else:
+                    job.status = "INTERRUPTED"
+                    job.finish_time = now_utc
+                    job.error_message = "INTERRUPTED_ON_RESTART: Server restarted or worker stopped during execution."
+                    job.message = f"Interrupted: Server restart detected. {job.completed_stocks}/{job.total_stocks} completed. {len(remaining_tickers)} remaining stocks can be resumed."
+
+                meta_dict["remaining_tickers"] = remaining_tickers
+                meta_dict["can_retry"] = len(remaining_tickers) > 0
+                meta_dict["interrupted_at"] = now_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+                job.errors_json = json.dumps(meta_dict)
+                interrupted_count += 1
+
+            if interrupted_count > 0:
                 db.commit()
-                print(f"[SnapshotService] Cleaned up {len(interrupted_jobs)} interrupted RUNNING refresh jobs.")
+                print(f"[SnapshotService] Cleaned up {interrupted_count} genuinely orphaned refresh jobs (preserved completed work).")
 
             # 2. Preserve QUEUED jobs; reset any transient claim text
             queued_jobs = db.query(RefreshJob).filter(
@@ -375,7 +425,11 @@ class SnapshotService:
                     for sig in base_signals:
                         t = sig.get("ticker")
                         if t in refreshed_map:
-                            merged_signals.append({**sig, **refreshed_map[t]})
+                            refreshed_sig = refreshed_map[t]
+                            if refreshed_sig.get("latest_refresh_status") == "FAILED":
+                                merged_signals.append({**sig, "latest_refresh_status": "FAILED"})
+                            else:
+                                merged_signals.append({**sig, **refreshed_sig})
                             merged_tickers.add(t)
                         else:
                             merged_signals.append(sig)
@@ -530,6 +584,16 @@ class SnapshotService:
                 target_update_signals = staged_signals if is_partial else final_signals
                 for sig in target_update_signals:
                     ticker = sig.get("ticker", "").strip().upper()
+                    if sig.get("latest_refresh_status") == "FAILED":
+                        # CRITICAL REQUIREMENT 8: A failed refresh must never overwrite a previously valid signal or its market-data date
+                        stock_rec = db.query(MonitoredStock).filter(MonitoredStock.ticker == ticker).first()
+                        if stock_rec:
+                            stock_rec.last_scanned_at = calc_time.isoformat()
+                        universe_manager.update_stock(ticker, {
+                            "last_scanned_at": calc_time.isoformat(),
+                        }, sync_db=False)
+                        continue
+
                     stock_rec = db.query(MonitoredStock).filter(MonitoredStock.ticker == ticker).first()
                     if stock_rec:
                         stock_rec.latest_signal_json = json.dumps(sig)
@@ -542,6 +606,8 @@ class SnapshotService:
                 # 6. Update in-memory universe manager records for refreshed stocks
                 from app.services.universe_manager import universe_manager
                 for sig in target_update_signals:
+                    if sig.get("latest_refresh_status") == "FAILED":
+                        continue
                     ticker = sig.get("ticker", "").strip().upper()
                     universe_manager.update_stock(ticker, {
                         "latest_signal": sig,

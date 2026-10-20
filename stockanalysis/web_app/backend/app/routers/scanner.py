@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.config import SECRET_KEY, STOCKANALYSIS_ADMIN_KEY
 from app.database import get_db
-from app.services.universe_manager import universe_manager
+from app.services.universe_manager import universe_manager, SYNTHETIC_EXCLUDED_TICKERS
 from app.services.scanner_service import scanner_service
 from app.services.security_master import search_symbols
 
@@ -165,12 +165,17 @@ def trigger_screener_refresh(
     if payload.job_type is not None:
         jt_raw = str(payload.job_type).strip()
         jt_upper = jt_raw.upper()
-        if jt_upper not in ("FULL", "PARTIAL", "PARTIAL_REFRESH"):
+        if jt_upper not in ("FULL", "PARTIAL", "PARTIAL_REFRESH", "ROLLOUT"):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid job_type '{payload.job_type}'. Must be 'FULL' or 'PARTIAL'."
+                detail=f"Invalid job_type '{payload.job_type}'. Must be 'FULL', 'PARTIAL', or 'ROLLOUT'."
             )
-        explicit_job_type = "FULL" if jt_upper == "FULL" else "PARTIAL"
+        if jt_upper == "FULL":
+            explicit_job_type = "FULL"
+        elif jt_upper == "ROLLOUT":
+            explicit_job_type = "ROLLOUT"
+        else:
+            explicit_job_type = "PARTIAL"
     elif has_tickers or has_selected:
         explicit_job_type = "PARTIAL"
     else:
@@ -197,11 +202,11 @@ def trigger_screener_refresh(
                 detail="Contradictory payload: both 'tickers' and 'selected_tickers' were provided but contain conflicting values."
             )
 
-    # Check for contradictory payload: job_type is PARTIAL but tickers omitted
-    if explicit_job_type == "PARTIAL" and not has_tickers and not has_selected:
+    # Check for contradictory payload: job_type is PARTIAL or ROLLOUT but tickers omitted
+    if explicit_job_type in ("PARTIAL", "ROLLOUT") and not has_tickers and not has_selected:
         raise HTTPException(
             status_code=400,
-            detail="Silent full-universe refresh prevented: Contradictory payload: job_type is PARTIAL but no tickers were specified. Provide a non-empty list in 'tickers' or 'selected_tickers'."
+            detail=f"Silent full-universe refresh prevented: Contradictory payload: job_type is {explicit_job_type} but no tickers were specified. Provide a non-empty list in 'tickers' or 'selected_tickers'."
         )
 
     # If tickers are specified, perform strict fail-closed validation
@@ -213,10 +218,16 @@ def trigger_screener_refresh(
                 detail="Tickers list cannot be empty when specified."
             )
 
-        if len(raw_list) > 50:
+        if explicit_job_type == "PARTIAL" and len(raw_list) > 50:
             raise HTTPException(
                 status_code=400,
-                detail="Partial refresh exceeds 50 ticker limit. Use full-universe refresh for larger scopes."
+                detail="Partial refresh exceeds 50 ticker limit. Use job_type='ROLLOUT' for selections of 51-230 tickers or 'FULL' for full universe."
+            )
+
+        if len(raw_list) > 230:
+            raise HTTPException(
+                status_code=400,
+                detail="Selection exceeds 230 eligible securities limit. Use job_type='FULL' for full universe."
             )
 
         # Check for duplicates unexpectedly
@@ -235,7 +246,7 @@ def trigger_screener_refresh(
                     detail=f"Malformed ticker symbol: {item}. Ticker must be a string."
                 )
             t_str = item.strip()
-            if not t_str or len(t_str) > 10 or not t_str.replace('.', '').replace('-', '').isalnum():
+            if not t_str or len(t_str) > 10 or not t_str.replace('.', '').replace('-', '').replace('_', '').isalnum():
                 raise HTTPException(
                     status_code=400,
                     detail=f"Malformed ticker symbol: '{item}'. Must be 1-10 alphanumeric characters."
@@ -245,6 +256,11 @@ def trigger_screener_refresh(
                 raise HTTPException(
                     status_code=400,
                     detail=f"Duplicate ticker '{t_upper}' detected in requested tickers list."
+                )
+            if t_upper in SYNTHETIC_EXCLUDED_TICKERS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Synthetic or test ticker '{t_upper}' cannot be scanned in screener."
                 )
             upper_set.add(t_upper)
             cleaned.append(t_upper)
@@ -265,7 +281,8 @@ def trigger_screener_refresh(
                 )
 
         requested_tickers = cleaned
-        explicit_job_type = "PARTIAL"
+        if explicit_job_type != "ROLLOUT":
+            explicit_job_type = "PARTIAL"
 
     kwargs = {"force_all": force, "tickers": requested_tickers, "job_type": explicit_job_type}
     result = scanner_service.start_refresh_async(**kwargs)

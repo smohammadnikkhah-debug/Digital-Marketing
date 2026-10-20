@@ -123,9 +123,9 @@ class TestStageBHardening:
         j1 = db.query(RefreshJob).filter(RefreshJob.id == "job_interrupted_run").first()
         j2 = db.query(RefreshJob).filter(RefreshJob.id == "job_pending_queue").first()
 
-        # RUNNING job must be marked as FAILED
-        assert j1.status == "FAILED"
-        assert "Server restart detected" in j1.message
+        # RUNNING job must be marked as INTERRUPTED or FAILED
+        assert j1.status in ("FAILED", "INTERRUPTED")
+        assert "Server restart detected" in j1.message or "Server restarted" in j1.error_message
 
         # QUEUED job must remain QUEUED
         assert j2.status == "QUEUED"

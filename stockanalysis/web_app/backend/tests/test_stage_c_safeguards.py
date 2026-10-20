@@ -760,3 +760,295 @@ class TestStageCSafeguards:
                 assert "Missing explicit job_type" in resp.json()["detail"]
                 mock_start.assert_not_called()
 
+    def test_27_reconciled_v40_baseline_research_universe_and_benchmark(self):
+        """Verifies exact reconciliation of 28 frozen research tickers and SPY benchmark."""
+        from app.services.universe_manager import FROZEN_RESEARCH_TICKERS, BENCHMARK_TICKER
+        # Exactly 28 research tickers
+        assert len(FROZEN_RESEARCH_TICKERS) == 28
+        assert "QQQ" in FROZEN_RESEARCH_TICKERS
+        assert "NVDA" in FROZEN_RESEARCH_TICKERS
+        assert "RDDT" in FROZEN_RESEARCH_TICKERS
+
+        # SPY is walk-forward benchmark, NOT in research tickers
+        assert BENCHMARK_TICKER == "SPY"
+        assert "SPY" not in FROZEN_RESEARCH_TICKERS
+
+        # In universe registry, SPY is benchmark
+        spy_stock = universe_manager.get_stock("SPY")
+        assert spy_stock is not None
+        assert spy_stock.get("is_benchmark") is True
+
+    def test_28_atomic_admission_control_with_advisory_lock_and_active_states(self):
+        """Verifies atomic admission rejects concurrent submissions across QUEUED, RUNNING, CANCEL_REQUESTED and advisory locks."""
+        db = SessionLocal()
+        job_id = "test_active_job_admission"
+        try:
+            # 1. Active job in CANCEL_REQUESTED state must block admission
+            active_job = RefreshJob(
+                id=job_id,
+                job_type="PARTIAL_REFRESH",
+                status="CANCEL_REQUESTED",
+                total_stocks=3,
+                completed_stocks=1,
+                remaining_stocks=2,
+            )
+            db.add(active_job)
+            db.commit()
+
+            res = scanner_service.start_refresh_async(tickers=["AAPL"], job_type="PARTIAL")
+            assert res["status"] == "ALREADY_RUNNING"
+            assert res["job_id"] == job_id
+        finally:
+            db.query(RefreshJob).filter(RefreshJob.id == job_id).delete()
+            db.commit()
+            db.close()
+
+    def test_29_persistent_cancellation_in_database_halts_worker_cleanly(self):
+        """Verifies cancel_refresh sets CANCEL_REQUESTED in DB, worker observes it, and no snapshot is published."""
+        db = SessionLocal()
+        job_id = "test_cancel_worker_job"
+        try:
+            job = RefreshJob(
+                id=job_id,
+                job_type="PARTIAL_REFRESH",
+                status="QUEUED",
+                total_stocks=3,
+                remaining_stocks=3,
+                errors_json=json.dumps({"requested_tickers": ["AAPL", "MSFT", "GOOGL"]}),
+            )
+            db.add(job)
+            db.commit()
+
+            # Calling cancel_refresh updates DB status
+            cancel_res = scanner_service.cancel_refresh()
+            assert cancel_res["status"] in ("CANCELLED", "CANCEL_REQUESTED")
+
+            # Worker checking this job acknowledges cancellation and does not publish snapshot
+            with patch.object(snapshot_service, "publish_new_snapshot") as mock_pub:
+                scanner_service._run_refresh_worker(
+                    job_id=job_id,
+                    stocks=[{"ticker": "AAPL"}, {"ticker": "MSFT"}],
+                    force_all=False,
+                    is_partial=True
+                )
+                mock_pub.assert_not_called()
+
+            db.expire_all()
+            updated_job = db.query(RefreshJob).filter(RefreshJob.id == job_id).first()
+            assert updated_job.status == "CANCELLED"
+            assert "cancelled" in updated_job.message.lower()
+        finally:
+            scanner_service._cancel_flag = False
+            db.query(RefreshJob).filter(RefreshJob.id == job_id).delete()
+            db.commit()
+            db.close()
+
+    def test_30_worker_lease_and_restart_recovery_preserves_healthy_and_marks_stale_interrupted(self):
+        """Verifies recover_orphaned_jobs leaves healthy worker jobs untouched and marks stale jobs as INTERRUPTED with remaining tickers."""
+        from datetime import datetime, timedelta
+        db = SessionLocal()
+        healthy_id = "test_healthy_lease_job"
+        stale_id = "test_stale_lease_job"
+        try:
+            # 1. Healthy job: updated 10 seconds ago
+            healthy_job = RefreshJob(
+                id=healthy_id,
+                job_type="ROLLOUT",
+                status="RUNNING",
+                total_stocks=10,
+                completed_stocks=4,
+                remaining_stocks=6,
+                start_time=datetime.utcnow() - timedelta(seconds=60),
+                updated_at=datetime.utcnow() - timedelta(seconds=10),
+                errors_json=json.dumps({
+                    "requested_tickers": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
+                    "completed_tickers": ["A", "B", "C", "D"],
+                }),
+            )
+            # 2. Stale job: updated 500 seconds ago (worker crashed)
+            stale_job = RefreshJob(
+                id=stale_id,
+                job_type="ROLLOUT",
+                status="RUNNING",
+                total_stocks=10,
+                completed_stocks=3,
+                remaining_stocks=7,
+                start_time=datetime.utcnow() - timedelta(seconds=600),
+                updated_at=datetime.utcnow() - timedelta(seconds=500),
+                errors_json=json.dumps({
+                    "requested_tickers": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"],
+                    "completed_tickers": ["T1", "T2", "T3"],
+                }),
+            )
+            db.add(healthy_job)
+            db.add(stale_job)
+            db.commit()
+
+            # Run recovery with 180s threshold
+            snapshot_service.recover_orphaned_jobs(db=db, lease_timeout_seconds=180)
+
+            db.expire_all()
+            h_after = db.query(RefreshJob).filter(RefreshJob.id == healthy_id).first()
+            s_after = db.query(RefreshJob).filter(RefreshJob.id == stale_id).first()
+
+            # Healthy job was NOT interrupted
+            assert h_after.status == "RUNNING"
+
+            # Stale job was marked INTERRUPTED
+            assert s_after.status == "INTERRUPTED"
+            assert "INTERRUPTED_ON_RESTART" in s_after.error_message
+            stale_meta = json.loads(s_after.errors_json)
+            assert stale_meta["can_retry"] is True
+            # Remaining tickers accurately identified for administrator resumption without duplicating completed scans
+            assert stale_meta["remaining_tickers"] == ["T4", "T5", "T6", "T7", "T8", "T9", "T10"]
+            assert len(stale_meta["remaining_tickers"]) == 7
+        finally:
+            db.query(RefreshJob).filter(RefreshJob.id.in_([healthy_id, stale_id])).delete()
+            db.commit()
+            db.close()
+
+    def test_31_request_contract_partial_limit_rollout_scope_and_full_requirements(self):
+        """Verifies PARTIAL enforces <=50 ceiling, ROLLOUT accepts 51-230, and FULL requires no tickers."""
+        headers = {"X-Admin-Key": "test_admin_key"}
+        with patch("app.routers.scanner.STOCKANALYSIS_ADMIN_KEY", "test_admin_key"):
+            # 1. PARTIAL with 51 tickers rejected
+            tickers_51 = [f"T{i}" for i in range(51)]
+            resp1 = client.post("/api/scanner/refresh", json={"job_type": "PARTIAL", "selected_tickers": tickers_51}, headers=headers)
+            assert resp1.status_code == 400
+            assert "exceeds 50 ticker limit" in resp1.json()["detail"]
+
+            # 2. FULL with tickers provided rejected
+            resp2 = client.post("/api/scanner/refresh", json={"job_type": "FULL", "selected_tickers": ["AAPL"]}, headers=headers)
+            assert resp2.status_code == 400
+            assert "Contradictory payload" in resp2.json()["detail"]
+
+            # 3. ROLLOUT with no tickers rejected
+            resp3 = client.post("/api/scanner/refresh", json={"job_type": "ROLLOUT"}, headers=headers)
+            assert resp3.status_code == 400
+            assert "no tickers were specified" in resp3.json()["detail"]
+
+    def test_32_synthetic_ticker_newipo_strictly_excluded_from_all_paths(self):
+        """Verifies synthetic ticker NEWIPO is rejected on refresh, excluded from universe listing, and excluded from full rollout."""
+        headers = {"X-Admin-Key": "test_admin_key"}
+        with patch("app.routers.scanner.STOCKANALYSIS_ADMIN_KEY", "test_admin_key"):
+            # 1. Rejected if requested in tickers
+            resp = client.post("/api/scanner/refresh", json={"job_type": "PARTIAL", "selected_tickers": ["NEWIPO"]}, headers=headers)
+            assert resp.status_code == 400
+            assert "NEWIPO" in resp.json()["detail"]
+            assert "Synthetic" in resp.json()["detail"]
+
+            # 2. Excluded from universe listing
+            univ_resp = client.get("/api/scanner/universe?limit=300")
+            assert univ_resp.status_code == 200
+            univ_data = univ_resp.json()
+            tickers_in_univ = [s["ticker"] for s in univ_data["stocks"]]
+            assert "NEWIPO" not in tickers_in_univ
+            # Exact 230 eligible securities
+            assert univ_data["total_filtered"] == 230
+
+            # 3. Excluded from eligible universe in universe_manager
+            eligible = universe_manager.get_eligible_universe()
+            assert len(eligible) == 230
+            assert not any(s["ticker"] == "NEWIPO" for s in eligible)
+
+    def test_33_separation_of_signal_provenance_and_failed_refresh_outcome(self):
+        """Verifies a failed refresh attempt preserves existing valid signals and market date without corruption."""
+        from app.models import MonitoredStock
+        db = SessionLocal()
+        test_ticker = "AAPL"
+        try:
+            # Setup stock with valid baseline signal
+            stock_rec = db.query(MonitoredStock).filter(MonitoredStock.ticker == test_ticker).first()
+            if stock_rec:
+                original_signal = stock_rec.latest_signal_json
+                original_date = stock_rec.latest_price_date
+            else:
+                original_signal = json.dumps({"ticker": test_ticker, "signal": "BUY CANDIDATE", "as_of": "2026-10-09"})
+                original_date = "2026-10-09"
+                stock_rec = MonitoredStock(
+                    ticker=test_ticker,
+                    latest_signal_json=original_signal,
+                    latest_price_date=original_date,
+                    data_status="READY",
+                )
+                db.add(stock_rec)
+                db.commit()
+
+            # Simulate worker receiving failure for this stock
+            failed_staged_signal = {
+                "ticker": test_ticker,
+                "latest_refresh_status": "FAILED",
+                "as_of": "2026-10-09",
+            }
+            snapshot_service.publish_new_snapshot(
+                staged_signals=[failed_staged_signal],
+                market_as_of_date="2026-10-18",
+                is_partial=True,
+                db=db,
+            )
+
+            db.expire_all()
+            stock_after = db.query(MonitoredStock).filter(MonitoredStock.ticker == test_ticker).first()
+            # Original valid signal and price date are strictly preserved!
+            assert stock_after.latest_signal_json == original_signal
+            assert stock_after.latest_price_date == original_date
+        finally:
+            db.close()
+
+    def test_34_batch_chunking_metrics_and_memory_reporting(self):
+        """Verifies rollout partitions into <=25 chunks and captures batch duration and peak memory metrics."""
+        db = SessionLocal()
+        job_id = "test_metrics_rollout_job"
+        try:
+            job = RefreshJob(
+                id=job_id,
+                job_type="ROLLOUT",
+                status="QUEUED",
+                total_stocks=3,
+                remaining_stocks=3,
+                errors_json=json.dumps({"requested_tickers": ["AAPL", "MSFT", "GOOGL"]}),
+            )
+            db.add(job)
+            db.commit()
+
+            stocks = [
+                {"ticker": "AAPL", "latest_signal": {"ticker": "AAPL", "signal": "BUY CANDIDATE", "as_of": "2026-10-16"}},
+                {"ticker": "MSFT", "latest_signal": {"ticker": "MSFT", "signal": "WATCH", "as_of": "2026-10-16"}},
+                {"ticker": "GOOGL", "latest_signal": {"ticker": "GOOGL", "signal": "WATCH", "as_of": "2026-10-16"}},
+            ]
+
+            # Mock fetch_or_update_stock to return valid data immediately without live download
+            df_mock = pd.DataFrame({
+                "Open": [100.0] * 260,
+                "High": [105.0] * 260,
+                "Low": [95.0] * 260,
+                "Close": [102.0] * 260,
+                "Volume": [1000000.0] * 260,
+            }, index=pd.date_range(end="2026-10-16", periods=260, freq="B"))
+
+            with patch.object(scanner_service, "fetch_or_update_stock", return_value=(df_mock, False)):
+                scanner_service._run_refresh_worker(
+                    job_id=job_id,
+                    stocks=stocks,
+                    force_all=False,
+                    is_partial=True
+                )
+
+            db.expire_all()
+            completed_job = db.query(RefreshJob).filter(RefreshJob.id == job_id).first()
+            assert completed_job.status == "COMPLETED"
+            assert completed_job.completed_stocks == 3
+            assert completed_job.failed_stocks == 0
+
+            # Formatted job dict contains full metrics
+            job_dict = scanner_service._format_job_dict(completed_job)
+            assert len(job_dict["batch_metrics"]) >= 1
+            assert "duration_s" in job_dict["batch_metrics"][0]
+            assert "peak_mb" in job_dict["batch_metrics"][0]
+            assert job_dict["peak_memory_mb"] >= 0.0
+        finally:
+            db.query(RefreshJob).filter(RefreshJob.id == job_id).delete()
+            db.commit()
+            db.close()
+
+

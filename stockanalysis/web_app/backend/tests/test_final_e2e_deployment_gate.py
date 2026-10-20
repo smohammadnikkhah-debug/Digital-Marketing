@@ -122,9 +122,9 @@ class TestFinalE2EDeploymentGate:
         """Gate 1: Populate isolated schema with historical daily OHLCV, monitored securities, screener snapshot, portfolio, transactions and lots."""
         db = self.SourceSession()
         try:
-            # 1. Populate Monitored Securities (231 stocks)
+            # 1. Populate Monitored Securities (230 eligible stocks excluding synthetic NEWIPO)
             raw_stocks = universe_manager.get_all(include_inactive=False)
-            assert len(raw_stocks) >= 231, f"Expected at least 231 monitored stocks, got {len(raw_stocks)}"
+            assert len(raw_stocks) >= 230, f"Expected at least 230 monitored stocks, got {len(raw_stocks)}"
             for s in raw_stocks:
                 m = MonitoredStock(
                     ticker=s["ticker"],
@@ -140,7 +140,7 @@ class TestFinalE2EDeploymentGate:
                 )
                 db.add(m)
             db.commit()
-            assert db.query(MonitoredStock).count() >= 231
+            assert db.query(MonitoredStock).count() >= 230
 
             # 2. Populate Historical Daily OHLCV Bars (300 bars per representative ticker)
             sample_tickers = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]

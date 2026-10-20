@@ -274,7 +274,7 @@ class TestDurableScreenerPersistence:
 
             # Assert recovered
             recovered_job = db.query(RefreshJob).filter(RefreshJob.id == stuck_id).first()
-            assert recovered_job.status == "FAILED"
+            assert recovered_job.status in ("FAILED", "INTERRUPTED")
             assert "restart" in recovered_job.error_message.lower()
         finally:
             db.close()
