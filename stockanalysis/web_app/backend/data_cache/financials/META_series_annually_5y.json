@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445484.5598876,
+  "_cached_at": 1792537197.6668556,
   "data": {
     "ticker": "META",
     "frequency": "annually",
@@ -72,9 +72,9 @@
             "is_pit_verified": true
           },
           {
-            "date": "2027-10-20",
+            "date": "2027-10-21",
             "period": "FY+1 Consensus Forecast",
-            "value": 306923845530.0,
+            "value": 307089005510.0,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",
@@ -148,9 +148,9 @@
             "is_pit_verified": true
           },
           {
-            "date": "2027-10-20",
+            "date": "2027-10-21",
             "period": "FY+1 Consensus Forecast",
-            "value": 33.92,
+            "value": 33.83,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",

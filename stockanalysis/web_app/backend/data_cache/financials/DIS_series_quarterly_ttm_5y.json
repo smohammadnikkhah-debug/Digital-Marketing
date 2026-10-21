@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445551.4091797,
+  "_cached_at": 1792537277.92392,
   "data": {
     "ticker": "DIS",
     "frequency": "quarterly_ttm",
@@ -34,16 +34,6 @@
             "coverage_status": "FULL",
             "sec_verification_status": "UNVERIFIED",
             "is_pit_verified": false
-          },
-          {
-            "date": "2027-01-18",
-            "period": "Q+1 Consensus Forecast",
-            "value": 27625294910.0,
-            "is_forecast": true,
-            "status": "ESTIMATED",
-            "coverage_status": "FULL",
-            "filing_date": null,
-            "fiscal_period_end": null
           }
         ]
       },
@@ -74,16 +64,6 @@
             "coverage_status": "FULL",
             "sec_verification_status": "UNVERIFIED",
             "is_pit_verified": false
-          },
-          {
-            "date": "2027-01-18",
-            "period": "Q+1 Consensus Forecast",
-            "value": 1.96,
-            "is_forecast": true,
-            "status": "ESTIMATED",
-            "coverage_status": "FULL",
-            "filing_date": null,
-            "fiscal_period_end": null
           }
         ]
       },

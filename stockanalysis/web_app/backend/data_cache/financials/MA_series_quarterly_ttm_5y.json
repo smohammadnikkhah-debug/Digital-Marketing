@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445502.7912552,
+  "_cached_at": 1792537222.4322114,
   "data": {
     "ticker": "MA",
     "frequency": "quarterly_ttm",
@@ -46,6 +46,16 @@
             "coverage_status": "FULL",
             "sec_verification_status": "REGULATORY_FILING_FOUND",
             "is_pit_verified": true
+          },
+          {
+            "date": "2027-01-19",
+            "period": "Q+1 Consensus Forecast",
+            "value": 9966384330.0,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
           }
         ]
       },
@@ -90,6 +100,16 @@
             "coverage_status": "FULL",
             "sec_verification_status": "REGULATORY_FILING_FOUND",
             "is_pit_verified": true
+          },
+          {
+            "date": "2027-01-19",
+            "period": "Q+1 Consensus Forecast",
+            "value": 5.18,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
           }
         ]
       },

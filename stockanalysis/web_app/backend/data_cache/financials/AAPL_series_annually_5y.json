@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445574.7104988,
+  "_cached_at": 1792537369.6250992,
   "data": {
     "ticker": "AAPL",
     "frequency": "annually",
@@ -60,9 +60,9 @@
             "is_pit_verified": false
           },
           {
-            "date": "2027-10-20",
+            "date": "2027-10-21",
             "period": "FY+1 Consensus Forecast",
-            "value": 528113789120.0,
+            "value": 527288206190.0,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",
@@ -124,9 +124,9 @@
             "is_pit_verified": false
           },
           {
-            "date": "2027-10-20",
+            "date": "2027-10-21",
             "period": "FY+1 Consensus Forecast",
-            "value": 9.57,
+            "value": 9.56,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",

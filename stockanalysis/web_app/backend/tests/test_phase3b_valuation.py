@@ -383,7 +383,7 @@ class TestPhase3BValuationModule(unittest.TestCase):
 
         self.assertAlmostEqual(meta_tv["undiscounted_terminal_value"], independent_tv5_meta, delta=1.0)
         self.assertAlmostEqual(meta_tv["pv_terminal_value"], independent_pv_tv_meta, delta=1.0)
-        self.assertAlmostEqual(meta_res["pv_terminal_value"] / 1e9, 1304.0, delta=3.0)
+        self.assertAlmostEqual(meta_res["pv_terminal_value"] / 1e9, 1308.68, delta=1.0)
 
         pv_fcff_5_meta = meta_res["forecast_table"][4]["pv_fcff"]
         auditor_calc_meta = (pv_fcff_5_meta * (1.0 + g_meta)) / (wacc_meta - g_meta) * independent_df5_meta

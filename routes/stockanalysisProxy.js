@@ -49,6 +49,14 @@ function timingSafeCompare(provided, expected) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+// Known development / test keys that must be rejected in production
+const KNOWN_DEV_INGEST_KEYS = new Set([
+  'ibkr-ingest-key-dev-local-2026',
+  'test_gateway_ibkr_ingest_key_2026',
+  'dev-key',
+  'default'
+]);
+
 // 2. Allowlisted Endpoint Prefixes
 const ALLOWED_PATH_PREFIXES = [
   '/api/health',
@@ -83,18 +91,33 @@ router.all('/*', (req, res) => {
 
   // Read client authentication credentials before stripping
   const clientAdminKey = req.headers['x-admin-key'] || '';
+  const clientIngestKey = req.headers['x-ibkr-ingest-key'] || '';
   const clientAuthHeader = req.headers['authorization'] || '';
 
-  // Security Check: Restrict sensitive screener trigger endpoints (refresh and cancel-refresh)
-  const isProtectedEndpoint = (
+  // Security Check: Restrict sensitive screener trigger, administrative binding, and paper account financial data
+  const isIBKRReadProtected = (
+    incomingPath === '/api/portfolio/ibkr' ||
+    incomingPath === '/api/portfolio/ibkr/' ||
+    incomingPath === '/api/portfolio/ibkr/status'
+  ) && req.method === 'GET';
+
+  const isScannerProtected = (
     incomingPath.startsWith('/api/scanner/refresh') ||
     incomingPath.startsWith('/api/scanner/cancel-refresh')
   ) && req.method === 'POST';
 
+  const isIBKRBindProtected = incomingPath.startsWith('/api/portfolio/ibkr/bind-account') && req.method === 'POST';
+  const isAdminProtected = isScannerProtected || isIBKRBindProtected || isIBKRReadProtected;
+
+  const isIBKRSyncProtected = incomingPath.startsWith('/api/portfolio/ibkr/sync') && req.method === 'POST';
+  const isProtectedEndpoint = isAdminProtected || isIBKRSyncProtected;
+
   let validatedAdminInternalKey = null;
+  let validatedIngestInternalKey = null;
 
   if (isProtectedEndpoint) {
     const expectedAdminKey = process.env.STOCKANALYSIS_ADMIN_KEY || '';
+    const expectedIngestKey = process.env.IBKR_INGESTION_KEY || process.env.STOCKANALYSIS_IBKR_INGEST_KEY || '';
 
     // 1. Verify validated administrator identity from authenticated web session
     const isAdminSession = !!(
@@ -103,26 +126,52 @@ router.all('/*', (req, res) => {
       req.session.adminRole === 'admin'
     );
 
-    // 2. Or verify authorized API token with timing-safe comparison against dedicated STOCKANALYSIS_ADMIN_KEY
-    let isAuthorizedToken = false;
-    if (expectedAdminKey) {
-      const bearerToken = clientAuthHeader.startsWith('Bearer ') ? clientAuthHeader.slice(7).trim() : '';
-      const provided = bearerToken || clientAdminKey;
-      if (provided && timingSafeCompare(provided, expectedAdminKey)) {
-        isAuthorizedToken = true;
+    const bearerToken = clientAuthHeader.startsWith('Bearer ') ? clientAuthHeader.slice(7).trim() : '';
+
+    if (isAdminProtected) {
+      // Admin endpoints STRICTLY require admin session or STOCKANALYSIS_ADMIN_KEY (IBKR ingest key is forbidden)
+      let isAuthorizedAdmin = isAdminSession;
+      const providedAdmin = bearerToken || clientAdminKey;
+      if (expectedAdminKey && providedAdmin && timingSafeCompare(providedAdmin, expectedAdminKey)) {
+        isAuthorizedAdmin = true;
       }
-    }
 
-    if (!isAdminSession && !isAuthorizedToken) {
-      return res.status(401).json({
-        status: 'UNAUTHORIZED',
-        message: 'Scanner execution commands require a validated administrator identity or authorized API key.'
-      });
-    }
+      if (!isAuthorizedAdmin) {
+        return res.status(401).json({
+          status: 'UNAUTHORIZED',
+          message: 'Administrator authorization required. Ingestion-only credentials or anonymous access cannot access this endpoint.'
+        });
+      }
 
-    // Prepare trusted internal credential for backend injection
-    if (expectedAdminKey) {
-      validatedAdminInternalKey = expectedAdminKey;
+      if (expectedAdminKey) validatedAdminInternalKey = expectedAdminKey;
+
+    } else if (isIBKRSyncProtected) {
+      // Production fail-closed guard: missing or known development credentials forbidden
+      if (process.env.NODE_ENV === 'production') {
+        if (!expectedIngestKey || KNOWN_DEV_INGEST_KEYS.has(expectedIngestKey)) {
+          return res.status(500).json({
+            status: 'CONFIGURATION_ERROR',
+            message: 'Production configuration failure: IBKR_INGESTION_KEY is missing, empty, or using an insecure development value.'
+          });
+        }
+      }
+
+      // IBKR sync strictly requires dedicated ingestion credentials
+      let isAuthorizedIngest = false;
+      const providedToken = bearerToken || clientIngestKey;
+
+      if (expectedIngestKey && providedToken && timingSafeCompare(providedToken, expectedIngestKey)) {
+        isAuthorizedIngest = true;
+      }
+
+      if (!isAuthorizedIngest) {
+        return res.status(401).json({
+          status: 'UNAUTHORIZED',
+          message: 'IBKR paper sync is restricted to authorized ingestion credentials.'
+        });
+      }
+
+      validatedIngestInternalKey = expectedIngestKey;
     }
   }
 
@@ -153,15 +202,19 @@ router.all('/*', (req, res) => {
     delete headers['connection'];
     delete headers['cookie'];
     delete headers['x-admin-key']; // Unconditionally strip client-supplied X-Admin-Key
+    delete headers['x-ibkr-ingest-key']; // Unconditionally strip client-supplied X-IBKR-Ingest-Key
 
-    // For protected scanner commands: strip client-supplied credentials and inject ONLY trusted internal admin key
+    // For protected commands: strip client-supplied credentials and inject ONLY trusted internal keys
     if (isProtectedEndpoint) {
       delete headers['authorization'];
       delete headers['x-admin-key'];
+      delete headers['x-ibkr-ingest-key'];
 
-      // Inject ONLY the trusted internal STOCKANALYSIS_ADMIN_KEY header for FastAPI verification
       if (validatedAdminInternalKey) {
         headers['x-admin-key'] = validatedAdminInternalKey;
+      }
+      if (validatedIngestInternalKey) {
+        headers['x-ibkr-ingest-key'] = validatedIngestInternalKey;
       }
     }
 

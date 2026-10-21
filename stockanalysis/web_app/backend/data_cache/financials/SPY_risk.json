@@ -1,27 +1,27 @@
 {
-  "_cached_at": 1792445566.1096666,
+  "_cached_at": 1792537360.010249,
   "data": {
     "ticker": "SPY",
     "trend_risk": {
       "title": "Trend & Technical Risk",
-      "current_price": 766.48,
+      "current_price": 769.05,
       "ma250": 709.44,
-      "price_vs_ma250_pct": 8.04,
-      "roc20_pct": 0.54,
+      "price_vs_ma250_pct": 8.4,
+      "roc20_pct": 0.87,
       "atr14": 6.26,
-      "atr14_pct": 0.82,
+      "atr14_pct": 0.81,
       "technical_signal": "HOLD",
       "rule_name": "V4.0 Baseline Trend & Volatility Exit",
       "exit_threshold_price": 762.83,
-      "distance_to_exit_pct": 0.48,
+      "distance_to_exit_pct": 0.81,
       "methodology": "Compares current price to 250-day simple moving average (long-term regime), 20-day rate of change (ROC20 momentum), and distance to 3.0x ATR14 trailing volatility stop.",
-      "evidence": "Close=$766.48, MA250=$709.44 (diff: +8.0%), ROC20=+0.5%, ATR14=$6.26 (0.8%). Trailing Stop=$762.83.",
-      "data_date": "2026-10-20",
-      "explanation": "The stock is trading 8.0% above its 250-day moving average. Technical signal is HOLD with a 0.5% buffer before triggering trailing stop rules."
+      "evidence": "Close=$769.05, MA250=$709.44 (diff: +8.4%), ROC20=+0.9%, ATR14=$6.26 (0.8%). Trailing Stop=$762.83.",
+      "data_date": "2026-10-21",
+      "explanation": "The stock is trading 8.4% above its 250-day moving average. Technical signal is HOLD with a 0.8% buffer before triggering trailing stop rules."
     },
     "valuation_risk": {
       "title": "Valuation & Compression Risk",
-      "current_pe": 24.33,
+      "current_pe": 24.42,
       "pe_percentile_5y": null,
       "historical_pe_distribution": {
         "observations_count": 0,
@@ -41,8 +41,8 @@
         "p25_reversion_impact_pct": null
       },
       "methodology": "Calculates percentile ranking of current trailing P/E against the genuine empirical historical distribution (minimum 12 observations required), Free Cash Flow yield relative to risk-free benchmark (10Y US Treasury at 4.25%), and price vulnerability under multiple compression.",
-      "evidence": "P/E=24.3349x (Historical Median: N/Ax, Range: Nonex to Nonex, n=0, Date Range: N/A). FCF Yield=N/A%, PEG=N/A.",
-      "data_date": "2026-10-20",
+      "evidence": "P/E=24.416494x (Historical Median: N/Ax, Range: Nonex to Nonex, n=0, Date Range: N/A). FCF Yield=N/A%, PEG=N/A.",
+      "data_date": "2026-10-21",
       "explanation": "Insufficient historical observations: 0 of 12 required quarterly observations available (N/A). Historical valuation percentile requires at least 12 valid quarterly observations. Empirical percentile and multiple compression sensitivity are N/A."
     },
     "financial_risk": {
@@ -57,8 +57,8 @@
       "share_dilution_yoy_pct": null,
       "methodology": "Evaluates solvency leverage (Net Debt/EBITDA), debt service buffer (Interest Coverage), organic cash conversion (Operating Cash Flow / Net Income > 1.0 signifies high earnings quality), and 1-year share dilution rate.",
       "evidence": "Net Debt=N/A, Net Debt/EBITDA=N/Ax, Interest Coverage=N/Ax, Earnings Quality (OCF/NI)=N/Ax, Dilution YoY=N/A%.",
-      "data_date": "2026-10-20",
-      "explanation": "Balance sheet leverage unavailable. Earnings quality ratio unavailable."
+      "data_date": "2026-10-21",
+      "explanation": "Balance sheet leverage and corporate debt service ratios are not applicable for index ETFs."
     },
     "market_risk": {
       "title": "Market & Macroeconomic Risk",
@@ -72,7 +72,7 @@
       },
       "methodology": "Calculates 5-year maximum peak-to-trough drawdown, 252-day covariance Beta relative to SPY, annualized realized volatility (std * sqrt(252)), downside capture ratio during negative market days, and stress drawdowns during COVID-19 (Feb-Mar 2020) and 2022 Tech Bear market.",
       "evidence": "Beta=1.0, Volatility=13.01254196262733%, 5Y MaxDD=-33.71728189633808%, Downside Capture=100.0%, COVID 2020 Crash=-33.71728189633808%, 2022 Bear=-24.496383714802196%.",
-      "data_date": "2026-10-20",
+      "data_date": "2026-10-21",
       "explanation": "The stock has a beta of 1.00 relative to the S&P 500 with realized volatility of 13.0%. Historical 5-year peak drawdown was -33.7%. Downside capture is 100%, indicating lower sensitivity on negative market days."
     }
   }

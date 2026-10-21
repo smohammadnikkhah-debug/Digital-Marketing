@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445504.3059742,
+  "_cached_at": 1792537224.913528,
   "data": {
     "ticker": "MA",
     "frequency": "quarterly",
@@ -84,9 +84,9 @@
             "is_pit_verified": true
           },
           {
-            "date": "2027-01-18",
+            "date": "2027-01-19",
             "period": "Q+1 Consensus Forecast",
-            "value": 9965236910.0,
+            "value": 9966384330.0,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",
@@ -172,7 +172,7 @@
             "is_pit_verified": true
           },
           {
-            "date": "2027-01-18",
+            "date": "2027-01-19",
             "period": "Q+1 Consensus Forecast",
             "value": 5.18,
             "is_forecast": true,

@@ -77,6 +77,23 @@ JOB_RETENTION_COUNT = int(os.getenv("JOB_RETENTION_COUNT", "50"))
 # Security & Auth
 SECRET_KEY = os.getenv("SECRET_KEY", "adaptive-trading-v40-super-secret-key-2026")
 STOCKANALYSIS_ADMIN_KEY = os.getenv("STOCKANALYSIS_ADMIN_KEY", "stockanalysis-admin-key-dev-local-2026")
+KNOWN_DEV_INGEST_KEYS = {
+    "ibkr-ingest-key-dev-local-2026",
+    "test_gateway_ibkr_ingest_key_2026",
+    "dev-key",
+    "default",
+}
+
+_raw_ingest_key = os.getenv("IBKR_INGESTION_KEY", os.getenv("STOCKANALYSIS_IBKR_INGEST_KEY", "")).strip()
+if IS_PRODUCTION:
+    if not _raw_ingest_key or _raw_ingest_key in KNOWN_DEV_INGEST_KEYS:
+        # Production fails closed: missing, empty, or known dev keys cannot be used
+        IBKR_INGESTION_KEY = ""
+    else:
+        IBKR_INGESTION_KEY = _raw_ingest_key
+else:
+    IBKR_INGESTION_KEY = _raw_ingest_key or "ibkr-ingest-key-dev-local-2026"
+IBKR_PAPER_ENABLED = os.getenv("IBKR_PAPER_ENABLED", "true").strip().lower() in ("true", "1", "yes")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

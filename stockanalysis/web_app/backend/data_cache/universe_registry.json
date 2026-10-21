@@ -30,7 +30,7 @@
       "shariah_status": "NOT VERIFIED",
       "data_freshness": "FRESH"
     },
-    "last_scanned_at": "2026-10-20T03:46:52.545059"
+    "last_scanned_at": "2026-10-20T23:10:33.605868"
   },
   "QQQ": {
     "ticker": "QQQ",
@@ -134,20 +134,20 @@
     "is_benchmark": false,
     "inclusion_date": "2026-10-09",
     "source": "v40_baseline",
-    "latest_price_date": "2026-10-19",
+    "latest_price_date": "2026-10-20",
     "data_status": "READY",
     "v40_eligible": true,
     "optimal_rule": null,
     "latest_signal": {
       "ticker": "NVDA",
       "name": "NVIDIA Corporation",
-      "as_of": "2026-10-19",
-      "close": 217.09,
-      "ma30": 224.83,
-      "ma50": 222.83,
-      "ma250": 199.43,
-      "roc20_pct": -4.53,
-      "atr14": 5.74,
+      "as_of": "2026-10-20",
+      "close": 216.47,
+      "ma30": 224.53,
+      "ma50": 222.81,
+      "ma250": 199.58,
+      "roc20_pct": -5.42,
+      "atr14": 5.78,
       "entry_rule": "ROC20_AT_CROSS",
       "exit_rule": "MA250_3CLOSE",
       "entry_type": "IMMEDIATE",
@@ -161,7 +161,7 @@
       "color_bg": "#D9E1E8",
       "color_text": "#404040"
     },
-    "last_scanned_at": "2026-10-20T03:44:48.529442"
+    "last_scanned_at": "2026-10-20T23:07:45.425495"
   },
   "GOOGL": {
     "ticker": "GOOGL",
@@ -204,7 +204,7 @@
       "color_text": "#7F6000",
       "latest_refresh_status": "SUCCESS"
     },
-    "last_scanned_at": "2026-10-20T03:47:00.898909"
+    "last_scanned_at": "2026-10-20T23:10:41.716127"
   },
   "META": {
     "ticker": "META",
@@ -1320,7 +1320,7 @@
     "is_benchmark": false,
     "inclusion_date": "2026-10-09",
     "source": "v40_baseline",
-    "latest_price_date": "2026-10-19",
+    "latest_price_date": "2026-10-20",
     "data_status": "READY",
     "v40_eligible": true,
     "optimal_rule": {
@@ -1330,13 +1330,13 @@
     "latest_signal": {
       "ticker": "ADBE",
       "name": "Adobe Inc.",
-      "as_of": "2026-10-19",
-      "close": 247.09,
-      "ma30": 244.22,
-      "ma50": 256.18,
-      "ma250": 270.88,
-      "roc20_pct": -0.97,
-      "atr14": 8.29,
+      "as_of": "2026-10-20",
+      "close": 256.73,
+      "ma30": 244.2,
+      "ma50": 255.86,
+      "ma250": 270.47,
+      "roc20_pct": 7.76,
+      "atr14": 8.34,
       "entry_rule": "DELAYED_STACK",
       "exit_rule": "MA250_ATR3",
       "entry_type": "DELAYED",
@@ -1350,7 +1350,7 @@
       "color_bg": "#8B0000",
       "color_text": "#FFFFFF"
     },
-    "last_scanned_at": "2026-10-20T14:46:21.575952"
+    "last_scanned_at": "2026-10-21T10:09:58.006824"
   },
   "CRM": {
     "ticker": "CRM",
@@ -1362,7 +1362,7 @@
     "is_benchmark": false,
     "inclusion_date": "2026-10-09",
     "source": "v40_baseline",
-    "latest_price_date": "2026-10-19",
+    "latest_price_date": "2026-10-20",
     "data_status": "READY",
     "v40_eligible": true,
     "optimal_rule": {
@@ -1372,13 +1372,13 @@
     "latest_signal": {
       "ticker": "CRM",
       "name": "Salesforce, Inc.",
-      "as_of": "2026-10-19",
-      "close": 242.45,
-      "ma30": 237.81,
-      "ma50": 230.9,
-      "ma250": 208.18,
-      "roc20_pct": 2.55,
-      "atr14": 8.61,
+      "as_of": "2026-10-20",
+      "close": 242.43,
+      "ma30": 237.61,
+      "ma50": 231.81,
+      "ma250": 208.11,
+      "roc20_pct": 3.92,
+      "atr14": 8.55,
       "entry_rule": "DELAYED_STACK",
       "exit_rule": "MA250_ATR3",
       "entry_type": "DELAYED",
@@ -1392,7 +1392,7 @@
       "color_bg": "#C6EFCE",
       "color_text": "#006100"
     },
-    "last_scanned_at": "2026-10-20T14:46:24.635717"
+    "last_scanned_at": "2026-10-21T10:10:02.987858"
   },
   "AAPL": {
     "ticker": "AAPL",
@@ -1432,7 +1432,7 @@
       "color_text": "#7F6000",
       "latest_refresh_status": "SUCCESS"
     },
-    "last_scanned_at": "2026-10-20T03:47:00.898909"
+    "last_scanned_at": "2026-10-20T23:10:41.716127"
   },
   "MSFT": {
     "ticker": "MSFT",
@@ -1472,7 +1472,7 @@
       "color_text": "#7F6000",
       "latest_refresh_status": "SUCCESS"
     },
-    "last_scanned_at": "2026-10-20T03:47:00.898909"
+    "last_scanned_at": "2026-10-20T23:10:41.716127"
   },
   "PLTR": {
     "ticker": "PLTR",
@@ -1484,7 +1484,7 @@
     "is_benchmark": false,
     "inclusion_date": "2026-10-09",
     "source": "v40_baseline",
-    "latest_price_date": "2026-10-19",
+    "latest_price_date": "2026-10-20",
     "data_status": "READY",
     "v40_eligible": true,
     "optimal_rule": {
@@ -1494,13 +1494,13 @@
     "latest_signal": {
       "ticker": "PLTR",
       "name": "Palantir Technologies Inc.",
-      "as_of": "2026-10-19",
-      "close": 194.15,
-      "ma30": 187.07,
-      "ma50": 183.01,
-      "ma250": 158.42,
-      "roc20_pct": 6.04,
-      "atr14": 7.99,
+      "as_of": "2026-10-20",
+      "close": 192.6,
+      "ma30": 187.82,
+      "ma50": 183.36,
+      "ma250": 158.47,
+      "roc20_pct": 4.11,
+      "atr14": 8.19,
       "entry_rule": "DELAYED_STACK",
       "exit_rule": "MA250_3CLOSE",
       "entry_type": "DELAYED",
@@ -1514,7 +1514,7 @@
       "color_bg": "#C6EFCE",
       "color_text": "#006100"
     },
-    "last_scanned_at": "2026-10-20T14:46:28.866191"
+    "last_scanned_at": "2026-10-21T10:10:07.008190"
   },
   "SNOW": {
     "ticker": "SNOW",
@@ -1569,7 +1569,7 @@
     "is_benchmark": false,
     "inclusion_date": "2026-10-09",
     "source": "v40_baseline",
-    "latest_price_date": "2026-10-19",
+    "latest_price_date": "2026-10-20",
     "data_status": "READY",
     "v40_eligible": true,
     "optimal_rule": {
@@ -1579,13 +1579,13 @@
     "latest_signal": {
       "ticker": "PANW",
       "name": "Palo Alto Networks, Inc.",
-      "as_of": "2026-10-19",
-      "close": 346.95,
-      "ma30": 379.03,
-      "ma50": 372.93,
-      "ma250": 249.08,
-      "roc20_pct": -6.67,
-      "atr14": 18.1,
+      "as_of": "2026-10-20",
+      "close": 340.28,
+      "ma30": 379.14,
+      "ma50": 372.03,
+      "ma250": 249.58,
+      "roc20_pct": -9.15,
+      "atr14": 17.81,
       "entry_rule": "ROC20_AT_CROSS",
       "exit_rule": "MA250_3CLOSE",
       "entry_type": "IMMEDIATE",
@@ -1599,7 +1599,7 @@
       "color_bg": "#FFF2CC",
       "color_text": "#7F6000"
     },
-    "last_scanned_at": "2026-10-20T14:44:19.925054"
+    "last_scanned_at": "2026-10-21T10:06:56.819845"
   },
   "FTNT": {
     "ticker": "FTNT",
@@ -9940,7 +9940,7 @@
       "color_bg": "#F1F5F9",
       "color_text": "#64748B"
     },
-    "last_scanned_at": "2026-10-20T14:46:41.685998"
+    "last_scanned_at": "2026-10-21T10:10:23.447662"
   },
   "QUALCOMM": {
     "ticker": "QUALCOMM",

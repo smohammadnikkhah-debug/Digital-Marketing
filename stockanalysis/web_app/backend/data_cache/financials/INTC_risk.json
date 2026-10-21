@@ -1,23 +1,23 @@
 {
-  "_cached_at": 1792445520.2030814,
+  "_cached_at": 1792537245.0591888,
   "data": {
     "ticker": "INTC",
     "trend_risk": {
       "title": "Trend & Technical Risk",
-      "current_price": 92.03,
+      "current_price": 91.69,
       "ma250": 74.03,
-      "price_vs_ma250_pct": 24.31,
-      "roc20_pct": -10.6,
+      "price_vs_ma250_pct": 23.85,
+      "roc20_pct": -10.93,
       "atr14": 5.53,
-      "atr14_pct": 6.01,
+      "atr14_pct": 6.03,
       "technical_signal": "EXIT",
       "rule_name": "V4.0 Baseline Trend & Volatility Exit",
       "exit_threshold_price": 110.85,
-      "distance_to_exit_pct": -20.45,
+      "distance_to_exit_pct": -20.89,
       "methodology": "Compares current price to 250-day simple moving average (long-term regime), 20-day rate of change (ROC20 momentum), and distance to 3.0x ATR14 trailing volatility stop.",
-      "evidence": "Close=$92.03, MA250=$74.03 (diff: +24.3%), ROC20=-10.6%, ATR14=$5.53 (6.0%). Trailing Stop=$110.85.",
-      "data_date": "2026-10-20",
-      "explanation": "The stock is trading 24.3% above its 250-day moving average. Technical signal is EXIT with a 20.4% buffer before triggering trailing stop rules."
+      "evidence": "Close=$91.69, MA250=$74.03 (diff: +23.9%), ROC20=-10.9%, ATR14=$5.53 (6.0%). Trailing Stop=$110.85.",
+      "data_date": "2026-10-21",
+      "explanation": "The stock is trading 23.9% above its 250-day moving average. Technical signal is EXIT with a 20.9% buffer before triggering trailing stop rules."
     },
     "valuation_risk": {
       "title": "Valuation & Compression Risk",
@@ -41,8 +41,8 @@
         "p25_reversion_impact_pct": null
       },
       "methodology": "Calculates percentile ranking of current trailing P/E against the genuine empirical historical distribution (minimum 12 observations required), Free Cash Flow yield relative to risk-free benchmark (10Y US Treasury at 4.25%), and price vulnerability under multiple compression.",
-      "evidence": "P/E=N/Ax (Historical Median: 13.89x, Range: 9.98x to 117.92x, n=3, Date Range: 2023-01-27 to 2025-09-30). FCF Yield=1.0003232771903434%, PEG=1.36.",
-      "data_date": "2026-10-20",
+      "evidence": "P/E=N/Ax (Historical Median: 13.89x, Range: 9.98x to 117.92x, n=3, Date Range: 2023-01-27 to 2025-09-30). FCF Yield=1.0040325888757557%, PEG=1.36.",
+      "data_date": "2026-10-21",
       "explanation": "Insufficient historical observations: 3 of 12 required quarterly observations available (2023-01-27 to 2025-09-30). Historical valuation percentile requires at least 12 valid quarterly observations. Empirical percentile and multiple compression sensitivity are N/A."
     },
     "financial_risk": {
@@ -57,7 +57,7 @@
       "share_dilution_yoy_pct": 15.33,
       "methodology": "Evaluates solvency leverage (Net Debt/EBITDA), debt service buffer (Interest Coverage), organic cash conversion (Operating Cash Flow / Net Income > 1.0 signifies high earnings quality), and 1-year share dilution rate.",
       "evidence": "Net Debt=$20.81B, Net Debt/EBITDA=1.2357482789016103x, Interest Coverage=2.0293308890925754x, Earnings Quality (OCF/NI)=N/Ax, Dilution YoY=15.334872979214786%.",
-      "data_date": "2026-10-20",
+      "data_date": "2026-10-21",
       "explanation": "Net debt of $20.8B. Earnings quality ratio unavailable."
     },
     "market_risk": {
@@ -72,7 +72,7 @@
       },
       "methodology": "Calculates 5-year maximum peak-to-trough drawdown, 252-day covariance Beta relative to SPY, annualized realized volatility (std * sqrt(252)), downside capture ratio during negative market days, and stress drawdowns during COVID-19 (Feb-Mar 2020) and 2022 Tech Bear market.",
       "evidence": "Beta=2.9231002038312663, Volatility=77.23444381566318%, 5Y MaxDD=-70.79732157296667%, Downside Capture=126.88671159291995%, COVID 2020 Crash=-33.52704129997745%, 2022 Bear=-54.056668302756705%.",
-      "data_date": "2026-10-20",
+      "data_date": "2026-10-21",
       "explanation": "The stock has a beta of 2.92 relative to the S&P 500 with realized volatility of 77.2%. Historical 5-year peak drawdown was -70.8%. Downside capture is 127%, indicating higher sensitivity on negative market days."
     }
   }

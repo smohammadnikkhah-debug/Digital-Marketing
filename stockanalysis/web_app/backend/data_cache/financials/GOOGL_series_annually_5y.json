@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445473.6965914,
+  "_cached_at": 1792537183.645727,
   "data": {
     "ticker": "GOOGL",
     "frequency": "annually",
@@ -58,6 +58,16 @@
             "coverage_status": "FULL",
             "sec_verification_status": "REGULATORY_FILING_FOUND",
             "is_pit_verified": true
+          },
+          {
+            "date": "2027-10-21",
+            "period": "FY+1 Consensus Forecast",
+            "value": 626613410790.0,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
           }
         ]
       },
@@ -112,6 +122,16 @@
             "coverage_status": "FULL",
             "sec_verification_status": "REGULATORY_FILING_FOUND",
             "is_pit_verified": true
+          },
+          {
+            "date": "2027-10-21",
+            "period": "FY+1 Consensus Forecast",
+            "value": 15.1,
+            "is_forecast": true,
+            "status": "ESTIMATED",
+            "coverage_status": "FULL",
+            "filing_date": null,
+            "fiscal_period_end": null
           }
         ]
       },

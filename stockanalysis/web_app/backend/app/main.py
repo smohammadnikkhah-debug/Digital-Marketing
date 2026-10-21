@@ -22,6 +22,7 @@ from app.routers import (
     settings,
     valuation,
     scanner,
+    ibkr,
 )
 
 # Initialize database schema (local development only; production schema is migration-managed)
@@ -51,6 +52,7 @@ app.include_router(stock_research.router)
 app.include_router(valuation.router)
 app.include_router(watchlist.router)
 app.include_router(portfolio.router)
+app.include_router(ibkr.router)
 app.include_router(backtesting.router)
 app.include_router(risk_analytics.router)
 app.include_router(settings.router)

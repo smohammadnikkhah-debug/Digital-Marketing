@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445492.32996,
+  "_cached_at": 1792537209.8579926,
   "data": {
     "ticker": "NVDA",
     "frequency": "quarterly",
@@ -72,9 +72,9 @@
             "is_pit_verified": false
           },
           {
-            "date": "2027-01-18",
+            "date": "2027-01-19",
             "period": "Q+1 Consensus Forecast",
-            "value": 124482697730.0,
+            "value": 124482690590.0,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",
@@ -148,7 +148,7 @@
             "is_pit_verified": false
           },
           {
-            "date": "2027-01-18",
+            "date": "2027-01-19",
             "period": "Q+1 Consensus Forecast",
             "value": 2.75,
             "is_forecast": true,

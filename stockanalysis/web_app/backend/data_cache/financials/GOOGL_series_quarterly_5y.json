@@ -1,5 +1,5 @@
 {
-  "_cached_at": 1792445469.522623,
+  "_cached_at": 1792537179.2768092,
   "data": {
     "ticker": "GOOGL",
     "frequency": "quarterly",
@@ -84,9 +84,9 @@
             "is_pit_verified": true
           },
           {
-            "date": "2027-01-18",
+            "date": "2027-01-19",
             "period": "Q+1 Consensus Forecast",
-            "value": 142390755490.0,
+            "value": 142725705350.0,
             "is_forecast": true,
             "status": "ESTIMATED",
             "coverage_status": "FULL",
@@ -172,7 +172,7 @@
             "is_pit_verified": true
           },
           {
-            "date": "2027-01-18",
+            "date": "2027-01-19",
             "period": "Q+1 Consensus Forecast",
             "value": 3.34,
             "is_forecast": true,
