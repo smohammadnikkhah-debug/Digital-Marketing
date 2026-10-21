@@ -1,6 +1,7 @@
-"""SQLAlchemy models for Watchlist, Backtests, Users, and Settings."""
+import re
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Text, CheckConstraint
+from sqlalchemy.orm import validates
 from app.database import Base
 
 
@@ -185,5 +186,113 @@ class DailyBar(Base):
     close = Column(Float, nullable=False)
     volume = Column(Float, default=0.0)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# ==============================================================================
+# STAGE D2.2: TRANSACTIONAL PAPER ORDER MANAGEMENT MODELS
+# ==============================================================================
+
+class PaperOrder(Base):
+    __tablename__ = "paper_orders"
+
+    order_id = Column(String(50), primary_key=True, index=True)
+    client_order_id = Column(String(100), unique=True, index=True, nullable=False)
+    broker = Column(String(20), default="ibkr", nullable=False, index=True)
+    account_id = Column(String(30), nullable=False, index=True)
+    symbol = Column(String(20), nullable=False, index=True)
+    action = Column(String(10), nullable=False)  # BUY, SELL
+    order_type = Column(String(20), default="LIMIT", nullable=False)
+    quantity = Column(Float, nullable=False)
+    limit_price = Column(Float, nullable=False)
+    currency = Column(String(10), default="USD", nullable=False)
+    estimated_notional = Column(Float, nullable=False)
+    filled_quantity = Column(Float, default=0.0, nullable=False)
+    avg_fill_price = Column(Float, nullable=True)
+    status = Column(String(30), default="DRAFT", index=True, nullable=False)
+    version = Column(Integer, default=1, nullable=False)
+    proposed_by = Column(String(50), default="ADMIN", nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    approved_by = Column(String(50), nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    approval_expires_at = Column(DateTime, nullable=True, index=True)
+    claimed_by_agent = Column(String(50), nullable=True, index=True)
+    claimed_at = Column(DateTime, nullable=True)
+    submitted_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    requires_manual_reconciliation = Column(Boolean, default=False, index=True, nullable=False)
+    can_auto_resubmit = Column(Boolean, default=False, nullable=False)
+    notes = Column(Text, nullable=True)
+    risk_check_json = Column(Text, nullable=True)
+    execution_report_json = Column(Text, nullable=True)
+    market_quote_json = Column(Text, nullable=True)
+
+    __table_args__ = (
+        CheckConstraint("quantity > 0", name="chk_paper_orders_qty"),
+        CheckConstraint("limit_price > 0", name="chk_paper_orders_price"),
+        CheckConstraint("action IN ('BUY', 'SELL')", name="chk_paper_orders_action"),
+        CheckConstraint("broker IN ('ibkr', 'alpaca')", name="chk_paper_orders_broker"),
+        CheckConstraint(
+            "(broker = 'ibkr' AND (account_id LIKE 'DU%' OR account_id LIKE 'DF%')) OR (broker = 'alpaca')",
+            name="chk_paper_orders_account",
+        ),
+    )
+
+    @validates("broker")
+    def validate_broker(self, key, value):
+        clean = str(value or "ibkr").strip().lower()
+        if clean not in ("ibkr", "alpaca"):
+            raise ValueError(f"Invalid broker '{value}'. Only 'ibkr' and 'alpaca' are supported.")
+        return clean
+
+    @validates("account_id")
+    def validate_account_id(self, key, value):
+        clean = str(value or "").strip().upper()
+        current_broker = getattr(self, "broker", None) or "ibkr"
+        if current_broker == "ibkr":
+            if not clean or not re.match(r"^(DU|DF)[A-Z0-9]{3,28}$", clean):
+                raise ValueError(
+                    f"Paper account validation rejection: '{value}' is invalid for IBKR. "
+                    "Account identifiers must strictly begin with 'DU' or 'DF' followed by 3-28 alphanumeric characters."
+                )
+        elif current_broker == "alpaca":
+            if not clean or not (
+                re.match(r"^PA[A-Z0-9]{5,28}$", clean) or
+                re.match(r"^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$", clean)
+            ):
+                raise ValueError(
+                    f"Paper account validation rejection: '{value}' is invalid for Alpaca. "
+                    "Account identifiers must be a valid Alpaca paper account number (PA...) or UUID."
+                )
+        return clean
+
+
+class PaperOrderEvent(Base):
+    __tablename__ = "paper_order_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    order_id = Column(String(50), nullable=False, index=True)
+    event_sequence = Column(Integer, nullable=False)
+    from_status = Column(String(30), nullable=True)
+    to_status = Column(String(30), nullable=False)
+    action = Column(String(50), nullable=False)
+    actor = Column(String(50), nullable=False)
+    reason = Column(Text, nullable=True)
+    event_data_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class PaperExecutionClaim(Base):
+    __tablename__ = "paper_execution_claims"
+
+    claim_id = Column(String(50), primary_key=True)
+    order_id = Column(String(50), nullable=False, index=True)
+    agent_id = Column(String(50), nullable=False, index=True)
+    broker = Column(String(20), default="ibkr", nullable=False, index=True)
+    claimed_at = Column(DateTime, default=datetime.utcnow)
+    lease_expires_at = Column(DateTime, nullable=False, index=True)
+    is_active = Column(Boolean, default=True, index=True)
+    released_at = Column(DateTime, nullable=True)
+    release_reason = Column(String(100), nullable=True)
 
 

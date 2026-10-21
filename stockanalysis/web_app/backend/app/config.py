@@ -94,6 +94,37 @@ if IS_PRODUCTION:
 else:
     IBKR_INGESTION_KEY = _raw_ingest_key or "ibkr-ingest-key-dev-local-2026"
 IBKR_PAPER_ENABLED = os.getenv("IBKR_PAPER_ENABLED", "true").strip().lower() in ("true", "1", "yes")
+
+# Stage D2.1: Controlled Paper Execution Foundation Settings
+KNOWN_DEV_EXECUTION_KEYS = {
+    "ibkr-execution-key-dev-local-2026",
+    "test_gateway_ibkr_execution_key_2026",
+    "dev-exec-key",
+    "default",
+}
+_raw_exec_key = os.getenv("IBKR_EXECUTION_KEY", os.getenv("STOCKANALYSIS_IBKR_EXECUTION_KEY", "")).strip()
+if IS_PRODUCTION:
+    if not _raw_exec_key or _raw_exec_key in KNOWN_DEV_EXECUTION_KEYS:
+        IBKR_EXECUTION_KEY = ""
+    else:
+        IBKR_EXECUTION_KEY = _raw_exec_key
+else:
+    IBKR_EXECUTION_KEY = _raw_exec_key or "ibkr-execution-key-dev-local-2026"
+
+# Disabled by default: execution capability remains non-executing until explicitly enabled
+IBKR_EXECUTION_ENABLED = os.getenv("IBKR_EXECUTION_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+# Emergency Stop active by default: halts all approvals, claims, and executions
+IBKR_EMERGENCY_STOP = os.getenv("IBKR_EMERGENCY_STOP", "true").strip().lower() in ("true", "1", "yes")
+
+# Stage D2.3A.2: Multi-Broker Architecture Configuration
+PAPER_BROKER = os.getenv("PAPER_BROKER", "alpaca").strip().lower()
+LIVE_BROKER = os.getenv("LIVE_BROKER", "ibkr").strip().lower()
+TRADING_EXECUTION_ENABLED = os.getenv("TRADING_EXECUTION_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+LIVE_TRADING_ENABLED = os.getenv("LIVE_TRADING_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+ALPACA_EXECUTION_ENABLED = os.getenv("ALPACA_EXECUTION_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+ALPACA_ENV = os.getenv("ALPACA_ENV", "paper").strip().lower()
+ALPACA_DATA_FEED = os.getenv("ALPACA_DATA_FEED", "iex").strip().lower()
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

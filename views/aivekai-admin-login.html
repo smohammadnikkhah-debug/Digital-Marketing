@@ -297,8 +297,17 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    // Redirect to Admin Portal
-                    window.location.replace(data.redirect_url || '/aivekai/admin/partners');
+                    // Check for preserved returnUrl (supporting hash-based routes)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const returnUrl = urlParams.get('returnUrl') || urlParams.get('redirect');
+                    let destination = data.redirect_url || '/aivekai/admin/partners';
+                    if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+                        destination = returnUrl;
+                        if (window.location.hash && !destination.includes('#')) {
+                            destination += window.location.hash;
+                        }
+                    }
+                    window.location.replace(destination);
                 } else {
                     errorAlert.textContent = data.message || 'Invalid username or password.';
                     errorAlert.style.display = 'block';

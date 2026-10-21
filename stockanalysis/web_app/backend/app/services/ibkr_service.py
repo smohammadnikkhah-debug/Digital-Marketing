@@ -573,16 +573,33 @@ class IBKRService:
             "staleness_seconds": staleness_seconds,
             "warning_message": warning_message,
             "summary": {
-                "net_liquidation": raw_data.get("net_liquidation", 0.0),
-                "total_cash_value": raw_data.get("total_cash_value", 0.0),
-                "buying_power": raw_data.get("buying_power", 0.0),
-                "currency": raw_data.get("currency", "AUD"),
+                "net_liquidation": raw_data.get("summary", {}).get("net_liquidation") if isinstance(raw_data.get("summary"), dict) and raw_data["summary"].get("net_liquidation") is not None else raw_data.get("net_liquidation", 0.0),
+                "total_cash_value": raw_data.get("summary", {}).get("total_cash_value") if isinstance(raw_data.get("summary"), dict) and raw_data["summary"].get("total_cash_value") is not None else raw_data.get("total_cash_value", 0.0),
+                "buying_power": raw_data.get("summary", {}).get("buying_power") if isinstance(raw_data.get("summary"), dict) and raw_data["summary"].get("buying_power") is not None else raw_data.get("buying_power", 0.0),
+                "currency": (raw_data.get("summary", {}).get("currency") if isinstance(raw_data.get("summary"), dict) else None) or raw_data.get("currency", "USD"),
             },
             "positions": positions,
             "positions_count": len(positions),
             "last_sync_timestamp": last_sync_str,
             "adapter_version": raw_data.get("adapter_version", "1.0.0"),
         }
+
+    def get_bound_paper_account_id(self, db: Optional[Session] = None) -> Optional[str]:
+        """Returns the authoritative bound paper account ID, or None if unconfigured."""
+        if db is not None:
+            try:
+                bound_setting = db.query(SystemSetting).filter(SystemSetting.key == self.BOUND_ACCOUNT_KEY).first()
+                if bound_setting and bound_setting.value:
+                    data = json.loads(bound_setting.value)
+                    acc = data.get("account_id")
+                    if acc:
+                        return str(acc).strip().upper()
+            except Exception as ex:
+                logger.warning(f"Error querying bound paper account from DB: {ex}")
+
+        if self._in_memory_cache and self._in_memory_cache.get("bound_account_id"):
+            return str(self._in_memory_cache["bound_account_id"]).strip().upper()
+        return None
 
     def clear_cache_for_testing(self, db: Optional[Session] = None) -> None:
         """Utility for test suites to reset state."""

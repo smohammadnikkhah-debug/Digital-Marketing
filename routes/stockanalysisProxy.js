@@ -57,6 +57,13 @@ const KNOWN_DEV_INGEST_KEYS = new Set([
   'default'
 ]);
 
+const KNOWN_DEV_EXECUTION_KEYS = new Set([
+  'ibkr-execution-key-dev-local-2026',
+  'test_gateway_ibkr_execution_key_2026',
+  'dev-exec-key',
+  'default'
+]);
+
 // 2. Allowlisted Endpoint Prefixes
 const ALLOWED_PATH_PREFIXES = [
   '/api/health',
@@ -92,32 +99,32 @@ router.all('/*', (req, res) => {
   // Read client authentication credentials before stripping
   const clientAdminKey = req.headers['x-admin-key'] || '';
   const clientIngestKey = req.headers['x-ibkr-ingest-key'] || '';
+  const clientExecutionKey = req.headers['x-ibkr-execution-key'] || '';
   const clientAuthHeader = req.headers['authorization'] || '';
 
-  // Security Check: Restrict sensitive screener trigger, administrative binding, and paper account financial data
-  const isIBKRReadProtected = (
-    incomingPath === '/api/portfolio/ibkr' ||
-    incomingPath === '/api/portfolio/ibkr/' ||
-    incomingPath === '/api/portfolio/ibkr/status'
-  ) && req.method === 'GET';
+  // Endpoint Security Classification:
+  // 1. Public: health probes
+  const isPublicEndpoint = incomingPath === '/api/health' || incomingPath === '/api/health/';
 
-  const isScannerProtected = (
-    incomingPath.startsWith('/api/scanner/refresh') ||
-    incomingPath.startsWith('/api/scanner/cancel-refresh')
-  ) && req.method === 'POST';
-
-  const isIBKRBindProtected = incomingPath.startsWith('/api/portfolio/ibkr/bind-account') && req.method === 'POST';
-  const isAdminProtected = isScannerProtected || isIBKRBindProtected || isIBKRReadProtected;
-
+  // 2. Ingestion-Only: dedicated IBKR paper adapter snapshot pushes
   const isIBKRSyncProtected = incomingPath.startsWith('/api/portfolio/ibkr/sync') && req.method === 'POST';
-  const isProtectedEndpoint = isAdminProtected || isIBKRSyncProtected;
+
+  // 3. Execution-Agent-Only: machine-to-machine execution endpoints (poll, claim, report, heartbeat)
+  const isIBKRExecutionProtected = incomingPath.startsWith('/api/portfolio/ibkr/execution/orders') ||
+    incomingPath.startsWith('/api/portfolio/ibkr/execution/agent/heartbeat');
+
+  // 4. Administrator-Only: all other StockAnalysis endpoints (portfolio, orders, emergency-stop, settings, scanner, valuation)
+  const isAdminProtected = !isPublicEndpoint && !isIBKRSyncProtected && !isIBKRExecutionProtected;
+  const isProtectedEndpoint = isAdminProtected || isIBKRSyncProtected || isIBKRExecutionProtected;
 
   let validatedAdminInternalKey = null;
   let validatedIngestInternalKey = null;
+  let validatedExecutionInternalKey = null;
 
   if (isProtectedEndpoint) {
     const expectedAdminKey = process.env.STOCKANALYSIS_ADMIN_KEY || '';
     const expectedIngestKey = process.env.IBKR_INGESTION_KEY || process.env.STOCKANALYSIS_IBKR_INGEST_KEY || '';
+    const expectedExecKey = process.env.IBKR_EXECUTION_KEY || process.env.STOCKANALYSIS_IBKR_EXECUTION_KEY || '';
 
     // 1. Verify validated administrator identity from authenticated web session
     const isAdminSession = !!(
@@ -129,7 +136,7 @@ router.all('/*', (req, res) => {
     const bearerToken = clientAuthHeader.startsWith('Bearer ') ? clientAuthHeader.slice(7).trim() : '';
 
     if (isAdminProtected) {
-      // Admin endpoints STRICTLY require admin session or STOCKANALYSIS_ADMIN_KEY (IBKR ingest key is forbidden)
+      // Admin endpoints STRICTLY require admin session or STOCKANALYSIS_ADMIN_KEY (IBKR ingest/exec keys are forbidden)
       let isAuthorizedAdmin = isAdminSession;
       const providedAdmin = bearerToken || clientAdminKey;
       if (expectedAdminKey && providedAdmin && timingSafeCompare(providedAdmin, expectedAdminKey)) {
@@ -172,6 +179,34 @@ router.all('/*', (req, res) => {
       }
 
       validatedIngestInternalKey = expectedIngestKey;
+
+    } else if (isIBKRExecutionProtected) {
+      // Production fail-closed guard: missing or known development execution credentials forbidden
+      if (process.env.NODE_ENV === 'production') {
+        if (!expectedExecKey || KNOWN_DEV_EXECUTION_KEYS.has(expectedExecKey)) {
+          return res.status(500).json({
+            status: 'CONFIGURATION_ERROR',
+            message: 'Production configuration failure: IBKR_EXECUTION_KEY is missing, empty, or using an insecure development value.'
+          });
+        }
+      }
+
+      // IBKR execution strictly requires dedicated machine-to-machine execution credentials
+      let isAuthorizedExec = false;
+      const providedToken = bearerToken || clientExecutionKey;
+
+      if (expectedExecKey && providedToken && timingSafeCompare(providedToken, expectedExecKey)) {
+        isAuthorizedExec = true;
+      }
+
+      if (!isAuthorizedExec) {
+        return res.status(401).json({
+          status: 'UNAUTHORIZED',
+          message: 'IBKR execution endpoints are restricted to authorized execution credentials.'
+        });
+      }
+
+      validatedExecutionInternalKey = expectedExecKey;
     }
   }
 
@@ -203,18 +238,23 @@ router.all('/*', (req, res) => {
     delete headers['cookie'];
     delete headers['x-admin-key']; // Unconditionally strip client-supplied X-Admin-Key
     delete headers['x-ibkr-ingest-key']; // Unconditionally strip client-supplied X-IBKR-Ingest-Key
+    delete headers['x-ibkr-execution-key']; // Unconditionally strip client-supplied X-IBKR-Execution-Key
 
     // For protected commands: strip client-supplied credentials and inject ONLY trusted internal keys
     if (isProtectedEndpoint) {
       delete headers['authorization'];
       delete headers['x-admin-key'];
       delete headers['x-ibkr-ingest-key'];
+      delete headers['x-ibkr-execution-key'];
 
       if (validatedAdminInternalKey) {
         headers['x-admin-key'] = validatedAdminInternalKey;
       }
       if (validatedIngestInternalKey) {
         headers['x-ibkr-ingest-key'] = validatedIngestInternalKey;
+      }
+      if (validatedExecutionInternalKey) {
+        headers['x-ibkr-execution-key'] = validatedExecutionInternalKey;
       }
     }
 

@@ -56,7 +56,16 @@ app.use(session({
 
 function requireAdminSession(req, res, next) {
   if (!req.session || !req.session.adminAuthUserId || req.session.adminRole !== 'admin') {
-    return res.redirect(302, '/aivekai/admin/login');
+    const targetUrl = req.originalUrl || req.url || '/';
+    if (targetUrl.startsWith('/api') || targetUrl.startsWith('/stockanalysis/api')) {
+      return res.status(401).json({
+        success: false,
+        status: 'UNAUTHORIZED',
+        message: 'Administrator session required'
+      });
+    }
+    const returnUrl = encodeURIComponent(targetUrl);
+    return res.redirect(302, `/aivekai/admin/login?returnUrl=${returnUrl}`);
   }
   next();
 }
@@ -214,17 +223,34 @@ const stockanalysisDistPath = path.join(__dirname, 'stockanalysis', 'dist');
 // Static assets for SPA (both under /stockanalysis/app/assets and /stockanalysis/assets)
 app.use('/stockanalysis/app/assets', express.static(path.join(stockanalysisDistPath, 'assets')));
 app.use('/stockanalysis/assets', express.static(path.join(stockanalysisDistPath, 'assets')));
-app.use('/stockanalysis/app', express.static(stockanalysisDistPath));
 
 // Ensure clean trailing-slash resolution for relative assets in SPA
-app.get('/stockanalysis/app', (req, res) => {
-  res.redirect(301, '/stockanalysis/app/');
+app.get('/stockanalysis/app', (req, res, next) => {
+  if (req.originalUrl === '/stockanalysis/app') {
+    return res.redirect(301, '/stockanalysis/app/');
+  }
+  next();
 });
 
-// SPA Fallback: Any subpath under /stockanalysis/app/* serves the built index.html
-app.get(['/stockanalysis/app/*', '/stockanalysis/app/'], (req, res) => {
+// Dedicated logout endpoint for StockAnalysis
+app.get(['/stockanalysis/logout', '/stockanalysis/app/logout'], (req, res) => {
+  const returnUrl = encodeURIComponent('/stockanalysis/app/');
+  if (req.session) {
+    req.session.destroy(() => {
+      res.clearCookie('aivekai_session_id', { path: '/' });
+      res.redirect(302, `/aivekai/admin/login?returnUrl=${returnUrl}`);
+    });
+  } else {
+    res.clearCookie('aivekai_session_id', { path: '/' });
+    res.redirect(302, `/aivekai/admin/login?returnUrl=${returnUrl}`);
+  }
+});
+
+// Protected SPA HTML Entry Point: Requires valid administrator session before rendering
+app.get(['/stockanalysis/app/', '/stockanalysis/app/*'], requireAdminSession, (req, res) => {
   res.sendFile(path.join(stockanalysisDistPath, 'index.html'));
 });
+app.use('/stockanalysis/app', requireAdminSession, express.static(stockanalysisDistPath));
 
 // Privacy Policy
 app.get('/policy', (req, res) => {

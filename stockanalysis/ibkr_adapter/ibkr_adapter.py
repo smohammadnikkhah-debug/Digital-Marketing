@@ -14,13 +14,14 @@ Features:
 import argparse
 import json
 import logging
+import math
 import os
 import sys
 import threading
 import time
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Dict, List, Optional, Any
+from pathlib import Path
 import requests
 
 try:
@@ -30,9 +31,12 @@ try:
     HAS_IBAPI = True
 except ImportError:
     HAS_IBAPI = False
-    EClient = object
-    EWrapper = object
-    Contract = object
+    class EClient:
+        pass
+    class EWrapper:
+        pass
+    class Contract:
+        pass
 
 # Configure logging
 logging.basicConfig(
@@ -76,8 +80,6 @@ DEFAULT_GATEWAY_HOST = os.getenv("IBKR_GATEWAY_HOST", "127.0.0.1")
 DEFAULT_GATEWAY_PORT = int(os.getenv("IBKR_GATEWAY_PORT", "4002"))
 DEFAULT_CLIENT_ID = int(os.getenv("IBKR_CLIENT_ID", "21"))
 DEFAULT_BACKEND_URL = os.getenv("STOCKANALYSIS_BACKEND_URL", "http://127.0.0.1:8000")
-DEFAULT_INGESTION_KEY = os.getenv("IBKR_INGESTION_KEY", os.getenv("STOCKANALYSIS_IBKR_INGEST_KEY", "ibkr-ingest-key-dev-local-2026"))
-DEFAULT_INTERVAL = int(os.getenv("SYNC_INTERVAL_SECONDS", "60"))
 
 
 class ReadOnlyIBKREClient(EClient):
@@ -145,11 +147,11 @@ class IBKRPaperReader(EWrapper, ReadOnlyIBKREClient):
             logger.debug(f"IBKR Status {error_code}: {error_str}")
             return
 
-        logger.warning(f"IBKR Message [Req {reqId}] Code {error_code}: {error_str}")
+        logger.warning("IBKR message [Req %s] code %s", reqId, error_code)
 
         # Severe connection failure codes
         if error_code in (502, 504, 1100, 1101, 1102):
-            self.last_error = f"Gateway Error {error_code}: {error_str}"
+            self.last_error = f"Gateway Error {error_code}"
             self.connection_ok = False
 
     def managedAccounts(self, accountsList: str):
@@ -157,7 +159,7 @@ class IBKRPaperReader(EWrapper, ReadOnlyIBKREClient):
         self.managed_accounts = accounts
         if accounts:
             self.account_id = accounts[0]
-            logger.info(f"Detected paper account: {self.account_id} (Managed accounts: {accounts})")
+            logger.info("IBKR managed account received (identifier redacted)")
 
     # --- Account Summary Callbacks ---
 
@@ -178,6 +180,8 @@ class IBKRPaperReader(EWrapper, ReadOnlyIBKREClient):
 
     def position(self, account: str, contract: Any, position: Any, avgCost: float):
         try:
+            if self.account_id and account != self.account_id:
+                raise RuntimeError("Position account differs from managed paper account")
             pos_qty = float(position)
             if pos_qty != 0:
                 symbol = getattr(contract, "symbol", "UNKNOWN")
@@ -192,10 +196,10 @@ class IBKRPaperReader(EWrapper, ReadOnlyIBKREClient):
                     "currency": curr,
                     "position": pos_qty,
                     "avg_cost": round(float(avgCost), 4),
-                    "market_price": round(float(avgCost), 4),  # Seeded from cost basis
-                    "market_value": round(pos_qty * float(avgCost), 2),
-                    "unrealized_pnl": 0.0,
-                    "realized_pnl": 0.0,
+                    "market_price": None,  # No live market quote requested
+                    "market_value": None,  # Unknown until market data is fetched
+                    "unrealized_pnl": None,
+                    "realized_pnl": None,
                 })
         except Exception as e:
             logger.error(f"Error parsing position: {e}")
@@ -228,36 +232,39 @@ def collect_live_snapshot(host: str, port: int, client_id: int, timeout: int = 1
         app.reqAccountSummary(req_id, "All", "NetLiquidation,TotalCashValue,BuyingPower")
         app.reqPositions()
 
-        # Wait for data retrieval events
-        app.summary_event.wait(timeout=timeout)
-        app.positions_event.wait(timeout=timeout)
+        # A snapshot is valid only after both IBKR streams finish.
+        if not app.summary_event.wait(timeout=30):
+            raise TimeoutError("IBKR account summary did not complete")
+        if not app.positions_event.wait(timeout=30):
+            raise TimeoutError("IBKR positions retrieval did not complete")
+        if not app.connection_ok or not app.isConnected():
+            raise ConnectionError("IBKR Gateway disconnected during account retrieval")
+        if app.last_error:
+            raise ConnectionError(app.last_error)
 
-        # Allow slight buffer for final packet flush
-        time.sleep(0.5)
+        required = ("NetLiquidation", "TotalCashValue", "BuyingPower")
+        missing = [tag for tag in required if tag not in app.account_values]
+        if missing:
+            raise RuntimeError(f"IBKR account summary incomplete: missing {missing}")
 
-        net_liq = float(app.account_values.get("NetLiquidation", 0.0))
-        cash = float(app.account_values.get("TotalCashValue", 0.0))
-        buying_power = float(app.account_values.get("BuyingPower", 0.0))
+        net_liq = float(app.account_values["NetLiquidation"])
+        cash = float(app.account_values["TotalCashValue"])
+        buying_power = float(app.account_values["BuyingPower"])
+        if not all(math.isfinite(v) for v in (net_liq, cash, buying_power)):
+            raise ValueError("IBKR returned a non-finite account balance")
 
-        managed_accs = getattr(app, "managed_accounts", [app.account_id] if app.account_id else [])
-        for acc in managed_accs:
-            acc_str = str(acc).strip().upper()
-            if acc_str.startswith("U") and not (
-                acc_str.startswith("DU") or acc_str.startswith("DF") or
-                "TEST" in acc_str or "MOCK" in acc_str or "PAPER" in acc_str
-            ):
-                raise RuntimeError(
-                    f"CRITICAL SECURITY ABORT: Gateway session reports LIVE account '{acc}'. "
-                    "Only paper trading accounts are permitted. Aborting snapshot push."
-                )
-
-        if app.account_id and app.account_id not in managed_accs:
-            raise RuntimeError(
-                f"Gateway identity mismatch: Target account '{app.account_id}' is not in authenticated managed accounts {managed_accs}."
-            )
+        managed_accs = getattr(app, "managed_accounts", [])
+        if not managed_accs or not app.account_id:
+            raise RuntimeError("IBKR did not supply a verifiable managed paper account")
+        if len(managed_accs) != 1 or app.account_id not in managed_accs:
+            raise RuntimeError("Expected exactly one matching IBKR paper account")
+        if not app.account_id.upper().startswith(("DU", "DF")):
+            raise RuntimeError("Non-paper or unrecognized account identifier: sync blocked")
+        if port not in (4002, 7497):
+            raise RuntimeError("Non-paper IBKR Gateway port: sync blocked")
 
         return {
-            "account_id": app.account_id or "DU_PAPER_ACCOUNT",
+            "account_id": app.account_id,
             "account_type": "PAPER",
             "currency": app.currency or "AUD",
             "net_liquidation": net_liq,
@@ -304,7 +311,7 @@ def generate_mock_snapshot() -> Dict[str, Any]:
                 "market_price": 224.50,
                 "market_value": 33675.00,
                 "unrealized_pnl": 915.00,
-                "realized_pnl": 0.0,
+                "realized_pnl": None,
             },
             {
                 "symbol": "MSFT",
@@ -316,7 +323,7 @@ def generate_mock_snapshot() -> Dict[str, Any]:
                 "market_price": 418.90,
                 "market_value": 41890.00,
                 "unrealized_pnl": 660.00,
-                "realized_pnl": 0.0,
+                "realized_pnl": None,
             },
             {
                 "symbol": "GOOGL",
@@ -328,7 +335,7 @@ def generate_mock_snapshot() -> Dict[str, Any]:
                 "market_price": 178.60,
                 "market_value": 35720.00,
                 "unrealized_pnl": 900.00,
-                "realized_pnl": 0.0,
+                "realized_pnl": None,
             },
             {
                 "symbol": "BHP",
@@ -340,7 +347,7 @@ def generate_mock_snapshot() -> Dict[str, Any]:
                 "market_price": 44.10,
                 "market_value": 35280.00,
                 "unrealized_pnl": 1280.00,
-                "realized_pnl": 0.0,
+                "realized_pnl": None,
             },
         ],
         "connection_state": "CONNECTED",
@@ -354,91 +361,72 @@ def generate_mock_snapshot() -> Dict[str, Any]:
 
 
 def push_to_backend(backend_url: str, ingest_key: str, payload: Dict[str, Any]) -> bool:
-    """Outbound-only authenticated push to StockAnalysis API."""
-    target_endpoint = f"{backend_url.rstrip('/')}/api/portfolio/ibkr/sync"
-    is_remote = not any(h in backend_url for h in ("127.0.0.1", "localhost"))
+    """Push one verified read-only paper snapshot over HTTPS."""
+    from urllib.parse import urlparse
 
-    # Fail closed on missing/dev credentials when targeting non-localhost
-    KNOWN_DEV_INGEST_KEYS = {
-        "ibkr-ingest-key-dev-local-2026",
-        "test_gateway_ibkr_ingest_key_2026",
-        "dev-key",
-        "default",
-    }
-    if is_remote:
-        if not ingest_key or ingest_key in KNOWN_DEV_INGEST_KEYS:
-            logger.error(
-                "CRITICAL SECURITY REJECTION: Missing, empty, or default development ingestion key "
-                "used with remote backend URL. Production requires an explicitly provisioned secret. Aborting."
-            )
-            return False
+    base = backend_url.rstrip("/")
+    parsed = urlparse(base)
+    local = parsed.hostname in ("127.0.0.1", "localhost", "::1")
+    if not local and (parsed.scheme != "https" or parsed.hostname != "mozarex.com"):
+        logger.error("Remote destination must be https://mozarex.com")
+        return False
+    if not local and base != "https://mozarex.com/stockanalysis":
+        logger.error("Set STOCKANALYSIS_BACKEND_URL=https://mozarex.com/stockanalysis")
+        return False
 
-    # HTTPS verification for remote transport
-    if target_endpoint.startswith("http://") and is_remote:
-        logger.warning(
-            "INSECURE TRANSPORT WARNING: Outbound push to remote backend is not using HTTPS. "
-            "HTTPS transport is strictly required in production."
-        )
+    known_dev = {"ibkr-ingest-key-dev-local-2026", "test_gateway_ibkr_ingest_key_2026", "dev-key", "default"}
+    if not local and (len(ingest_key) < 32 or ingest_key in known_dev):
+        logger.error("Missing, weak or development ingestion key; sync blocked")
+        return False
+    if payload.get("connection_state") != "CONNECTED" or payload.get("account_type") != "PAPER":
+        logger.error("Invalid or disconnected snapshot; sync blocked")
+        return False
+    if not str(payload.get("account_id", "")).upper().startswith(("DU", "DF")):
+        logger.error("Invalid paper account identifier; sync blocked")
+        return False
 
-    headers = {
-        "Content-Type": "application/json",
-        "X-IBKR-Ingest-Key": ingest_key,
-    }
-
+    endpoint = f"{base}/api/portfolio/ibkr/sync"
+    headers = {"Content-Type": "application/json", "X-IBKR-Ingest-Key": ingest_key}
     try:
-        logger.info(f"Pushing outbound paper snapshot to {target_endpoint}...")
-        resp = requests.post(target_endpoint, headers=headers, json=payload, timeout=12)
-
-        if resp.status_code == 200:
-            logger.info("Successfully pushed snapshot to StockAnalysis backend.")
+        logger.info("Pushing read-only paper snapshot to %s", endpoint)
+        resp = requests.post(endpoint, headers=headers, json=payload, timeout=12,
+                             allow_redirects=False)
+        if resp.status_code == 200 and "json" in resp.headers.get("Content-Type", "").lower():
+            logger.info("Paper snapshot accepted by StockAnalysis (HTTP 200)")
             return True
-        else:
-            logger.error(f"Backend rejected snapshot (HTTP {resp.status_code}): {resp.text}")
-            return False
-
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Outbound HTTP push to backend failed: {e}")
+        logger.error("Snapshot rejected: HTTP %s, response type %s", resp.status_code,
+                     resp.headers.get("Content-Type", "unknown"))
+        # Never print server response bodies; they may contain sensitive information.
+        return False
+    except requests.exceptions.RequestException as exc:
+        logger.error("Outbound request failed: %s", type(exc).__name__)
         return False
 
 
 def run_single_sync(args) -> bool:
-    """Executes a single sync pass."""
-    payload = None
+    """Collect and optionally push one complete, real paper account snapshot."""
     try:
         if args.mock:
-            logger.info("Running with mock IBKR responses (--mock).")
+            if not args.dry_run:
+                logger.error("Mock snapshots are local dry-run only; cloud upload blocked")
+                return False
             payload = generate_mock_snapshot()
         else:
             payload = collect_live_snapshot(
-                host=args.host,
-                port=args.port,
-                client_id=args.client_id,
+                host=args.host, port=args.port, client_id=args.client_id,
                 timeout=args.timeout,
             )
-
-    except Exception as e:
-        logger.error(f"IB Gateway data collection failed: {e}")
-        payload = {
-            "account_id": "UNKNOWN",
-            "account_type": "PAPER",
-            "currency": "AUD",
-            "net_liquidation": 0.0,
-            "total_cash_value": 0.0,
-            "buying_power": 0.0,
-            "positions": [],
-            "connection_state": "DISCONNECTED",
-            "error_message": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "adapter_version": "1.0.0",
-        }
+    except Exception as exc:
+        logger.error("IB Gateway collection failed: %s", exc)
+        return False
 
     if args.dry_run:
         print("\n--- DRY RUN SNAPSHOT PAYLOAD (NO CLOUD PUSH) ---")
         print(json.dumps(payload, indent=2))
-        print("--- END SNAPLOAD ---\n")
+        print("--- END SNAPSHOT ---\n")
         return True
 
-    effective_key = (args.ingest_key or os.getenv("IBKR_INGESTION_KEY") or os.getenv("STOCKANALYSIS_IBKR_INGEST_KEY") or DEFAULT_INGESTION_KEY).strip()
+    effective_key = (os.getenv("IBKR_INGESTION_KEY") or "").strip()
     return push_to_backend(args.backend_url, effective_key, payload)
 
 
@@ -448,39 +436,27 @@ def main():
     parser.add_argument("--port", type=int, default=DEFAULT_GATEWAY_PORT, help="IB Gateway Socket Port (default: 4002)")
     parser.add_argument("--client-id", type=int, default=DEFAULT_CLIENT_ID, help="IB Client ID (default: 21)")
     parser.add_argument("--backend-url", default=DEFAULT_BACKEND_URL, help="StockAnalysis Backend URL")
-    parser.add_argument("--ingest-key", default=None, help="Dedicated IBKR Ingestion Key (preferred: use local .env file or environment)")
-    parser.add_argument("--admin-key", default=None, help=argparse.SUPPRESS)
-    parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL, help="Sync interval in seconds (default: 60)")
+    parser.add_argument("--interval", type=int, default=None, help="Continuous sync is disabled in Stage D1B")
     parser.add_argument("--timeout", type=int, default=15, help="Socket timeout in seconds (default: 15)")
     parser.add_argument("--once", action="store_true", help="Run once and exit")
     parser.add_argument("--dry-run", action="store_true", help="Print collected snapshot without pushing to backend")
     parser.add_argument("--mock", action="store_true", help="Use mock IBKR paper account data")
 
     args = parser.parse_args()
+    if args.interval is not None:
+        parser.error("Continuous sync is disabled in Stage D1B")
 
-    effective_key = (args.ingest_key or os.getenv("IBKR_INGESTION_KEY") or os.getenv("STOCKANALYSIS_IBKR_INGEST_KEY") or DEFAULT_INGESTION_KEY).strip()
-    masked_key = (effective_key[:4] + "***" + effective_key[-4:]) if len(effective_key) > 8 else "***"
 
     logger.info("=== StockAnalysis IBKR Paper Trading Adapter Starting ===")
     logger.info(f"Target Gateway: {args.host}:{args.port} (clientId={args.client_id})")
-    logger.info(f"Destination Backend: {args.backend_url} (Ingest Auth: {masked_key})")
+    logger.info("Destination Backend: %s", args.backend_url)
     logger.info("READ-ONLY SAFETY: Order placement and modification are disabled.")
 
     if args.once or args.dry_run:
         success = run_single_sync(args)
         sys.exit(0 if success else 1)
 
-    logger.info(f"Entering continuous sync loop (interval: {args.interval}s). Press Ctrl+C to stop.")
-    while True:
-        try:
-            run_single_sync(args)
-        except KeyboardInterrupt:
-            logger.info("Stopping IBKR Adapter upon user interrupt.")
-            break
-        except Exception as e:
-            logger.error(f"Unexpected error in sync cycle: {e}")
-
-        time.sleep(args.interval)
+    parser.error("Stage D1B permits only --once or --dry-run; continuous sync is disabled")
 
 
 if __name__ == "__main__":
