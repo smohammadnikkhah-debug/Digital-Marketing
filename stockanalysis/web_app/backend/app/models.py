@@ -232,8 +232,19 @@ class PaperOrder(Base):
         CheckConstraint("limit_price > 0", name="chk_paper_orders_price"),
         CheckConstraint("action IN ('BUY', 'SELL')", name="chk_paper_orders_action"),
         CheckConstraint("broker IN ('ibkr', 'alpaca')", name="chk_paper_orders_broker"),
+        # Portable approximation of migration regex constraints (PostgreSQL enforces
+        # the full regex in d2_2_paper_orders_transactional.sql). Application-level
+        # @validates below mirrors the exact broker-aware patterns.
         CheckConstraint(
-            "(broker = 'ibkr' AND (account_id LIKE 'DU%' OR account_id LIKE 'DF%')) OR (broker = 'alpaca')",
+            "("
+            "(broker = 'ibkr' AND (account_id LIKE 'DU%' OR account_id LIKE 'DF%') "
+            "AND length(account_id) >= 5 AND length(account_id) <= 30) "
+            "OR "
+            "(broker = 'alpaca' AND ("
+            "(account_id LIKE 'PA%' AND length(account_id) >= 7 AND length(account_id) <= 30) "
+            "OR length(account_id) = 36"
+            "))"
+            ")",
             name="chk_paper_orders_account",
         ),
     )

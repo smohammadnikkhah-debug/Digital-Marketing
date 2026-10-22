@@ -22,11 +22,11 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-# Ensure sys.path includes PROJECT_ROOT and BACKEND_DIR
+# Ensure sys.path includes Digital Marketing / StockAnalysis roots and backend
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
-_PROJECT_ROOT = _BACKEND_DIR.parent.parent
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
+for _root in (_BACKEND_DIR.parent.parent.parent, _BACKEND_DIR.parent.parent):
+    if (_root / "alpaca_adapter").exists() and str(_root) not in sys.path:
+        sys.path.insert(0, str(_root))
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 

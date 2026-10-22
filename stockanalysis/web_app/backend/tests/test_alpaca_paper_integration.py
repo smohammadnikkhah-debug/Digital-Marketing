@@ -26,9 +26,9 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
-_PROJECT_ROOT = _BACKEND_DIR.parent.parent
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
+for _root in (_BACKEND_DIR.parent.parent.parent, _BACKEND_DIR.parent.parent):
+    if (_root / "alpaca_adapter").exists() and str(_root) not in sys.path:
+        sys.path.insert(0, str(_root))
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
@@ -160,19 +160,32 @@ class TestAlpacaPaperIntegration(unittest.TestCase):
     # 6. IEX Quote Retrieval
     # -------------------------------------------------------------------------
     def test_06_iex_quote_retrieval(self):
-        """Verifies top-of-book quote retrieval for AAPL, MSFT, and SPY from IEX."""
+        """Verifies top-of-book quote retrieval for AAPL, MSFT, and SPY from IEX.
+
+        Session-aware: outside regular hours, zero/one-sided books are tolerated for
+        connectivity proof; positive two-sided books are required during REGULAR session.
+        """
         quotes = self.adapter.get_latest_quotes(["AAPL", "MSFT", "SPY"])
+        session, _detail = market_data_service.get_market_session()
         for sym in ["AAPL", "MSFT", "SPY"]:
             self.assertIn(sym, quotes)
             q = quotes[sym]
             self.assertEqual(q["source"], "ALPACA_IEX")
             self.assertEqual(q["feed"], "iex")
             self.assertFalse(q["is_consolidated_nbbo"])
-            self.assertGreater(q["bid"], 0.0)
-            self.assertGreater(q["ask"], 0.0)
-            self.assertGreaterEqual(q["ask"], q["bid"])
-            self.assertIsNotNone(q["midpoint"])
             self.assertIsNotNone(q["quote_timestamp"])
+            self.assertIn("received_at", q)
+            if session == "REGULAR":
+                self.assertGreater(q["bid"], 0.0, f"{sym} bid must be positive in REGULAR session")
+                self.assertGreater(q["ask"], 0.0, f"{sym} ask must be positive in REGULAR session")
+                self.assertGreaterEqual(q["ask"], q["bid"])
+                self.assertIsNotNone(q["midpoint"])
+            else:
+                # Outside RTH: require a structured quote payload; sizes/prices may be zero.
+                self.assertIn("bid", q)
+                self.assertIn("ask", q)
+                if q["bid"] > 0 and q["ask"] > 0:
+                    self.assertGreaterEqual(q["ask"], q["bid"])
 
     # -------------------------------------------------------------------------
     # 7. Stale or Missing Quotes

@@ -65,17 +65,41 @@ UNBOUND_VALID_DF_ACCOUNT = "DF888888"  # Valid format, but NOT bound!
 
 
 def get_real_pg_connection():
-    """Establishes real connection to Supabase PostgreSQL."""
-    cred_file = Path(r"C:\Users\zeiva\.gemini\antigravity-ide\brain\f7f9f605-49c4-4d05-9959-07d8016cc98e\scratch\stockanalysis_app_runtime_credentials.json")
-    with cred_file.open("r", encoding="utf-8") as f:
-        creds = json.load(f)
+    """Establish PostgreSQL connection using environment configuration only.
+
+    Required (either):
+    - STOCKANALYSIS_READONLY_DATABASE_URL / DATABASE_URL (postgresql://...)
+    - or discrete STOCKANALYSIS_PG_HOST, STOCKANALYSIS_PG_PORT, STOCKANALYSIS_PG_USER,
+      STOCKANALYSIS_PG_PASSWORD, STOCKANALYSIS_PG_DATABASE
+
+    Hardcoded credential file paths are intentionally unsupported.
+    """
+    url = (
+        os.getenv("STOCKANALYSIS_READONLY_DATABASE_URL", "").strip()
+        or os.getenv("DATABASE_URL", "").strip()
+    )
+    if url.startswith("postgres"):
+        # psycopg2 accepts postgresql:// ; normalize SQLAlchemy-style URLs
+        url = url.replace("postgresql+psycopg2://", "postgresql://", 1)
+        return psycopg2.connect(url)
+
+    host = os.getenv("STOCKANALYSIS_PG_HOST", "").strip()
+    user = os.getenv("STOCKANALYSIS_PG_USER", "").strip()
+    password = os.getenv("STOCKANALYSIS_PG_PASSWORD", "").strip()
+    dbname = os.getenv("STOCKANALYSIS_PG_DATABASE", "").strip()
+    port = int(os.getenv("STOCKANALYSIS_PG_PORT", "5432").strip() or "5432")
+    if not (host and user and password and dbname):
+        raise unittest.SkipTest(
+            "prod_db PostgreSQL credentials not configured via environment "
+            "(STOCKANALYSIS_READONLY_DATABASE_URL or STOCKANALYSIS_PG_*)."
+        )
     return psycopg2.connect(
-        host=creds["pooler_host"],
-        port=creds["session_port"],
-        user=creds["pooler_username"],
-        password=creds["password"],
-        dbname=creds["database_name"],
-        sslmode="require"
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        dbname=dbname,
+        sslmode=os.getenv("STOCKANALYSIS_PG_SSLMODE", "require"),
     )
 
 

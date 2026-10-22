@@ -22,13 +22,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-# Ensure project root in sys.path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-BACKEND_DIR = PROJECT_ROOT / "web_app" / "backend"
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
+# Resolve repository layouts:
+# - Digital Marketing monorepo: <repo>/alpaca_adapter + <repo>/stockanalysis/web_app/backend
+# - StockAnalysis workspace:    <repo>/alpaca_adapter + <repo>/web_app/backend
+ADAPTER_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = ADAPTER_DIR.parent
+_CANDIDATE_BACKENDS = [
+    PROJECT_ROOT / "stockanalysis" / "web_app" / "backend",
+    PROJECT_ROOT / "web_app" / "backend",
+]
+BACKEND_DIR = next((p for p in _CANDIDATE_BACKENDS if p.exists()), _CANDIDATE_BACKENDS[0])
+for path in (PROJECT_ROOT, BACKEND_DIR):
+    if path.exists() and str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 from alpaca_adapter.alpaca_paper_adapter import (
     AlpacaPaperAdapter,

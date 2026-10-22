@@ -286,28 +286,31 @@ class AlpacaPaperAdapter:
         - Calculates spread, midpoint, and 30-second freshness contract compliance.
         """
         client = self._get_data_client()
+        request_started_at = datetime.now(timezone.utc)
         req = StockLatestQuoteRequest(symbol_or_symbols=symbols, feed=DataFeed.IEX)
         raw_quotes = client.get_stock_latest_quote(req)
-
-        if now_utc is None:
-            now_utc = datetime.now(timezone.utc)
-        elif now_utc.tzinfo is None:
-            now_utc = now_utc.replace(tzinfo=timezone.utc)
+        # Receipt clock is captured AFTER the network response (not before the request).
+        received_at = datetime.now(timezone.utc)
+        eval_now = now_utc if now_utc is not None else received_at
+        if eval_now.tzinfo is None:
+            eval_now = eval_now.replace(tzinfo=timezone.utc)
 
         results = {}
         for sym, q in raw_quotes.items():
-            bid = float(q.bid_price)
-            ask = float(q.ask_price)
+            bid = float(q.bid_price) if q.bid_price is not None else 0.0
+            ask = float(q.ask_price) if q.ask_price is not None else 0.0
             q_time = q.timestamp
             if q_time.tzinfo is None:
                 q_time = q_time.replace(tzinfo=timezone.utc)
 
-            quote_age_sec = max(0.0, (now_utc - q_time).total_seconds())
+            age_delta = (eval_now - q_time).total_seconds()
+            clock_skew_seconds = max(0.0, -age_delta)
+            quote_age_sec = max(0.0, age_delta)
             is_two_sided = bid > 0 and ask > 0
             is_valid_spread = ask >= bid if is_two_sided else False
             midpoint = (bid + ask) / 2.0 if is_two_sided else None
             spread = (ask - bid) if is_two_sided else None
-            meets_30s_freshness = quote_age_sec <= 30.0
+            meets_30s_freshness = quote_age_sec <= 30.0 and clock_skew_seconds <= 2.0
 
             results[sym] = {
                 "symbol": sym,
@@ -317,13 +320,15 @@ class AlpacaPaperAdapter:
                 "venue_type": "NON_CONSOLIDATED_DIRECT_VENUE",
                 "bid": bid,
                 "ask": ask,
-                "bid_size": float(q.bid_size),
-                "ask_size": float(q.ask_size),
+                "bid_size": float(q.bid_size) if q.bid_size is not None else 0.0,
+                "ask_size": float(q.ask_size) if q.ask_size is not None else 0.0,
                 "midpoint": midpoint,
                 "spread": spread,
                 "quote_timestamp": q_time.isoformat(),
-                "received_at": now_utc.isoformat(),
+                "received_at": received_at.isoformat(),
+                "request_started_at": request_started_at.isoformat(),
                 "quote_age_seconds": round(quote_age_sec, 2),
+                "clock_skew_seconds": round(clock_skew_seconds, 3),
                 "is_two_sided": is_two_sided,
                 "is_valid_spread": is_valid_spread,
                 "meets_30s_freshness": meets_30s_freshness,
