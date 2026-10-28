@@ -269,6 +269,24 @@ class AlpacaPaperAdapter:
             })
         return normalized
 
+    def get_market_clock(self) -> Dict[str, Any]:
+        """Read-only market session clock from the paper trading API."""
+        client = self._get_trading_client()
+        clock = client.get_clock()
+        return {
+            "is_open": bool(getattr(clock, "is_open", False)),
+            "timestamp": getattr(clock, "timestamp", None).isoformat()
+            if getattr(clock, "timestamp", None)
+            else None,
+            "next_open": getattr(clock, "next_open", None).isoformat()
+            if getattr(clock, "next_open", None)
+            else None,
+            "next_close": getattr(clock, "next_close", None).isoformat()
+            if getattr(clock, "next_close", None)
+            else None,
+            "source": "ALPACA_CLOCK",
+        }
+
     # -------------------------------------------------------------------------
     # Read-Only Market Data Operations (IEX Feed)
     # -------------------------------------------------------------------------

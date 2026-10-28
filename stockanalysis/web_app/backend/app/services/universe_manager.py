@@ -91,7 +91,7 @@ SEED_UNIVERSE = [
     {"ticker": "MDB", "name": "MongoDB, Inc.", "exchange": "NASDAQ", "sector": "Technology", "industry": "Software - Infrastructure", "source": "curated_expansion"},
     {"ticker": "HUBS", "name": "HubSpot, Inc.", "exchange": "NYSE", "sector": "Technology", "industry": "Software - Application", "source": "curated_expansion"},
     {"ticker": "SHOP", "name": "Shopify Inc.", "exchange": "NYSE", "sector": "Technology", "industry": "Software - Application", "source": "curated_expansion"},
-    {"ticker": "SQ", "name": "Block, Inc.", "exchange": "NYSE", "sector": "Technology", "industry": "Software - Infrastructure", "source": "curated_expansion"},
+    {"ticker": "XYZ", "name": "Block, Inc.", "exchange": "NYSE", "sector": "Technology", "industry": "Software - Infrastructure", "source": "d2_4l_remediation"},
     {"ticker": "PYPL", "name": "PayPal Holdings, Inc.", "exchange": "NASDAQ", "sector": "Financial Services", "industry": "Credit Services", "source": "curated_expansion"},
     {"ticker": "CSCO", "name": "Cisco Systems, Inc.", "exchange": "NASDAQ", "sector": "Technology", "industry": "Communication Equipment", "source": "curated_expansion"},
     {"ticker": "IBM", "name": "International Business Machines Corp.", "exchange": "NYSE", "sector": "Technology", "industry": "Information Technology Services", "source": "curated_expansion"},
@@ -145,7 +145,7 @@ SEED_UNIVERSE = [
     {"ticker": "SCHW", "name": "The Charles Schwab Corporation", "exchange": "NYSE", "sector": "Financial Services", "industry": "Capital Markets", "source": "curated_expansion"},
     {"ticker": "AXP", "name": "American Express Company", "exchange": "NYSE", "sector": "Financial Services", "industry": "Credit Services", "source": "curated_expansion"},
     {"ticker": "CB", "name": "Chubb Limited", "exchange": "NYSE", "sector": "Financial Services", "industry": "Insurance - Property & Casualty", "source": "curated_expansion"},
-    {"ticker": "MMC", "name": "Marsh & McLennan Companies, Inc.", "exchange": "NYSE", "sector": "Financial Services", "industry": "Insurance Brokers", "source": "curated_expansion"},
+    {"ticker": "MRSH", "name": "Marsh & McLennan Companies, Inc.", "exchange": "NYSE", "sector": "Financial Services", "industry": "Insurance Brokers", "source": "d2_4l_remediation"},
     {"ticker": "PGR", "name": "The Progressive Corporation", "exchange": "NYSE", "sector": "Financial Services", "industry": "Insurance - Property & Casualty", "source": "curated_expansion"},
     {"ticker": "SPGI", "name": "S&P Global Inc.", "exchange": "NYSE", "sector": "Financial Services", "industry": "Financial Data & Stock Exchanges", "source": "curated_expansion"},
     {"ticker": "ICE", "name": "Intercontinental Exchange, Inc.", "exchange": "NYSE", "sector": "Financial Services", "industry": "Financial Data & Stock Exchanges", "source": "curated_expansion"},
@@ -244,9 +244,9 @@ SEED_UNIVERSE = [
     {"ticker": "VZ", "name": "Verizon Communications Inc.", "exchange": "NYSE", "sector": "Communication Services", "industry": "Telecom Services", "source": "curated_expansion"},
     {"ticker": "T", "name": "AT&T Inc.", "exchange": "NYSE", "sector": "Communication Services", "industry": "Telecom Services", "source": "curated_expansion"},
     {"ticker": "TMUS", "name": "T-Mobile US, Inc.", "exchange": "NASDAQ", "sector": "Communication Services", "industry": "Telecom Services", "source": "curated_expansion"},
-    {"ticker": "EA", "name": "Electronic Arts Inc.", "exchange": "NASDAQ", "sector": "Communication Services", "industry": "Electronic Gaming & Multimedia", "source": "curated_expansion"},
+    # EA removed from seed (D2.4L): delisted cash take-private 2026-08-04; preserved inactive in registry if present
     {"ticker": "TTWO", "name": "Take-Two Interactive Software, Inc.", "exchange": "NASDAQ", "sector": "Communication Services", "industry": "Electronic Gaming & Multimedia", "source": "curated_expansion"},
-    {"ticker": "WBD", "name": "Warner Bros. Discovery, Inc.", "exchange": "NASDAQ", "sector": "Communication Services", "industry": "Entertainment", "source": "curated_expansion"},
+    # WBD removed from seed (D2.4L): delisted cash merger 2026-10-06; SKYD not auto-added; preserved inactive in registry if present
 
     # --- Major US Utilities & Infrastructure ---
     {"ticker": "NEE", "name": "NextEra Energy, Inc.", "exchange": "NYSE", "sector": "Utilities", "industry": "Utilities - Regulated Electric", "source": "curated_expansion"},

@@ -1230,7 +1230,7 @@ class FinancialDataService:
         atr14 = None
         atr_pct = None
         price_vs_ma250_pct = None
-        signal = "WATCH"
+        signal = "TREND_WATCH"
         exit_stop = None
         stop_dist_pct = None
 
@@ -1255,14 +1255,16 @@ class FinancialDataService:
             exit_stop = highest_recent - trailing_buffer
             stop_dist_pct = ((current_price - exit_stop) / current_price) * 100
 
+            # Stage D2.4B: risk-UI recommendations must NOT reuse V4.0 scanner labels
+            # (BUY CANDIDATE / WATCH / HOLD / EXIT / AVOID) to avoid dashboard confusion.
             if current_price > ma250 and (roc20 or 0) > 0 and stop_dist_pct > 0:
-                signal = "BUY CANDIDATE" if stop_dist_pct > 5.0 else "HOLD"
+                signal = "TREND_FAVORABLE" if stop_dist_pct > 5.0 else "TREND_BUFFER"
             elif current_price < ma250 and (roc20 or 0) < -5:
-                signal = "AVOID"
+                signal = "TREND_UNFAVORABLE"
             elif current_price < exit_stop:
-                signal = "EXIT"
+                signal = "TREND_EXIT_ZONE"
             else:
-                signal = "WATCH"
+                signal = "TREND_WATCH"
 
         trend_risk = {
             "title": "Trend & Technical Risk",
@@ -1272,11 +1274,14 @@ class FinancialDataService:
             "roc20_pct": round(roc20, 2) if roc20 is not None else None,
             "atr14": round(atr14, 2) if atr14 else None,
             "atr14_pct": round(atr_pct, 2) if atr_pct is not None else None,
-            "technical_signal": signal,
-            "rule_name": "V4.0 Baseline Trend & Volatility Exit",
+            "risk_ui_recommendation": signal,
+            "technical_signal": signal,  # alias; NOT a V4.0 scanner signal
+            "signal_family": "FINANCIAL_RISK_UI",
+            "not_a_v40_scanner_signal": True,
+            "rule_name": "Risk UI Trend & Volatility Heuristic (non-scanner)",
             "exit_threshold_price": round(exit_stop, 2) if exit_stop else None,
             "distance_to_exit_pct": round(stop_dist_pct, 2) if stop_dist_pct is not None else None,
-            "methodology": "Compares current price to 250-day simple moving average (long-term regime), 20-day rate of change (ROC20 momentum), and distance to 3.0x ATR14 trailing volatility stop.",
+            "methodology": "Compares current price to 250-day simple moving average (long-term regime), 20-day rate of change (ROC20 momentum), and distance to 3.0x ATR14 trailing volatility stop. Distinct from the authoritative V4.0 scanner BUY/WATCH/HOLD/EXIT/AVOID classification.",
             "evidence": f"Close=${current_price:.2f}, MA250=${(ma250 or 0):.2f} (diff: {(price_vs_ma250_pct or 0):+.1f}%), ROC20={(roc20 or 0):+.1f}%, ATR14=${(atr14 or 0):.2f} ({(atr_pct or 0):.1f}%). Trailing Stop=${(exit_stop or 0):.2f}.",
             "data_date": data_date,
             "explanation": f"The stock is trading {(abs(price_vs_ma250_pct or 0)):.1f}% {'above' if (price_vs_ma250_pct or 0) >= 0 else 'below'} its 250-day moving average. Technical signal is {signal} with a {abs(stop_dist_pct or 0):.1f}% buffer before triggering trailing stop rules.",

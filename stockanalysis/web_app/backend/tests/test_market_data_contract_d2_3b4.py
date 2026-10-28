@@ -144,11 +144,13 @@ class TestMarketDataContractD23B4(unittest.TestCase):
         # Force MSFT bad on sample 2
         s2 = _evaluate_sample_quotes({"AAPL": good, "MSFT": bad}, 2, _regular_now())
         s3 = _evaluate_sample_quotes({"AAPL": good, "MSFT": good}, 3, _regular_now())
-        agg = _aggregate_verdicts([s1, s2, s3])
+        agg = _aggregate_verdicts([s1, s2, s3], ["AAPL", "MSFT"])
         self.assertEqual(agg["feed_connectivity_verdict"], "PASS")
         self.assertEqual(agg["execution_suitability_verdict"], "FAIL")
         self.assertEqual(agg["overall_execution_suitability"], "FAIL")
         self.assertIn("MSFT", agg["failing_symbols"])
+        # Freshness must remain independent of spread-driven suitability FAIL
+        self.assertTrue(agg["all_fresh_within_30s"])
 
     def test_11_multi_sample_aggregate_pass_requires_all_samples(self):
         good_a = _quote(symbol="AAPL", bid=345.41, ask=345.62)
@@ -157,10 +159,11 @@ class TestMarketDataContractD23B4(unittest.TestCase):
             _evaluate_sample_quotes({"AAPL": good_a, "SPY": good_s}, i, _regular_now())
             for i in (1, 2, 3)
         ]
-        agg = _aggregate_verdicts(samples)
+        agg = _aggregate_verdicts(samples, ["AAPL", "SPY"])
         self.assertEqual(agg["sample_count"], 3)
         self.assertEqual(agg["feed_connectivity_verdict"], "PASS")
         self.assertEqual(agg["overall_execution_suitability"], "PASS")
+        self.assertTrue(agg["all_fresh_within_30s"])
 
     def test_12_yahoo_rejected_for_execution(self):
         q = _quote()

@@ -168,7 +168,14 @@ class TestPhase3AStockResearch(unittest.TestCase):
             self.assertGreater(len(sec["evidence"]), 10)
 
         # Trend risk V4.0 rule
-        self.assertIn(data["trend_risk"]["technical_signal"], ["BUY CANDIDATE", "WATCH", "HOLD", "EXIT", "AVOID"])
+        # Stage D2.4B: risk UI uses distinct labels (not V4.0 scanner BUY CANDIDATE vocabulary)
+        self.assertIn(
+            data["trend_risk"]["technical_signal"],
+            ["TREND_FAVORABLE", "TREND_BUFFER", "TREND_WATCH", "TREND_UNFAVORABLE", "TREND_EXIT_ZONE"],
+        )
+        self.assertEqual(data["trend_risk"].get("signal_family"), "FINANCIAL_RISK_UI")
+        self.assertTrue(data["trend_risk"].get("not_a_v40_scanner_signal"))
+        self.assertNotIn(data["trend_risk"]["technical_signal"], ["BUY CANDIDATE", "WATCH", "HOLD", "EXIT", "AVOID"])
         # Market risk Beta vs SPY
         self.assertIsNotNone(data["market_risk"]["beta_vs_spy_252d"])
         # Valuation compression sensitivity

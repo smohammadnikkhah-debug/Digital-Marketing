@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.engine_bridge import bridge
@@ -6,9 +6,54 @@ from app.database import get_db
 from app.models import WatchlistStock
 from app.services.universe_manager import universe_manager
 from app.services.scanner_service import scanner_service
-from app.config import DATA_PROVENANCE
+from app.services.shariah_eligibility import attach_execution_eligibility
+from app.services.investment_eligibility import attach_investment_eligibility
+from app.config import (
+    DATA_PROVENANCE,
+    INVESTMENT_ELIGIBILITY_MODE,
+    V40_SIGNAL_SOURCE,
+    V40_STRATEGY_VERSION,
+)
 
 router = APIRouter(prefix="/api/signals", tags=["Signals"])
+
+
+def _enrich_signal_for_api(sig: Dict[str, Any], shariah_map: Dict[str, Dict[str, str]]) -> Dict[str, Any]:
+    """Attach Shariah overlay + USER_POLICY eligibility for dashboard visibility."""
+    out = dict(sig)
+    ticker = out.get("ticker", "")
+    if ticker in shariah_map:
+        out["shariah_status"] = shariah_map[ticker]["status"]
+    stock_info = universe_manager.get_stock(ticker) or {}
+    stock_name = stock_info.get("name", out.get("name", ticker))
+    out["name"] = out.get("name") or stock_name
+    out["company_name"] = stock_name
+    out["sector"] = stock_info.get("sector", out.get("sector", "Technology"))
+    out["industry"] = stock_info.get("industry", out.get("industry", ""))
+    out["exchange"] = stock_info.get("exchange", out.get("exchange", "NASDAQ"))
+    out["data_status"] = stock_info.get("data_status", out.get("data_status", "READY"))
+    # Ensure V4.0 scanner identity is explicit when missing (legacy seeded rows)
+    out.setdefault("signal_source", V40_SIGNAL_SOURCE)
+    out.setdefault("strategy_version", V40_STRATEGY_VERSION)
+    # Preserve legacy Shariah classification fields, then overlay USER_POLICY for dashboard
+    out = attach_execution_eligibility(out)
+    mode = (INVESTMENT_ELIGIBILITY_MODE or "USER_POLICY").strip().upper()
+    out = attach_investment_eligibility(out, eligibility_mode=mode)
+    # Keep excluded / review-required stocks visible in research monitoring
+    out["research_visible"] = True
+    out["user_policy_status"] = (out.get("investment_eligibility") or {}).get("user_policy_status")
+    out["policy_blocking_reason"] = (out.get("investment_eligibility") or {}).get("blocking_reason") or ""
+    return out
+
+
+def _snapshot_is_live_refresh(active_snap: Dict[str, Any], signals_list: List[Dict[str, Any]]) -> bool:
+    """True only when snapshot signals were produced by a live scan, not frozen seed."""
+    if any(s.get("is_fresh_analysis") is True for s in signals_list):
+        return True
+    if any(s.get("provenance_mode") == "LIVE_SCAN" for s in signals_list):
+        return True
+    # Legacy snapshots without provenance: treat as refreshed only if refresh_job_id present
+    return bool(active_snap.get("refresh_job_id"))
 
 
 @router.get("")
@@ -28,7 +73,24 @@ def get_today_signals(
     }
 
     if mode == "baseline":
-        return bridge.get_today_signals(custom_shariah=shariah_map)
+        # Explicit frozen baseline — never advertised as a fresh opportunity scan
+        payload = bridge.get_today_signals(custom_shariah=shariah_map)
+        enriched = [_enrich_signal_for_api(s, shariah_map) for s in payload.get("signals", [])]
+        for s in enriched:
+            s["provenance_mode"] = "FROZEN_BASELINE"
+            s["is_fresh_analysis"] = False
+            s["validation_status"] = s.get("validation_status") or "FROZEN_BASELINE"
+            s["data_freshness"] = "FROZEN_BASELINE"
+        payload["signals"] = enriched
+        payload["data_provenance"] = {
+            **DATA_PROVENANCE,
+            "mode": "FROZEN_BASELINE",
+            "is_refreshed": False,
+            "badge_text": "Frozen Baseline Dataset — not a live scan",
+            "signal_source": V40_SIGNAL_SOURCE,
+            "strategy_version": V40_STRATEGY_VERSION,
+        }
+        return payload
 
     # Expanded Market Universe Signals: Read from persistent active ScreenerSnapshot
     from app.services.snapshot_service import snapshot_service
@@ -44,20 +106,10 @@ def get_today_signals(
         for s in signals_source:
             if not s:
                 continue
-            sig = dict(s)
-            ticker = sig.get("ticker", "")
-            if ticker in shariah_map:
-                sig["shariah_status"] = shariah_map[ticker]["status"]
-            stock_info = universe_manager.get_stock(ticker) or {}
-            stock_name = stock_info.get("name", sig.get("name", ticker))
-            sig["name"] = sig.get("name") or stock_name
-            sig["company_name"] = stock_name
-            sig["sector"] = stock_info.get("sector", sig.get("sector", "Technology"))
-            sig["exchange"] = stock_info.get("exchange", sig.get("exchange", "NASDAQ"))
-            sig["data_status"] = stock_info.get("data_status", sig.get("data_status", "READY"))
-            signals_list.append(sig)
+            signals_list.append(_enrich_signal_for_api(s, shariah_map))
 
         summary = active_snap.get("summary") or universe_manager.get_summary_counts()
+        is_live = _snapshot_is_live_refresh(active_snap, signals_list)
         return {
             "snapshot_id": active_snap.get("snapshot_id"),
             "as_of_date": active_snap.get("market_as_of_date", "2026-10-14"),
@@ -68,17 +120,28 @@ def get_today_signals(
             "signals": signals_list,
             "data_provenance": {
                 **DATA_PROVENANCE,
-                "badge_text": f"Expanded Screener Universe ({len(signals_list)} Monitored)",
-                "is_refreshed": True,
+                "mode": "LIVE_SCAN" if is_live else "SNAPSHOT_OR_SEEDED",
+                "badge_text": (
+                    f"Live V4.0 Screener ({len(signals_list)} Monitored)"
+                    if is_live
+                    else f"Screener Snapshot — verify freshness ({len(signals_list)} Monitored)"
+                ),
+                "is_refreshed": is_live,
                 "as_of_date": active_snap.get("market_as_of_date"),
-                "description": "Adaptive Trading V4.0 quantitative signal engine across expanded liquid US market.",
+                "description": (
+                    "Adaptive Trading V4.0 quantitative signal engine across expanded liquid US market."
+                    if is_live
+                    else "Snapshot may include seeded frozen-baseline rows until a FULL/MARKET_CLOSE refresh completes."
+                ),
+                "signal_source": V40_SIGNAL_SOURCE,
+                "strategy_version": V40_STRATEGY_VERSION,
             },
         }
 
     # Fallback if no snapshot created yet
     active_stocks = universe_manager.get_all(include_inactive=False)
     signals_list = []
-    
+
     for s in active_stocks:
         sig = s.get("latest_signal")
         ticker = s["ticker"]
@@ -86,18 +149,15 @@ def get_today_signals(
             sig = scanner_service.evaluate_stock_signal(ticker)
             universe_manager.update_stock(ticker, {"latest_signal": sig})
 
-        # Attach custom Shariah if present
-        if ticker in shariah_map:
-            sig["shariah_status"] = shariah_map[ticker]["status"]
-        
-        # Attach sector & company name from universe registry
-        sig["company_name"] = s.get("name", ticker)
-        sig["sector"] = s.get("sector", "Technology")
-        sig["exchange"] = s.get("exchange", "NASDAQ")
-        sig["data_status"] = s.get("data_status", "READY")
-        signals_list.append(sig)
+        enriched = _enrich_signal_for_api(dict(sig), shariah_map)
+        enriched["company_name"] = s.get("name", ticker)
+        enriched["sector"] = s.get("sector", "Technology")
+        enriched["exchange"] = s.get("exchange", "NASDAQ")
+        enriched["data_status"] = s.get("data_status", "READY")
+        signals_list.append(enriched)
 
     summary = universe_manager.get_summary_counts()
+    any_fresh = any(s.get("is_fresh_analysis") for s in signals_list)
 
     return {
         "snapshot_id": None,
@@ -109,9 +169,12 @@ def get_today_signals(
         "signals": signals_list,
         "data_provenance": {
             **DATA_PROVENANCE,
+            "mode": "LIVE_SCAN" if any_fresh else "REGISTRY_FALLBACK",
             "badge_text": f"Expanded Screener Universe ({len(signals_list)} Monitored)",
-            "is_refreshed": True,
+            "is_refreshed": bool(any_fresh),
             "description": "Adaptive Trading V4.0 quantitative signal engine across expanded liquid US market.",
+            "signal_source": V40_SIGNAL_SOURCE,
+            "strategy_version": V40_STRATEGY_VERSION,
         },
     }
 

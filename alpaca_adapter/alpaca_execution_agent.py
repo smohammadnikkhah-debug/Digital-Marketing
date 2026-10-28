@@ -159,6 +159,29 @@ class AlpacaExecutionAgent:
                 ),
             }
 
+        # 1b. USER_POLICY — never submit EXCLUDED names (e.g. PLTR / MILITARY_DEFENCE_EXPOSURE)
+        try:
+            from app.services.user_policy_eligibility import assert_user_policy_order_permitted
+
+            policy_gate = assert_user_policy_order_permitted(symbol)
+            if not policy_gate.get("permitted"):
+                return {
+                    "status": "REJECTED",
+                    "order_id": order_id,
+                    "client_order_id": cid,
+                    "reason": policy_gate.get("blocking_reason")
+                    or f"USER_POLICY blocks submission for {symbol}",
+                    "user_policy_status": policy_gate.get("user_policy_status"),
+                    "reason_codes": policy_gate.get("reason_codes"),
+                }
+        except Exception as exc:
+            return {
+                "status": "REJECTED",
+                "order_id": order_id,
+                "client_order_id": cid,
+                "reason": f"USER_POLICY gate failed closed: {type(exc).__name__}: {exc}",
+            }
+
         # 2. Risk Engine Notional Value Guard
         notional = quantity * limit_price
         if notional > self.max_order_notional:

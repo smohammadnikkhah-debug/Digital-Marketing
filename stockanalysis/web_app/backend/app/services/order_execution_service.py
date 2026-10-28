@@ -576,9 +576,13 @@ class OrderExecutionService:
                 account_id == bound_account and
                 not (account_id.startswith("U") and not (account_id.startswith("DU") or account_id.startswith("DF")))
             )
+            # Positions for holdings check come from proposal context / empty default
+            # (Alpaca live position fetch is outside this risk snapshot path).
+            paper_status = {"account_id": account_id, "positions": []}
         else:
             ch_paper = False
             account_id = ""
+            paper_status = {"account_id": "", "positions": []}
 
         checks.append({
             "name": "paper_account_only",
@@ -598,6 +602,39 @@ class OrderExecutionService:
         })
         if not ch_sym:
             failed_reasons.append("Unsupported instrument type or invalid symbol.")
+
+        # 3b. USER_POLICY — EXCLUDED / REVIEW names (e.g. PLTR) cannot propose or submit
+        try:
+            from app.services.user_policy_eligibility import assert_user_policy_order_permitted
+
+            policy_gate = assert_user_policy_order_permitted(sym)
+            ch_policy = bool(policy_gate.get("permitted"))
+            checks.append({
+                "name": "user_policy_eligibility",
+                "passed": ch_policy,
+                "detail": (
+                    f"USER_POLICY ALLOWED for {sym}"
+                    if ch_policy
+                    else (
+                        policy_gate.get("blocking_reason")
+                        or f"USER_POLICY blocks {sym}"
+                    )
+                ),
+                "reason_codes": policy_gate.get("reason_codes"),
+                "user_policy_status": policy_gate.get("user_policy_status"),
+            })
+            if not ch_policy:
+                failed_reasons.append(
+                    policy_gate.get("blocking_reason")
+                    or f"USER_POLICY blocks order for {sym}."
+                )
+        except Exception as exc:  # fail closed
+            checks.append({
+                "name": "user_policy_eligibility",
+                "passed": False,
+                "detail": f"USER_POLICY gate error (fail-closed): {type(exc).__name__}",
+            })
+            failed_reasons.append("USER_POLICY eligibility check failed closed.")
 
         # 4. Limit Orders Only
         ch_type = proposal.order_type.upper() == "LIMIT"

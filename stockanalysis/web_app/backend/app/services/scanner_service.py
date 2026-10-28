@@ -27,6 +27,7 @@ from sqlalchemy import text
 from app.database import is_sqlite
 from app.config import (
     ACTIVE_ENGINE_DIR,
+    DATA_CACHE_DIR,
     PRICE_CACHE_DIR,
     ROLLING_PRICE_CACHE_DIR,
     BASELINE_EXCEL_PATH,
@@ -36,13 +37,20 @@ from app.config import (
     DEFAULT_TRAIN_YEARS,
     DEFAULT_MIN_BUYS,
     WORKER_MODE,
+    V40_SIGNAL_SOURCE,
+    V40_STRATEGY_VERSION,
 )
+
+# Same-day disk cache for walk-forward rule selection (identical inputs → identical win).
+# Does not alter V4.0 mathematics; avoids redundant train() on resume/re-scan.
+OPTIMIZE_CACHE_DIR = DATA_CACHE_DIR / "observation" / "optimize_cache"
 from app.services.universe_manager import (
     universe_manager,
     SYNTHETIC_EXCLUDED_TICKERS,
     FROZEN_RESEARCH_TICKERS,
     BENCHMARK_TICKER,
 )
+from app.services.shariah_eligibility import attach_execution_eligibility
 
 # Deterministic PostgreSQL advisory lock ID for atomic job admission across processes
 SCANNER_ADVISORY_LOCK_ID = 84729103
@@ -61,6 +69,14 @@ from defensive_exits import exit_trigger
 
 # Known simulated holdings from the audited V4.0 baseline portfolio
 SIMULATED_HOLDINGS = {"QQQ", "NVDA", "MA"}
+
+# Job types that resolve the full eligible universe (no ticker list required)
+FULL_UNIVERSE_JOB_TYPES = frozenset({"FULL", "MARKET_CLOSE"})
+
+
+def normalize_refresh_job_type(job_type: Optional[str]) -> str:
+    """Normalize refresh job_type tokens. MARKET_CLOSE is a full-universe alias."""
+    return str(job_type or "").strip().upper()
 
 
 class ScannerService:
@@ -116,6 +132,7 @@ class ScannerService:
                             "ticker": ticker,
                             "name": existing.get("name", ticker),
                             "as_of": str(r["As of"])[:10],
+                            "market_as_of_date": str(r["As of"])[:10],
                             "close": close_val,
                             "ma30": round(float(r["MA30"]), 2) if pd.notna(r["MA30"]) else None,
                             "ma50": round(float(r["MA50"]), 2) if pd.notna(r["MA50"]) else None,
@@ -132,9 +149,16 @@ class ScannerService:
                             "explanation": str(r["Explanation"]) if pd.notna(r["Explanation"]) else "",
                             "is_simulated_position": ticker in SIMULATED_HOLDINGS,
                             "data_freshness": "FROZEN_BASELINE",
+                            "signal_source": V40_SIGNAL_SOURCE,
+                            "strategy_version": V40_STRATEGY_VERSION,
+                            "provenance_mode": "FROZEN_BASELINE",
+                            "is_fresh_analysis": False,
+                            "validation_status": "SEEDED_BASELINE",
+                            "scan_completed_at": None,
                             "color_bg": palette["bg"],
                             "color_text": palette["text"],
                         }
+                        sig_dict = attach_execution_eligibility(sig_dict)
 
                         universe_manager.update_stock(ticker, {
                             "latest_price_date": str(r["As of"])[:10],
@@ -357,9 +381,38 @@ class ScannerService:
                 return existing_df, True
             return None, False
 
-    def optimize_v40_rule(self, d: pd.DataFrame, asof: pd.Timestamp) -> Optional[Dict[str, Any]]:
-        """Per-stock walk-forward parameter optimization without lookahead using V4.0 engine."""
+    def _optimize_cache_path(self, ticker: str, as_of: str) -> Path:
+        safe_t = "".join(c if c.isalnum() else "_" for c in str(ticker).upper())[:16]
+        safe_d = str(as_of)[:10]
+        ver = "".join(c if c.isalnum() else "_" for c in V40_STRATEGY_VERSION)[:48]
+        OPTIMIZE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        return OPTIMIZE_CACHE_DIR / f"{safe_t}_{safe_d}_{ver}.json"
+
+    def optimize_v40_rule(
+        self,
+        d: pd.DataFrame,
+        asof: pd.Timestamp,
+        *,
+        cache_key: Optional[Tuple[str, str]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Per-stock walk-forward parameter optimization without lookahead using V4.0 engine.
+
+        Optional cache_key=(ticker, as_of_YYYY_MM_DD) reuses a prior identical train result
+        for the same strategy version. Cache hits preserve mathematics; they only skip
+        redundant compute.
+        """
         import engine as v41_engine
+
+        if cache_key is not None:
+            ticker_k, as_of_k = cache_key
+            path = self._optimize_cache_path(ticker_k, as_of_k)
+            if path.exists():
+                try:
+                    cached = json.loads(path.read_text(encoding="utf-8"))
+                    if isinstance(cached, dict) and cached.get("entry") and cached.get("exit"):
+                        return cached
+                except (OSError, json.JSONDecodeError):
+                    pass
         try:
             # 5-year lookback or whatever is eligible (minimum 1 year / 250 bars)
             win, _ = v41_engine.train(
@@ -380,23 +433,74 @@ class ScannerService:
                     min_buys=1,
                     exit_mode="baseline",
                 )
+            if win is not None and cache_key is not None:
+                try:
+                    path = self._optimize_cache_path(cache_key[0], cache_key[1])
+                    # Persist only serializable rule fields
+                    payload = {
+                        k: win.get(k)
+                        for k in ("entry", "exit", "score", "Train score", "train_score")
+                        if k in win or win.get(k) is not None
+                    }
+                    if "entry" not in payload and "entry" in win:
+                        payload["entry"] = win["entry"]
+                    if "exit" not in payload and "exit" in win:
+                        payload["exit"] = win["exit"]
+                    payload["entry"] = win["entry"]
+                    payload["exit"] = win["exit"]
+                    path.write_text(json.dumps(payload, default=str), encoding="utf-8")
+                except OSError:
+                    pass
             return win
         except Exception:
             return None
 
-    def evaluate_stock_signal(self, ticker: str, df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
-        """Calculates indicators and evaluates V4.0 trading signal for a stock."""
+    def _base_signal_provenance(
+        self,
+        *,
+        as_of: str,
+        data_freshness: str,
+        validation_status: str,
+        is_fresh_analysis: bool,
+        provenance_mode: str,
+    ) -> Dict[str, Any]:
+        """Common provenance fields for every V4.0 scanner signal payload."""
+        return {
+            "market_as_of_date": as_of,
+            "signal_source": V40_SIGNAL_SOURCE,
+            "strategy_version": V40_STRATEGY_VERSION,
+            "provenance_mode": provenance_mode,
+            "is_fresh_analysis": is_fresh_analysis,
+            "validation_status": validation_status,
+            "data_freshness": data_freshness,
+            "scan_completed_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+
+    def evaluate_stock_signal(
+        self,
+        ticker: str,
+        df: Optional[pd.DataFrame] = None,
+        *,
+        use_optimize_cache: bool = False,
+    ) -> Dict[str, Any]:
+        """Calculates indicators and evaluates V4.0 trading signal for a stock.
+
+        use_optimize_cache: when True, reuse same-day disk-cached train() winners
+        for this ticker/as_of/strategy version (no math change).
+        """
         ticker = ticker.strip().upper()
         stock_info = universe_manager.get_stock(ticker) or {"ticker": ticker, "name": ticker}
+        shariah_status = stock_info.get("shariah_status", "NOT VERIFIED")
 
         if df is None:
             df = self.get_price_df(ticker)
 
         if df is None or len(df) < 30:
-            return {
+            as_of = str(df.index[-1].date()) if df is not None and len(df) > 0 else datetime.now().strftime("%Y-%m-%d")
+            payload = {
                 "ticker": ticker,
                 "name": stock_info.get("name", ticker),
-                "as_of": str(df.index[-1].date()) if df is not None and len(df) > 0 else datetime.now().strftime("%Y-%m-%d"),
+                "as_of": as_of,
                 "close": round(float(df["Close"].iloc[-1]), 2) if df is not None and len(df) > 0 else None,
                 "ma30": None,
                 "ma50": None,
@@ -409,21 +513,29 @@ class ScannerService:
                 "delayed_stage": "",
                 "order_notice": "INSUFFICIENT DATA",
                 "signal": "INSUFFICIENT DATA",
-                "shariah_status": "NOT VERIFIED",
+                "shariah_status": shariah_status,
                 "explanation": f"Insufficient historical price history ({len(df) if df is not None else 0} bars available, minimum 250 bars required for MA250).",
                 "is_simulated_position": False,
-                "data_freshness": "INSUFFICIENT_DATA",
                 "color_bg": "#F1F5F9",
                 "color_text": "#64748B",
+                **self._base_signal_provenance(
+                    as_of=as_of,
+                    data_freshness="INSUFFICIENT_DATA",
+                    validation_status="INSUFFICIENT_DATA",
+                    is_fresh_analysis=True,
+                    provenance_mode="LIVE_SCAN",
+                ),
             }
+            return attach_execution_eligibility(payload)
 
         # Calculate V4.0 core indicators
         d = v41_core.prep(df)
         if d.empty or len(d) < 30:
-            return {
+            as_of = str(df.index[-1].date())
+            payload = {
                 "ticker": ticker,
                 "name": stock_info.get("name", ticker),
-                "as_of": str(df.index[-1].date()),
+                "as_of": as_of,
                 "close": round(float(df["Close"].iloc[-1]), 2),
                 "ma30": None,
                 "ma50": None,
@@ -436,13 +548,20 @@ class ScannerService:
                 "delayed_stage": "",
                 "order_notice": "INSUFFICIENT DATA",
                 "signal": "INSUFFICIENT DATA",
-                "shariah_status": "NOT VERIFIED",
+                "shariah_status": shariah_status,
                 "explanation": "Calculation error during indicator preparation.",
                 "is_simulated_position": False,
-                "data_freshness": "INSUFFICIENT_DATA",
                 "color_bg": "#F1F5F9",
                 "color_text": "#64748B",
+                **self._base_signal_provenance(
+                    as_of=as_of,
+                    data_freshness="INSUFFICIENT_DATA",
+                    validation_status="INSUFFICIENT_DATA",
+                    is_fresh_analysis=True,
+                    provenance_mode="LIVE_SCAN",
+                ),
             }
+            return attach_execution_eligibility(payload)
 
         r = d.iloc[-1]
         as_of = str(d.index[-1].date())
@@ -454,7 +573,7 @@ class ScannerService:
         atr14_val = round(float(r.ATR14), 2) if pd.notna(r.ATR14) else None
 
         if len(d) < 250 or ma250 is None:
-            return {
+            payload = {
                 "ticker": ticker,
                 "name": stock_info.get("name", ticker),
                 "as_of": as_of,
@@ -470,16 +589,24 @@ class ScannerService:
                 "delayed_stage": "",
                 "order_notice": "INSUFFICIENT DATA",
                 "signal": "INSUFFICIENT DATA",
-                "shariah_status": "NOT VERIFIED",
+                "shariah_status": shariah_status,
                 "explanation": f"Fewer than 250 bars ({len(d)} bars). MA250 requires 250 sessions.",
                 "is_simulated_position": False,
-                "data_freshness": "INSUFFICIENT_DATA",
                 "color_bg": "#F1F5F9",
                 "color_text": "#64748B",
+                **self._base_signal_provenance(
+                    as_of=as_of,
+                    data_freshness="INSUFFICIENT_DATA",
+                    validation_status="INSUFFICIENT_DATA",
+                    is_fresh_analysis=True,
+                    provenance_mode="LIVE_SCAN",
+                ),
             }
+            return attach_execution_eligibility(payload)
 
         # Derive historically eligible optimal V4.0 parameters for this stock
-        win = self.optimize_v40_rule(d, d.index[-1])
+        cache_key = (ticker, as_of) if use_optimize_cache else None
+        win = self.optimize_v40_rule(d, d.index[-1], cache_key=cache_key)
         entry_rule = win["entry"] if win else "CROSS"
         exit_rule = win["exit"] if win else "MA250_3CLOSE"
 
@@ -581,7 +708,7 @@ class ScannerService:
             else "Research watchlist observation"
         )
 
-        return {
+        payload = {
             "ticker": ticker,
             "name": stock_info.get("name", ticker),
             "as_of": as_of,
@@ -597,13 +724,20 @@ class ScannerService:
             "delayed_stage": delayed_stage,
             "order_notice": order_notice,
             "signal": sig,
-            "shariah_status": stock_info.get("shariah_status", "NOT VERIFIED"),
+            "shariah_status": shariah_status,
             "explanation": explanation,
             "is_simulated_position": is_simulated,
-            "data_freshness": "FRESH",
             "color_bg": palette["bg"],
             "color_text": palette["text"],
+            **self._base_signal_provenance(
+                as_of=as_of,
+                data_freshness="FRESH",
+                validation_status="OK",
+                is_fresh_analysis=True,
+                provenance_mode="LIVE_SCAN",
+            ),
         }
+        return attach_execution_eligibility(payload)
 
     def add_stock_to_screener(self, ticker: str, name: Optional[str] = None, exchange: Optional[str] = None, sector: Optional[str] = None) -> Dict[str, Any]:
         """Dynamically ingests, optimizes, analyzes, and persists a stock into the screener universe and active snapshot."""
@@ -726,30 +860,60 @@ class ScannerService:
                     }
 
                 # 3. Contract & Payload Validation
-                jt_raw = str(job_type).strip().upper() if job_type else ""
-                declared_full = jt_raw == "FULL"
+                # MARKET_CLOSE is a full-universe alias used by cli.run_market_close
+                # (preserves session/holiday/idempotency guards in CLI while satisfying
+                # the FULL/ROLLOUT/PARTIAL ticker-resolution contract).
+                jt_raw = normalize_refresh_job_type(job_type)
+                declared_market_close = jt_raw == "MARKET_CLOSE"
+                declared_full = jt_raw in FULL_UNIVERSE_JOB_TYPES
                 declared_rollout = jt_raw == "ROLLOUT"
                 declared_partial = jt_raw in ("PARTIAL", "PARTIAL_REFRESH")
                 has_tickers = bool(tickers is not None and len(tickers) > 0)
 
                 if declared_full and has_tickers:
-                    raise ValueError("Contradictory request: job_type is FULL but tickers were provided.")
+                    raise ValueError(
+                        f"Contradictory request: job_type is {jt_raw} but tickers were provided."
+                    )
 
                 if not has_tickers and not declared_full:
-                    raise ValueError("Full-universe refresh requires explicit job_type='FULL'.")
+                    raise ValueError(
+                        "Full-universe refresh requires explicit job_type='FULL' or job_type='MARKET_CLOSE'."
+                    )
 
                 if (declared_partial or declared_rollout) and not has_tickers:
                     raise ValueError(f"Cannot initiate a {jt_raw.lower()} refresh job without a valid list of tickers.")
 
                 if declared_full:
-                    # Authoritative 230 eligible securities (NEWIPO synthetic ticker strictly excluded)
+                    # Authoritative eligible securities (NEWIPO synthetic ticker strictly excluded)
                     resolved_stocks = universe_manager.get_eligible_universe()
                     norm_tickers = [s["ticker"] for s in resolved_stocks]
-                    actual_type = "FULL"
+                    actual_type = "MARKET_CLOSE" if declared_market_close else "FULL"
                     total_batches = (len(resolved_stocks) + ROLLOUT_BATCH_SIZE - 1) // ROLLOUT_BATCH_SIZE
-                    msg = f"Full-universe rollout queued for {len(resolved_stocks)} eligible securities across {total_batches} sequential batches..."
+                    trigger = "Market-close full-universe" if declared_market_close else "Full-universe"
+                    msg = (
+                        f"{trigger} refresh queued for {len(resolved_stocks)} eligible securities "
+                        f"across {total_batches} sequential batches..."
+                    )
                 else:
-                    norm_tickers = [str(t).strip().upper() for t in tickers]
+                    from app.services.ticker_integrity import resolve_canonical_ticker
+
+                    # Map legacy listing aliases (SQ→XYZ, MMC→MRSH, QUALCOMM→QCOM)
+                    # without rewriting historical OHLCV under the legacy symbol.
+                    mapped: List[str] = []
+                    seen_canon = set()
+                    for t in tickers:
+                        canon = str(
+                            resolve_canonical_ticker(t).get("canonical") or t or ""
+                        ).strip().upper()
+                        if not canon:
+                            continue
+                        if canon in seen_canon:
+                            raise ValueError(
+                                f"Duplicate tickers detected in refresh request after canonical mapping ({canon})."
+                            )
+                        seen_canon.add(canon)
+                        mapped.append(canon)
+                    norm_tickers = mapped
                     if len(norm_tickers) != len(set(norm_tickers)):
                         raise ValueError("Duplicate tickers detected in refresh request.")
 
@@ -988,17 +1152,29 @@ class ScannerService:
 
                     try:
                         df, is_stale = self.fetch_or_update_stock(ticker, force_full=force_all)
+                        scan_ts = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
                         if df is not None and len(df) >= 250:
                             sig_data = self.evaluate_stock_signal(ticker, df)
+                            sig_data["scan_completed_at"] = scan_ts
+                            sig_data["provenance_mode"] = "LIVE_SCAN"
+                            sig_data["is_fresh_analysis"] = True
                             if is_stale:
                                 sig_data["data_freshness"] = "STALE"
+                                sig_data["validation_status"] = "STALE_BARS"
                                 cur.stale_stocks += 1
+                            else:
+                                sig_data["data_freshness"] = "FRESH"
+                                sig_data["validation_status"] = "OK"
                             sig_data["latest_refresh_status"] = "SUCCESS"
                             staged_signals.append(sig_data)
                             completed_tickers.append(ticker)
                         elif df is not None and len(df) < 250:
                             sig_data = self.evaluate_stock_signal(ticker, df)
+                            sig_data["scan_completed_at"] = scan_ts
                             sig_data["data_freshness"] = "INSUFFICIENT_DATA"
+                            sig_data["validation_status"] = "INSUFFICIENT_DATA"
+                            sig_data["is_fresh_analysis"] = True
+                            # Never promote missing history to BUY — evaluate_stock_signal already returns INSUFFICIENT DATA
                             sig_data["latest_refresh_status"] = "INSUFFICIENT_DATA"
                             cur.failed_stocks += 1
                             failed_tickers.append(ticker)

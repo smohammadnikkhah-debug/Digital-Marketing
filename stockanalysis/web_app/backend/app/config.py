@@ -135,6 +135,16 @@ DEFAULT_TRAIN_YEARS = 5
 DEFAULT_FEE_BPS = 10.0
 DEFAULT_MIN_BUYS = 2
 
+# Authoritative V4.0 scanner provenance (Stage D2.4B)
+V40_SIGNAL_SOURCE = "V40_SCANNER"
+V40_STRATEGY_VERSION = "V4.0 Baseline (via V4.1 Engine in exit_mode=baseline)"
+
+# D2.4H: USER_POLICY (default for dashboard/workflow) | SHARIAH_STRICT | LEGACY
+# DecisionContext.eligibility_mode=None keeps pre-D2.4H unit-test behavior (LEGACY).
+INVESTMENT_ELIGIBILITY_MODE = os.getenv("INVESTMENT_ELIGIBILITY_MODE", "USER_POLICY").strip().upper()
+# Parallel financial-risk UI recommendations must never share this source id
+RISK_UI_SIGNAL_SOURCE = "FINANCIAL_RISK_UI"
+
 # Signal Colors (from V4.0 Excel definition)
 SIGNAL_PALETTE = {
     "BUY CANDIDATE": {"bg": "#C6EFCE", "text": "#006100", "border": "#A3E4B0"},
@@ -151,5 +161,6 @@ DATA_PROVENANCE = {
     "as_of_date": "2026-10-09",
     "description": "Audited V4.0 quantitative baseline research snapshot. 100% deterministic, cached Yahoo adjusted OHLC.",
     "is_refreshed": False,
-    "strategy_version": "V4.0 Baseline (via V4.1 Engine in --exit-mode baseline)",
+    "strategy_version": V40_STRATEGY_VERSION,
+    "signal_source": V40_SIGNAL_SOURCE,
 }

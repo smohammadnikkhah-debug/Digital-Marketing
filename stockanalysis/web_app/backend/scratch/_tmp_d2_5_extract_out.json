@@ -1,0 +1,2175 @@
+{
+  "latest_post_close": "d2_4l_20261028T203002Z",
+  "trading_day": "2026-10-28",
+  "freshness": {
+    "status": "FRESH",
+    "reason_code": "SESSION_AS_OF_MATCH",
+    "expected_session": "2026-10-28",
+    "as_of_distribution": {
+      "2026-10-28": 227
+    },
+    "matching_expected_count": 227,
+    "evaluable_count": 227,
+    "coverage_pct_matching_expected": 100.0,
+    "excluded_ticker_count": 0,
+    "excluded_tickers": [],
+    "data_freshness_counts": {
+      "FRESH": 227
+    },
+    "provenance_mode_counts": {
+      "LIVE_SCAN": 227
+    },
+    "strategy_version_counts": {
+      "V4.0 Baseline (via V4.1 Engine in exit_mode=baseline)": 227
+    },
+    "signal_source_counts": {
+      "V40_SCANNER": 227
+    },
+    "scan_completed_at_samples": [
+      "2026-10-28T20:30:09Z",
+      "2026-10-28T20:30:10Z",
+      "2026-10-28T20:30:11Z",
+      "2026-10-28T20:30:13Z",
+      "2026-10-28T20:30:14Z"
+    ],
+    "scan_completed_at_max": "2026-10-28T20:35:39Z",
+    "expected_strategy_version": "V4.0 Baseline (via V4.1 Engine in exit_mode=baseline)",
+    "expected_signal_source": "V40_SCANNER",
+    "provenance_issues": [],
+    "fabricated_freshness": false,
+    "note": null
+  },
+  "scan_summary": {
+    "universe_count": 227,
+    "successfully_scanned": 227,
+    "signal_distribution": {
+      "BUY CANDIDATE": 32,
+      "HOLD": 3,
+      "WATCH": 116,
+      "AVOID": 76
+    },
+    "scanner_runtime_seconds": 336.097,
+    "data_quality_failures": 0,
+    "partial_universe": false
+  },
+  "signal_distribution_bundle": {
+    "BUY CANDIDATE": 32,
+    "HOLD": 3,
+    "WATCH": 116,
+    "AVOID": 76
+  },
+  "policy_eligibility_breakdown": {
+    "ALLOWED": 181,
+    "EXCLUDED": 22,
+    "REVIEW REQUIRED": 24
+  },
+  "buy_candidates_count": 32,
+  "buy_candidates_by_policy_counts": {
+    "ALLOWED": 28,
+    "EXCLUDED": 4,
+    "REVIEW REQUIRED": 0
+  },
+  "buy_candidates": [
+    {
+      "ticker": "SPY",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "AMD",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "NOW",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "INTC",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CRWD",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MSFT",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "ZS",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "PYPL",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CSCO",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "TSM",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "TXN",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MU",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "DHR",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "GILD",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "ELV",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CI",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "V",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MS",
+      "entry_rule": "MA50_AT_CROSS",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CB",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "ROST",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MO",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "DG",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "EMR",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "XOM",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "COP",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MPC",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "KMI",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "APD",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "NUE",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "XLP",
+      "entry_rule": "DELAYED_MA50",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "SOXX",
+      "entry_rule": "DELAYED_STACK",
+      "_all_keys": [
+        "entry_rule",
+        "investment",
+        "policy",
+        "signal_price",
+        "ticker"
+      ]
+    }
+  ],
+  "excluded_buy_candidates": [
+    {
+      "ticker": "SPY",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MS",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MO",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "XLP",
+      "_all_keys": [
+        "ticker"
+      ]
+    }
+  ],
+  "review_buy_candidates": [],
+  "allowed_buy_candidates": [
+    {
+      "ticker": "AMD",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "NOW",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "INTC",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CRWD",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MSFT",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "ZS",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "PYPL",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CSCO",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "TSM",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "TXN",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MU",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "DHR",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "GILD",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "ELV",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CI",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "V",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "CB",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "ROST",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "DG",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "EMR",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "XOM",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "COP",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "MPC",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "KMI",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "APD",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "NUE",
+      "_all_keys": [
+        "ticker"
+      ]
+    },
+    {
+      "ticker": "SOXX",
+      "_all_keys": [
+        "ticker"
+      ]
+    }
+  ],
+  "policy_rejects_from_signals_count": 0,
+  "policy_rejects_sample": [],
+  "proposals_by_run": {
+    "d2_4l_20261027T134503Z": [
+      {
+        "ticker": "NOW",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "ZS",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "DHR",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "ELV",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "CB",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "DG",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "EMR",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "MPC",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "NUE",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      }
+    ],
+    "d2_4l_20261028T134502Z": [
+      {
+        "ticker": "PLTR",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "ELV",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "CI",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "EMR",
+        "proposal": {},
+        "decision": null,
+        "investment_classification": null,
+        "execution_readiness": null,
+        "ranking": null,
+        "reason_codes": null,
+        "_keys": [
+          "idempotency_key",
+          "pilot_rank",
+          "proposed_limit",
+          "proposed_notional",
+          "proposed_qty",
+          "ticker"
+        ]
+      }
+    ]
+  },
+  "perf_by_run": {
+    "d2_4l_20261027T134503Z": [
+      {
+        "ticker": "NOW",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "NOW",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 158.17999267578125,
+          "proposed_limit": 153.57,
+          "proposed_quantity": 3,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "ZS",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "ZS",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_MA50",
+          "signal_price": 260.45001220703125,
+          "proposed_limit": 261.36,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "DHR",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "DHR",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_MA50",
+          "signal_price": 232.97000122070312,
+          "proposed_limit": 232.01,
+          "proposed_quantity": 2,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "ELV",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "ELV",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 431.3200073242188,
+          "proposed_limit": 431.61,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "CB",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "CB",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_MA50",
+          "signal_price": 356.739990234375,
+          "proposed_limit": 374.58,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "DG",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "DG",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 128.4199981689453,
+          "proposed_limit": 134.22,
+          "proposed_quantity": 3,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "EMR",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "EMR",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_MA50",
+          "signal_price": 161.6999969482422,
+          "proposed_limit": 162.94,
+          "proposed_quantity": 3,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "MPC",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "MPC",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 470.6400146484375,
+          "proposed_limit": 482.68,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "NUE",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "NUE",
+          "signal_date": "2026-10-26",
+          "strategy_rule": "DELAYED_MA50",
+          "signal_price": 257.3500061035156,
+          "proposed_limit": 278.15,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      }
+    ],
+    "d2_4l_20261028T134502Z": [
+      {
+        "ticker": "PLTR",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "PLTR",
+          "signal_date": "2026-10-27",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 198.72999572753903,
+          "proposed_limit": 197.48,
+          "proposed_quantity": 2,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "ELV",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "ELV",
+          "signal_date": "2026-10-27",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 421.489990234375,
+          "proposed_limit": 420.89,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "CI",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "CI",
+          "signal_date": "2026-10-27",
+          "strategy_rule": "DELAYED_STACK",
+          "signal_price": 298.2799987792969,
+          "proposed_limit": 298.16,
+          "proposed_quantity": 1,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      },
+      {
+        "ticker": "EMR",
+        "investment_classification": "BUY_READY",
+        "performance": {
+          "ticker": "EMR",
+          "signal_date": "2026-10-27",
+          "strategy_rule": "DELAYED_MA50",
+          "signal_price": 166.27000427246094,
+          "proposed_limit": 168.04,
+          "proposed_quantity": 2,
+          "fill_approximation_id": "BUY_LIMIT_TOUCHED_BY_SUBSEQUENT_LOW",
+          "fill_approximation_doc": "WOULD_HAVE_FILLED iff a subsequent regular-session bar Low <= proposed limit_price within lookforward_bars after signal date. NOT a broker fill.",
+          "is_real_broker_fill": false,
+          "lookforward_bars": 5,
+          "sufficient_data": false,
+          "subsequent_reference_prices": [],
+          "error": "NO_SUBSEQUENT_BARS",
+          "would_have_filled_approx": null
+        }
+      }
+    ]
+  },
+  "sample_buy_keys": [
+    "entry_rule",
+    "investment",
+    "policy",
+    "signal_price",
+    "ticker"
+  ],
+  "db": {
+    "active": 228,
+    "signal_dist": [
+      [
+        "WATCH",
+        101
+      ],
+      [
+        "AVOID",
+        90
+      ],
+      [
+        "BUY CANDIDATE",
+        29
+      ],
+      [
+        "HOLD",
+        5
+      ],
+      [
+        null,
+        2
+      ],
+      [
+        "INSUFFICIENT DATA",
+        1
+      ]
+    ],
+    "buy_candidates": [
+      {
+        "ticker": "APD",
+        "signal": "BUY CANDIDATE",
+        "close": 292.53,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Basic Materials",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "CB",
+        "signal": "BUY CANDIDATE",
+        "close": 359.79,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Financial Services",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "CI",
+        "signal": "BUY CANDIDATE",
+        "close": 302.3,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Healthcare",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "COP",
+        "signal": "BUY CANDIDATE",
+        "close": 142.34,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Energy",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "CRM",
+        "signal": "BUY CANDIDATE",
+        "close": 242.43,
+        "entry_rule": "DELAYED_STACK",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "data_freshness",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "D",
+        "signal": "BUY CANDIDATE",
+        "close": 62.8,
+        "entry_rule": "CROSS",
+        "sector": "Utilities",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "DG",
+        "signal": "BUY CANDIDATE",
+        "close": 129.94,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Consumer Defensive",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "DHR",
+        "signal": "BUY CANDIDATE",
+        "close": 224.43,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Healthcare",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "ELV",
+        "signal": "BUY CANDIDATE",
+        "close": 428.26,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Healthcare",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "EMR",
+        "signal": "BUY CANDIDATE",
+        "close": 161.08,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Industrials",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "GILD",
+        "signal": "BUY CANDIDATE",
+        "close": 156.19,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Healthcare",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "KMI",
+        "signal": "BUY CANDIDATE",
+        "close": 33.35,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Energy",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "MDB",
+        "signal": "BUY CANDIDATE",
+        "close": 348.69,
+        "entry_rule": "MA50_AT_CROSS",
+        "sector": "Technology",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "MO",
+        "signal": "BUY CANDIDATE",
+        "close": 73.13,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Consumer Defensive",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "MPC",
+        "signal": "BUY CANDIDATE",
+        "close": 484.92,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Energy",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "MRK",
+        "signal": "BUY CANDIDATE",
+        "close": 143.63,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Healthcare",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "MU",
+        "signal": "BUY CANDIDATE",
+        "close": 904.9,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Technology",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "NUE",
+        "signal": "BUY CANDIDATE",
+        "close": 257.11,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Basic Materials",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "PLTR",
+        "signal": "BUY CANDIDATE",
+        "close": 192.6,
+        "entry_rule": "DELAYED_STACK",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "data_freshness",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "PYPL",
+        "signal": "BUY CANDIDATE",
+        "close": 56.51,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Financial Services",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "ROST",
+        "signal": "BUY CANDIDATE",
+        "close": 230.57,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Consumer Cyclical",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "SOXX",
+        "signal": "BUY CANDIDATE",
+        "close": 519.42,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "ETFs",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "TSM",
+        "signal": "BUY CANDIDATE",
+        "close": 420.22,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Technology",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "TXN",
+        "signal": "BUY CANDIDATE",
+        "close": 276.15,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Technology",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "V",
+        "signal": "BUY CANDIDATE",
+        "close": 402.61,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Financial Services",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "VZ",
+        "signal": "BUY CANDIDATE",
+        "close": 44.42,
+        "entry_rule": "CROSS",
+        "sector": "Communication Services",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "XLP",
+        "signal": "BUY CANDIDATE",
+        "close": 86.06,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "ETFs",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "XOM",
+        "signal": "BUY CANDIDATE",
+        "close": 177.01,
+        "entry_rule": "DELAYED_STACK",
+        "sector": "Energy",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      },
+      {
+        "ticker": "ZS",
+        "signal": "BUY CANDIDATE",
+        "close": 212.53,
+        "entry_rule": "DELAYED_MA50",
+        "sector": "Technology",
+        "shariah_status": "NOT VERIFIED",
+        "_all_keys": [
+          "as_of",
+          "atr14",
+          "close",
+          "color_bg",
+          "color_text",
+          "company_name",
+          "data_freshness",
+          "data_status",
+          "delayed_stage",
+          "entry_rule",
+          "entry_type",
+          "exchange",
+          "exit_rule",
+          "explanation",
+          "is_simulated_position",
+          "ma250",
+          "ma30",
+          "ma50",
+          "name",
+          "order_notice",
+          "roc20_pct",
+          "sector",
+          "shariah_status",
+          "signal",
+          "ticker"
+        ]
+      }
+    ],
+    "backtest_runs": 0,
+    "paper_orders": 0,
+    "active_snapshot": {
+      "id": "snap_baseline_20261021_232124",
+      "market_as_of_date": "2026-10-20",
+      "buy_candidates_count": 29,
+      "total_stocks": 231,
+      "created_at": "2026-10-21 23:21:24.539748"
+    }
+  },
+  "user_policy_files": [
+    "business_activity_evidence.json",
+    "etf_fund_evidence.json",
+    "proposed_universe_additions.json"
+  ]
+}

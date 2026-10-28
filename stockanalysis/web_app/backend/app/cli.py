@@ -217,6 +217,15 @@ def run_market_open():
     print(f"[MarketOpen] Market open job complete. Refreshed quotes for {updated} securities.")
 
 
+def enqueue_market_close_refresh(force_all: bool = False) -> dict:
+    """Enqueue the market-close full-universe V4.0 refresh (testable entry point).
+
+    Maps to scanner_service job_type='MARKET_CLOSE', which resolves the eligible
+    universe the same way as FULL without requiring an explicit ticker list.
+    """
+    return scanner_service.start_refresh_async(force_all=force_all, job_type="MARKET_CLOSE")
+
+
 def run_market_close(max_retries: int = 5, retry_delay: int = 45):
     """Market Close Job (Target: 4:30 PM America/New_York, or 1:30 PM on early closes):
     1. Timezone Guard: Verifies local New York time is past market close.
@@ -283,8 +292,10 @@ def run_market_close(max_retries: int = 5, retry_delay: int = 45):
             "Proceeding with available data; any unsettled stocks will be flagged as STALE."
         )
 
-    # Start refresh pipeline
-    res = scanner_service.start_refresh_async(force_all=False, job_type="MARKET_CLOSE")
+    # Start refresh pipeline.
+    # MARKET_CLOSE is a full-universe alias accepted by scanner_service.start_refresh_async
+    # (resolves eligible universe identically to FULL while preserving market-close audit job_type).
+    res = enqueue_market_close_refresh(force_all=False)
     job_id = res.get("job_id")
 
     if not job_id:
