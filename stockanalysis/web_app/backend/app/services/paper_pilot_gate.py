@@ -41,6 +41,14 @@ from app.services.order_execution_service import (
     DEFAULT_MAX_ORDER_NOTIONAL_USD,
 )
 from app.services.order_proposal_engine import STAGE_APPROVAL_ENABLED, STAGE_SUBMISSION_ENABLED
+from app.services.paper_pilot_bundle import select_current_session_pilot_bundle
+from app.services.paper_pilot_safety import (
+    evaluate_candidate_execution_safety,
+    extract_broker_quote_timestamp,
+    validate_quote_for_pilot,
+    validate_signal_for_pilot,
+    validate_us_regular_session,
+)
 from app.services.user_policy_eligibility import classify_user_policy
 
 logger = logging.getLogger("stockanalysis.paper_pilot_gate")
@@ -106,8 +114,8 @@ def assess_soak_prerequisite(ledger: Optional[Dict[str, Any]] = None) -> Dict[st
     if not soak_complete:
         remaining = (
             f"Need {target - len(completed)} more completed observation pair(s). "
-            "Await unattended next_session for pair opened by latest post_close "
-            "(currently 2026-10-28→2026-10-29). Keep all execution flags disabled."
+            "Keep all execution flags disabled. Soak remains a separate "
+            "authorization prerequisite from current-session pilot bundles."
         )
 
     return {
@@ -123,24 +131,22 @@ def assess_soak_prerequisite(ledger: Optional[Dict[str, Any]] = None) -> Dict[st
     }
 
 
-def _latest_post_close_bundle() -> Tuple[Optional[Path], Optional[Dict[str, Any]]]:
-    """Prefer soak-ledger post_close evidence; fall back to newest d2_4l_*post_close bundle."""
-    ledger = load_soak_ledger()
-    sessions = ledger.get("sessions") or []
-    post_closes = [s for s in sessions if s.get("mode") == "post_close" and s.get("eligible")]
-    if post_closes:
-        latest = post_closes[-1]
-        evidence = Path(latest.get("evidence_dir") or "")
-        bundle_path = evidence / "session_bundle.json"
-        if bundle_path.exists():
-            return bundle_path, json.loads(bundle_path.read_text(encoding="utf-8"))
+def _latest_post_close_bundle(
+    *,
+    now_utc: Optional[datetime] = None,
+) -> Tuple[Optional[Path], Optional[Dict[str, Any]], Dict[str, Any]]:
+    """Session-aware pilot bundle selection (D2.6C).
 
-    candidates = sorted(EVIDENCE_DIR.glob("d2_4l_*/session_bundle.json"), reverse=True)
-    for path in candidates:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if data.get("mode") == "post_close":
-            return path, data
-    return None, None
+    Returns (path, bundle, selection_meta). Never silently returns an older
+    session as current — missing current → CURRENT_SESSION_BUNDLE_MISSING.
+    """
+    selection = select_current_session_pilot_bundle(now_utc=now_utc)
+    if not selection.get("ok"):
+        return None, None, selection
+    path_raw = selection.get("bundle_path")
+    bundle = selection.get("bundle")
+    path = Path(path_raw) if path_raw else None
+    return path, bundle, selection
 
 
 def list_allowed_buy_candidates(bundle: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -237,11 +243,38 @@ def select_pilot_candidate(
     *,
     client: Optional[AlpacaReadOnlyClient] = None,
     max_order_notional_usd: float = DEFAULT_MAX_ORDER_NOTIONAL_USD,
+    now_utc: Optional[datetime] = None,
+    bundle_selection: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Highest scan-ranked ALLOWED BUY with fresh signal and live whole-share ≤ cap."""
-    bundle_path, bundle = _latest_post_close_bundle()
+    """Highest scan-ranked ALLOWED BUY with fresh signal, safe quote, and whole-share ≤ cap.
+
+    Ranking method is unchanged (D2E_BUY_READY_SEQUENCE_THEN_TICKER). Quote / signal
+    hard failures are recorded on skipped_higher_rank before lower ranks are tried.
+    Market-session failures do not discard research selection, but they block
+    preview_ready via build_order_preview / run_d2_6_readiness.
+
+    Bundle source is session-aware (D2.6C): required completed US session only.
+    """
+    now = now_utc or datetime.now(timezone.utc)
+    if bundle_selection is None:
+        bundle_path, bundle, bundle_selection = _latest_post_close_bundle(now_utc=now)
+    else:
+        bundle_path = (
+            Path(bundle_selection["bundle_path"])
+            if bundle_selection.get("bundle_path")
+            else None
+        )
+        bundle = bundle_selection.get("bundle")
+
     if not bundle:
-        return {"selected": False, "reason_code": "NO_POST_CLOSE_BUNDLE"}
+        return {
+            "selected": False,
+            "reason_code": bundle_selection.get("reason_code")
+            or "CURRENT_SESSION_BUNDLE_MISSING",
+            "reason_codes": list(bundle_selection.get("reason_codes") or ["CURRENT_SESSION_BUNDLE_MISSING"]),
+            "bundle_selection": bundle_selection,
+            "required_completed_session": bundle_selection.get("required_completed_session"),
+        }
 
     freshness = (bundle.get("freshness") or {}).get("status")
     if freshness != "FRESH":
@@ -249,18 +282,27 @@ def select_pilot_candidate(
             "selected": False,
             "reason_code": "BUNDLE_NOT_FRESH",
             "freshness": freshness,
-            "bundle_path": str(bundle_path),
+            "bundle_path": str(bundle_path) if bundle_path else None,
+            "bundle_selection": bundle_selection,
         }
 
     allowed = list_allowed_buy_candidates(bundle)
     if not allowed:
-        return {"selected": False, "reason_code": "NO_ALLOWED_BUY_CANDIDATES", "bundle_path": str(bundle_path)}
+        return {
+            "selected": False,
+            "reason_code": "NO_ALLOWED_BUY_CANDIDATES",
+            "bundle_path": str(bundle_path) if bundle_path else None,
+            "bundle_selection": bundle_selection,
+        }
 
     own_client = client is None
     if client is None:
         client, status = try_load_readonly_client()
         if client is None:
             return {"selected": False, "reason_code": status or "ALPACA_UNAVAILABLE"}
+
+    session_v = validate_us_regular_session(now_utc=now)
+    research_fallback: Optional[Dict[str, Any]] = None
 
     try:
         snap = client.get_account_snapshot()
@@ -275,7 +317,28 @@ def select_pilot_candidate(
                 bid = float(q.get("bid") or 0)
             except (TypeError, ValueError):
                 ask, bid = 0.0, 0.0
-            sizing = size_whole_share_limit(ask=ask, max_order_notional_usd=max_order_notional_usd, cash=cash)
+
+            quote_ts = extract_broker_quote_timestamp(q)
+            live_quote = {
+                "bid": bid,
+                "ask": ask,
+                "source": q.get("source"),
+                "quote_timestamp": quote_ts,
+                # Legacy key retained for evidence compatibility; broker emission time only
+                "timestamp": quote_ts,
+                "is_two_sided": q.get("is_two_sided"),
+                "meets_30s_freshness": q.get("meets_30s_freshness"),
+                "received_at": q.get("received_at"),
+                "note": (
+                    "Limit priced from this live Alpaca quote ask — "
+                    "not from historical observation proposal prices. "
+                    "Freshness uses quote_timestamp only (never received_at / wall clock)."
+                ),
+            }
+
+            sizing = size_whole_share_limit(
+                ask=ask, max_order_notional_usd=max_order_notional_usd, cash=cash
+            )
             if not sizing.get("ok"):
                 skipped.append(
                     {
@@ -284,71 +347,177 @@ def select_pilot_candidate(
                         "ask": ask,
                         "bid": bid,
                         "quote_source": q.get("source"),
-                        "reason_codes": sizing.get("reason_codes"),
+                        "quote_timestamp": quote_ts,
+                        "reason_codes": list(sizing.get("reason_codes") or []),
                         "research_close": row.get("signal_close"),
                     }
                 )
                 continue
-            # Fresh signal gate
-            if str(row.get("data_freshness") or "").upper() != "FRESH":
-                skipped.append({**row, "reason_codes": ["SIGNAL_NOT_FRESH"]})
+
+            safety = evaluate_candidate_execution_safety(
+                quote=live_quote,
+                candidate=row,
+                bundle=bundle,
+                now_utc=now,
+            )
+            quote_v = safety["quote_validation"]
+            signal_v = safety["signal_validation"]
+            # Quote + signal are hard selection gates; market session is preview-only
+            hard_blockers = list(quote_v.get("reason_codes") or []) + list(
+                signal_v.get("reason_codes") or []
+            )
+            if hard_blockers:
+                skipped.append(
+                    {
+                        "ticker": ticker,
+                        "scan_rank": row["scan_rank"],
+                        "ask": ask,
+                        "bid": bid,
+                        "quote_source": q.get("source"),
+                        "quote_timestamp": quote_ts,
+                        "spread_pct": quote_v.get("spread_pct"),
+                        "reason_codes": hard_blockers,
+                        "quote_validation": quote_v,
+                        "signal_validation": signal_v,
+                        "research_close": row.get("signal_close"),
+                        "market_as_of_date": row.get("market_as_of_date"),
+                    }
+                )
+                # Keep first affordable research candidate for closed-session display
+                if research_fallback is None:
+                    research_fallback = {
+                        "selected": True,
+                        "reason_code": "RESEARCH_ONLY_SAFETY_BLOCKED",
+                        "ranking_method": RANKING_METHOD_ID,
+                        "ranking_notes": describe_ranking_methodology(),
+                        "bundle_path": str(bundle_path) if bundle_path else None,
+                        "trading_day": bundle.get("trading_day"),
+                        "bundle_freshness": freshness,
+                        "bundle_selection": bundle_selection,
+                        "candidate": row,
+                        "live_quote": live_quote,
+                        "sizing": sizing,
+                        "execution_safety": safety,
+                        "account_cash": cash,
+                        "account_id_redacted": (
+                            f"****{(snap.account_id or '')[-4:]}"
+                            if snap.account_id and len(snap.account_id) > 4
+                            else "****"
+                        ),
+                        "skipped_higher_rank": list(skipped),
+                        "evaluated_at_utc": now.astimezone(timezone.utc).isoformat()
+                        if now.tzinfo
+                        else now.replace(tzinfo=timezone.utc).isoformat(),
+                    }
                 continue
+
+            # Attach current session validation (may still block preview if closed)
+            safety = {
+                **safety,
+                "session_validation": session_v,
+                "reason_codes": list(session_v.get("reason_codes") or []),
+                "ok": bool(session_v.get("ok")),
+            }
             return {
                 "selected": True,
-                "reason_code": "OK",
+                "reason_code": "OK" if safety.get("ok") else "SELECTED_SESSION_BLOCKED",
                 "ranking_method": RANKING_METHOD_ID,
                 "ranking_notes": describe_ranking_methodology(),
-                "bundle_path": str(bundle_path),
+                "bundle_path": str(bundle_path) if bundle_path else None,
                 "trading_day": bundle.get("trading_day"),
                 "bundle_freshness": freshness,
+                "bundle_selection": bundle_selection,
                 "candidate": row,
                 "live_quote": {
-                    "bid": bid,
-                    "ask": ask,
-                    "source": q.get("source"),
-                    "timestamp": q.get("timestamp") or q.get("asof") or q.get("t"),
-                    "is_two_sided": q.get("is_two_sided"),
-                    "meets_30s_freshness": q.get("meets_30s_freshness"),
-                    "note": (
-                        "Limit priced from this live Alpaca quote ask — "
-                        "not from historical observation proposal prices."
-                    ),
+                    **live_quote,
+                    "spread_pct": quote_v.get("spread_pct"),
+                    "quote_age_seconds": quote_v.get("quote_age_seconds"),
                 },
                 "sizing": sizing,
+                "execution_safety": safety,
                 "account_cash": cash,
                 "account_id_redacted": (
-                    f"****{(snap.account_id or '')[-4:]}" if snap.account_id and len(snap.account_id) > 4 else "****"
+                    f"****{(snap.account_id or '')[-4:]}"
+                    if snap.account_id and len(snap.account_id) > 4
+                    else "****"
                 ),
                 "skipped_higher_rank": skipped,
+                "evaluated_at_utc": now.astimezone(timezone.utc).isoformat()
+                if now.tzinfo
+                else now.replace(tzinfo=timezone.utc).isoformat(),
             }
+
+        if research_fallback is not None:
+            research_fallback["skipped_higher_rank"] = skipped
+            # Prefer showing research when market closed with only quote/signal failures elsewhere
+            return research_fallback
+
         return {
             "selected": False,
             "reason_code": "NO_AFFORDABLE_ALLOWED_CANDIDATE",
-            "bundle_path": str(bundle_path),
+            "bundle_path": str(bundle_path) if bundle_path else None,
+            "bundle_selection": bundle_selection,
             "skipped": skipped,
             "allowed_count": len(allowed),
+            "session_validation": session_v,
         }
     finally:
         if own_client:
             pass  # client has no close(); GC is fine
 
 
-def build_order_preview(selection: Dict[str, Any]) -> Dict[str, Any]:
-    """Single LIMIT order preview — preparation artifact only."""
-    if not selection.get("selected"):
-        return {"preview_ready": False, "reason_code": selection.get("reason_code")}
+def build_order_preview(
+    selection: Dict[str, Any],
+    *,
+    now_utc: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    """Single LIMIT order preview — preparation artifact only.
 
+    preview_ready requires quote, US regular session, and signal safety to pass.
+    """
+    if not selection.get("selected"):
+        return {
+            "preview_ready": False,
+            "reason_code": selection.get("reason_code"),
+            "reason_codes": [selection.get("reason_code")] if selection.get("reason_code") else [],
+            "execution_status": "PREVIEW_BLOCKED_NO_CANDIDATE",
+        }
+
+    now = now_utc or datetime.now(timezone.utc)
     c = selection["candidate"]
     sizing = selection["sizing"]
-    quote = selection["live_quote"]
+    quote = dict(selection.get("live_quote") or {})
     atr = c.get("atr14")
     qty = int(sizing["qty"])
     limit_price = float(sizing["limit_price"])
     notional = float(sizing["notional"])
     atr_dollar = round(float(atr) * qty, 2) if atr is not None else None
 
-    return {
-        "preview_ready": True,
+    safety = selection.get("execution_safety")
+    if not safety:
+        safety = evaluate_candidate_execution_safety(
+            quote=quote,
+            candidate=c,
+            bundle={"trading_day": selection.get("trading_day")},
+            now_utc=now,
+        )
+
+    safety_ok = bool(safety.get("ok"))
+    reason_codes = list(safety.get("reason_codes") or [])
+    quote_v = safety.get("quote_validation") or validate_quote_for_pilot(quote, now_utc=now)
+    session_v = safety.get("session_validation") or validate_us_regular_session(now_utc=now)
+    signal_v = safety.get("signal_validation") or validate_signal_for_pilot(
+        c, bundle={"trading_day": selection.get("trading_day")}, now_utc=now
+    )
+
+    preview_ready = safety_ok and not reason_codes
+    if not preview_ready and not reason_codes:
+        reason_codes = ["EXECUTION_SAFETY_FAILED"]
+
+    payload = {
+        "preview_ready": preview_ready,
+        "reason_code": None if preview_ready else (reason_codes[0] if reason_codes else "NOT_READY"),
+        "reason_codes": reason_codes,
         "stage": PILOT_STAGE,
         "order": {
             "ticker": c["ticker"],
@@ -400,7 +569,18 @@ def build_order_preview(selection: Dict[str, Any]) -> Dict[str, Any]:
             "pilot_max_orders": PILOT_MAX_ORDERS,
             "note": "Do not invent a stop price; use strategy exit rule + $500 hard cap as risk bound.",
         },
-        "live_quote": quote,
+        "live_quote": {
+            **quote,
+            "spread_pct": quote_v.get("spread_pct"),
+            "quote_age_seconds": quote_v.get("quote_age_seconds"),
+        },
+        "execution_safety": {
+            "ok": safety_ok,
+            "reason_codes": reason_codes,
+            "quote_validation": quote_v,
+            "session_validation": session_v,
+            "signal_validation": signal_v,
+        },
         "safety_checks_that_must_pass_before_submit": [
             "D2.4L soak_complete == True (3 completed pairs)",
             "IBKR_EMERGENCY_STOP remains True until explicitly authorized otherwise for paper path",
@@ -408,6 +588,10 @@ def build_order_preview(selection: Dict[str, Any]) -> Dict[str, Any]:
             "ALPACA_ENV == paper and trading URL is paper-api.alpaca.markets (not api.alpaca.markets)",
             "USER_POLICY status ALLOWED re-checked at approval time",
             "Live Alpaca quote ask > 0 and whole-share qty >= 1 under $500",
+            "Broker quote_timestamp present, timezone-aware, ≤30s old, not materially future",
+            "Bid/ask valid and spread ≤ 1% of midpoint",
+            "US regular trading session (America/New_York calendar; holidays/early closes)",
+            "Signal market_as_of equals last completed US equity session (strategy carry-forward)",
             "Account cash >= notional; open_orders == 0; daily caps not exceeded",
             "No existing long position in ticker",
             "STAGE path: propose → AWAITING_APPROVAL → manual approve → single submit (no auto-retry)",
@@ -420,8 +604,11 @@ def build_order_preview(selection: Dict[str, Any]) -> Dict[str, Any]:
             "sdk_path": ALPACA_PAPER_SUBMIT_SDK,
             "called_in_d2_6": False,
         },
-        "execution_status": "PREVIEW_ONLY_NOT_SUBMITTED",
+        "execution_status": (
+            "PREVIEW_ONLY_NOT_SUBMITTED" if preview_ready else "PREVIEW_BLOCKED_SAFETY"
+        ),
     }
+    return payload
 
 
 def verify_pilot_gate_invariants(state: Optional[PilotGateState] = None) -> Dict[str, Any]:
@@ -544,12 +731,22 @@ def assess_tracking_readiness(client: Optional[AlpacaReadOnlyClient] = None) -> 
     }
 
 
-def run_d2_6_readiness(*, write_evidence: bool = True) -> Dict[str, Any]:
-    """Full D2.6 preparation assessment — never submits orders."""
-    gate = verify_pilot_gate_invariants()
-    soak = assess_soak_prerequisite()
+def run_d2_6_readiness(
+    *,
+    write_evidence: bool = True,
+    now_utc: Optional[datetime] = None,
+    client: Optional[AlpacaReadOnlyClient] = None,
+    selection: Optional[Dict[str, Any]] = None,
+    soak_ledger: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Full D2.6 preparation assessment — never submits orders.
 
-    client, client_status = try_load_readonly_client()
+    Optional client/selection/now_utc/soak_ledger enable deterministic tests.
+    """
+    now = now_utc or datetime.now(timezone.utc)
+    gate = verify_pilot_gate_invariants()
+    soak = assess_soak_prerequisite(soak_ledger)
+
     alpaca_report = None
     endpoint_check = {
         "configured_trading_url": None,
@@ -559,20 +756,27 @@ def run_d2_6_readiness(*, write_evidence: bool = True) -> Dict[str, Any]:
         "submit_invoked": False,
         "submit_blocked": None,
     }
-    selection: Dict[str, Any] = {"selected": False, "reason_code": "ALPACA_UNAVAILABLE"}
-    if client is not None:
-        alpaca_report = client.validate_readonly()
-        endpoint_check["configured_trading_url"] = getattr(client.adapter, "trading_url", None)
-        url = str(endpoint_check["configured_trading_url"] or "").lower().rstrip("/")
-        endpoint_check["is_paper_endpoint"] = url.startswith("https://paper-api.alpaca.markets")
-        endpoint_check["live_endpoint_rejected"] = url.startswith("https://api.alpaca.markets")
-        endpoint_check["submit_blocked"] = bool(alpaca_report.get("order_submission_blocked"))
-        selection = select_pilot_candidate(client=client)
-    else:
-        selection = {"selected": False, "reason_code": client_status}
+    own_client = client is None and selection is None
+    client_status = None
+    if selection is None:
+        if client is None:
+            client, client_status = try_load_readonly_client()
+        if client is not None:
+            alpaca_report = client.validate_readonly()
+            endpoint_check["configured_trading_url"] = getattr(client.adapter, "trading_url", None)
+            url = str(endpoint_check["configured_trading_url"] or "").lower().rstrip("/")
+            endpoint_check["is_paper_endpoint"] = url.startswith("https://paper-api.alpaca.markets")
+            endpoint_check["live_endpoint_rejected"] = url.startswith("https://api.alpaca.markets")
+            endpoint_check["submit_blocked"] = bool(alpaca_report.get("order_submission_blocked"))
+            selection = select_pilot_candidate(client=client, now_utc=now)
+        else:
+            selection = {"selected": False, "reason_code": client_status or "ALPACA_UNAVAILABLE"}
 
-    preview = build_order_preview(selection)
-    tracking = assess_tracking_readiness(client)
+    preview = build_order_preview(selection, now_utc=now)
+    tracking = assess_tracking_readiness(client if not own_client or client is not None else client)
+
+    safety = preview.get("execution_safety") or selection.get("execution_safety") or {}
+    safety_codes = list(preview.get("reason_codes") or safety.get("reason_codes") or [])
 
     # GO only if soak complete AND preview ready AND gate intact AND submit still blocked in prep
     blockers: List[str] = []
@@ -580,28 +784,61 @@ def run_d2_6_readiness(*, write_evidence: bool = True) -> Dict[str, Any]:
         blockers.append(soak.get("remaining") or "Soak incomplete")
     if not gate.get("passed"):
         blockers.append(f"Pilot gate failures: {gate.get('failures')}")
+    bundle_sel = selection.get("bundle_selection") or {}
+    bundle_codes = list(selection.get("reason_codes") or bundle_sel.get("reason_codes") or [])
+    if selection.get("reason_code") == "CURRENT_SESSION_BUNDLE_MISSING" or (
+        "CURRENT_SESSION_BUNDLE_MISSING" in bundle_codes
+    ):
+        blockers.append("CURRENT_SESSION_BUNDLE_MISSING")
+    if not selection.get("selected"):
+        blockers.append(
+            f"No pilot candidate selected: {selection.get('reason_code') or 'NO_CANDIDATE'}"
+        )
     if not preview.get("preview_ready"):
-        blockers.append(f"No order preview: {preview.get('reason_code') or selection.get('reason_code')}")
+        detail = preview.get("reason_code") or selection.get("reason_code") or "NOT_READY"
+        if safety_codes:
+            blockers.append(f"Order preview not execution-ready: {', '.join(safety_codes)}")
+        else:
+            blockers.append(f"No order preview: {detail}")
+    # Surface each hard safety code explicitly in the JSON blockers list
+    for code in safety_codes:
+        if code not in blockers:
+            blockers.append(code)
+    for code in bundle_codes:
+        if code not in blockers:
+            blockers.append(code)
     if alpaca_report and not alpaca_report.get("order_submission_blocked", True):
         blockers.append("Order submission unexpectedly unblocked during preparation")
     if alpaca_report and not alpaca_report.get("connected"):
         blockers.append(f"Alpaca not connected: {alpaca_report.get('error')}")
 
-    # During D2.6 prep, recommendation is NO-GO for execution even if preview exists,
-    # until soak + explicit authorization. If soak incomplete → hard NO-GO.
-    if not soak.get("prerequisite_met"):
-        recommendation = "NO-GO"
-    elif blockers:
-        recommendation = "NO-GO"
-    else:
-        # Soak met + preview ready + gates intact → CONDITIONAL GO pending human auth
-        recommendation = "CONDITIONAL GO"
+    # Any hard safety failure or missing preview → NO-GO. CONDITIONAL GO only when
+    # all technical/market-data prerequisites passed (human auth still outstanding).
+    hard_fail = (
+        not soak.get("prerequisite_met")
+        or not gate.get("passed")
+        or not selection.get("selected")
+        or not preview.get("preview_ready")
+        or bool(safety_codes)
+        or bool(blockers)
+    )
+    recommendation = "NO-GO" if hard_fail else "CONDITIONAL GO"
 
     result = {
         "stage": PILOT_STAGE,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": now.astimezone(timezone.utc).isoformat()
+        if now.tzinfo
+        else now.replace(tzinfo=timezone.utc).isoformat(),
         "recommendation": recommendation,
         "blockers": blockers,
+        "safety_reason_codes": safety_codes,
+        "bundle_selection": bundle_sel
+        or selection.get("bundle_selection")
+        or {"reason_code": selection.get("reason_code")},
+        "required_completed_session": (
+            bundle_sel.get("required_completed_session")
+            or selection.get("required_completed_session")
+        ),
         "soak_prerequisite": soak,
         "pilot_gate": gate,
         "alpaca_readonly": alpaca_report,
@@ -628,22 +865,24 @@ def _authorization_steps(soak: Dict[str, Any], recommendation: str) -> List[str]
     steps = []
     if not soak.get("prerequisite_met"):
         steps.append(
-            "1. Wait for unattended D2.4L next_session to complete pair "
-            "2026-10-28→2026-10-29 and confirm soak_complete=true / "
-            "completed_pair_ids length == 3 in soak_ledger.json"
+            "1. Confirm soak_ledger.json shows completed_pair_ids length == 3 "
+            "(soak remains a separate prerequisite from current-session bundles)"
         )
     else:
         steps.append("1. Confirm soak_ledger.json shows 3 completed pairs (already met)")
     steps.extend(
         [
-            "2. Re-run paper_pilot_gate.run_d2_6_readiness() and confirm preview_ready with a live session quote",
-            "3. Explicit written authorization for ONE Alpaca paper LIMIT order only",
-            "4. Bind/confirm Alpaca paper account in settings; keep LIVE_TRADING_ENABLED=false",
-            "5. Temporarily enable paper submission path for a single manually approved order "
+            "2. Ensure a validated post-close bundle exists for required_completed_session "
+            "(scheduled-window observation preferred; catch-up is not auto-promoted)",
+            "3. Re-run paper_pilot_gate.run_d2_6_readiness() during US RTH with a fresh "
+            "narrow-spread Alpaca quote and confirm preview_ready",
+            "4. Explicit written authorization for ONE Alpaca paper LIMIT order only",
+            "5. Bind/confirm Alpaca paper account in settings; keep LIVE_TRADING_ENABLED=false",
+            "6. Temporarily enable paper submission path for a single manually approved order "
             "(ALPACA_EXECUTION_ENABLED + controlled STAGE_SUBMISSION / non-executing guard change) "
             "— do not enable batch or auto-retry",
-            "6. propose_order → manual approve_order → single submit → immediately restore execution-disabled defaults",
-            "7. Monitor Alpaca blotter + PaperOrder lifecycle + unrealized P&L vs SPY",
+            "7. propose_order → manual approve_order → single submit → immediately restore execution-disabled defaults",
+            "8. Monitor Alpaca blotter + PaperOrder lifecycle + unrealized P&L vs SPY",
         ]
     )
     if recommendation == "NO-GO":

@@ -145,11 +145,30 @@ class OverlapLock:
         self.held = False
 
 
+def next_session_day_from_pair_id(pair_id: Optional[str]) -> Optional[str]:
+    """Extract next_session_day from `{post_close}->{next_session}` pair ids."""
+    if not pair_id or "->" not in str(pair_id):
+        return None
+    suffix = str(pair_id).split("->", 1)[1].strip()
+    return suffix or None
+
+
 def resolve_prior_post_close_bundle(
     *,
     ledger: Optional[Dict[str, Any]] = None,
+    now_utc: Optional[datetime] = None,
 ) -> Dict[str, Any]:
-    """Pick the eligible pending post-close bundle for next-session validation."""
+    """Pick the pending post-close whose next_session_day is today's NY session.
+
+    Missed / past-due pending pairs stay listed for humans but are not selected
+    for validation (no backfill, no fabricated soak credit). Future pendings wait
+    until their next_session_day.
+    """
+    now = now_utc or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    today_ny = now.astimezone(NY_TZ).date().isoformat()
+
     led = ledger or load_soak_ledger()
     status = soak_status(led)
     pending = list(status.get("pending_post_close_pair_ids") or [])
@@ -159,10 +178,46 @@ def resolve_prior_post_close_bundle(
             "reason_code": "NO_PENDING_POST_CLOSE",
             "bundle_path": None,
             "pair_id": None,
+            "today_ny": today_ny,
+            "stale_pending_pair_ids": [],
+            "future_pending_pair_ids": [],
         }
 
-    # Prefer chronologically first pending pair
-    pair_id = sorted(pending)[0]
+    pending_sorted = sorted(pending)
+    due_today: list[str] = []
+    stale: list[str] = []
+    future: list[str] = []
+    for pid in pending_sorted:
+        ns_day = next_session_day_from_pair_id(pid)
+        if not ns_day:
+            stale.append(pid)
+            continue
+        if ns_day == today_ny:
+            due_today.append(pid)
+        elif ns_day < today_ny:
+            stale.append(pid)
+        else:
+            future.append(pid)
+
+    if not due_today:
+        return {
+            "found": False,
+            "reason_code": "NO_PENDING_FOR_TODAY",
+            "bundle_path": None,
+            "pair_id": None,
+            "today_ny": today_ny,
+            "stale_pending_pair_ids": stale,
+            "future_pending_pair_ids": future,
+            "note": (
+                "Missed historical pending pairs are retained without soak credit; "
+                "no backfill. Waiting for a pending pair whose next_session_day "
+                "matches today's NY session."
+            ),
+        }
+
+    # Exactly one actionable pair for today when schedule is healthy; if several
+    # somehow share the same next_session_day, take chronological first.
+    pair_id = due_today[0]
     sessions = led.get("sessions") or []
     matches = [
         s
@@ -178,6 +233,9 @@ def resolve_prior_post_close_bundle(
             "reason_code": "PENDING_PAIR_MISSING_ELIGIBLE_BUNDLE",
             "bundle_path": None,
             "pair_id": pair_id,
+            "today_ny": today_ny,
+            "stale_pending_pair_ids": stale,
+            "future_pending_pair_ids": future,
         }
 
     # Latest eligible post-close for that pair
@@ -191,6 +249,9 @@ def resolve_prior_post_close_bundle(
             "bundle_path": str(path),
             "pair_id": pair_id,
             "run_id": chosen.get("run_id"),
+            "today_ny": today_ny,
+            "stale_pending_pair_ids": stale,
+            "future_pending_pair_ids": future,
         }
 
     # Do not use if an eligible next-session already completed the pair
@@ -200,6 +261,9 @@ def resolve_prior_post_close_bundle(
             "reason_code": "PAIR_ALREADY_COMPLETE",
             "bundle_path": str(path),
             "pair_id": pair_id,
+            "today_ny": today_ny,
+            "stale_pending_pair_ids": stale,
+            "future_pending_pair_ids": future,
         }
 
     return {
@@ -210,6 +274,10 @@ def resolve_prior_post_close_bundle(
         "run_id": chosen.get("run_id"),
         "trading_day": chosen.get("trading_day"),
         "evidence_dir": chosen.get("evidence_dir"),
+        "today_ny": today_ny,
+        "expected_next_session_day": today_ny,
+        "stale_pending_pair_ids": stale,
+        "future_pending_pair_ids": future,
     }
 
 
@@ -526,14 +594,17 @@ def run_unattended_next_session(
         out["log_path"] = str(_write_run_log(out))
         return out
 
-    prior = resolve_prior_post_close_bundle()
+    prior = resolve_prior_post_close_bundle(now_utc=now)
     if not prior.get("found"):
         out = {
             "mode": "next_session",
             "status": "SKIPPED_NO_PRIOR",
             "eligibility_reason_code": prior.get("reason_code"),
             "prior_resolution": prior,
-            "note": "No eligible pending post-close — no soak credit fabricated",
+            "note": (
+                "No eligible pending post-close for today's NY session — "
+                "no soak credit fabricated (missed pairs not backfilled)"
+            ),
             "broker_orders": False,
         }
         out["log_path"] = str(_write_run_log(out))
@@ -802,7 +873,7 @@ def morning_status(*, now_utc: Optional[datetime] = None) -> Dict[str, Any]:
             }
         )
 
-    prior = resolve_prior_post_close_bundle()
+    prior = resolve_prior_post_close_bundle(now_utc=now)
     if prior.get("found"):
         categorized["pending"].append(
             {
@@ -813,6 +884,26 @@ def morning_status(*, now_utc: Optional[datetime] = None) -> Dict[str, Any]:
                 "category": "pending",
             }
         )
+    for pid in prior.get("stale_pending_pair_ids") or []:
+        if not any(p.get("pair_id") == pid for p in categorized["pending"]):
+            categorized["pending"].append(
+                {
+                    "mode": "stale_pending_pair",
+                    "pair_id": pid,
+                    "category": "pending",
+                    "note": "Missed next-session day — retained without soak credit",
+                }
+            )
+    for pid in prior.get("future_pending_pair_ids") or []:
+        if not any(p.get("pair_id") == pid for p in categorized["pending"]):
+            categorized["pending"].append(
+                {
+                    "mode": "future_pending_pair",
+                    "pair_id": pid,
+                    "category": "pending",
+                    "note": "Waiting for next_session_day",
+                }
+            )
     for pid in st.get("pending_post_close_pair_ids") or []:
         if not any(p.get("pair_id") == pid for p in categorized["pending"]):
             categorized["pending"].append(
